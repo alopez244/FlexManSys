@@ -1,0 +1,66 @@
+diff --git a/src/es/ehu/ThreadedMiddlewareManager.java b/src/es/ehu/ThreadedMiddlewareManager.java
+index 50d63f8..810ba51 100755
+--- a/src/es/ehu/ThreadedMiddlewareManager.java
++++ b/src/es/ehu/ThreadedMiddlewareManager.java
+@@ -202,6 +202,17 @@ public class ThreadedMiddlewareManager extends Agent {
+           try{
+             executionStates.put(compon, msg.getContentObject());
+           } catch (Exception e) {e.printStackTrace();}
++          // INFORM LOGGER
++          ACLMessage resp = new ACLMessage(ACLMessage.INFORM);
++          String[] targets = processCmd(CMD_GET + " * services=" + ONT_LOG, "0").split(",");
++          for (String target: targets) resp.addReceiver(new AID(target, AID.ISLOCALNAME));
++          try {
++            resp.setSender(msg.getSender());
++            resp.setContentObject(msg.getContentObject());
++            resp.setOntology(ONT_LOG);
++            resp.setConversationId(msg.getConversationId());
++            send(resp);
++          } catch (Exception e) {}
+           
+           
+         } else { // ontolog�a de control
+@@ -1229,6 +1240,21 @@ public class ThreadedMiddlewareManager extends Agent {
+ 
+       //actualizo el actual
+       elements.get(prm).put(attrib, attribs.get(attrib));
++      // INFORM LOGGER
++      ACLMessage resp = new ACLMessage(ACLMessage.INFORM);
++      String[] targets = processCmd(CMD_GET + " * services=" + ONT_LOG, "0").split(",");
++      for (String target: targets) {
++        System.out.println(target);
++        resp.addReceiver(new AID(target, AID.ISLOCALNAME));
++      }
++      HashMap<String,Hashtable<String,String>> aux = new HashMap<String,Hashtable<String,String>>();
++      aux.put(prm, elements.get(prm));
++      try {
++        resp.setContentObject(aux);
++      } catch (Exception e) {}
++        resp.setOntology(ONT_CONTROL);
++      resp.setConversationId("msg.getConversationId()");
++      send(resp);
+ 
+ 
+ 
+@@ -1599,6 +1625,21 @@ public class ThreadedMiddlewareManager extends Agent {
+       }
+     }
+     elements.put(id, attribs);
++    // INFORM LOGGER
++    ACLMessage resp = new ACLMessage(ACLMessage.INFORM);
++    String[] targets = processCmd(CMD_GET + " * services=" + ONT_LOG, "0").split(",");
++    for (String target: targets) {
++      System.out.println(target);
++      resp.addReceiver(new AID(target, AID.ISLOCALNAME));
++    }
++    HashMap<String,Hashtable<String,String>> aux = new HashMap<String,Hashtable<String,String>>();
++    aux.put(id, attribs);
++    try {
++      resp.setContentObject(aux);
++    } catch (Exception e) {}
++      resp.setOntology(ONT_CONTROL);
++    resp.setConversationId("msg.getConversationId()");
++    send(resp);
+     
+     //TODO Rafael: cuando es un registro de nodo re laszar los componentes asociados a ese nodo de las aplicaciones activas
+     //TODO convertirlo en un thread

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<!-- ======= APPLICATIONSET ======= -->
+	<xs:complexType name="ApplicationSet">
+		<xs:attribute name="name" type="xs:string" use="required"/>
+	</xs:complexType>
+	<!-- ======= APPLICATION ======= -->
+	<xs:complexType name="Application">
+		<xs:attribute name="name" type="xs:string" use="required"/>
+		<xs:attribute name="deadline" type="xs:float" use="required"/>
+	</xs:complexType>
+	<!-- ======= COMPONENT ======= -->
+	<xs:simpleType name="Tactivation">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="periodic"/>
+			<xs:enumeration value="onDemand"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="Component">
+		<xs:attribute name="name" type="xs:string" use="required"/>
+		<xs:attribute name="activation" type="Tactivation" use="required"/>
+		<xs:attribute name="period" type="xs:float" use="optional"/>
+		<xs:attribute name="nodeRestriction" type="xs:string" use="optional"/>
+	</xs:complexType>
+	<!-- ======= IMPLEMENTATION ======= -->
+	<xs:complexType name="Implementation">
+		<xs:attribute name="name" type="xs:string" use="required"/>
+		<xs:attribute name="class" type="xs:string" use="required"/>
+		<xs:attribute name="maxMemory" type="xs:integer" use="required"/>
+	</xs:complexType>
+</xs:schema>
