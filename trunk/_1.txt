@@ -1,8 +1,0 @@
-Name=Aintzane
-SurName=Armentia
-Age=35
-FCMin=40
-FCMax=90
-FCR=70
-BP_S=118
-BP_D=61

@@ -1,1 +1,0 @@
-Taskkill /F /IM java.exe /FI "WINDOWTITLE ne cmd"
