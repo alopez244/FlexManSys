@@ -6,3 +6,4 @@ It will contain detail of every step.
 16/12/2019 Minor folder changes have been introduced in the SystemModelAgent.java file, in the line 406.
 18/12/2019 Structure of the project has been modified to include the modified jade and FIPA folders as libraries instead of outputs.
 09/03/2020 Cleaning the unnecessary files for FlexManSys. The packet ehu.mas has been erased. The schemas related to healthcare have also been arased. 
+09/03/2020 Updating SystemModelAgent.java, MasReconAgent.java, Registerer.java, among others, from Unai's SVN repository.
