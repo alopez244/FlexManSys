@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
-<xs:schema xmlns="Concepts" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="Concepts" elementFormDefault="qualified" attributeFormDefault="unqualified">
-	<xs:include schemaLocation="bin/resources/TConcepts.xsd"/>
-	<xs:element name="applicationSet" type="ApplicationSet"/>
-	<xs:element name="application" type="Application"/>
-	<xs:element name="component" type="Component"/>
-	<xs:element name="implementation" type="Implementation"/>
-</xs:schema>
