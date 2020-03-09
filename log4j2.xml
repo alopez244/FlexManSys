@@ -53,6 +53,14 @@
 		
 		<logger name="es.ehu.platform.template.interfaces.BasicFunctionality">	<appenderRef ref="console" level="info"/></logger>
 		<logger name="es.ehu.platform.utilities.MasReconAgent">					<appenderRef ref="console" level="info"/></logger>
+		<logger name="es.ehu.platform.behaviour.BootBehaviour">					<appenderRef ref="console" level="info"/></logger>
+		<logger name="es.ehu.platform.behaviour.ResourceBootBehaviour">			<appenderRef ref="console" level="info"/></logger>
+		<logger name="es.ehu.platform.behaviour.NegotiatingBehaviour">			<appenderRef ref="console" level="info"/></logger>
+		
+		
+		<logger name="es.ehu.domain.orion2030.templates.functionality.ApplicationSet_Functionality"> <appenderRef ref="console" level="debug"/></logger>
+		
+		
 		
 		
 		

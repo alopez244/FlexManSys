@@ -1,24 +1,20 @@
 package es.ehu.platform.behaviour;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import es.ehu.SystemModelAgent;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.platform.utilities.Cmd;
-import es.ehu.platform.utilities.MasReconAgent;
 import es.ehu.platform.utilities.MsgNegotiation;
-import jade.core.*;
-import jade.core.behaviours.*;
-import jade.lang.acl.*;
+import jade.core.AID;
+import jade.core.behaviours.SimpleBehaviour;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.Iterator;
+import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
+
 import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
 
 
@@ -176,15 +172,24 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 		  // recibo petición de negociación
 		  if (msg.getPerformative() == ACLMessage.CFP) {
 			  LOGGER.info("msg="+msg.getContent());
-			  Cmd cmd = new Cmd(msg.getContent());     
-	       //TODO copiar a punto común el processAttibs
-			  MsgNegotiation negMsg = new MsgNegotiation((Iterator<AID>) msg.getAllReceiver(), conversationId, cmd.attribs.get("action"), cmd.attribs.get("criterion"));
+			  Cmd cmd = new Cmd(msg.getContent());
+			  System.out.println("externaldata="+cmd.attribs.get("externaldata"));
+
+			  StringTokenizer externaldata = new StringTokenizer(cmd.attribs.get("externaldata"),",");
+			  
+			  MsgNegotiation negMsg = new MsgNegotiation((Iterator<AID>) msg.getAllReceiver(), conversationId, cmd.attribs.get("action"), cmd.attribs.get("criterion"),
+			      externaldata.nextElement().toString(),externaldata.nextElement().toString(),externaldata.nextElement().toString(),externaldata.nextElement().toString());
+
 	      initNegotiation(conversationId, msg.getSender(), negMsg);
 
 		  } else 
 			  // Recibo propuestas
 			  if (msg.getPerformative() == ACLMessage.PROPOSE) {
 				if (negotiationRuntime.containsKey(conversationId)) {
+				  
+				  
+				  //System.out.println("------------------ "+cmd.attribs.get("action"));
+				  
 					Long receivedVal = new Long(0);
 					try {
 						receivedVal = (Long) msg.getContentObject();
@@ -196,24 +201,23 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 					LOGGER.info(msg.getSender().getLocalName()+"("+receivedVal+") ");
 					negotiationRuntime.get(conversationId).cntReplies();
 					
-//					if (receivedVal>negotiationRuntime.get(conversationId).getScalarValue()) { //recibo valor mayor (mejor) > pierdo
-//					  System.out.println("> "+myAgent.getLocalName()+"("+negotiationRuntime.get(conversationId).getScalarValue()+") pierde negociación "+conversationId);
-
 					// TODO: parámetro de desempate - deberá estar dentro del checkNegotiation (debe ser plataforma)
 					boolean tieBreak = msg.getSender().getLocalName().compareTo(myAgent.getLocalName())>0;
 
+					//negotiationRuntime.get(conversationId).getExternalData()[0];
+					
 					// TODO: Vienen en el mensaje de negociación o los consulto al sA?
-					String seID = "applic101";//(String)negExternalData[0];//
-					String seType = "applicationSet";//(String)negExternalData[1];//seType
-			    String seClass = "es.ehu.domain.orion2030.templates.ApplicationSetTemplate";//(String)negExternalData[2];//
-			    String seFirstTransition = "running";//(String)negExternalData[3]; //
+					String seID = (String)negotiationRuntime.get(conversationId).getExternalData()[0];//"applic101";//(String)negExternalData[0];//
+					String seType = (String)negotiationRuntime.get(conversationId).getExternalData()[1];//"applicationSet";//(String)negExternalData[1];//seType
+			    String seClass = (String)negotiationRuntime.get(conversationId).getExternalData()[2];//"es.ehu.domain.orion2030.templates.ApplicationSetTemplate";//(String)negExternalData[2];//
+			    String seFirstTransition = (String)negotiationRuntime.get(conversationId).getExternalData()[3];//"running";//(String)negExternalData[3]; //
 			    
 					switch (aNegFunctionality.checkNegotiation(conversationId, negotiationRuntime.get(conversationId).getAction(), receivedVal, 
               negotiationRuntime.get(conversationId).getScalarValue(),tieBreak, negotiationRuntime.get(conversationId).checkReplies(),
               seID, seType, seClass, seFirstTransition)) {
 					
-    					case NEG_LOST: //he perido la negociación  
-    					  LOGGER.info("> "+myAgent.getLocalName()+"("+negotiationRuntime.get(conversationId).getScalarValue()+") pierde negociación "+conversationId);
+    					case NEG_LOST: //he perdido la negociación
+    					  LOGGER.info("> "+myAgent.getLocalName()+"("+negotiationRuntime.get(conversationId).getScalarValue()+") lost nego"+conversationId);
     					  negotiationRuntime.remove(conversationId); //salgo de esta negociación
     					  break;
     					  
@@ -223,6 +227,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
     					  break;
     					  
     					case NEG_WON: //he ganado la negociación y termina correctamente
+    					  System.out.println("WON!");
     					// informar al del cfp-er que la negociación ha finalizado y hemos ganado
     					  negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
     					  

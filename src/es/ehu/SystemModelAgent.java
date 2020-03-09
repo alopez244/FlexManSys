@@ -1,73 +1,42 @@
 package es.ehu;
 
+import es.ehu.platform.behaviour.ControlBehaviour;
+import es.ehu.platform.utilities.MWMCommand;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.DataStore;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.core.behaviours.ThreadedBehaviourFactory;
-import jade.core.behaviours.DataStore;
 import jade.core.behaviours.ThreadedBehaviourFactory.ThreadedBehaviourWrapper;
 import jade.domain.DFService;
-import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
-
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Serializable;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Properties;
-import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
+import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.w3c.dom.*;
+import org.xml.sax.InputSource;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
-import es.ehu.platform.behaviour.ControlBehaviour;
-import es.ehu.platform.utilities.MWMCommand;
+import java.io.*;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /* 
@@ -134,11 +103,11 @@ public class SystemModelAgent extends Agent {
       myAgent.ds = this.getDataStore();
       ((SystemModelAgent)myAgent).registerAgent("sa"); //registrar mwm en el df
       
-      //filtro de recepciï¿½n de mesnajes (state) || (control&REQUEST+CONTROL)
+      //filtro de recepción de mesnajes (state) || (control&REQUEST+CONTROL)
       template = MessageTemplate.or(MessageTemplate.MatchOntology("state"),
-                                    MessageTemplate.and(MessageTemplate.MatchOntology("control"), 
-                                                        MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.REQUEST), 
-                                                                           MessageTemplate.MatchPerformative(ACLMessage.INFORM)))); 
+                                    MessageTemplate.and(MessageTemplate.MatchOntology("control"),
+                                                        MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+                                                                           MessageTemplate.MatchPerformative(ACLMessage.INFORM))));
       
       //aMsg.setOntology("state");
       LOGGER.debug("template=" + template);
@@ -177,12 +146,12 @@ public class SystemModelAgent extends Agent {
           } catch (Exception e) {e.printStackTrace();}
           
           
-        } else { // ontologï¿½a de control
-        if (msg.getConversationId()!=null) { //si hay id de conversaciï¿½n despertaremos la tarea que interviene en ella
+        } else { // ontología de control
+        if (msg.getConversationId()!=null) { //si hay id de conversación despertaremos la tarea que interviene en ella
           LOGGER.trace("***************** Conversation message *******************");
           if (behaviours.containsKey(msg.getConversationId())){ //si hay una coportamiento con ese id
             LOGGER.trace("Localizado comportamiento");
-            myAgent.ds.put(msg.getConversationId(), msg); // guardamos el dato en el ds comï¿½n
+            myAgent.ds.put(msg.getConversationId(), msg); // guardamos el dato en el ds común
             LOGGER.trace("behaviours.get("+msg.getConversationId()+").resume()");
             myAgent.tbf.getThread(behaviours.get(msg.getConversationId())).resume();
           } // end existe la tarea
@@ -197,7 +166,7 @@ public class SystemModelAgent extends Agent {
         behaviours.put(key, new ThreadedCommandProcessor(key, myAgent));
         myAgent.addBehaviour(tbf.wrap(behaviours.get(key)));
 
-      } // end ontologï¿½a de control 
+      } // end ontología de control 
       }else {
         block();
       }
@@ -271,7 +240,8 @@ public class SystemModelAgent extends Agent {
       else if (cmds[0].equals("ext")) result.append(ext(cmds[1], attribs, conversationId)); //TODO Rafael
 
       else if (cmds[0].equals("localcmd")) result.append(localCmd(cmds[1], attribs, conversationId));
-      else if (cmds[0].equals("localneg")) result.append(negotiate(cmds[1], attribs.get("criterion"), attribs.get("action"), conversationId));
+      else if (cmds[0].equals("localneg")) result.append(negotiate(cmds[1], attribs.get("criterion"), attribs.get("action"),attribs.get("externaldata"), conversationId));
+      //else if (cmds[0].equals("localneg")) result.append(negotiate(cmds[1], attribs, conversationId));
       
       else if (cmds[0].equals("sestart")) result.append(seStart(cmds[1], attribs, conversationId)); // threaded#condition
       
@@ -404,23 +374,7 @@ public class SystemModelAgent extends Agent {
     
     Properties prop = new Properties();
     
-    String url = "../../resources/sa.properties";
-
-    /*if (getClass() != null) {
-      URL y = getClass().getResource(url);
-      if (y != null) {
-        String z = getClass().getResource(url).getPath();
-        if (z != null) {
-          System.out.println ("z es ok");
-        } else {
-          System.out.println("z es null");
-        }
-      } else {
-        System.out.println("y es null" + y);
-      }
-    } else {
-      System.out.println("x es null");
-    }*/
+    String url = "/resources/sa.properties";
 
     
     LOGGER.debug("Properties: "+ getClass().getResource(url).getPath());
@@ -549,7 +503,7 @@ public class SystemModelAgent extends Agent {
         String[] attribDef = cmdLine[i].split("=");
         attrib = attribDef[0];
 
-        attribs.put(attrib, (attribDef.length>1)?attribDef[1]:""); // puede estar vacï¿½o
+        attribs.put(attrib, (attribDef.length>1)?attribDef[1]:""); // puede estar vacío
       } else
         attribs.put(attrib, attribs.get(attrib)+" "+cmdLine[i]);
      String attribValue = attribs.get(attrib);
@@ -607,7 +561,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
           rootElement.setAttributeNode(attr);
         }
         
-        //aï¿½ado atributos al raiz
+        //añado atributos al raiz
         forKeys: for (String key : elements.get(element).keySet()) {
           if (key.equals("category") || key.equals("parent") || key.equals("xsd")|| key.equals("seParent")) continue forKeys;
           attr =  doc.createAttribute(key);
@@ -686,7 +640,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
       
       boolean appValidation = _prm[0].equals("appValidation");
       
-      Document document = listDom(_prm[1], appValidation); //segundo parï¿½metro indica al DOM si arrastrar los IDs
+      Document document = listDom(_prm[1], appValidation); //segundo parámetro indica al DOM si arrastrar los IDs
       
       SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
       
@@ -710,16 +664,16 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
            // instance document is invalid!
        }
        if (output.indexOf(';')>0) //hay error
-       output = output.substring(output.indexOf(";")+2, output.indexOf('\n')); //muestro la descripciï¿½n
+       output = output.substring(output.indexOf(";")+2, output.indexOf('\n')); //muestro la descripción
        LOGGER.info(output);
          
          
     }
-    else if (_prm[0].equals("hierarchy")) { //comprueba jerarquï¿½a
+    else if (_prm[0].equals("hierarchy")) { //comprueba jerarquía
       String padre = _prm[2];
       String hijo = _prm[1];
       
-      LOGGER.debug("comprobar jerarquï¿½a hijo="+hijo+" padre="+padre);
+      LOGGER.debug("comprobar jerarquía hijo="+hijo+" padre="+padre);
       
       
       
@@ -749,8 +703,8 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
 //      for (String s: vt)
 //        System.out.println(s);
       //Algoritmo ELI
-      // 1. se buscarï¿½a el xs:element que tenga como atributo name y/o atributo ref el valor deseado. IR A PASO 2
-      LOGGER.info("1. se buscarï¿½a el xs:element que tenga como atributo name y/o atributo ref el valor deseado. IR A PASO 2");
+      // 1. se buscaría el xs:element que tenga como atributo name y/o atributo ref el valor deseado. IR A PASO 2
+      LOGGER.info("1. se buscaría el xs:element que tenga como atributo name y/o atributo ref el valor deseado. IR A PASO 2");
       
       boolean encontrado=false;
       int posicion = 0;
@@ -762,23 +716,23 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
         }
       if (encontrado) { // IR A PASO 2
         LOGGER.info("encontrado pos="+posicion);
-      // 2. de la lista que salga del paso 1, nos quedamos ï¿½nicamente con el caso en el que su padre sea  xs:sequence. IR A PASO 3
-        LOGGER.info("2. de la lista que salga del paso 1, nos quedamos ï¿½nicamente con el caso en el que su padre sea  xs:sequence. IR A PASO 3");
+      // 2. de la lista que salga del paso 1, nos quedamos únicamente con el caso en el que su padre sea  xs:sequence. IR A PASO 3
+        LOGGER.info("2. de la lista que salga del paso 1, nos quedamos únicamente con el caso en el que su padre sea  xs:sequence. IR A PASO 3");
       
       if (v.get(posicion-1).equals("xs:sequence=")){ //el anterior es sequence, IR A PASO 3
         LOGGER.info("el anterior es xs:sequence");
-        LOGGER.info("3. En tal caso, se busca el predecesor mï¿½s cercano que sea xs:element.");
+        LOGGER.info("3. En tal caso, se busca el predecesor más cercano que sea xs:element.");
         encontrado=false;
         for (int i=posicion-2; i>=0; i--)
           if (v.get(i).startsWith("xs:element")) {
             encontrado=true;
-            LOGGER.info("encontrado. El padre ("+padre+") deberï¿½a ser "+v.get(i).substring(v.get(i).indexOf("=")+1)+".");
+            LOGGER.info("encontrado. El padre ("+padre+") debería ser "+v.get(i).substring(v.get(i).indexOf("=")+1)+".");
             if (padre.equals(v.get(i).substring(v.get(i).indexOf("=")+1))) return "valid";
             break;
           }
         
         if (!encontrado) {
-          LOGGER.info("no encontrado ningï¿½n xs:element. Se buscarï¿½ el xs:complexType predecesor mï¿½s cercano y quedarnos con el valor de su atributo name.  IR A PASO 4");
+          LOGGER.info("no encontrado ningún xs:element. Se buscará el xs:complexType predecesor más cercano y quedarnos con el valor de su atributo name.  IR A PASO 4");
           String complexTypeName="";
           for (int i=posicion-2; i>=0; i--)
             if (v.get(i).startsWith("xs:complexType")) {
@@ -789,7 +743,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
             }
           
           if (!encontrado)
-            LOGGER.info("complexType ("+complexTypeName+") NO encontrado ï¿½? .");
+            LOGGER.info("complexType ("+complexTypeName+") NO encontrado ¿? .");
           
           LOGGER.info("Buscar en el XML schema un xs:element que tenga como atributo type el valor que hemos guardado en el PASO 3 ("+complexTypeName+")");
           encontrado=false;
@@ -797,14 +751,14 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
           for (int i=0; i<vt.size(); i++)
             if (vt.get(i).equals("xs:element="+complexTypeName)) {
               encontrado=true;
-              LOGGER.info("padre ("+padre+") deberï¿½a ser "+v.get(i).substring(v.get(i).indexOf("=")+1)+".");
+              LOGGER.info("padre ("+padre+") debería ser "+v.get(i).substring(v.get(i).indexOf("=")+1)+".");
               if (padre.equals(v.get(i).substring(v.get(i).indexOf("=")+1))) return "valid";
               break;
             }
           if (!encontrado)
             LOGGER.info("no encontrado");
           //if (padre.equals(bame)
-          return "ERROR de jerarquï¿½a";          
+          return "ERROR de jerarquía";          
           
           
 
@@ -814,7 +768,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
         
       } else { //no lo he encontrado
         LOGGER.info("no encontrado");
-        return "ERROR de jerarquï¿½a";
+        return "ERROR de jerarquía";
       }
       
       
@@ -897,7 +851,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
       for (String key : executionStates.keySet())
         response.append(key).append(": ").append(executionStates.get(key).getClass()).append("\n");
     }else if (_prm.startsWith("activethreads")) {
-      for (ThreadedBehaviourWrapper tbw: tbf.getWrappers()) 
+      for (ThreadedBehaviourWrapper tbw: tbf.getWrappers())
         try{
           response.append(((ThreadedCommandProcessor)tbw.getBehaviour()).key).append(" ").append(((ThreadedCommandProcessor)tbw.getBehaviour())
               .msg.getContent()).append(" ").append(" (cond:").append(((ThreadedCommandProcessor)tbw.getBehaviour()).condition).append(")\n");
@@ -980,7 +934,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
                             bestValue = value;
                             winner = reply.getSender().getLocalName();
                           }
-                      } else if (reply.getPerformative() == ACLMessage.FAILURE) {                         
+                      } else if (reply.getPerformative() == ACLMessage.FAILURE) {
                         String name=reply.getContent().substring(reply.getContent().indexOf(":name ", reply.getContent().indexOf("MTS-error"))+":name ".length());
                         name=name.substring(0, name.indexOf('@'));                        
                         LOGGER.debug(name+" FAILURE");
@@ -1012,12 +966,12 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
 //                      // Purchase order reply received
 //                      if (reply.getPerformative() == ACLMessage.INFORM) {
 //                          // Purchase successful. We can terminate
-//                          System.out.println(titolo.toLowerCase()+" ï¿½ stato venduto con successo da "+reply.getSender().getName());
-//                          System.out.println("Prezzo = "+bestPrice+" ï¿½");
+//                          System.out.println(titolo.toLowerCase()+" è stato venduto con successo da "+reply.getSender().getName());
+//                          System.out.println("Prezzo = "+bestPrice+" €");
 //                          myAgent.doDelete();
 //                      }
 //                      else {
-//                          System.out.println("Tentativo fallito: il libro richiesto ï¿½ giï¿½ stato venduto.");
+//                          System.out.println("Tentativo fallito: il libro richiesto è già stato venduto.");
 //                          myAgent.doDelete();
 //                      }
 //                      step = 4;
@@ -1058,7 +1012,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
     LOGGER.entry(appID);
     if (!elements.containsKey(appID)) return LOGGER.exit(appID + "not found");
 
-    // inicia todos los componentes que forman parte de la aplicaciï¿½n
+    // inicia todos los componentes que forman parte de la aplicación
     StringBuilder result = new StringBuilder();
     String[] appComponents = getCmp(appID).split(",");
 
@@ -1105,59 +1059,65 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
     LOGGER.entry(seID, attribs, conversationId);
     //String seClass = attribs.get("seClass");
     
-    String redundancy = "1";
-    if (attribs!=null)
-    if (attribs.containsKey("redundancy"))
-      redundancy = attribs.get("redundancy");
+    if (seID.indexOf(",")>0) {
+      String[] tokens = seID.split(",");
+      for (int j=0; j<tokens.length; j++)
+        seStart(tokens[j], attribs, conversationId);
+      return "";
+        
+    }
     
+    String redundancy = "1";
+    if ((attribs!=null) && (attribs.containsKey("redundancy")))
+      redundancy = attribs.get("redundancy");
 
-    // si no existe el id en el registro devuelve error (irï¿½ al launcher)
+    // si no existe el id en el registro devuelve error (irá al launcher)
     if (!elements.containsKey(seID)) return "-1";
     
     
 
-    // 18/09/2019: Hay un elemento nuevo "Launcher" que procesarï¿½ las condiciones de arranque
+    // 18/09/2019: Habrá un elemento nuevo "Launcher" que procesará las condiciones de arranque
     
     //L: si en el elemento en el xsd no es isStartable  devolvermos error
-    //L: xs:attribute name="isStartable" type="xs:string" fixed="true" - Launcher es de dominio, esto se decidirï¿½ en el launcher 
+    //L: xs:attribute name="isStartable" type="xs:string" fixed="true" - Launcher es de dominio, esto se decidirá en el launcher 
     //L: obtengo el tipo y 
     //L: <xs:complexType name="ApplicationSet">
     //L: <xs:complexContent>
     //L: <xs:extension base="ApplicationSet">
-// L:        <xs:sequence>
-// L:         <xs:element name="application" type="Application" minOccurs="1" maxOccurs="unbounded"/>
-// L:       </xs:sequence>
-// L:       <xs:attribute name="ID" type="xs:string" use="required"/>
-// L:       <xs:attribute name="isStartable" type="xs:string" use="required" fixed="true"/>
-    
+    // L:        <xs:sequence>
+    // L:         <xs:element name="application" type="Application" minOccurs="1" maxOccurs="unbounded"/>
+    // L:       </xs:sequence>
+    // L:       <xs:attribute name="ID" type="xs:string" use="required"/>
+    // L:       <xs:attribute name="isStartable" type="xs:string" use="required" fixed="true"/>
     //L: if (buscaEnXsd...) return "-2"; //TODO
     
-    //L: si no estï¿½ arrancado //TODO
+    //L: si no está arrancado //TODO
     //L: if (estaArrancado...) return "-3"; //TODO
     
-    //L: ï¿½es de primer nivel? //si padre es system?
-    //L: NO //TODO habrï¿½ que pedir a su padre que lo arranque
+    //L: ¿es de primer nivel? //si padre es system?
+    //L: NO //TODO habrá que pedir a su padre que lo arranque
     //L: SI 
     //
 
     
-    //ï¿½quienes pueden negociar?
-    
+    //Calcular quiénes negocian:
     // leer del registro para este "seID" la lista entera de procNodes cada uno con sus refServId. - leo del registro los serviceid que requiere el seID
     // buscar procnodes que tengan estas refServId > lista de los procNodes negociadores
     // si no hay negociarres return "-4"; //TODO
+    String refServID=processCmd("get (get * parent=(get * parent="+seID+" category=restrictionList)) attrib=attribValue", conversationId);
+    //si hay restricción la añado al filtro, en caso contrario solo busco procNode
+    String targets = processCmd("get * category=procNode"+((refServID.length()>0)?" refServID="+refServID:""), conversationId);
+    if (targets.length()<=0) return "-4";
     
-    String targets = processCmd("get * category=procNode refServID=id55", conversationId);
-
+    String seCategory = processCmd("get "+seID+" attrib=category", conversationId);
+    String seClass = "es.ehu.domain.orion2030.templates.ApplicationSetTemplate";//processCmd("get "+seID+" attrib=class", conversationId);
+    
+    //mando negociar a todos        
     for (int i=0; i<Integer.parseInt(redundancy); i++) { 
-      //mando negociar a todos
       
-      //private String negotiate(String targets, String negotiationCriteria, String action, String conversationId){
-      
-      //localneg (get * category=procNode service=id55) criterion="max mem" action=start (reg aplicationset parent=system)
-      
-      String neg = processCmd("localneg "+targets+" action=start "+seID+" criterion=max mem", conversationId);
-      
+      String neg = processCmd("localneg "+targets+" action=start "+seID+" criterion=max mem externaldata="+seID+","+seCategory+","+seClass+","+((i==0)?"running":"tracking"), conversationId);
+
+   
       
 //      ACLMessage msg = new ACLMessage(ACLMessage.CFP);
 //
@@ -1187,7 +1147,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
 //      //cfp.setContent(String.valueOf(myValue));
 //
 //      myAgent.send(cfp);
-      //Negociaciï¿½n (grupo_recursos, condiciï¿½n, acciï¿½n_recursos)
+      //Negociación (grupo_recursos, condición, acción_recursos)
       //condicion: max memory
       //accion: start "es.ehu.AvailabilityManager"
       
@@ -1273,7 +1233,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
    
     StringBuilder nodes = new StringBuilder();
     nodes.append((attribs!=null && attribs.containsKey("node")) ? attribs.get("node")+"," : "")
-        .append((elements.get(compon).containsKey("defaultNode")) ? elements.get(compon).get("defaultNode")+"," : "") // si node por defecto en la definiciï¿½n
+        .append((elements.get(compon).containsKey("defaultNode")) ? elements.get(compon).get("defaultNode")+"," : "") // si node por defecto en la definición
         .append((elements.get(compon).containsKey("node")) ? elements.get(compon).get("node")+"," : "")
         .append(get("node*", null,conversationId)); // cualquier node
     
@@ -1320,7 +1280,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
       
       if (elements.get(compon).containsKey("sourceComponentIDs") || elements.get(compon).containsKey("targetComponentIDs")) {
         LOGGER.info("*********** arranca con source y target");
-        ac = ((AgentController) getContainerController().createNewAgent(cmpins, elements.get(cmpimp).get("class"), 
+        ac = ((AgentController) getContainerController().createNewAgent(cmpins, elements.get(cmpimp).get("class"),
             new Object[] { getCmp(cmpins), node, initialFSMState, period, executionState, conversationId,
           (elements.get(compon).containsKey("sourceComponentIDs")? new String[]{elements.get(compon).get("sourceComponentIDs")}: new String[]{}),
           (elements.get(compon).containsKey("targetComponentIDs")? new String[]{elements.get(compon).get("targetComponentIDs")}: new String[]{})
@@ -1333,7 +1293,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
         
       } else {
         LOGGER.info("*********** arranca SIN source y target");
-        ac = ((AgentController) getContainerController().createNewAgent(cmpins, elements.get(cmpimp).get("class"), 
+        ac = ((AgentController) getContainerController().createNewAgent(cmpins, elements.get(cmpimp).get("class"),
           new Object[] { getCmp(cmpins), node, initialFSMState, period, executionState, conversationId }));
         LOGGER.debug("getContainerController().createNewAgent("+cmpins+", "+elements.get(cmpimp).get("class")+ 
             ", new Object[] { "+getCmp(cmpins)+", "+node+", "+initialFSMState+", "+period+", "+
@@ -1352,37 +1312,37 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
 
   }
 
-  public String startComponent(final String compon, final Hashtable<String, String> attribs, final String conversationId) { //TODO: prm deberï¿½a ser la aplicaciï¿½n -> al AM - > a las CI. Por el momento directo Componente.
+  public String startComponent(final String compon, final Hashtable<String, String> attribs, final String conversationId) { //TODO: prm debería ser la aplicación -> al AM - > a las CI. Por el momento directo Componente.
     LOGGER.entry(compon, attribs, conversationId);
 
     if (!(elements.containsKey(compon))) return LOGGER.exit(compon + " not found");
     LOGGER.debug("compon = " + compon);
     
     String aux = (attribs!=null && attribs.containsKey("node")) ? attribs.get("node"):"";
-    LOGGER.debug("restricciï¿½n de nodo forzado: "+aux);
-    LOGGER.debug("restricciï¿½n de nodo registro: "+elements.get(compon).get("nodeRestriction"));
+    LOGGER.debug("restricción de nodo forzado: "+aux);
+    LOGGER.debug("restricción de nodo registro: "+elements.get(compon).get("nodeRestriction"));
 
     String result = "not found";
     //try {
-    //buscar implementaciï¿½n TODO: por el momento la ï¿½nica, luego deberï¿½ estar restringida por los nodos disponibles
-    // contemplar el caso de que no haya ninguna y varias -> negociaciï¿½n entre nodos disponibles.
+    //buscar implementación TODO: por el momento la única, luego deberá estar restringida por los nodos disponibles
+    // contemplar el caso de que no haya ninguna y varias -> negociación entre nodos disponibles.
     final String cmpimp = processCmd("get cmpimp* parent="+compon, conversationId).split(",")[0];
     LOGGER.debug("cmpimp = " + cmpimp);
     final String nodes =  (attribs!=null && attribs.containsKey("node")) ? attribs.get("node"): // si node forzado
-     // (elements.get(compon).containsKey("defaultNode")) ? elements.get(compon).get("defaultNode") : // si node por defecto en la definiciï¿½n
+     // (elements.get(compon).containsKey("defaultNode")) ? elements.get(compon).get("defaultNode") : // si node por defecto en la definición
         (elements.get(compon).containsKey("nodeRestriction")) ? elements.get(compon).get("nodeRestriction"): get("node*", null, conversationId); // si no en modelo
     LOGGER.debug("nodes = " + nodes);
 //    String defaultNode =  (attribs!=null && attribs.containsKey("defaultNode")) ? attribs.get("defaultNode"): // si node forzado
 //        (elements.get(compon).containsKey("defaultNode")) ? elements.get(compon).get("defaultNode"): ""; // si no en modelo
 //    LOGGER.debug("defaultNode = " + defaultNode);
     final String initState = (attribs!=null && attribs.containsKey("initState")) ? attribs.get("initState"): // si initState forzado 
-          (elements.get(compon).containsKey("initState")) ? elements.get(compon).get("initState") : "running"; // si node por defecto en la definiciï¿½n
+          (elements.get(compon).containsKey("initState")) ? elements.get(compon).get("initState") : "running"; // si node por defecto en la definición
     LOGGER.debug("initState = " + initState);
     final String period = (attribs!=null && attribs.containsKey("period")) ? attribs.get("period"): // si period forzado
-            (elements.get(compon).containsKey("period")) ? elements.get(compon).get("period") : "-1"; // si period por defecto en la definiciï¿½n
+            (elements.get(compon).containsKey("period")) ? elements.get(compon).get("period") : "-1"; // si period por defecto en la definición
     LOGGER.debug("period = " + period);
 //    final String deadline = (attribs!=null && attribs.containsKey("deadline")) ? attribs.get("deadline"): // si deadline forzado 
-//              (elements.get(compon).containsKey("deadline")) ? elements.get(compon).get("deadline") : "-1";// si deadline por defecto en la definiciï¿½n
+//              (elements.get(compon).containsKey("deadline")) ? elements.get(compon).get("deadline") : "-1";// si deadline por defecto en la definición
 //    LOGGER.debug("deadline = " + deadline);
     String negotiationCriteria = (attribs!=null && attribs.containsKey("negotiationCriteria")) ? attribs.get("negotiationCriteria"): // si negotiation forzado
           (elements.get(compon).containsKey("negotiationCriteria")) ? elements.get(compon).get("negotiationCriteria") : "max freeMem";
@@ -1398,7 +1358,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
 //      final String targetNode = (i==0 && !defaultNode.isEmpty())? defaultNode : //si estamos en el primer elemento hay nodo por defecto para running lo uso 
 //        (node.split(",").length>0)? node.split(",")[0] :""; //en caso contrario, si quedan nodos libres, uso el primero.
 //      LOGGER.debug("targetNode = " + targetNode);
-//      final String sInitialState = (i>0)? "tracking": initState; // el primer irï¿½ en running/paused, pero el resto en tracking
+//      final String sInitialState = (i>0)? "tracking": initState; // el primer irá en running/paused, pero el resto en tracking
 //      node=node.replace(","+targetNode, "").replace(targetNode+",", "").replace(targetNode, ""); //elimino el nodo usado de los disponibles
 //      LOGGER.debug("nuevo node = " + node);
 //      
@@ -1449,7 +1409,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
         
           LOGGER.debug("targetNode = " + targetNode);
           
-          final String sInitialState = (inicial)? "tracking": initState; // el primer irï¿½ en running/paused, pero el resto en tracking
+          final String sInitialState = (inicial)? "tracking": initState; // el primer irá en running/paused, pero el resto en tracking
           
           node=node.replace(","+targetNode, "").replace(targetNode+",", "").replace(targetNode, ""); //elimino el nodo usado de los disponibles
           LOGGER.debug("nuevo node = " + node);
@@ -1474,7 +1434,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
     return LOGGER.exit(result);
   }
 
-  public String startApplication(String applic, final Hashtable<String, String> attribs, String conversationId) { //TODO: prm deberï¿½a ser la aplicaciï¿½n -> al AM - > a las CI. Por el momento directo Componente.
+  public String startApplication(String applic, final Hashtable<String, String> attribs, String conversationId) { //TODO: prm debería ser la aplicación -> al AM - > a las CI. Por el momento directo Componente.
     LOGGER.entry(applic, attribs, conversationId);
     //evento inicial, reset del tiempo
     this.startTime=System.currentTimeMillis();
@@ -1483,14 +1443,14 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
 
     String result = "not found";
     //try {
-    //buscar implementaciï¿½n TODO: por el momento la ï¿½nica, luego deberï¿½ estar restringida por los nodos disponibles
-    // contemplar el caso de que no haya ninguna y varias -> negociaciï¿½n entre nodos disponibles.
+    //buscar implementación TODO: por el momento la única, luego deberá estar restringida por los nodos disponibles
+    // contemplar el caso de que no haya ninguna y varias -> negociación entre nodos disponibles.
     for (String compon: getCmp(applic).split(",")) 
       start(compon, attribs , conversationId);
       
     //TODO Rafael: cambiar el estado de la applicacion a activo para saber que se esta ejecutando. 
     // Esto se deberia de hacer despues de que todas los componetes esten activos
-    // Unai: la aplicaciï¿½n estarï¿½ "activa" cuanto todos sus componentes "iniciales" estï¿½n en el FSM activos
+    // Unai: la aplicación estará "activa" cuanto todos sus componentes "iniciales" estén en el FSM activos
     //processCmd("set "+applic+" state=active",null);
     
    result = "set.*state=running";
@@ -1518,7 +1478,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
             Hashtable<String, String> elementoClon = (Hashtable<String, String>)elements.get(element).clone();
             elementoClon.put("ID", element);              
             elementosConOrden.put(element, elementoClon);              
-            LOGGER.debug("aï¿½ado " + element + " a la lista de ordenados; ");
+            LOGGER.debug("añado " + element + " a la lista de ordenados; ");
           }
 
         }
@@ -1630,12 +1590,12 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
       //element.put(attrib, attribs.get(attrib));
       //elements.put(prm, element);
 
-      // si una instancia de un componente pasa a running, la que estï¿½ en running pasa a failure -- TODO esto habrï¿½a que comprobarlo
+      // si una instancia de un componente pasa a running, la que esté en running pasa a failure -- TODO esto habría que comprobarlo
       if (prm.startsWith("cmpins") && attrib.equals("state") && attribs.get(attrib).equals("running")) {
         //String cmpid = processCmd("getcmp "+prm, conversationId);
         
         if (processCmd("get (getcmp "+prm+") attrib=isFirst", conversationId).equals("true")) // es primero
-          processCmd("set (get (getcmp "+prm+") attrib=parent) state=running", conversationId); //aplicaciï¿½n pasa a running
+          processCmd("set (get (getcmp "+prm+") attrib=parent) state=running", conversationId); //aplicación pasa a running
         
         String runningInstance = processCmd("getins (getcmp "+prm+") state=running", conversationId);
         if (runningInstance.length()>0) processCmd("set "+runningInstance+" state=failure", conversationId);
@@ -1646,7 +1606,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
       
       //si el atributo va en blanco y existe lo borro
       
-      //if (attribs.get(attrib).isEmpty()) System.out.println("vacï¿½o **************");
+      //if (attribs.get(attrib).isEmpty()) System.out.println("vacío **************");
       //if (elements.get(prm).containsKey(attrib)) System.out.println("containsKey **************");
           
       if ((attribs.get(attrib).isEmpty()) && (elements.get(prm).containsKey(attrib)))  elements.get(prm).remove(attrib);
@@ -1668,7 +1628,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
       //          // instancia prm ha cambiado a attribs.get(attrib)
       //          //LOGGER.info("****************** cambia el estado de "+prm+" a "+attribs.get(attrib));
       //          // calcular componente de prm
-      //          //String cmpimpID = ;//implementaciï¿½n
+      //          //String cmpimpID = ;//implementación
       //          String cmpID = elements.get(elements.get(prm).get("parent")).get("parent");//componente
       //          //cmpMap.get(cmpID); //arraylist de las instancias que utilizan el componente que ha cambiado de estado
       //          // si el nuevo es running recorre las instancias a las que hay que avisar
@@ -1692,17 +1652,17 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
       //
       //              if (separador) sTargets+=","; else separador = true;
       //              sTargets+=cmpins;
-      //              //LOGGER.info("aï¿½ado destino al mensaje " + elements.get(cmpins).get("aid"));    
+      //              //LOGGER.info("añado destino al mensaje " + elements.get(cmpins).get("aid"));    
       //            }
       //
-      //            String cmpinss = getComponentInstances(cmpID); //aï¿½adir las instanacias del componente que cambia de estado
+      //            String cmpinss = getComponentInstances(cmpID); //añadir las instanacias del componente que cambia de estado
       //            cmpins: for (String cmpins: cmpinss.split(",")) { 
       //              //if (cmpins.equals(prm)) continue cmpins;
       //              //aMsg.addReceiver(new AID(elements.get(cmpins).get("aid"), true));
       //              aMsg.addReceiver(new AID(cmpins, AID.ISLOCALNAME));
       //              if (separador) sTargets+=","; else separador = true;
       //              sTargets+=cmpins;
-      //              //LOGGER.info("aï¿½ado destino al mensaje " + elements.get(cmpins).get("aid"));    
+      //              //LOGGER.info("añado destino al mensaje " + elements.get(cmpins).get("aid"));    
       //            }
       //
       //            //new AID(elements.get(cmpins).get("aid"), true)
@@ -1737,14 +1697,14 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
       //
       //            String sTargets = ""; boolean separador = false;
       //
-      //            String cmpinss = getComponentInstances(cmpID); //aï¿½adir las instanacias del componente que cambia de estado
+      //            String cmpinss = getComponentInstances(cmpID); //añadir las instanacias del componente que cambia de estado
       //            cmpins: for (String cmpins: cmpinss.split(",")) { 
       //              if (cmpins.equals(prm)) continue cmpins;
       //              //aMsg.addReceiver(new AID(elements.get(cmpins).get("aid"), true));
       //              aMsg.addReceiver(new AID(cmpins, AID.ISLOCALNAME));
       //              if (separador) sTargets+=","; else separador = true;
       //              sTargets+=cmpins;
-      //              //LOGGER.info("aï¿½ado destino al mensaje " + elements.get(cmpins).get("aid"));    
+      //              //LOGGER.info("añado destino al mensaje " + elements.get(cmpins).get("aid"));    
       //            }
       //            //new AID(elements.get(cmpins).get("aid"), true)
       //            LOGGER.info("mwmBehaviour().setParams().send()");
@@ -1777,13 +1737,13 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
       //
       //            String sTargets = ""; boolean separador = false;
       //
-      //            String cmpinss = getComponentInstances(cmpID); //aï¿½adir las instanacias del componente que cambia de estado
+      //            String cmpinss = getComponentInstances(cmpID); //añadir las instanacias del componente que cambia de estado
       //            cmpins: for (String cmpins: cmpinss.split(",")) { 
       //              if (cmpins.equals(prm)) continue cmpins;
       //              aMsg.addReceiver(new AID(cmpins, AID.ISLOCALNAME));
       //              if (separador) sTargets+=","; else separador = true;
       //              sTargets+=cmpins;
-      //              //LOGGER.info("aï¿½ado destino al mensaje " + elements.get(cmpins).get("aid"));    
+      //              //LOGGER.info("añado destino al mensaje " + elements.get(cmpins).get("aid"));    
       //            }
       //            //new AID(elements.get(cmpins).get("aid"), true)
       //            LOGGER.info("mwmBehaviour().setParams().send()");
@@ -1851,13 +1811,13 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
       forPrm: for (String prm: prms.split(",")) {
         // el elemento existe y contiene el atributo que se pide o estamos pidiendo el ID 
 
-        if (!elements.containsKey(prm)) continue forPrm; // si no existe el parï¿½metro
+        if (!elements.containsKey(prm)) continue forPrm; // si no existe el parámetro
         
         if (filters!=null && filters.size()>0) {
-          if (filters.containsKey("attrib") && !elements.get(prm).containsKey(filters.get("attrib"))) continue forPrm; //si pedimos un attributo especï¿½fico y el elemento NO lo contiene
+          if (filters.containsKey("attrib") && !elements.get(prm).containsKey(filters.get("attrib"))) continue forPrm; //si pedimos un attributo específico y el elemento NO lo contiene
           forFilter: for (String filter : filters.keySet()) {
             if (filter.equals("attrib")) continue forFilter;//si es attrib nos lo saltamos el atributo
-            if (!elements.get(prm).containsKey(filter)) continue forPrm; //si el candidato no contiene el parï¿½metro del filtro descartamos el candidato
+            if (!elements.get(prm).containsKey(filter)) continue forPrm; //si el candidato no contiene el parámetro del filtro descartamos el candidato
             if (!elements.get(prm).get(filter).matches(filters.get(filter))) continue forPrm; // si el valor del filtro no coincide descartamos el candidato  
           } // end forKey
         }
@@ -1901,8 +1861,8 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
   }
 
   /** 
-   * Esta funciï¿½n devuelve el componente o componentes asociados a una instancia/implementaciï¿½n o aplicaciï¿½n
-   * @param id id del elemento a procesar: puede ser aplicaciï¿½n, implementaciï¿½n o instancia
+   * Esta función devuelve el componente o componentes asociados a una instancia/implementación o aplicación
+   * @param id id del elemento a procesar: puede ser aplicación, implementación o instancia
    * @return
    */
   public String getCmp (final String id) {
@@ -1941,7 +1901,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
         result.append(elements.get(id).get(attribs.get("attrib")));
       } else result.append(id);
       
-      if (attribs!=null && attribs.containsKey("limit")) {// si hay lï¿½mite lo descontamos
+      if (attribs!=null && attribs.containsKey("limit")) {// si hay límite lo descontamos
         if (Integer.parseInt(attribs.get("limit"))<=0) return null;
         attribs.put("limit", String.valueOf(Integer.parseInt(attribs.get("limit"))-1));
       }
@@ -1949,7 +1909,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
       
       return result.toString();
     } else if (id.startsWith("cmpimp") || id.startsWith("node") || id.startsWith("compon") || id.startsWith("applic")) {
-      String relationTag =  id.startsWith("node")? "node" : "parent"; //si es un node se indica la ubicaciï¿½n con "node" en caso contrario con "parent"
+      String relationTag =  id.startsWith("node")? "node" : "parent"; //si es un node se indica la ubicación con "node" en caso contrario con "parent"
       String child = (id.startsWith("applic"))? "compon" : (id.startsWith("compon"))? "cmpimp" : "cmpins";
       forElement: for (String element: elements.keySet()) {
         if (!elements.get(element).containsKey(relationTag)) continue forElement; //el cmpins no contiene parent
@@ -2098,7 +2058,8 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
     dfd.setName(getAID());
     dfd.addOntologies("ontology");
     dfd.setState("initialSate");
-    try {DFService.deregister(this);} catch (Exception e) {} //si estï¿½ lo deregistro
+    try {
+        DFService.deregister(this);} catch (Exception e) {} //si está lo deregistro
     try {
       DFService.register(this, dfd);
     } catch (FIPAException e) {
@@ -2114,7 +2075,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
    * Porceso de nogociacion entre nodos para determinar quien recupera la ejecucion del componente
    * 
    * @param element: nombre del componentes
-   * @param conversationId: Id de conversaciï¿½n
+   * @param conversationId: Id de conversación
    * @return
    */
   
@@ -2125,7 +2086,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
     
     
     
-      if (attribs.containsKey("action") && attribs.containsKey("winner")) { //acciï¿½n resultado de una negociaciï¿½n
+      if (attribs.containsKey("action") && attribs.containsKey("winner")) { //acción resultado de una negociación
         String action = attribs.get("action").replaceAll("%winner%", attribs.get("winner"));
         LOGGER.debug("action="+action);
         this.processCmd(action, conversationId);
@@ -2158,12 +2119,12 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
             } //end marcar en failure
 
           }
-          String trackers =  processCmd("getins "+element+" state=tracking attrib=node", conversationId); //grupo que negociaciï¿½n
-          if (!trackers.isEmpty() & trackers.contains(",")) { //hay trackers y mï¿½s de uno> negociaciï¿½n
+          String trackers =  processCmd("getins "+element+" state=tracking attrib=node", conversationId); //grupo que negociación
+          if (!trackers.isEmpty() & trackers.contains(",")) { //hay trackers y más de uno> negociación
             String condition = processCmd("get "+element+" attrib=negotiation", conversationId);
             if (condition.isEmpty()) condition = "max freeMem";
             processCmd("localcmd "+trackers+" cmd=setstate paused", conversationId);
-            negotiate(trackers, condition, "", element);
+            negotiate(trackers, condition, "", "",element);
           } else if (!trackers.isEmpty() & !trackers.contains(",")) { //hay trackers y solo uno
             processCmd("localcmd "+trackers+" cmd=setstate running", conversationId);
             if (elements.get(element).containsKey("recovering")) elements.get(element).remove("recovering");
@@ -2171,7 +2132,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
             LOGGER.debug("**************** No hay reservas");
             processCmd("start "+element, conversationId);
           }        }
-      } else if (attribs.containsKey("winner")) { //reporte de resultado de negociaciï¿½n
+      } else if (attribs.containsKey("winner")) { //reporte de resultado de negociación
         String winnerNode = attribs.get("winner");
         //getins compon101 node=node106 state=paused
         LOGGER.debug("*****************************");
@@ -2197,10 +2158,10 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
     return "done";
   }
   
-  private String negotiate(String targets, String negotiationCriteria, String action, String conversationId){
+  private String negotiate(String targets, String negotiationCriteria, String action, String externalData, String conversationId){
     LOGGER.entry(targets, negotiationCriteria, action, conversationId);
 
-    //Request de nueva negociaciï¿½n
+    //Request de nueva negociación
     ACLMessage msg = new ACLMessage(ACLMessage.CFP);
 
     for (String target: targets.split(",")) 
@@ -2210,9 +2171,9 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
     //msg.setOntology("control");
     msg.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE );
     //msg.setPerformative(ACLMessage.PROPOSE);
+    System.out.println("****************");
     
-    
-    msg.setContent("negotiate "+targets+" criterion="+negotiationCriteria+" action="+action);
+    msg.setContent("negotiate "+targets+" criterion="+negotiationCriteria+" action="+action+" externaldata="+externalData);
     LOGGER.debug(msg);
     send(msg);
     
@@ -2266,7 +2227,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
    * @author Rafael Priego
    * 
    * @param id id del nodo que se ha recuperado
-   * @param conversationId Id de conversaciï¿½n
+   * @param conversationId Id de conversación
    * @return el mensaje de parada
    */
   private String recoverNode(final String id, String conversationId){
@@ -2293,7 +2254,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
           if(nodos.contains(id) || nodos.equals(null)){
             //Lanzar la instancia en el nodo en traking
 
-            // Buscar implementaciï¿½n TODO: por el momento la ï¿½nica, luego deberï¿½ estar restringida por los nodos disponibles
+            // Buscar implementación TODO: por el momento la única, luego deberá estar restringida por los nodos disponibles
             final String cmpimp = processCmd("get cmpimp* parent="+compon, conversationId).split(",")[0];
             LOGGER.debug("cmpimp = " + cmpimp);
             //Obtener el periodo
@@ -2338,7 +2299,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
   }
   
   /** 
-   * Esta funciï¿½n devuelve las aplicaciones asociados a un sistema o escenario, que se encuentre en el estado espesificado
+   * Esta función devuelve las aplicaciones asociados a un sistema o escenario, que se encuentre en el estado espesificado
    * @author Rafael Priego
    * @param id id del elemento a procesar: puede ser el system o scenar
    * @param state el estado que debe estar la aplicacion qeu se esta buscando: puede ser activa, en el caso de estar vacio "" se retornan todas
@@ -2406,7 +2367,7 @@ private Document listDom(String _prm, boolean mostrarID) throws Exception{
    *  - ID system: balancear la carga de sus aplicaciones activas
    *  - ID scenar: balancear la carga de sus aplicaciones activas
    *  - ID applic: balancear la carga de sus componentes
-   * @param conversationId Id de conversaciï¿½n
+   * @param conversationId Id de conversación
    * @return
    */
   private String loadBalancing(final String id, String conversationId){

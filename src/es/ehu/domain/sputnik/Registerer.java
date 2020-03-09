@@ -1,17 +1,15 @@
 package es.ehu.domain.sputnik;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 
 import es.ehu.platform.utilities.MasReconAgent;
 import jade.core.Agent;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.domain.DFService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-public class Registerer extends Agent{
+import java.util.concurrent.ConcurrentHashMap;
+
+public class Registerer extends Agent {
 
   private static final long serialVersionUID = 1L;
   
@@ -32,14 +30,14 @@ public class Registerer extends Agent{
     LOGGER.exit();
   }
   
-  class Mra extends SimpleBehaviour 
+  class Mra extends SimpleBehaviour
     {   
     
     private MasReconAgent mra = new MasReconAgent(myAgent);
     private static final long serialVersionUID = 6711046229173067015L;
     
     
-        public Mra(Agent a) { 
+        public Mra(Agent a) {
             super(a);
         }
         
@@ -116,10 +114,19 @@ public class Registerer extends Agent{
             attributes.put("room", "P3B66");
             mra.register("service","system", attributes);
             
+            attributes.clear();            
+            attributes.put("refServID", "id56");            
+            attributes.put("sensor", "Pulse-cardio");
+            attributes.put("room", "P3B67");
+            mra.register("service","system", attributes);
+            
 
             attributes.clear();
             attributes.put("name", "Pepe");
+            restrictionList.clear();
+            //restrictionList.put("refServID", "id55");  
             restrictionLists.clear();
+            //restrictionLists.put("procNode", restrictionList);
             String as1 = mra.seRegister ("applicationSet", "system", attributes, restrictionLists);
             
             
@@ -137,7 +144,7 @@ public class Registerer extends Agent{
             attributes.put("period", "3.5");
          // ************* COMPONENT - restricción 1
             restrictionList.clear();
-            restrictionList.put("refServID", "id55");  
+            restrictionList.put("refServID", "id56");  
             restrictionLists.clear();
             restrictionLists.put("procNode", restrictionList);
             String c1 = mra.seRegister ("component", a1 , attributes, restrictionLists);
@@ -189,7 +196,7 @@ public class Registerer extends Agent{
             attributes.put("period", "3.5");
          // ************* COMPONENT - restricción 1
             restrictionList.clear();
-            restrictionList.put("refServID", "id55");  
+            restrictionList.put("refServID", "id56");  
             restrictionLists.clear();
             restrictionLists.put("procNode", restrictionList);
             String c21 = mra.seRegister ("component", a2 , attributes, restrictionLists);

@@ -1,22 +1,18 @@
 package es.ehu.platform.utilities;
 
+import es.ehu.XSDException;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.DFService;
-import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
-
-
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import es.ehu.XSDException;
-
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class MasReconAgent {
@@ -40,7 +36,7 @@ public class MasReconAgent {
   public void searchMwm() throws FIPAException, InterruptedException{
     LOGGER.entry();
   //arranque, esperar a tmwm activo
-    DFAgentDescription dfd = new DFAgentDescription();  
+    DFAgentDescription dfd = new DFAgentDescription();
     ServiceDescription sd = new ServiceDescription();
    
     sd.setType("sa");
@@ -96,7 +92,7 @@ public class MasReconAgent {
     //compruebo restricciones
     //ConcurrentHashMap<String, ConcurrentHashMap<String, String>> restrictionLists
     
-    System.out.println(sendCommand(mwm,"help").getContent());
+    //System.out.println(sendCommand(mwm,"help").getContent());
     
     String restrictionMatch = null;
     if (restrictionLists!=null)
@@ -284,8 +280,16 @@ public class MasReconAgent {
     return xml; //xml a partir de la estructura o vacío si no existe el seID
   }
   
-  public String[] getAttribInfo(String attribName, ConcurrentHashMap filtro){
-    return null; //devuelve lista de todos los valores de atributos de los elementos que cumplen el filtro
+  public String[] getAttribInfo(String attribName, ConcurrentHashMap<String, String> filtro){
+    
+    StringBuilder command = new StringBuilder("get "+attribName);
+    
+    if (filtro!=null)
+      filtro.entrySet().stream().forEach(entry -> command.append(" "+entry.getKey()+"="+entry.getValue()));
+    
+    return sendCommand(mwm,command.toString()).getContent().split(",");
+    
+
   }
   
   /**
