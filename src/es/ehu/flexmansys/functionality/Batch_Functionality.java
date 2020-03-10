@@ -16,16 +16,16 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import org.w3c.dom.*;
 
-import es.ehu.Functionality;
-import es.ehu.MsgNegotiation;
-import es.ehu.behaviour.ControlBehaviour;
+import es.ehu.platform.template.interfaces.BasicFunctionality;
+import es.ehu.platform.utilities.MsgNegotiation;
+import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.flexmansys.agents.Batch_Agent;
 import es.ehu.flexmansys.utilities.*;
 
 import java.util.concurrent.ConcurrentHashMap;
 
 import static es.ehu.flexmansys.utilities.FmsNegotiation.*;
-import static es.ehu.utilities.MasReconOntologies.*;
+import static es.ehu.platform.utilities.MasReconOntologies.*;
 
 /**
  * Batch Agent Functionality

@@ -12,9 +12,9 @@ import es.ehu.flexmansys.functionality.Monitor_Functionality;
 import jade.core.behaviours.Behaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import es.ehu.behaviour.ControlBehaviour;
+import es.ehu.platform.behaviour.ControlBehaviour;
 
-import static es.ehu.utilities.MasReconOntologies.*;
+import static es.ehu.platform.utilities.MasReconOntologies.*;
 
 public class Monitor_Agent extends Monitor_Template {
 

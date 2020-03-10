@@ -1,14 +1,14 @@
 package es.ehu.flexmansys.functionality;
 
-import es.ehu.Functionality;
-import es.ehu.behaviour.ControlBehaviour;
+import es.ehu.platform.template.interfaces.BasicFunctionality;
+import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.flexmansys.agents.Order_Agent;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 
-import static es.ehu.utilities.MasReconOntologies.*;
+import static es.ehu.platform.utilities.MasReconOntologies.*;
 
 import java.io.Serializable;
 import java.util.Objects;

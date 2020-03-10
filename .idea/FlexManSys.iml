@@ -12,5 +12,6 @@
     <orderEntry type="library" name="commons" level="project" />
     <orderEntry type="library" name="jade" level="project" />
     <orderEntry type="library" name="log4j" level="project" />
+    <orderEntry type="library" name="rosjade" level="project" />
   </component>
 </module>

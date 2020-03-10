@@ -1,6 +1,6 @@
 package es.ehu.flexmansys.functionality;
 
-import es.ehu.Functionality;
+import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.flexmansys.agents.Monitor_Agent;
 import es.ehu.flexmansys.utilities.Position;
 import jade.core.AID;
@@ -17,7 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import static es.ehu.flexmansys.utilities.FmsNegotiation.*;
-import static es.ehu.utilities.MasReconOntologies.*;
+import static es.ehu.platform.utilities.MasReconOntologies.*;
 
 /**
  * Monitor Agent Functionality

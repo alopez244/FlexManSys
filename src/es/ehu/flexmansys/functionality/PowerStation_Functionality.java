@@ -1,6 +1,6 @@
 package es.ehu.flexmansys.functionality;
 
-import es.ehu.NegFunctionality;
+import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.flexmansys.agents.PowerStation_Agent;
 import es.ehu.flexmansys.utilities.Position;
 import es.ehu.flexmansys.utilities.Timeout;
@@ -10,7 +10,7 @@ import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
-import static es.ehu.utilities.MasReconOntologies.*;
+import static es.ehu.platform.utilities.MasReconOntologies.*;
 
 import java.io.Serializable;
 import java.util.Objects;

@@ -17,9 +17,9 @@ import javax.xml.parsers.DocumentBuilder;
 
 import es.ehu.flexmansys.functionality.Machine_Functionality;
 import es.ehu.flexmansys.templates.Resource_Agent;
-import es.ehu.behaviour.ControlBehaviour;
+import es.ehu.platform.behaviour.ControlBehaviour;
 import static es.ehu.flexmansys.utilities.FmsNegotiation.*;
-import static es.ehu.utilities.MasReconOntologies.*;
+import static es.ehu.platform.utilities.MasReconOntologies.*;
 
 public class Machine_Agent extends Resource_Agent {
 

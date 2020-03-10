@@ -8,14 +8,14 @@ import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.FSMBehaviourMW;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import es.ehu.MWAgent;
-import es.ehu.behaviour.BootBehaviour;
-import es.ehu.behaviour.ControlBehaviour;
-import es.ehu.behaviour.EndBehaviour;
-import es.ehu.behaviour.RunningBehaviour;
-import es.ehu.behaviour.TrackingBehaviour;
+import es.ehu.platform.MWAgent;
+import es.ehu.platform.behaviour.BootBehaviour;
+import es.ehu.platform.behaviour.ControlBehaviour;
+import es.ehu.platform.behaviour.EndBehaviour;
+import es.ehu.platform.behaviour.RunningBehaviour;
+import es.ehu.platform.behaviour.TrackingBehaviour;
 import es.ehu.platform.utilities.StateParallel;
-import static es.ehu.utilities.MasReconOntologies.*;
+import static es.ehu.platform.utilities.MasReconOntologies.*;
 
 /**
  * Production Agent template used by orders and batches in the FLEXMANSYS

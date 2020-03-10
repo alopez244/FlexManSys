@@ -1,8 +1,8 @@
 package es.ehu.flexmansys.functionality;
 
-import es.ehu.MsgNegotiation;
-import es.ehu.NegFunctionality;
-import es.ehu.behaviour.ControlBehaviour;
+import es.ehu.platform.utilities.MsgNegotiation;
+import es.ehu.platform.template.interfaces.NegFunctionality;
+import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.flexmansys.agents.Machine_Agent;
 import es.ehu.flexmansys.utilities.Position;
 import es.ehu.flexmansys.utilities.MsgOperation;
@@ -26,7 +26,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.commons.lang3.tuple.Pair;
 
 import static es.ehu.flexmansys.utilities.FmsNegotiation.*;
-import static es.ehu.utilities.MasReconOntologies.*;
+import static es.ehu.platform.utilities.MasReconOntologies.*;
 
 /**
  * Machine Agent Functionality

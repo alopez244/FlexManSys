@@ -10,9 +10,9 @@ import org.w3c.dom.Document;
 
 import es.ehu.flexmansys.functionality.PowerStation_Functionality;
 import es.ehu.flexmansys.templates.Resource_Agent;
-import es.ehu.behaviour.ControlBehaviour;
+import es.ehu.platform.behaviour.ControlBehaviour;
 import static es.ehu.flexmansys.utilities.FmsNegotiation.ONT_DEBUG;
-import static es.ehu.utilities.MasReconOntologies.*;
+import static es.ehu.platform.utilities.MasReconOntologies.*;
 
 import java.io.File;
 

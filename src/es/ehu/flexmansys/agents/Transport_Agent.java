@@ -11,9 +11,9 @@ import org.ros.jade.RosAgent;
 import org.w3c.dom.Document;
 
 import es.ehu.flexmansys.functionality.Transport_Functionality;
-import es.ehu.behaviour.ControlBehaviour;
+import es.ehu.platform.behaviour.ControlBehaviour;
 import static es.ehu.flexmansys.utilities.FmsNegotiation.ONT_KILL;
-import static es.ehu.utilities.MasReconOntologies.ONT_NEGOTIATE;
+import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
 
 import java.io.File;
 import java.util.HashSet;
