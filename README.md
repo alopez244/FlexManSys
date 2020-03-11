@@ -8,3 +8,4 @@ It will contain detail of every step.
 09/03/2020 Cleaning the unnecessary files for FlexManSys. The packet ehu.mas has been erased. The schemas related to healthcare have also been arased. 
 09/03/2020 Updating SystemModelAgent.java, MasReconAgent.java, Registerer.java, among others, from Unai's SVN repository.
 10/03/2020 Modification of the import path for the classes in flexmansys folder.
+11/03/2020 The file MasReconAgent has been indented. The comments with old code sections have been deleted.
