@@ -10,3 +10,4 @@ It will contain detail of every step.
 10/03/2020 Modification of the import path for the classes in flexmansys folder.
 11/03/2020 The file MasReconAgent has been indented. The comments with old code sections have been deleted.
 12/03/2020 The files SystemModelAgent and Registerer have been indented. The comments with old code sections have been deleted.
+16/03/2020 Method listXML has been recovered from MAS-RECON svn repository to this version.

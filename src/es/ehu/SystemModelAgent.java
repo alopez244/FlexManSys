@@ -675,6 +675,24 @@ public class SystemModelAgent extends Agent {
         return v;
     }
 
+    private String listXml(String... prm) throws Exception{
+        LOGGER.entry(prm);
+        String _prm = prm[0].replace("*", ".*");
+
+        //Transformar dom a String
+        StringWriter sw = new StringWriter();
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer transformer = tf.newTransformer();
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+        transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+        transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+
+        transformer.transform(new DOMSource(listDom(_prm)), new StreamResult(sw));
+        return sw.toString();
+    }
+
     private String list(String... prm) {
         LOGGER.entry(prm);
         String _prm = prm[0].replace("*", ".*");
@@ -1323,7 +1341,7 @@ public class SystemModelAgent extends Agent {
      * Sends a command to a target agent. If sync=true the methods waits for and returns the response.
      * @param cmd
      * @param target
-     * @param sync
+     * @param conversationId
      * @return if sync returns ACLMessage, if asyn returns null
      * @throws FIPAException
      */
