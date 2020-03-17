@@ -3,6 +3,7 @@ package es.ehu.domain.sputnik;
 import java.io.Serializable;
 import java.util.Date;
 
+import es.ehu.platform.MWAgent;
 import jade.wrapper.*;
 import jade.core.*;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
@@ -18,7 +19,7 @@ public class FunctionalityProcesador implements BasicFunctionality {
 	public FunctionalityProcesador () {
 	}
 
-	public String init() {
+	public String init(MWAgent myAgent) {
 		return "done";
 	}
 

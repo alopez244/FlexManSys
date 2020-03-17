@@ -15,11 +15,11 @@ public class FunctionalityRestador implements BasicFunctionality {
 	Object state = null;
 	Dato msg = null;
 	Agent myAgent = null;
-	
+
 	public FunctionalityRestador () {
 	}
 	
-	public String init () {
+	public String init (MWAgent myAgent) {
 		return "done";
 	}
 	
@@ -65,11 +65,5 @@ public class FunctionalityRestador implements BasicFunctionality {
 		
 		((AgentController)myAgent.getContainerController().createNewAgent(agentName,className, arguments)).start();
 	}
-
-  @Override
-  public String init(MWAgent myAgent) {
-    // TODO Auto-generated method stub
-    return null;
-  }
 
 }

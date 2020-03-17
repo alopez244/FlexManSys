@@ -3,6 +3,7 @@ package es.ehu.domain.sputnik;
 import java.io.Serializable;
 import java.util.Date;
 
+import es.ehu.platform.MWAgent;
 import jade.wrapper.*;
 import jade.core.*;
 import es.ehu.domain.sputnik.ProcessingNode.NodeAgentBehaviour;
@@ -38,7 +39,7 @@ public class FunctionalityProcessingNode implements BasicFunctionality {
 	public FunctionalityProcessingNode () {
 	}
 
-	public String init() {
+	public String init(MWAgent myAgent) {
 	  System.out.println("ejecuto init en functionalityProcessingNode");
 //	  LOGGER.entry();
 //    

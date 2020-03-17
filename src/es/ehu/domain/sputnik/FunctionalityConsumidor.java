@@ -2,6 +2,7 @@ package es.ehu.domain.sputnik;
 
 import java.io.Serializable;
 
+import es.ehu.platform.MWAgent;
 import jade.core.Agent;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 
@@ -9,18 +10,18 @@ import es.ehu.platform.template.interfaces.BasicFunctionality;
 public class FunctionalityConsumidor implements BasicFunctionality {
 	Object state = null;
 	Dato msg = null;
-	//Agent myAgent = null;
-	
-	public String init(){
+//	Agent myAgent = null;
+
+	public String init(MWAgent myAgent){
 		return "done";
 	}
-	
+
 	public FunctionalityConsumidor () {
 	}
-	
-	//public FuncionalidadConsumidor (Agent myAgent) {
+
+	//public FunctionalityConsumidor (Agent myAgent) {
 	//	this.myAgent = myAgent;
-	//} 
+	//}
 	
 	public Object getState () {
 		return null;

@@ -1,5 +1,6 @@
 package es.ehu.domain.sputnik;
 
+import es.ehu.platform.MWAgent;
 import jade.core.Agent;
 import jade.util.Logger;
 
@@ -14,7 +15,7 @@ public class FunctionalityGenerador implements BasicFunctionality {
 	Dato msg = null;
 	//Agent myAgent = null;
 	
-	public String init(){
+	public String init(MWAgent myAgent){
 		return "Ok";
 		
 	}
@@ -24,7 +25,7 @@ public class FunctionalityGenerador implements BasicFunctionality {
 	
 	//public FuncionalidadGenerador (Agent myAgent) {
 	//	this.myAgent = myAgent;
-	//} 
+	//}
 	
 	public Object getState () {
 		return new Integer(state);
