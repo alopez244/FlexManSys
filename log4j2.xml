@@ -43,7 +43,7 @@
 
 		<logger name="es.ehu.MiddlewareManager">			<appenderRef ref="console" level="info"/></logger>
 		<logger name="es.ehu.CommandBehaviour">				<appenderRef ref="console" level="info"/></logger>
-		<logger name="es.ehu.Registerer">					<appenderRef ref="console" level="info"/></logger>
+		<logger name="es.ehu.domain.sputnik.Registerer">	<appenderRef ref="console" level="info"/></logger>
 		<logger name="es.ehu.NodeAgent">					<appenderRef ref="console" level="info"/></logger>
 		<logger name="es.ehu.Functionality">				<appenderRef ref="console" level="info"/></logger>
 		<logger name="es.ehu.SystemModelAgent">				<appenderRef ref="console" level="info"/></logger>
