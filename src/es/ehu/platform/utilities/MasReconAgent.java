@@ -85,9 +85,9 @@ public class MasReconAgent {
                 String query = "get * category=service";
 
                 for (Entry<String, String> entry : restriction.getValue().entrySet())
-                    query = query + " " + entry.getKey() + "=" + entry.getValue();
+                    query = query +" "+ entry.getKey() + "=" + entry.getValue();
 
-                query = "get (get (" + query + ") attrib=parent) category=" + restriction.getKey();
+                query = "get (get ("+query+") attrib=parent) category=" + restriction.getKey();
 
                 System.out.println("***************** Lanzo consulta de comprobación " + query);
                 String validateRestriction = sendCommand(mwm, query).getContent();
