@@ -12,3 +12,4 @@ It will contain detail of every step.
 12/03/2020 The files SystemModelAgent and Registerer have been indented. The comments with old code sections have been deleted.
 16/03/2020 Method listXML has been recovered from MAS-RECON svn repository to this version.
 18/03/2020 Changes in the xsd schemas trying to solve the issue with xsd validation.
+18/03/2020 Registerer fault solved.
