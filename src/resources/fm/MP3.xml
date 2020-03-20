@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manufacturingPlan xmlns="RepositoryContent" name="MP3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="RepositoryContent file:///C:/Users/Alejandro%20L%C3%B3pez/OneDrive%20-%20UPV%20EHU/PhD%20Alejandro/PhD%20Tracking/Tasks/Task%2015%20-%20Start%20FlexManSys/Eli&apos;s%20schemas/AppGenerator.xsd">
+	<order reference="O1_MP3" customer="Ekaitz">
+		<batch reference="B1_O1_MP3" numberOfItems="3" refProductID="P_02"/>
+	</order>
+	<order reference="O2_MP3" customer="Jon">
+		<batch reference="B1_O2_MP3" numberOfItems="3" refProductID="P_02"/>
+	</order>
+</manufacturingPlan>

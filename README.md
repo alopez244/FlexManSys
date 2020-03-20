@@ -13,3 +13,4 @@ It will contain detail of every step.
 16/03/2020 Method listXML has been recovered from MAS-RECON svn repository to this version.
 18/03/2020 Changes in the xsd schemas trying to solve the issue with xsd validation.
 18/03/2020 Registerer fault solved.
+20/03/2020 xsd files updated for manufacturing domain. Planner.java class created.
