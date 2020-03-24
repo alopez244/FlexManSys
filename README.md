@@ -15,3 +15,4 @@ It will contain detail of every step.
 18/03/2020 Registerer fault solved.
 20/03/2020 xsd files updated for manufacturing domain. Planner.java class created.
 23/03/2020 Planner Agent V1 is ready. Manufacturing domain applications registration accomplished.
+24/03/2020 Planner Agent V1 has been updated. Keyboard command scanner updated.

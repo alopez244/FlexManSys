@@ -54,29 +54,25 @@ public class Planner extends Agent {
                 //Interfaz de usuario. El operario la usará para registrar aplicaciones
 
                 String cmd = "";
-                String help = "Local commands:\n"
+                String api = "Planner Agent local commands:\n"
                         + "register_MP1 > Loads Manufacturing Plan 1 application\n"
                         + "register_MP2 > Loads Manufacturing Plan 2 application\n"
                         + "register_MP3 > Loads Manufacturing Plan 3 application\n"
                         + "help > SystemModelAgent commands summary\n"
-                        + "exit";
-                LOGGER.info(help);
+                        + "exit > Shut down Planner Agent\n";
+                System.out.print(api);
+                LOGGER.info(api);
 
                 //Bucle de decisión asociado a la interfaz de usuario.
                 //Este bucle estará en ejecución hasta que el operario utilice el comando exit.
 
                 while (!cmd.equals("exit")) {
 
-                    //Se comprueba si el operario solicita el registro de un plan predefinido
-
-                    if (cmd.startsWith("register")) registerPredefined(cmd);
-
                     //Se solicita un comando al operario y se recoge el resultado
 
                     Scanner in = new Scanner(System.in);
-                    System.out.print("cmd: ");
+                    System.out.print("\ncmd: ");
                     cmd = in.nextLine();
-                    cmd = cmd.trim();
 
                     //Se vacia la cola de mensajes recibidos por el Planner Agent
 
@@ -96,11 +92,19 @@ public class Planner extends Agent {
                         //Se envía un mensaje ACL por cada String del array "cmds".
 
                         for (int i=0; i<cmds.length;i++){
-                            ACLMessage reply = mra.sendCommand(cmds[i]);
-                            if (reply!=null) {
-                                System.out.print(reply.getInReplyTo()+": "+reply.getContent());
-                                if (cmds.length>1) System.out.print(" < "+cmds[i]);
-                                System.out.println();
+                            cmds[i] = cmds[i].trim();
+                            if (cmds[i].startsWith("register")) registerPredefined(cmds[i]);
+                            else if (cmds[i].equals("exit")) {
+                                cmd = "exit";
+                                break;
+                            }
+                            else {
+                                ACLMessage reply = mra.sendCommand(cmds[i]);
+                                if (reply!=null) {
+                                    System.out.print(reply.getInReplyTo()+": "+reply.getContent());
+                                    if (cmds.length>1) System.out.print(" < "+cmds[i]);
+                                    System.out.println();
+                                }
                             }
                         }
                     }
@@ -240,7 +244,7 @@ public class Planner extends Agent {
                 attributes.put("reference","B1_O2_MP3");
                 attributes.put("numberOfItems", "3");
                 attributes.put("refProductID", "P_02");
-                String b1_2_3 = mra.seRegister("batch", o1_3, attributes, restrictionLists);
+                String b1_2_3 = mra.seRegister("batch", o2_3, attributes, restrictionLists);
 
                 //Validación de la aplicación MANUFACTURING PLAN
 
