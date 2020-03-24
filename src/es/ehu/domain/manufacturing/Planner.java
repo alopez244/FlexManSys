@@ -59,7 +59,7 @@ public class Planner extends Agent {
                         + "register_MP2 > Loads Manufacturing Plan 2 application\n"
                         + "register_MP3 > Loads Manufacturing Plan 3 application\n"
                         + "help > SystemModelAgent commands summary\n"
-                        + "exit > Shut down Planner Agent\n";
+                        + "exit > Shut down Planner Agent\n\n";
                 System.out.print(api);
                 LOGGER.info(api);
 
@@ -71,8 +71,9 @@ public class Planner extends Agent {
                     //Se solicita un comando al operario y se recoge el resultado
 
                     Scanner in = new Scanner(System.in);
-                    System.out.print("\ncmd: ");
+                    System.out.print("cmd: ");
                     cmd = in.nextLine();
+                    System.out.println();
 
                     //Se vacia la cola de mensajes recibidos por el Planner Agent
 
@@ -93,7 +94,11 @@ public class Planner extends Agent {
 
                         for (int i=0; i<cmds.length;i++){
                             cmds[i] = cmds[i].trim();
-                            if (cmds[i].startsWith("register")) registerPredefined(cmds[i]);
+                            if (cmds[i].startsWith("register")) {
+                                registerPredefined(cmds[i]);
+                                if (cmds.length>1) System.out.print(" < "+cmds[i]);
+                                System.out.print("\n\n");
+                            }
                             else if (cmds[i].equals("exit")) {
                                 cmd = "exit";
                                 break;
@@ -101,9 +106,13 @@ public class Planner extends Agent {
                             else {
                                 ACLMessage reply = mra.sendCommand(cmds[i]);
                                 if (reply!=null) {
-                                    System.out.print(reply.getInReplyTo()+": "+reply.getContent());
+
+                                    //La salida por pantalla  del mensaje está comentada porque...
+                                    // Esa info la muestra el log (es información redundante)
+
+                                    //System.out.print(reply.getInReplyTo()+": "+reply.getContent());
                                     if (cmds.length>1) System.out.print(" < "+cmds[i]);
-                                    System.out.println();
+                                    System.out.print("\n\n");
                                 }
                             }
                         }

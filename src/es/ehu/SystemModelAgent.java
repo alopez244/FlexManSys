@@ -211,7 +211,7 @@ public class SystemModelAgent extends Agent {
             else if (cmds[0].equals("start")) result.append(start(cmds[1], attribs, conversationId)); // threaded#condition
             else if (cmds[0].equals("stop")) result.append(processCmd("localcmd " + cmds[1] + " cmd=setstate stop", conversationId));
             else if (cmds[0].equals("pause")) result.append(processCmd("localcmd " + cmds[1] + " cmd=setstate paused", conversationId));
-            else if (cmds[0].equals("resume")) result.append(processCmd("localcmd " + cmds[1] + " ccmd=setstate running", conversationId));
+            else if (cmds[0].equals("resume")) result.append(processCmd("localcmd " + cmds[1] + " cmd=setstate running", conversationId));
             else if (cmds[0].equals("track")) result.append(processCmd("localcmd " + cmds[1] + " cmd=setstate tracking", conversationId));
             else if (cmds[0].equals("move")) result.append(processCmd("localcmd " + cmds[1] + " cmd=move "+cmds[2], conversationId));
 
@@ -249,45 +249,55 @@ public class SystemModelAgent extends Agent {
 
     private String help (String [] cmds){
 
+        //Detailed help menu of the different commands
+
         // LOCALCMD
-        if ((cmds.length>1) && (cmds[1].equals("localcmd"))) return "localcmd command:\n"
-                + "executes a command in a remote agent:\n"
-                + "\n"
-                + "examples:\n"
-                + "localcmd cmpins101 cmd=move node103    // moves cmpin101 to node103\n"
-                + "localcmd cmpins102 cmd=setstate paused // starts cmpin101 agent transaction to paused state\n"
-                + "localcmd node102 cmd=get freeMem       // gets free memory on node102\n";
+        if ((cmds.length>1) && (cmds[1].equals("localcmd"))) {
+            return "localcmd command:\n"
+                    + "executes a command in a remote agent:\n"
+                    + "\n"
+                    + "examples:\n"
+                    + "localcmd cmpins101 cmd=move node103    // moves cmpins101 to node103\n"
+                    + "localcmd cmpins102 cmd=setstate paused // starts cmpins102 agent transaction to paused state\n"
+                    + "localcmd node102 cmd=get freeMem       // gets free memory on node102";
+        }
 
         // GET
-        if ((cmds.length>1) && (cmds[1].equals("get"))) return "get command:\n"
-                + "searches elements in database for a parameter:\n"
-                + "\n"
-                + "examples:\n"
-                + "get cmpins* node=node102               // gets component instances running on node102\n"
-                + "get action102 attrib=order             // get the order parameter of element action102\n";
+        if ((cmds.length>1) && (cmds[1].equals("get"))) {
+            return "get command:\n"
+                    + "searches elements in database for a parameter:\n"
+                    + "\n"
+                    + "examples:\n"
+                    + "get cmpins* node=node102               // gets component instances running on node102\n"
+                    + "get action102 attrib=order             // get the order parameter of element action102";
+        }
 
         // SET
-        if ((cmds.length>1) && (cmds[1].equals("set"))) return "set command:\n"
-                + "sets a parameter value for the selected element:\n"
-                + "\n"
-                + "examples:\n"
-                + "set action102 order=5                  // sets value 5 for order parameter in element action102\n"
-                + "\n"
-                + "NOTE that dinamyc parameteres changes only affect the database: state, node,...\n"
-                + "this values must be changed with localcmd: setstate, move,...\n";
+        if ((cmds.length>1) && (cmds[1].equals("set"))) {
+            return "set command:\n"
+                    + "sets a parameter value for the selected element:\n"
+                    + "\n"
+                    + "examples:\n"
+                    + "set action102 order=5                  // sets value 5 for order parameter in element action102\n"
+                    + "\n"
+                    + "NOTE that dinamyc parameteres changes only affect the database: state, node,...\n"
+                    + "this values must be changed with localcmd: setstate, move,...";
+        }
 
         // GETINS
-        if ((cmds.length>1) && (cmds[1].equals("set"))) return "getins (get instances) command:\n"
-                + "gets the instances for a implementation/component/application/node that meets a filtre:\n"
-                + "\n"
-                + "examples:\n"
-                + "getins applic101 state=running              // returns component instances of applic101 which state is running\n"
-                + "getins compon102 state=tracking|running     // return tracking or running instances of component compon102\n"
-                + "getins compon102 state=tracking attrib=node // return tracking instances of component compon102\n";
+        if ((cmds.length>1) && (cmds[1].equals("getins"))) {
+            return "getins (get instances) command:\n"
+                    + "gets the instances for a implementation/component/application/node that meets a filtre:\n"
+                    + "\n"
+                    + "examples:\n"
+                    + "getins applic101 state=running              // returns component instances of applic101 which state is running\n"
+                    + "getins compon102 state=tracking|running     // return tracking or running instances of component compon102\n"
+                    + "getins compon102 state=tracking attrib=node // return tracking instances of component compon102";
+        }
 
+        //General help regarding the commands of the SystemModelAgent
 
-        return "MWM Commands:\n"
-                + "help command for details:\n"
+        return "SystemModelAgent Commands general informacion:\n"
                 + "\n"
                 + "reg element attriblist                 // registers element\n"
                 + "del element                            // removes element, allows wildcards\n"
@@ -310,8 +320,9 @@ public class SystemModelAgent extends Agent {
                 +  "\n"
                 + "save filename                          // saves application in file\n"
                 + "load filename                          // loads applictaion from file\n"
-                + "restart                                // restarts mwm";
-
+                + "restart                                // restarts mwm\n"
+                + "\n"
+                + "insert help + command name for detailed information (example: help localcmd)";
     }
 
     private String initialize(String arg) {
@@ -384,25 +395,6 @@ public class SystemModelAgent extends Agent {
         elements = ht[2];
         return conf;
     }
-
-    public String[] splitCmds (final String content){
-        LOGGER.entry(content);
-        String response=content.trim();
-
-        boolean dentroDeComilla = false;
-        char[] cCmd = content.toCharArray();
-        for (int i=0; i<cCmd.length; i++) {
-            if (cCmd[i]=='\"') dentroDeComilla = !dentroDeComilla;
-            if (dentroDeComilla) {
-                if (cCmd[i]=='(') cCmd[i]='{';
-                else if (cCmd[i]==')') cCmd[i]='}';
-                else if (cCmd[i]=='=') cCmd[i]='#';
-            }
-        } //end forCCmd;
-        String cmd = cCmd.toString();
-
-        return LOGGER.exit(cmd.replaceAll("  ", " ").replace(" =", "=").replace("= ", "=").split(" "));
-    } // end process
 
     public Hashtable<String, String> processAttribs(String... cmdLine){
         LOGGER.entry((Object[])cmdLine);
@@ -943,11 +935,6 @@ public class SystemModelAgent extends Agent {
         }
 
         if (element.startsWith("cmpins")) return LOGGER.exit("threaded#"+startInstance(element, attribs, conversationId));
-        if (element.startsWith("compon")) return LOGGER.exit("threaded#"+startComponent(element, attribs, conversationId));
-        if (element.startsWith("applic")) return LOGGER.exit("threaded#"+startApplication(element, attribs, conversationId));
-        if (element.startsWith("action")) return LOGGER.exit("threaded#"+startAction(element, conversationId));
-        if (element.startsWith("event")) return LOGGER.exit("threaded#"+startEvent(element, conversationId));
-
 
         return LOGGER.exit(element + " no runnable element");
     }
@@ -1039,139 +1026,6 @@ public class SystemModelAgent extends Agent {
 
         return LOGGER.exit(cmpins + " started");
 
-    }
-
-    public String startComponent(final String compon, final Hashtable<String, String> attribs, final String conversationId) { //TODO: prm debería ser la aplicación -> al AM - > a las CI. Por el momento directo Componente.
-        LOGGER.entry(compon, attribs, conversationId);
-
-        if (!(elements.containsKey(compon))) return LOGGER.exit(compon + " not found");
-        LOGGER.debug("compon = " + compon);
-
-        String aux = (attribs!=null && attribs.containsKey("node")) ? attribs.get("node"):"";
-        LOGGER.debug("restricción de nodo forzado: "+aux);
-        LOGGER.debug("restricción de nodo registro: "+elements.get(compon).get("nodeRestriction"));
-
-        String result = "not found";
-        //buscar implementación TODO: por el momento la única, luego deberá estar restringida por los nodos disponibles
-        // contemplar el caso de que no haya ninguna y varias -> negociación entre nodos disponibles.
-        final String cmpimp = processCmd("get cmpimp* parent="+compon, conversationId).split(",")[0];
-        LOGGER.debug("cmpimp = " + cmpimp);
-
-        final String nodes =  (attribs!=null && attribs.containsKey("node")) ? attribs.get("node"): // si node forzado
-                (elements.get(compon).containsKey("nodeRestriction")) ? elements.get(compon).get("nodeRestriction"): get("node*", null, conversationId); // si no en modelo
-        LOGGER.debug("nodes = " + nodes);
-
-        final String initState = (attribs!=null && attribs.containsKey("initState")) ? attribs.get("initState"): // si initState forzado
-                (elements.get(compon).containsKey("initState")) ? elements.get(compon).get("initState") : "running"; // si node por defecto en la definición
-        LOGGER.debug("initState = " + initState);
-
-        final String period = (attribs!=null && attribs.containsKey("period")) ? attribs.get("period"): // si period forzado
-                (elements.get(compon).containsKey("period")) ? elements.get(compon).get("period") : "-1"; // si period por defecto en la definición
-        LOGGER.debug("period = " + period);
-
-        String negotiationCriteria = (attribs!=null && attribs.containsKey("negotiationCriteria")) ? attribs.get("negotiationCriteria"): // si negotiation forzado
-                (elements.get(compon).containsKey("negotiationCriteria")) ? elements.get(compon).get("negotiationCriteria") : "max freeMem";
-        LOGGER.debug("negotiationCriteria = " + negotiationCriteria);
-
-        //TODO Rafael: mejorar el lanzamienot para que no se lancen implementaciones que no tienen nodos a donde ir.
-
-        // Selecionar la redundacia, de los attributos pasados, los del componete o del numero de nodos en los que puede estar
-        final String sourceComponentIDs =  (attribs!=null && attribs.containsKey("sourceComponentIDs")) ? attribs.get("sourceComponentIDs"): "";
-        final String targetComponentIDs =  (attribs!=null && attribs.containsKey("targetComponentIDs")) ? attribs.get("targetComponentIDs"): "";
-
-        int redundancy =(attribs!=null && attribs.containsKey("redundancy")) ? Integer.parseInt(attribs.get("redundancy")):
-                (elements.get(compon).containsKey("redundancy")) ? Integer.parseInt(elements.get(compon).get("redundancy")) : nodes.split(",").length-1;
-        LOGGER.debug("redundancy = " + redundancy);
-
-        if (nodes.contains(",")) {
-            String localneg = "localneg "+nodes+" negotiationCriteria="+negotiationCriteria+" action=\"start cmpins node=%winner% compon="+compon+
-                    " initState="+initState+" period="+period+
-                    ((sourceComponentIDs.length()>0)?(" sourceComponentIDs="+sourceComponentIDs):"")+
-                    ((targetComponentIDs.length()>0)?(" targetComponentIDs="+targetComponentIDs):"")+
-                    "\"";
-
-            LOGGER.debug(localneg);
-            processCmd(localneg,null);
-        } else {
-            start("cmpins", new Hashtable<String, String>() {
-                        { put("node", nodes);put("compon", compon);put("initState", initState);
-                            put("period", period);
-                            if (sourceComponentIDs.length()>0) put("sourceComponentIDs", sourceComponentIDs);
-                            if (targetComponentIDs.length()>0) put("targetComponentIDs", targetComponentIDs);
-                        }} ,
-                    conversationId);
-        }
-
-        result = "set.*state="+initState;
-        return LOGGER.exit(result);
-    }
-
-    public String startApplication(String applic, final Hashtable<String, String> attribs, String conversationId) { //TODO: prm debería ser la aplicación -> al AM - > a las CI. Por el momento directo Componente.
-        LOGGER.entry(applic, attribs, conversationId);
-        //evento inicial, reset del tiempo
-        this.startTime=System.currentTimeMillis();
-
-        if (!(elements.containsKey(applic))) return LOGGER.exit(applic + " not found");
-
-        String result = "not found";
-        //buscar implementación TODO: por el momento la única, luego deberá estar restringida por los nodos disponibles
-        // contemplar el caso de que no haya ninguna y varias -> negociación entre nodos disponibles.
-        for (String compon: getCmp(applic).split(",")) start(compon, attribs, conversationId);
-
-        //TODO Rafael: cambiar el estado de la applicacion a activo para saber que se esta ejecutando.
-        // Esto se deberia de hacer despues de que todas los componetes esten activos
-        // Unai: la aplicación estará "activa" cuanto todos sus componentes "iniciales" estén en el FSM activos
-
-        result = "set.*state=running";
-
-        return LOGGER.exit(result);
-    }
-
-    public String startEvent(final String eventID, String conversationId) {
-        LOGGER.entry(eventID);
-        final StringBuilder response = new StringBuilder();
-        if (!elements.containsKey(eventID)) LOGGER.exit(response.append(eventID).append(" not found"));
-        HashMap<String, Hashtable<String, String>> elementosConOrden = new HashMap<String, Hashtable<String, String>>();
-
-        for (String element: elements.keySet()) {
-            if (elements.get(element).containsKey("parent") && elements.get(element).get("parent").equals(eventID)) { // es hijo de eventID
-                if (!elements.get(element).containsKey("order")) {
-                    LOGGER.debug("********************** ejecuto " + element + " sin orden; ");
-                    startAction(element, null);
-                } else { //el elemento tiene orden
-                    Hashtable<String, String> elementoClon = (Hashtable<String, String>)elements.get(element).clone();
-                    elementoClon.put("ID", element);
-                    elementosConOrden.put(element, elementoClon);
-                    LOGGER.debug("añado " + element + " a la lista de ordenados; ");
-                }
-            }
-        }
-        // si hay eventos en la lista de ordenados los ordeno y los ejecuto
-        if (elementosConOrden.size()>0) {
-            //los ordenos
-            List<Hashtable<String, String>> elementosConOrdenOrdenados = new ArrayList<Hashtable<String, String>>(elementosConOrden.values());
-            Collections.sort(elementosConOrdenOrdenados, new Comparator<Hashtable<String, String>>(){
-
-                public int compare(Hashtable<String, String> o1, Hashtable<String, String> o2) {
-                    return Integer.parseInt(o1.get("order"))-Integer.parseInt(o2.get("order"));
-                }
-            });
-            // los ejecuto en orden
-            for (Hashtable<String, String> elemento: elementosConOrdenOrdenados) {
-                LOGGER.debug("********************** tocat ejecutar " + elemento.get("ID"));
-                startAction(elemento.get("ID"), null);
-            }
-        }
-        return LOGGER.exit(response.toString());
-    }
-
-    public String startAction(final String actID, String conversationId){
-        LOGGER.entry(actID, conversationId);
-
-        if (!elements.containsKey(actID)) return LOGGER.exit(actID + " not found");
-        if (!elements.get(actID).containsKey("action")) return LOGGER.exit(actID+ " has no action");
-
-        return LOGGER.exit(processCmd(elements.get(actID).get("action"), conversationId));
     }
 
     public String startAvailabilityManager(//String appID, String conversationId) throws Exception
@@ -1565,9 +1419,9 @@ public class SystemModelAgent extends Agent {
     } // end registerAgent
 
     /**
-     * Porceso de nogociacion entre nodos para determinar quien recupera la ejecucion del componente
+     * Proceso de negociacion entre nodos para determinar quien recupera la ejecucion del componente
      *
-     * @param element: nombre del componentes
+     * @param element: nombre del componente
      * @param conversationId: Id de conversación
      * @return
      */
