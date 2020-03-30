@@ -17,3 +17,4 @@ It will contain detail of every step.
 23/03/2020 Planner Agent V1 is ready. Manufacturing domain applications registration accomplished.
 24/03/2020 Planner Agent V1 has been updated. Keyboard command scanner updated.
 30/03/2020 Setup of ProcNodeAgent, ResourceAgentTemplate and MWAgent classes.
+30/03/2020 Updated cmd files.
