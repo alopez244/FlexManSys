@@ -50,7 +50,6 @@ public class MasReconAgent {
 
         }
         LOGGER.exit();
-
     }
 
     public String register(String seType, String parentId,ConcurrentHashMap<String, String> attributes) {
