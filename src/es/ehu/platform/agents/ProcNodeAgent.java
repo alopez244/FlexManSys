@@ -28,7 +28,6 @@ public class ProcNodeAgent extends ResourceAgentTemplate  {
 
     protected void takeDown() {
         try {
-            //LOGGER.info("Agent: " + this.getAID().getName() + "has ended");
         } catch (Exception e) {
             e.printStackTrace();
         }

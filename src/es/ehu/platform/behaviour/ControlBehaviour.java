@@ -9,12 +9,9 @@ import static es.ehu.platform.utilities.MWMCommands.CMD_REPORT;
 import static es.ehu.platform.utilities.MWMCommands.CMD_SET;
 import static es.ehu.platform.utilities.MasReconOntologies.ONT_CONTROL;
 
-import java.util.Iterator;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.MWAgent;
 
 import jade.core.ContainerID;
@@ -56,7 +53,6 @@ public class ControlBehaviour extends SimpleBehaviour {
                         MessageTemplate.MatchPerformative(ACLMessage.REQUEST))
         );
 
-
         LOGGER.exit();
     }
 
@@ -65,7 +61,6 @@ public class ControlBehaviour extends SimpleBehaviour {
         LOGGER.entry(a);
         LOGGER.trace("***************** init ControlBehaviour");
         myAgent = a;
-
         fsm = (FSMBehaviour)fsmBeh;
         template =  MessageTemplate.or(
                 MessageTemplate.MatchPerformative(ACLMessage.FAILURE),
@@ -73,7 +68,6 @@ public class ControlBehaviour extends SimpleBehaviour {
                         MessageTemplate.MatchOntology(ONT_CONTROL),
                         MessageTemplate.MatchPerformative(ACLMessage.REQUEST))
         );
-
 
         LOGGER.exit();
     }
@@ -87,12 +81,6 @@ public class ControlBehaviour extends SimpleBehaviour {
         LOGGER.debug(myAgent.cmpID+"("+myAgent.getLocalName()+"): SupervisorControl.action()");
         ACLMessage msg = myAgent.receive(template);
 
-        /*
-         *  Comandos que recibe el agente
-         *  UPDATE_RUNNING CMP INS
-         *  CHANGE_STATE stop
-         */
-        //TODO: Utilizar los tipos en ontologia
         if (msg != null) {
             if (msg.getContent() == null) {
                 LOGGER.info("message content null!");
@@ -116,65 +104,6 @@ public class ControlBehaviour extends SimpleBehaviour {
                 }
                 boolean sendReply=false;
 
-
-// TODO refresh local cache
-//        if (cmd[0].equals("update_running")) {
-//          // Recibo orden de actualizaci�n de la instancia en running
-//          LOGGER.info("control:update_running()");
-//          myAgent.runningInstance.put(cmd[1], cmd[2]);
-//          if (myAgent.trackingInstances.contains(cmd[2])) myAgent.trackingInstances.remove(cmd[2]);
-//
-//          result="done";
-//
-//
-//        } else if (cmd[0].equals("update_tracking")) {
-//          // Recibo orden de actualizaci�n de la instancia en running
-//          LOGGER.info("control:update_tracking()");
-//          if (!myAgent.trackingInstances.contains(cmd[1])) myAgent.trackingInstances.add(cmd[1]);
-//          result="done";
-//
-//
-//        } else 
-//        if (cmd[0].equals("set")) {
-//          
-//        } else 
-//          if (cmd[0].equals("get")) {
-//          
-//          String prm = (cmd.length>2)?cmd[2]:((cmd.length>1)?cmd[1]:"");
-//          LOGGER.debug("control:get("+prm+")");
-//
-//          // TODO refresh local cache
-////          if (prm.equalsIgnoreCase("runningInstance"))
-////            for (String key: myAgent.runningInstance.keySet())
-////              result+=key+":"+ myAgent.runningInstance.get(key)+"\n";
-////          //        
-////          //        /**
-////          //         *  Instancias en tracking del componente (arraylist para actualiza el estado, actualizarla cuando al MWM llega un setState)
-////          //         */
-////          //        public ArrayList<String> trackingInstances = new ArrayList<String>();
-////
-////          else if (prm.equalsIgnoreCase("trackingInstances"))
-////            for (Iterator<String> iter = myAgent.trackingInstances.iterator(); iter.hasNext();) {
-////              String cmpins = iter.next();
-////              result+=cmpins+(iter.hasNext()?",":"");
-////            }
-////
-////          //        
-////          //        public Functionality functionalityInstance = null;
-////          else 
-//            
-//            if (prm.equalsIgnoreCase("functionalityInstance"))
-//            result=myAgent.functionalityInstance.getClass().getName();
-//          //        
-//          //        protected String cmpID = null;
-//          else if (prm.equalsIgnoreCase("cmpID"))
-//            result=myAgent.cmpID;
-//
-//          else result="not found";
-//
-//          sendReply=true;
-//
-//        } else 
                 if (cmd[0].equals("set")) {
                     sendReply=true;
 
@@ -204,13 +133,6 @@ public class ControlBehaviour extends SimpleBehaviour {
                     } else {
                         result = CMD_INCORRECTSTATE;
                     }
-//          if (fsm != null) {
-//            if (!fsm.hasCurrentTransition(exitValue)) {
-//              exitValue = 0;
-//              result = CMD_INCORRECTSTATE;
-//              LOGGER.info("Set state to" + cmd[1] + "not allowed");
-//            }
-//          }
 
                     if (!result.equals(CMD_INCORRECTSTATE)) {
                         exit = true;
@@ -219,7 +141,6 @@ public class ControlBehaviour extends SimpleBehaviour {
                 } else if (cmd[0].equals("move")) {
                     LOGGER.debug("doMove(new ContainerID("+cmd[1]+", null));"); //TODO comprobar que el nodo args[1] existe
                     myAgent.doMove(new ContainerID(cmd[1], null));
-                    //myAgent.nodeID = cmd[1]; no es correcto hacerlo aqu�. Es posible que el agente no viaje (por ejemplo si no existe el nodo destino). Se debe hacer en el afterMove
                 }
 
                 if (sendReply) { //devuelvo respuesta
@@ -230,17 +151,10 @@ public class ControlBehaviour extends SimpleBehaviour {
                     LOGGER.info("controlBehaviour().send("+aReply.getContent()+")");
                     myAgent.send(aReply);
                 }
-
-
-        /*ACLMessage aReply = msg.createReply();
-        aReply.setInReplyTo(msg.getContent());
-        aReply.setContent(result);
-        myAgent.send(aReply);*/
             }
         } else {
             LOGGER.trace("ControlBehaviour.beh.block()");
             block();
-
         }
 
         LOGGER.exit();

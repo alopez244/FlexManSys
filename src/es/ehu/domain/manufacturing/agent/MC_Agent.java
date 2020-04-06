@@ -102,19 +102,19 @@ public class MC_Agent extends MWAgent {
     /** FSM transition **/  
     comportamientoFSM.registerTransition("boot", "running", ControlBehaviour.RUNNING, new String [] {"boot"});
     comportamientoFSM.registerTransition("boot", "tracking", ControlBehaviour.TRACKING, new String [] {"boot"});
-    comportamientoFSM.registerTransition("boot", "paused", ControlBehaviour.PAUSED, new String [] {"boot"});
+//    comportamientoFSM.registerTransition("boot", "paused", ControlBehaviour.PAUSED, new String [] {"boot"});
     comportamientoFSM.registerTransition("boot", "moving", ControlBehaviour.NEGOTIATING, new String [] {"boot"});
     comportamientoFSM.registerTransition("boot", "end", ControlBehaviour.STOP, new String [] {"boot"});
 
     comportamientoFSM.registerTransition("running", "tracking", ControlBehaviour.TRACKING, new String [] {"running"});
-    comportamientoFSM.registerTransition("running", "paused", ControlBehaviour.PAUSED, new String [] {"running"});
+//    comportamientoFSM.registerTransition("running", "paused", ControlBehaviour.PAUSED, new String [] {"running"});
     comportamientoFSM.registerTransition("running", "moving", ControlBehaviour.NEGOTIATING, new String [] {"running"});
     comportamientoFSM.registerTransition("running", "end", ControlBehaviour.STOP, new String [] {"running"});
     
     //comportamientoFSM.registerTransition("tracking", "running", ControlBehaviour.RUNNING, new String [] {"tracking"});
     comportamientoFSM.registerTransition("tracking", "recovering", ControlBehaviour.RUNNING, new String [] {"tracking"});//TODO se ha modificado el cambio a recovering para que funcione con el MW
     comportamientoFSM.registerTransition("tracking", "recovering", ControlBehaviour.RECOVERING, new String [] {"tracking"});
-    comportamientoFSM.registerTransition("tracking", "paused", ControlBehaviour.PAUSED, new String [] {"tracking"});
+//    comportamientoFSM.registerTransition("tracking", "paused", ControlBehaviour.PAUSED, new String [] {"tracking"});
     comportamientoFSM.registerTransition("tracking", "negotiating", ControlBehaviour.NEGOTIATING, new String [] {"tracking"});
     comportamientoFSM.registerTransition("tracking", "end", ControlBehaviour.STOP, new String [] {"tracking"});
 
@@ -126,14 +126,14 @@ public class MC_Agent extends MWAgent {
     comportamientoFSM.registerTransition("paused", "end", ControlBehaviour.STOP, new String [] {"paused"});
 
     comportamientoFSM.registerTransition("recovering", "running", ControlBehaviour.RUNNING, new String [] {"recovering"});
-    comportamientoFSM.registerTransition("recovering", "paused", ControlBehaviour.PAUSED, new String [] {"recovering"});
+//    comportamientoFSM.registerTransition("recovering", "paused", ControlBehaviour.PAUSED, new String [] {"recovering"});
     comportamientoFSM.registerTransition("recovering", "tracking", ControlBehaviour.TRACKING, new String [] {"recovering"});
     comportamientoFSM.registerTransition("recovering", "moving", ControlBehaviour.NEGOTIATING, new String [] {"recovering"});
     comportamientoFSM.registerTransition("recovering", "end", ControlBehaviour.STOP, new String [] {"recovering"});
     
     comportamientoFSM.registerTransition("moving", "running", ControlBehaviour.RUNNING, new String [] {"moving"});
     comportamientoFSM.registerTransition("moving", "recovering", ControlBehaviour.RECOVERING, new String [] {"moving"});
-    comportamientoFSM.registerTransition("moving", "paused", ControlBehaviour.PAUSED, new String [] {"moving"});
+//    comportamientoFSM.registerTransition("moving", "paused", ControlBehaviour.PAUSED, new String [] {"moving"});
     comportamientoFSM.registerTransition("moving", "tracking", ControlBehaviour.TRACKING, new String [] {"moving"});
     comportamientoFSM.registerTransition("moving", "end", ControlBehaviour.STOP, new String [] {"moving"});
     

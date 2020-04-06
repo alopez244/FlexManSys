@@ -176,6 +176,10 @@ public class Planner extends Agent {
 
                 mra.iValidate(mp1);
 
+                //Arranque de la aplicación MANUFACTURING PLAN
+
+                mra.start(mp1,null);
+
                 this.finished=true;
                 LOGGER.info("register process finished.");
 
@@ -213,6 +217,10 @@ public class Planner extends Agent {
                 //Validación de la aplicación MANUFACTURING PLAN
 
                 mra.iValidate(mp2);
+
+                //Arranque de la aplicación MANUFACTURING PLAN
+
+                mra.start(mp2,null);
 
                 this.finished=true;
                 LOGGER.info("register process finished.");
@@ -258,6 +266,10 @@ public class Planner extends Agent {
                 //Validación de la aplicación MANUFACTURING PLAN
 
                 mra.iValidate(mp3);
+
+                //Arranque de la aplicación MANUFACTURING PLAN
+
+                mra.start(mp3,null);
 
                 this.finished=true;
                 LOGGER.info("register process finished.");

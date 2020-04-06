@@ -47,7 +47,7 @@
 		<logger name="es.ehu.NodeAgent">					<appenderRef ref="console" level="info"/></logger>
 		<logger name="es.ehu.Functionality">				<appenderRef ref="console" level="info"/></logger>
 		<logger name="es.ehu.SystemModelAgent">				<appenderRef ref="console" level="info"/></logger>
-		<logger name="es.ehu.StateParallel">				<appenderRef ref="console" level="info"/></logger>
+		<logger name="es.ehu.utilities.StateParallel">		<appenderRef ref="console" level="info"/></logger>
 		<logger name="es.ehu.MasReconAgent">				<appenderRef ref="console" level="info"/></logger>
 		<logger name="es.ehu.domain.sputnik.Registerer">	<appenderRef ref="console" level="debug"/></logger>
 		
