@@ -329,8 +329,7 @@ public class SystemModelAgent extends Agent {
 
         Properties prop = new Properties();
 
-        //String url = "/resources/sa.properties";
-        String url = "/resources/fm/sa.properties";
+        String url = "/resources/sa.properties";
 
         LOGGER.debug("Properties: "+ getClass().getResource(url).getPath());
 
