@@ -5,8 +5,6 @@ import java.io.Serializable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-//import es.ehu.domain.sputnik.Dato;
-//import es.ehu.domain.sputnik.Procesador;
 import es.ehu.platform.MWAgent;
 import jade.core.*;
 import jade.core.behaviours.*;
