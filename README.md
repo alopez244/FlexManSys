@@ -20,3 +20,4 @@ It will contain detail of every step.
 30/03/2020 Updated cmd files.
 06/04/2020 Cleaning code for several files (behaviours, ProcNode_Utility, etc)
 07/04/2020 xyz discarded files folder has been created to store those files that aren't part of our project but could contain code of interest.
+07/04/2020 xyz discarded files folder has been deleted, now that information is in the new branch "Parallel branch test"
