@@ -18,6 +18,7 @@ It will contain detail of every step.
 24/03/2020 Planner Agent V1 has been updated. Keyboard command scanner updated.
 30/03/2020 Setup of ProcNodeAgent, ResourceAgentTemplate and MWAgent classes.
 30/03/2020 Updated cmd files.
-06/04/2020 Cleaning code for several files (behaviours, ProcNode_Utility, etc)
+06/04/2020 Cleaning code for several files (behaviours, ProcNode_Utility, etc).
 07/04/2020 xyz discarded files folder has been created to store those files that aren't part of our project but could contain code of interest.
-07/04/2020 xyz discarded files folder has been deleted, now that information is in the new branch "Parallel branch test"
+07/04/2020 xyz discarded files folder has been deleted, now that information is in the new branch "Parallel branch test".
+07/04/2020 orion2030 folder has been deleted. The ApplicationSet_Template has been renamed as MPlanAgent and moved to "es.ehu.domain.manufacturing.agents".
