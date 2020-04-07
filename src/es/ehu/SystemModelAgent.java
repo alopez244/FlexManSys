@@ -372,7 +372,7 @@ public class SystemModelAgent extends Agent {
     private String prop2String(String file){
         String output = "";
         try {
-            output = IOUtils.toString(this.getClass().getResourceAsStream("/resources/fm/"+file), "UTF-8");
+            output = IOUtils.toString(this.getClass().getResourceAsStream("/resources/"+file), "UTF-8");
         } catch (IOException e1) {e1.printStackTrace();}
         return output.substring(output.indexOf("<"));
     }
