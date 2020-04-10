@@ -1,1 +1,1 @@
-http://Alejandro:7778/acc
+http://10.253.1.178:7778/acc

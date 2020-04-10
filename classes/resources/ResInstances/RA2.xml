@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resourceAgent xmlns="Concepts" name="RA2" type="Machine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="Concepts ResGenerator.xsd">
+	<service name="S_01" description="Place cover: the cover (consumable) is placed on the base"/>
+	<service name="C_01" description="Assembly: the cover (raw material) is placed on the intermediate product"/>
+</resourceAgent>
+
