@@ -23,3 +23,4 @@ It will contain detail of every step.
 07/04/2020 xyz discarded files folder has been deleted, now that information is in the new branch "Parallel branch test".
 07/04/2020 orion2030 folder has been deleted. The ApplicationSet_Template has been renamed as MPlanAgent and moved to "es.ehu.domain.manufacturing.agents".
 10/04/2020 the xml files for the resource agents are ready and placed in the project tree.
+10/04/2020 the AppProperties.xsd file is back on the root.
