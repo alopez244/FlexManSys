@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
-<xs:schema xmlns="RepositoryContent" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="RepositoryContent" elementFormDefault="qualified" attributeFormDefault="unqualified">
+<xs:schema xmlns="Concepts" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="Concepts" elementFormDefault="qualified" attributeFormDefault="unqualified">
 	<xs:redefine schemaLocation="../AppProperties.xsd">
 		<!-- ============= ORDER =========== -->
 		<xs:complexType name="Order">
