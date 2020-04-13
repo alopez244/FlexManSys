@@ -1,6 +1,7 @@
 package es.ehu.domain.manufacturing.utilities;
 
 import es.ehu.platform.utilities.MasReconAgent;
+import es.ehu.platform.utilities.XMLReader;
 
 import jade.core.Agent;
 import jade.core.behaviours.SimpleBehaviour;
@@ -150,6 +151,10 @@ public class Planner extends Agent {
             //Mediante un if-else se accede a cada una de las aplicaciones
 
             if (cmd.equals("register_MP1")) {
+
+//                String uri="classes/resources/AppInstances/MP1.xml";
+//                XMLReader fileReader = new XMLReader();
+//                fileReader.readFile(uri);
 
                 // Registro del elemento MANUFACTURING PLAN
 

@@ -12,7 +12,7 @@ import org.w3c.dom.NodeList;
 
 public class XMLReader {
 
-    public static void XMLReader (String uri) throws Exception {
+    public static void readFile (String uri) throws Exception {
 
         //Build DOM
 
@@ -31,7 +31,6 @@ public class XMLReader {
         String element = "system";
         String parent = "system";
         String level = "/*";
-        Integer level_counter = 1;
 
         while (element != ""){
 
@@ -58,9 +57,10 @@ public class XMLReader {
                 String value = nodes.item(i).getNodeValue();
                 System.out.println(name+" = "+value);
             }
+            System.out.println();
 
-            //Update the level counter
-            level_counter=level_counter+1;
+            //Update the level string
+            level=level+"/*";
         }
     }
 }
