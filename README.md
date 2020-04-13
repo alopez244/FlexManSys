@@ -25,3 +25,4 @@ It will contain detail of every step.
 10/04/2020 the xml files for the resource agents are ready and placed in the project tree.
 10/04/2020 the AppProperties.xsd file is back on the root.
 12/04/2020 mesing aroung with the XMLReading.
+13/04/2020 update of the XMLReading.
