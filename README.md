@@ -26,3 +26,4 @@ It will contain detail of every step.
 10/04/2020 the AppProperties.xsd file is back on the root.
 12/04/2020 mesing aroung with the XMLReading.
 13/04/2020 update of the XMLReading.
+14/04/2020 XMLReader method completed and tested.

@@ -4,6 +4,6 @@
 		<batch reference="B1_O1_MP3" numberOfItems="3" refProductID="P_02"/>
 	</order>
 	<order reference="O2_MP3" customer="Jon">
-		<batch reference="B1_O2_MP3" numberOfItems="3" refProductID="P_02"/>
+		<batch reference="B1_O2_MP3" numberOfItems="5" refProductID="P_01"/>
 	</order>
 </manufacturingPlan>

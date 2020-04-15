@@ -1,11 +1,11 @@
 package es.ehu.platform.test;
 
-import es.ehu.platform.utilities.XMLReader;
+import es.ehu.platform.test.XMLReader_V2;
 
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class main {
+public class main2 {
     public static void main(String[] args) throws Exception {
         String appPath="classes/resources/AppInstances/";
         String file="";
@@ -15,7 +15,7 @@ public class main {
         file = in.nextLine();
         System.out.println();
         String uri=appPath+file;
-        XMLReader fileReader = new XMLReader();
+        XMLReader_V2 fileReader = new XMLReader_V2();
         ArrayList<ArrayList<ArrayList<String>>> xmlelements = fileReader.readFile(uri);
         System.out.println();
     }

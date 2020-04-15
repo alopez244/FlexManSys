@@ -1,24 +1,20 @@
-package es.ehu.domain.manufacturing.utilities;
+package es.ehu.domain.manufacturing.test;
 
 import es.ehu.platform.utilities.MasReconAgent;
-import es.ehu.platform.utilities.XMLReader;
-
 import jade.core.Agent;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.domain.DFService;
 import jade.lang.acl.ACLMessage;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Planner extends Agent {
+public class Planner_old extends Agent {
 
     private static final long serialVersionUID = 1L;
-    static final Logger LOGGER = LogManager.getLogger(Planner.class.getName()) ;
+    static final Logger LOGGER = LogManager.getLogger(Planner_old.class.getName()) ;
 
     protected void setup() {
         LOGGER.entry();
@@ -57,7 +53,9 @@ public class Planner extends Agent {
 
                 String cmd = "";
                 String api = "Planner Agent local commands:\n"
-                        + "register > Register a Manufacturing Plan of your desire\n"
+                        + "register_MP1 > Loads Manufacturing Plan 1 application\n"
+                        + "register_MP2 > Loads Manufacturing Plan 2 application\n"
+                        + "register_MP3 > Loads Manufacturing Plan 3 application\n"
                         + "help > SystemModelAgent commands summary\n"
                         + "exit > Shut down Planner Agent\n\n";
                 System.out.print(api);
@@ -147,51 +145,139 @@ public class Planner extends Agent {
             ConcurrentHashMap<String, String> serviceList = new ConcurrentHashMap<String, String>();
             ConcurrentHashMap<String, ConcurrentHashMap<String, String>> serviceLists = new ConcurrentHashMap<String, ConcurrentHashMap<String, String>>();
 
-            String appPath="classes/resources/AppInstances/";
-            String file="";
-            Scanner in = new Scanner(System.in);
-            System.out.println("Please, introduce the name of the XML File you want to register.");
-            System.out.print("File: ");
-            file = in.nextLine();
-            System.out.println();
-            String uri=appPath+file;
-            XMLReader fileReader = new XMLReader();
-            ArrayList<ArrayList<ArrayList<String>>> xmlelements = fileReader.readFile(uri);
-            System.out.println();
+            //Mediante un if-else se accede a cada una de las aplicaciones
 
-            //Variable initialization at their first levels
-            ArrayList<String> parentIdList = new ArrayList<String>();
-            parentIdList.add(0,"system");
-            String parentId = "";
-            String seId = "";
+            if (cmd.equals("register_MP1")) {
 
-            //For structure is used to register all the elements
-            for (int i = 0; i < xmlelements.size(); i++){
+//                String uri="classes/resources/AppInstances/MP1.xml";
+//                XMLReader fileReader = new XMLReader();
+//                fileReader.readFile(uri);
 
-                //First the attributes are collected
+                // Registro del elemento MANUFACTURING PLAN
+
                 attributes.clear();
-                for (int j = 0; j < xmlelements.get(i).get(2).size(); j++){
-                    attributes.put(xmlelements.get(i).get(2).get(j),xmlelements.get(i).get(3).get(j));
-                }
+                attributes.put("name","MP1");
+                String mp1 = mra.seRegister("manufacturingPlan", "system", attributes, restrictionLists);
 
-                //The parent Id is always the last element Id of the upper level
-                parentId = parentIdList.get(Integer.parseInt(xmlelements.get(i).get(1).get(0))-1);
+                // Registro del elemento ORDER
 
-                //Now the register is performed and the element name is obtained
-                seId = mra.seRegister(xmlelements.get(i).get(0).get(0),parentId,attributes,restrictionLists);
+                attributes.clear();
+                attributes.put("reference","O1_MP1");
+                attributes.put("customer","Marga");
+                String o1_1 = mra.seRegister("order", mp1, attributes, restrictionLists);
 
-                //Finally, the new seId is added to the parent Id list
-                parentIdList.add(Integer.parseInt(xmlelements.get(i).get(1).get(0)),seId);
+                // Registro del elemento BATCH
+
+                attributes.clear();
+                attributes.put("reference","B1_O1_MP1");
+                attributes.put("numberOfItems", "6");
+                attributes.put("refProductID", "P_01");
+                String b1_1_1 = mra.seRegister("batch", o1_1, attributes, restrictionLists);
+
+                //Validación de la aplicación MANUFACTURING PLAN
+
+                mra.iValidate(mp1);
+
+                //Arranque de la aplicación MANUFACTURING PLAN
+
+                mra.start(mp1,null);
+
+                this.finished=true;
+                LOGGER.info("register process finished.");
+
+            } else if (cmd.equals("register_MP2")) {
+
+                // Registro del elemento MANUFACTURING PLAN
+
+                attributes.clear();
+                attributes.put("name","MP2");
+                String mp2 = mra.seRegister("manufacturingPlan", "system", attributes, restrictionLists);
+
+                // Registro del elemento ORDER
+
+                attributes.clear();
+                attributes.put("reference","O1_MP2");
+                attributes.put("customer","Oskar");
+                String o1_2 = mra.seRegister("order", mp2, attributes, restrictionLists);
+
+                // Registro del elemento BATCH 1
+
+                attributes.clear();
+                attributes.put("reference","B1_O1_MP2");
+                attributes.put("numberOfItems", "2");
+                attributes.put("refProductID", "P_01");
+                String b1_1_2 = mra.seRegister("batch", o1_2, attributes, restrictionLists);
+
+                // Registro del elemento BATCH 2
+
+                attributes.clear();
+                attributes.put("reference","B2_O1_MP2");
+                attributes.put("numberOfItems", "4");
+                attributes.put("refProductID", "P_03");
+                String b2_1_2 = mra.seRegister("batch", o1_2, attributes, restrictionLists);
+
+                //Validación de la aplicación MANUFACTURING PLAN
+
+                mra.iValidate(mp2);
+
+                //Arranque de la aplicación MANUFACTURING PLAN
+
+                mra.start(mp2,null);
+
+                this.finished=true;
+                LOGGER.info("register process finished.");
+
+            } else if (cmd.equals("register_MP3")) {
+
+                // Registro del elemento MANUFACTURING PLAN
+
+                attributes.clear();
+                attributes.put("name","MP3");
+                String mp3 = mra.seRegister("manufacturingPlan", "system", attributes, restrictionLists);
+
+                // Registro del elemento ORDER 1
+
+                attributes.clear();
+                attributes.put("reference","O1_MP3");
+                attributes.put("customer","Ekatiz");
+                String o1_3 = mra.seRegister("order", mp3, attributes, restrictionLists);
+
+                // Registro del elemento BATCH 1 (ORDER 1)
+
+                attributes.clear();
+                attributes.put("reference","B1_O1_MP3");
+                attributes.put("numberOfItems", "3");
+                attributes.put("refProductID", "P_02");
+                String b1_1_3 = mra.seRegister("batch", o1_3, attributes, restrictionLists);
+
+                // Registro del elemento ORDER 2
+
+                attributes.clear();
+                attributes.put("reference","O2_MP3");
+                attributes.put("customer","Jon");
+                String o2_3 = mra.seRegister("order", mp3, attributes, restrictionLists);
+
+                // Registro del elemento BATCH 1 (ORDER 2)
+
+                attributes.clear();
+                attributes.put("reference","B1_O2_MP3");
+                attributes.put("numberOfItems", "3");
+                attributes.put("refProductID", "P_02");
+                String b1_2_3 = mra.seRegister("batch", o2_3, attributes, restrictionLists);
+
+                //Validación de la aplicación MANUFACTURING PLAN
+
+                mra.iValidate(mp3);
+
+                //Arranque de la aplicación MANUFACTURING PLAN
+
+                mra.start(mp3,null);
+
+                this.finished=true;
+                LOGGER.info("register process finished.");
+
             }
 
-            //After the register, the element to be validated and started will be the second on the list (the level 1 element)
-            String app = parentIdList.get(1);
-
-            //Validation
-            mra.iValidate(app);
-
-            //Start
-            mra.start(app,null);
         }
 
         private boolean finished = false;
@@ -220,4 +306,5 @@ public class Planner extends Agent {
             LOGGER.exit();
         }
     }
+
 }
