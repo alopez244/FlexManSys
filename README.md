@@ -27,3 +27,4 @@ It will contain detail of every step.
 12/04/2020 mesing aroung with the XMLReading.
 13/04/2020 update of the XMLReading.
 14/04/2020 XMLReader method completed and tested.
+15/04/2020 The Planner.java class has been adapted to the new XMLReader.

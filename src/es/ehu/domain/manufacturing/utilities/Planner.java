@@ -49,12 +49,10 @@ public class Planner extends Agent {
 
                 LOGGER.info("start.");
 
-                //Se comprueba que el SystemModelAgent se encuentra activo y obtiene su LocalName.
-
+                //This method checks the SystemModelAgent is active. If so, retrieves its LocalName.
                 mra.searchMwm();
 
-                //Interfaz de usuario. El operario la usará para registrar aplicaciones
-
+                //User interface. The operator will use it for the register of mannufacturing applications.
                 String cmd = "";
                 String api = "Planner Agent local commands:\n"
                         + "register > Register a Manufacturing Plan of your desire\n"
@@ -63,35 +61,30 @@ public class Planner extends Agent {
                 System.out.print(api);
                 LOGGER.info(api);
 
-                //Bucle de decisión asociado a la interfaz de usuario.
-                //Este bucle estará en ejecución hasta que el operario utilice el comando exit.
-
+                //Decision loop related to the user interface.
+                //This loop will remain active until the operator chooses the command "exit".
                 while (!cmd.equals("exit")) {
 
-                    //Se solicita un comando al operario y se recoge el resultado
-
+                    //A new command is required to the operator.
                     Scanner in = new Scanner(System.in);
                     System.out.print("cmd: ");
                     cmd = in.nextLine();
                     System.out.println();
 
-                    //Se vacia la cola de mensajes recibidos por el Planner Agent
-
+                    //The Planner Agent message queue is flushed away.
                     ACLMessage flush = receive();
                     while (flush!=null) {
                         System.out.println(flush.getInReplyTo()+" : "+ flush.getContent());
                         flush = receive();
                     }
 
-                    //Se comprueba si el campo cmd está vacío.
-                    //En caso contrario, se divide su contenido con el separador ";".
-                    //Cada nuevo String se guarda en el array "cmds".
-
+                    //The field cmd is checked.
+                    //If it is not empty, it is spplited with respect to the character ; as separation.
+                    //Each new String is stored in a position of the array "cmds".
                     if (cmd.length()>0) {
                         String [] cmds = cmd.split(";");
 
-                        //Se envía un mensaje ACL por cada String del array "cmds".
-
+                        //An ACL message is sent per each String in "cmds".
                         for (int i=0; i<cmds.length;i++){
                             cmds[i] = cmds[i].trim();
                             if (cmds[i].startsWith("register")) {
@@ -106,11 +99,6 @@ public class Planner extends Agent {
                             else {
                                 ACLMessage reply = mra.sendCommand(cmds[i]);
                                 if (reply!=null) {
-
-                                    //La salida por pantalla  del mensaje está comentada porque...
-                                    // Esa info la muestra el log (es información redundante)
-
-                                    //System.out.print(reply.getInReplyTo()+": "+reply.getContent());
                                     if (cmds.length>1) System.out.print(" < "+cmds[i]);
                                     System.out.print("\n\n");
                                 }
@@ -119,7 +107,7 @@ public class Planner extends Agent {
                     }
                 }
 
-                System.exit(0); //Agur
+                System.exit(0);
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -138,9 +126,7 @@ public class Planner extends Agent {
 
         public void registerPredefined(String cmd) throws Exception {
 
-            //En este método se recogen las aplicaciones predefinidas
-            //Primero se define el HashMap
-
+            //Definition of the HashMaps
             ConcurrentHashMap<String, String> attributes = new ConcurrentHashMap<String, String>();
             ConcurrentHashMap<String, String> restrictionList = new ConcurrentHashMap<String, String>();
             ConcurrentHashMap<String, ConcurrentHashMap<String, String>> restrictionLists = new ConcurrentHashMap<String, ConcurrentHashMap<String, String>>();
@@ -157,7 +143,6 @@ public class Planner extends Agent {
             String uri=appPath+file;
             XMLReader fileReader = new XMLReader();
             ArrayList<ArrayList<ArrayList<String>>> xmlelements = fileReader.readFile(uri);
-            System.out.println();
 
             //Variable initialization at their first levels
             ArrayList<String> parentIdList = new ArrayList<String>();
@@ -201,7 +186,7 @@ public class Planner extends Agent {
             return LOGGER.exit(finished);
         }
 
-    } // Fin del comportamiento
+    } //End of behaviour
 
     class ShutdownThread extends Thread {
         private Agent myAgent = null;
