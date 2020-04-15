@@ -66,6 +66,8 @@ public class XMLReadElement {
             //The element is registered in the return object
             solution[0] = xmlelements;
 
+            Node test = nodes.item(i);
+
             //Now search for elements in the next level of the XML file
             if (nodes.item(i).hasChildNodes()){
 
@@ -80,17 +82,31 @@ public class XMLReadElement {
                 //Invoke this method recursively
                 solution = new XMLReadElement().XMLReadElement(doc, xpath, new_level, solution);
                 lc = (Integer) solution[1];
-                System.out.println();
+
+                //If this is the last iteration at this level, the level counter is decreased
+                if(nodes.getLength()-i==1){
+                    lc = lc - 1; //There are no more items at this level, the loop comes back to the upper level
+                    solution[1] = lc;
+                }
+
             } else {
 
                 //If this element has no children, it is the last of its branch. The for loop must conclude
                 if(nodes.getLength()-i==1){
-                    lc = lc - 1; //There are no more items at tbis level, the loop comes back to the upper level
+                    lc = lc - 1; //There are no more items at this level, the loop comes back to the upper level
                     solution[1] = lc;
                     break; //If this condition is met, this is the last iteration of the loop
                 }
             }
         }
+
+        //In case this child is a text of a comment node, the code won't enter in the loop
+        //The level counter must be updated here
+        if (nodes.getLength() == 0) {
+            lc = lc - 1; //There are no more items at this level or they are unreadable
+            solution[1] = lc;
+        }
+
         return solution;
     }
 }
