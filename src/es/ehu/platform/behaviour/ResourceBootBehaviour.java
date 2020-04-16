@@ -49,7 +49,7 @@ public class ResourceBootBehaviour extends SimpleBehaviour {
     private String mwm;
 
     private boolean exit;
-    private String ID, newID;
+    private String ID, newID, className;
 
     // Constructor. Create a default template for the entry messages
     public ResourceBootBehaviour(MWAgent a) {
@@ -92,7 +92,8 @@ public class ResourceBootBehaviour extends SimpleBehaviour {
             try {
                 // Agent generation;
                 //TODO parametrizar la clase que se pasa al crear el agente
-                ((AgentController)myAgent.getContainerController().createNewAgent(newID,"es.ehu.platform.agents.ProcNodeAgent", new String[] { "ID="+newID, "description=description" })).start();
+                className = myAgent.getClass().getName();
+                ((AgentController)myAgent.getContainerController().createNewAgent(newID,className, new String[] { "ID="+newID, "description=description" })).start();
 
                 Thread.sleep(1000);
                 exit = true;

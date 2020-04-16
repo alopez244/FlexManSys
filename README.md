@@ -28,3 +28,4 @@ It will contain detail of every step.
 13/04/2020 update of the XMLReading.
 14/04/2020 XMLReader method completed and tested.
 15/04/2020 The Planner.java class has been adapted to the new XMLReader.
+16/04/2020 Manufacturing Resource Agent and its functionality have been developed. ResourceBootBehaviour has been modified to read the class required to create such Agent.
