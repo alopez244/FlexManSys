@@ -1,22 +1,21 @@
 package es.ehu.flexmansys.functionality;
 
-import es.ehu.platform.template.interfaces.BasicFunctionality;
+import es.ehu.flexmansys.agents.Monitor_Agent;
 import es.ehu.flexmansys.utilities.Position;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.ros.jade.RosMsg;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.ros.jade.RosMsg;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import static es.ehu.flexmansys.utilities.FmsNegotiation.*;
-import static es.ehu.platform.utilities.MasReconOntologies.*;
+import static es.ehu.utilities.MasReconOntologies.*;
 
 /**
  * Monitor Agent Functionality

@@ -1,9 +1,9 @@
 package es.ehu.flexmansys.agents;
 
+import es.ehu.behaviour.ControlBehaviour;
+import es.ehu.flexmansys.templates.Production_Agent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import es.ehu.platform.behaviour.ControlBehaviour;
 
 public class Order_Agent extends Production_Agent {
 

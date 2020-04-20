@@ -1,9 +1,9 @@
 package es.ehu.flexmansys.utilities;
 
+import jade.core.AID;
+
 import java.io.Serializable;
 import java.util.Objects;
-
-import jade.core.AID;
 
 /**
  * Defines timeout class.

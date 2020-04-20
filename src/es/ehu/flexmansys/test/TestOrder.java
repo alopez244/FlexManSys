@@ -1,20 +1,14 @@
 package es.ehu.flexmansys.test;
 
-import jade.core.*;
-import jade.core.behaviours.*;
+import jade.core.AID;
+import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import java.io.Serializable;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Document;
 
-import static es.ehu.utilities.MasReconOntologies.*;
-
-import java.io.File;
-
-import javax.print.Doc;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -22,6 +16,10 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import java.io.File;
+import java.io.Serializable;
+
+import static es.ehu.utilities.MasReconOntologies.*;
 
 /**
  * This agent send different type of messages to some OrderAgents, checking that

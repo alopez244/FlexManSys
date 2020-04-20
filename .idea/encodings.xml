@@ -1,9 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding">
-    <file url="file://$PROJECT_DIR$/src/es/ehu/Registerer.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/MWM_monitorAgent.patch" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/agents/Batch_Agent.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/agents/Machine_Agent.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/agents/Monitor_Agent.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/agents/Order_Agent.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/agents/PowerStation_Agent.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/agents/Transport_Agent.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/functionality/Batch_Functionality.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/functionality/Machine_Functionality.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/functionality/Monitor_Functionality.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/functionality/Order_Functionality.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/functionality/PowerStation_Functionality.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/functionality/Transport_Functionality.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/templates/Monitor_Template.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/templates/Production_Agent.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/templates/Resource_Agent.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/test/TestBatch.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/test/TestOrder.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/test/tests.md" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/utilities/FmsNegotiation.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/utilities/MsgOperation.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/utilities/MsgReqOperation.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/utilities/MsgTransport.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/utilities/Position.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/flexmansys/utilities/Timeout.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/es/ehu/platform/MWAgent.java" charset="windows-1252" />
-    <file url="file://$PROJECT_DIR$/xyz discarded files/Registerer.java" charset="UTF-8" />
     <file url="PROJECT" charset="windows-1252" />
   </component>
 </project>

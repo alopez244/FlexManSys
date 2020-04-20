@@ -1,24 +1,26 @@
 package es.ehu.flexmansys.functionality;
 
-import es.ehu.platform.template.interfaces.NegFunctionality;
+import es.ehu.NegFunctionality;
+import es.ehu.flexmansys.agents.PowerStation_Agent;
+import es.ehu.flexmansys.utilities.MsgOperation;
 import es.ehu.flexmansys.utilities.Position;
-
+import es.ehu.flexmansys.utilities.Timeout;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-
-import static es.ehu.platform.utilities.MasReconOntologies.*;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.w3c.dom.*;
-import org.apache.commons.lang3.tuple.Pair;
-
 import static es.ehu.flexmansys.utilities.FmsNegotiation.*;
+import static es.ehu.utilities.MasReconOntologies.*;
 
 /**
  * Power Station Agent Functionality
@@ -295,7 +297,7 @@ public class PowerStation_Functionality implements NegFunctionality {
 	 * @return Object
 	 */
 	public Object checkNegotiation(String negTaskId, String negAction, String negCriterion, long negScalarValue,
-			AID requester, Object... externalData) {
+                                   AID requester, Object... externalData) {
 		LOGGER.entry(negTaskId, negAction, negCriterion, negScalarValue, requester, externalData);
 		long value = calculateNegotiation(negAction, negCriterion, externalData);
 		if (value <= negScalarValue) {

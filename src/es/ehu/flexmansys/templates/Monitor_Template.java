@@ -1,17 +1,16 @@
 package es.ehu.flexmansys.templates;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import es.ehu.platform.MWAgent;
+import es.ehu.platform.behaviour.BootBehaviour;
+import es.ehu.platform.behaviour.ControlBehaviour;
+import es.ehu.platform.behaviour.EndBehaviour;
+import es.ehu.platform.behaviour.RunningBehaviour;
+import es.ehu.platform.utilities.StateParallel;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.FSMBehaviourMW;
 import jade.lang.acl.MessageTemplate;
-import es.ehu.platform.MWAgent;
-import es.ehu.platform.behaviour.BootBehaviour;
-import es.ehu.platform.behaviour.EndBehaviour;
-import es.ehu.platform.behaviour.RunningBehaviour;
-import es.ehu.platform.behaviour.ControlBehaviour;
-import es.ehu.platform.utilities.StateParallel;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Monitor Agent template used by the control panel in the FLEXMANSYS

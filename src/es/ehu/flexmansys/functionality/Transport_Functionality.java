@@ -1,26 +1,30 @@
 package es.ehu.flexmansys.functionality;
 
+import es.ehu.flexmansys.agents.Transport_Agent;
+import es.ehu.flexmansys.utilities.MsgOperation;
+import es.ehu.flexmansys.utilities.MsgTransport;
+import es.ehu.flexmansys.utilities.Position;
+import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.platform.utilities.MsgNegotiation;
-import es.ehu.platform.behaviour.ControlBehaviour;
-import es.ehu.flexmansys.utilities.Position;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import static es.ehu.platform.utilities.MasReconOntologies.*;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.ros.jade.RosMsg;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.ros.jade.RosMsg;
-import org.w3c.dom.*;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.commons.lang3.tuple.Pair;
-
 import static es.ehu.flexmansys.utilities.FmsNegotiation.*;
+import static es.ehu.platform.utilities.MasReconOntologies.*;
 
 /**
  * Transport Agent Functionality
@@ -333,7 +337,7 @@ public class Transport_Functionality implements NegFunctionality {
 	 *         negotiation is refused.
 	 */
 	public Object checkNegotiation(String negTaskId, String negAction, String negCriterion, long negScalarValue,
-			AID requester, Object... negExternalData) {
+                                   AID requester, Object... negExternalData) {
 
 		LOGGER.entry(negTaskId, negAction, negCriterion, negScalarValue, requester, negExternalData);
 		MsgOperation winMsg = null;
@@ -551,7 +555,7 @@ public class Transport_Functionality implements NegFunctionality {
 	 * @return
 	 */
 	private ACLMessage createMsg(String ontology, String conversationID, int performative, Object content,
-			AID... targets) {
+                                 AID... targets) {
 		LOGGER.entry(ontology, performative, conversationID, content, targets);
 		ACLMessage msg = createMsg(ontology, performative, content, targets);
 		msg.setConversationId(conversationID);

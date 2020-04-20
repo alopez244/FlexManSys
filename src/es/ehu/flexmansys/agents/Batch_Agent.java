@@ -1,17 +1,15 @@
 package es.ehu.flexmansys.agents;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
+import es.ehu.flexmansys.templates.Production_Agent;
+import es.ehu.platform.behaviour.ControlBehaviour;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Document;
 
-import java.io.File;
-
 import javax.xml.parsers.DocumentBuilder;
-
-import es.ehu.platform.behaviour.ControlBehaviour;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
 
 public class Batch_Agent extends Production_Agent {
 

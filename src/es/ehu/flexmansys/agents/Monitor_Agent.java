@@ -1,18 +1,19 @@
 package es.ehu.flexmansys.agents;
 
-import java.util.HashSet;
-import java.util.Set;
-
+import es.ehu.behaviour.ControlBehaviour;
+import es.ehu.flexmansys.functionality.Monitor_Functionality;
+import es.ehu.flexmansys.templates.Monitor_Template;
+import jade.core.behaviours.Behaviour;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ros.jade.RosAgent;
 
-import jade.core.behaviours.Behaviour;
-import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
-import es.ehu.platform.behaviour.ControlBehaviour;
+import java.util.HashSet;
+import java.util.Set;
 
-import static es.ehu.platform.utilities.MasReconOntologies.*;
+import static es.ehu.utilities.MasReconOntologies.*;
 
 public class Monitor_Agent extends Monitor_Template {
 

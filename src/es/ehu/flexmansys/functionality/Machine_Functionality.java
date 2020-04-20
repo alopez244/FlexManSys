@@ -1,28 +1,26 @@
 package es.ehu.flexmansys.functionality;
 
-import es.ehu.platform.utilities.MsgNegotiation;
-import es.ehu.platform.template.interfaces.NegFunctionality;
-import es.ehu.platform.behaviour.ControlBehaviour;
+import es.ehu.NegFunctionality;
+import es.ehu.flexmansys.agents.Machine_Agent;
+import es.ehu.flexmansys.utilities.MsgOperation;
+import es.ehu.flexmansys.utilities.MsgReqOperation;
 import es.ehu.flexmansys.utilities.Position;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.w3c.dom.*;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.commons.lang3.tuple.Pair;
 
 import static es.ehu.flexmansys.utilities.FmsNegotiation.*;
-import static es.ehu.platform.utilities.MasReconOntologies.*;
+import static es.ehu.utilities.MasReconOntologies.*;
 
 /**
  * Machine Agent Functionality
@@ -166,7 +164,7 @@ public class Machine_Functionality implements NegFunctionality {
 	/** Identifier of new task template. */
 	private MessageTemplate newTaskTemplate;
 
-	/** Identifier of new task template. */
+	/** Identifier of debug pallet arrived template. */
 	private MessageTemplate debugPalletArrivedTemplate;
 
 	// Constructor
@@ -300,7 +298,7 @@ public class Machine_Functionality implements NegFunctionality {
 	 * TODO Reconfiguration
 	 */
 	public boolean checkNegotiation(String negTaskId, String negAction, String negCriterion, long negScalarValue,
-			AID requester, Object... negExternalData) {
+                                    AID requester, Object... negExternalData) {
 		return LOGGER.exit(null);
 	}
 
@@ -392,7 +390,7 @@ public class Machine_Functionality implements NegFunctionality {
 	 * @return
 	 */
 	private ACLMessage createMsg(String ontology, String conversationID, int performative, Object content,
-			AID... targets) {
+                                 AID... targets) {
 		LOGGER.entry(ontology, performative, conversationID, content, targets);
 		ACLMessage msg = createMsg(ontology, performative, content, targets);
 		msg.setConversationId(conversationID);

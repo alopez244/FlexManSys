@@ -1,30 +1,30 @@
 package es.ehu.flexmansys.functionality;
 
+import es.ehu.MsgNegotiation;
+import es.ehu.behaviour.ControlBehaviour;
+import es.ehu.flexmansys.agents.Batch_Agent;
+import es.ehu.flexmansys.utilities.*;
 import jade.core.AID;
-import jade.lang.acl.*;
-
-import java.io.Serializable;
-import java.util.Date;
-import java.util.Objects;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.commons.lang3.tuple.Pair;
-
-import org.w3c.dom.*;
-
-import es.ehu.platform.template.interfaces.BasicFunctionality;
-import es.ehu.platform.utilities.MsgNegotiation;
-import es.ehu.platform.behaviour.ControlBehaviour;
-import es.ehu.flexmansys.utilities.*;
-
+import java.io.Serializable;
+import java.util.Date;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static es.ehu.flexmansys.utilities.FmsNegotiation.*;
-import static es.ehu.platform.utilities.MasReconOntologies.*;
+import static es.ehu.utilities.MasReconOntologies.*;
 
 /**
  * Batch Agent Functionality
@@ -418,7 +418,7 @@ public class Batch_Functionality implements BasicFunctionality {
 	 * @return
 	 */
 	private ACLMessage createMsg(String ontology, String conversationID, int performative, Object content,
-			AID... targets) {
+                                 AID... targets) {
 		LOGGER.entry(ontology, performative, conversationID, content, targets);
 		ACLMessage msg = createMsg(ontology, performative, content, targets);
 		msg.setConversationId(conversationID);

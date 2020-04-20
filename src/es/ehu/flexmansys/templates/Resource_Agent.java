@@ -1,15 +1,14 @@
 package es.ehu.flexmansys.templates;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.w3c.dom.Document;
-
-import jade.core.behaviours.Behaviour;
-import jade.core.behaviours.FSMBehaviourMW;
-import jade.lang.acl.MessageTemplate;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.*;
 import es.ehu.platform.utilities.StateParallel;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.FSMBehaviourMW;
+import jade.lang.acl.MessageTemplate;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.w3c.dom.Document;
 
 /**
  * Resource Agent template used by machines and transports in the FLEXMANSYS

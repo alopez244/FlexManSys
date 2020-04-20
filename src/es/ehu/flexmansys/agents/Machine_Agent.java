@@ -1,23 +1,22 @@
 package es.ehu.flexmansys.agents;
 
+import es.ehu.behaviour.ControlBehaviour;
+import es.ehu.flexmansys.functionality.Machine_Functionality;
+import es.ehu.flexmansys.templates.Resource_Agent;
 import jade.core.behaviours.Behaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Document;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 
-import javax.xml.parsers.DocumentBuilder;
-
-import es.ehu.platform.behaviour.ControlBehaviour;
-import static es.ehu.flexmansys.utilities.FmsNegotiation.*;
-import static es.ehu.platform.utilities.MasReconOntologies.*;
+import static es.ehu.flexmansys.utilities.FmsNegotiation.ONT_DEBUG;
+import static es.ehu.utilities.MasReconOntologies.*;
 
 public class Machine_Agent extends Resource_Agent {
 

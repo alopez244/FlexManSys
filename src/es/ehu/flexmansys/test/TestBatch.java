@@ -1,9 +1,10 @@
 package es.ehu.flexmansys.test;
 
-import jade.core.*;
-import jade.core.behaviours.*;
+import es.ehu.flexmansys.utilities.MsgOperation;
+import jade.core.AID;
+import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

@@ -1,25 +1,25 @@
 package es.ehu.flexmansys.agents;
 
+import es.ehu.behaviour.ControlBehaviour;
+import es.ehu.flexmansys.functionality.Transport_Functionality;
+import es.ehu.flexmansys.templates.Resource_Agent;
 import jade.core.behaviours.Behaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ros.jade.RosAgent;
 import org.w3c.dom.Document;
 
-import es.ehu.platform.behaviour.ControlBehaviour;
-import static es.ehu.flexmansys.utilities.FmsNegotiation.ONT_KILL;
-import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
-
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
+import static es.ehu.flexmansys.utilities.FmsNegotiation.ONT_KILL;
+import static es.ehu.utilities.MasReconOntologies.ONT_NEGOTIATE;
 
 public class Transport_Agent extends Resource_Agent {
 

@@ -1,25 +1,24 @@
 package es.ehu.flexmansys.functionality;
 
-import es.ehu.platform.template.interfaces.BasicFunctionality;
-import es.ehu.platform.behaviour.ControlBehaviour;
+import es.ehu.behaviour.ControlBehaviour;
+import es.ehu.flexmansys.agents.Order_Agent;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
-
-import static es.ehu.platform.utilities.MasReconOntologies.*;
-
-import java.io.Serializable;
-import java.util.Objects;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.w3c.dom.*;
+import java.io.Serializable;
+import java.util.Objects;
 
 import static es.ehu.flexmansys.utilities.FmsNegotiation.*;
+import static es.ehu.utilities.MasReconOntologies.*;
 
 /**
  * Order Agent Functionality
@@ -293,7 +292,7 @@ public class Order_Functionality implements BasicFunctionality {
 	 * @return
 	 */
 	private ACLMessage createMsg(String ontology, String conversationID, int performative, Object content,
-			AID... targets) {
+                                 AID... targets) {
 		LOGGER.entry(ontology, performative, conversationID, content, targets);
 		ACLMessage msg = createMsg(ontology, performative, content, targets);
 		msg.setConversationId(conversationID);
