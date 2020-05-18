@@ -10,6 +10,7 @@ import jade.lang.acl.MessageTemplate;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.*;
 import es.ehu.platform.utilities.*;
+import org.w3c.dom.Document;
 
 public class ResourceAgentTemplate extends MWAgent {
 
@@ -23,15 +24,18 @@ public class ResourceAgentTemplate extends MWAgent {
      */
     public String resourceName;
 
+    /**
+     * Resource Model DOM
+     */
+    public Document resourceModel;
+
     @Override
     protected void setup() {
-        System.out.println(this.getLocalName()+": es.ehu.platform.template.ResourceAgentTemplate.setup()");
 
         this.initTransition = ControlBehaviour.RUNNING;
 
         /** Comportamiento Agente FSM **/
         FSMBehaviour behaviourFSM = new FSMBehaviour(this);
-        //FSMBehaviourMW
 
         MessageTemplate runTemplates = variableInitialization(getArguments(), behaviourFSM);
 

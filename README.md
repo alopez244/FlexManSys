@@ -32,3 +32,4 @@ It will contain detail of every step.
 17/04/2020 Manufacturing Resource Agent Launcher class has been developed in its first stage.
 15/05/2020 Restoring flexmansys folder from assistant branch.
 18/05/2020 Deleting the content of the Setup method, as well as the SetupContent method from the class MWAgent.
+18/05/2020 Modification of the ResourceAgentTemplate to meet the requirements for the development of domain resource agents.

@@ -46,21 +46,18 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         super(a);
         LOGGER.debug("*** Constructing RunningBehaviour ***");
         this.myAgent = a;
-
         this.template = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_RUN),
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
     }
 
     public void onStart() {
         LOGGER.entry();
-
         this.PrevPeriod = myAgent.period;
         if (myAgent.period < 0) {
             this.NextActivation = -1;
         } else {
             this.NextActivation = myAgent.period + System.currentTimeMillis();
         }
-
         LOGGER.exit();
     }
 
