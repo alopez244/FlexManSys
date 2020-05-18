@@ -27,7 +27,6 @@ public final class FmsNegotiation {
 	public static final String ONT_FAILURE = "failure";
 	public static final String ONT_KILL = "kill";
 	public static final String ONT_DEBUG = "debug";
-	public static final String ONT_NEGOTIATE = "negotiate";
 
 	public static final String CAT_MACHINE = "machine";
 	public static final String CAT_TRANSPORT = "transport";

@@ -15,7 +15,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 
-import static es.ehu.domain.manufacturing.utilities.FmsNegotiation.ONT_NEGOTIATE;
+import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
 import static es.ehu.domain.manufacturing.utilities.FmsNegotiation.ONT_DEBUG;
 
 public class MachineAgent extends ResourceAgentTemplate {
