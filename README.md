@@ -30,4 +30,5 @@ It will contain detail of every step.
 15/04/2020 The Planner.java class has been adapted to the new XMLReader.
 16/04/2020 Manufacturing Resource Agent and its functionality have been developed. ResourceBootBehaviour has been modified to read the class required to create such Agent.
 17/04/2020 Manufacturing Resource Agent Launcher class has been developed in its first stage.
-15/05/2020 Restoring flexmansys folder from auxiliar branch.
+15/05/2020 Restoring flexmansys folder from assistant branch.
+18/05/2020 Deleting the content of the Setup method, as well as the SetupContent method from the class MWAgent.

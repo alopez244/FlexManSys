@@ -71,61 +71,6 @@ public class MWAgent extends Agent {
     }
 
     protected void setup() {
-        LOGGER.entry(getArguments());
-        Object[] args = (Object[]) getArguments();
-
-        if (args.length>0) { //getCmp(cmpins)
-            LOGGER.debug("this.cmpID = "+args[0]+";");
-            this.cmpID = args[0].toString();
-        }
-        if (args.length>1) { //node
-            LOGGER.debug("doMove(new ContainerID("+args[1]+", null));"); //TODO comprobar que el nodo args[1] existe
-            doMove(new ContainerID(args[1].toString(), null));
-        }
-        if (args.length>2 && (args[2]!=null)) { //initialFSMState
-            LOGGER.debug("initTransition=Integer.parseInt("+args[2]+");");
-            initTransition=(Integer)args[2];
-        }
-        if ((args.length>3) && (args[3]!=null)) { //period
-            LOGGER.debug("period=Integer.parseInt("+args[3]+");");
-            period=(Integer)args[3];
-        }
-        if (args.length>4) {
-            LOGGER.debug("executionState = "+((args[4]==null)?"null":args[4].getClass().getName())+";");
-            initialExecutionState = args[4];
-        }
-        if (args.length>5) {
-            LOGGER.debug("conversationId = "+args[5]+";");
-            conversationId = args[5].toString();
-        }
-
-        if (args.length>6) {
-            this.sourceComponentIDs = (String[]) args[6] ;
-            LOGGER.info("sourceComponentIDs = "+((sourceComponentIDs.length>0)?sourceComponentIDs[0]:"")+";");
-        }
-        if (args.length>7) {
-            this.targetComponentIDs = (String[]) args[7] ;
-            LOGGER.info("targetComponentIDs = "+((targetComponentIDs.length>0)?targetComponentIDs[0]:"")+";");
-        }
-
-        // Anadir una tarea de apagado
-        try {
-            Runtime.getRuntime().addShutdownHook(new ShutdownThread(this));
-            LOGGER.info("Anadida tarea apagado");
-        } catch (Throwable t) {
-            LOGGER.warn(" *** Error: No se ha podido anadir tarea de apagado");
-            LOGGER.warn(t.getLocalizedMessage());}
-
-        setupContent();
-        LOGGER.exit();
-    }
-
-    /**
-     * Funcion para definir los comportamientos a ejecutar dentro del contenedor
-     */
-    protected void setupContent() {
-        LOGGER.entry();
-        LOGGER.exit();
     }
 
     protected void afterMove() {
