@@ -33,3 +33,4 @@ It will contain detail of every step.
 15/05/2020 Restoring flexmansys folder from assistant branch.
 18/05/2020 Deleting the content of the Setup method, as well as the SetupContent method from the class MWAgent.
 18/05/2020 Modification of the ResourceAgentTemplate to meet the requirements for the development of domain resource agents.
+18/05/2020 MachineAgent has been created in folder domain.manufacturing.agents following the Agent developed by Brais.
