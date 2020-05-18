@@ -36,3 +36,4 @@ It will contain detail of every step.
 18/05/2020 MachineAgent has been created in folder domain.manufacturing.agents following the Agent developed by Brais.
 18/05/2020 Developing the new Machine_Functionality class.
 18/05/2020 Recover for this project the .java files RosAgent and RosMsg, renamed as RosNodeAgent and RosNodeMsg, respectively.
+18/05/2020 ODK_JADE class has been created.

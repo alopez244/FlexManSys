@@ -1,5 +1,6 @@
 package es.ehu.domain.manufacturing.agents;
 
+import es.ehu.domain.manufacturing.agents.cognitive.odk.jade.ODK_JADE;
 import es.ehu.domain.manufacturing.agents.functionality.Machine_Functionality;
 import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.ResourceAgentTemplate;
@@ -30,6 +31,8 @@ public class MachineAgent extends ResourceAgentTemplate {
     /** Machine Plan . */
     public Document machinePlan;
 
+    public ODK_JADE machineTranslator;
+
     @Override
     protected MessageTemplate variableInitialization(Object[] arguments, Behaviour behaviour) {
         LOGGER.entry(arguments);
@@ -40,7 +43,7 @@ public class MachineAgent extends ResourceAgentTemplate {
                 MessageTemplate.MatchPerformative(ACLMessage.INFORM));
 
         //Declaration of the variable used to communicate the agent and the machine (at the moment, Siemens PLC)
-
+        machineTranslator = new ODK_JADE(this);
 
         if ((arguments != null) && (arguments.length >= 3)) {
             this.resourceName = arguments[0].toString();
