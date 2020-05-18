@@ -39,6 +39,9 @@ public class MachineAgent extends ResourceAgentTemplate {
         MessageTemplate debugSim = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_DEBUG),
                 MessageTemplate.MatchPerformative(ACLMessage.INFORM));
 
+        //Declaration of the variable used to communicate the agent and the machine (at the moment, Siemens PLC)
+
+
         if ((arguments != null) && (arguments.length >= 3)) {
             this.resourceName = arguments[0].toString();
             machineServices = arguments[1].toString();

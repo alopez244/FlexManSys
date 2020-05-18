@@ -32,14 +32,6 @@ public class MWAgent extends Agent {
     static final Logger LOGGER = LogManager.getLogger(MWAgent.class.getName()) ;
 
     /**
-     *  Tabla para almacenar los AIDs de los receptores
-     */
-
-    /**
-     * instancia AID
-     */
-
-    /**
      *  Instancia en running del componente (actualizarla cuando al MWM llega un setState)
      */
     //TODO refresh local cache
