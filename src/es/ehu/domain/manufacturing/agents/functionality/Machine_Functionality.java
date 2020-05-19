@@ -177,9 +177,41 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         LOGGER.exit();
     }
 
+    /**
+     * Initialize the functional properties
+     *
+     * @return The name used for registering the agent in the MWM (or SM)
+     */
     @Override
-    public String init(MWAgent myAgent) {
-        return null;
+    public String init(MWAgent mwAgent) {
+
+        //First of all, the connection with the asset must be checked
+
+
+        //Later, if the previous condition is accomplished, the agent is registered
+        //this.mwAgent = myAgent;
+        LOGGER.entry();
+
+        String attribs = "";
+        String [] args = (String[]) mwAgent.getArguments();
+
+        for (int i=0; i<args.length; i++){
+            if (!args[i].toString().toLowerCase().startsWith("id=")) attribs += " "+args[i];
+            if (args[i].toString().toLowerCase().startsWith("id=")) return "";
+        }
+
+        String cmd = "reg machine parent=system"+attribs;
+
+        ACLMessage reply = null;
+        try {
+            reply = mwAgent.sendCommand(cmd);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        String respuesta = reply.getContent();
+
+        LOGGER.info(mwAgent.getLocalName()+" ("+cmd+")"+" > mwm < "+respuesta);
+        return LOGGER.exit(respuesta);
     }
 
     @Override

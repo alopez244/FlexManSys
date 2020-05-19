@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
+<xs:schema xmlns="updatedPlan" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="updatedPlan" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:redefine schemaLocation="../Base Schemas/Operations.xsd">
+		<xs:complexType name="SimpleOperation">
+			<xs:complexContent>
+				<xs:extension base="SimpleOperation">
+					<xs:sequence>
+						<xs:element name="Product">
+							<xs:complexType>
+								<xs:attribute name="refProductID" type="xs:string"/>
+								<xs:attribute name="refPalletIn" type="xs:string"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute name="order" type="xs:string" use="required"/>
+					<xs:attribute name="batch" type="xs:string" use="required"/>
+					<xs:attribute name="startTime" type="xs:string" use="required"/>
+					<xs:attribute name="finishTime" type="xs:string" use="required"/>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+		<xs:complexType name="ComplexOperation">
+			<xs:complexContent>
+				<xs:extension base="ComplexOperation">
+					<xs:sequence>
+						<xs:element name="Product" minOccurs="2" maxOccurs="2">
+							<xs:complexType>
+								<xs:attribute name="refProductID" type="xs:string"/>
+								<xs:attribute name="refPalletIn" type="xs:string"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute name="order" type="xs:string" use="required"/>
+					<xs:attribute name="batch" type="xs:string" use="required"/>
+					<xs:attribute name="startTime" type="xs:string" use="required"/>
+					<xs:attribute name="finishTime" type="xs:string" use="required"/>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:redefine>
+	<xs:element name="station">
+		<xs:complexType>
+			<xs:choice maxOccurs="unbounded">
+				<xs:element name="simple_operation" type="SimpleOperation"/>
+				<xs:element name="complex_operation" type="ComplexOperation"/>
+			</xs:choice>
+			<xs:attribute name="ref_id" type="xs:NMTOKEN" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="updatedPlan">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="station" minOccurs="1" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="id" type="xs:NMTOKEN" use="required"/>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>
