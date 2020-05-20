@@ -87,7 +87,7 @@ public class Planner extends Agent {
                         //An ACL message is sent per each String in "cmds".
                         for (int i=0; i<cmds.length;i++){
                             cmds[i] = cmds[i].trim();
-                            if (cmds[i].startsWith("register")) {
+                            if (cmds[i].equals("register")) {
                                 registerPredefined(cmds[i]);
                                 if (cmds.length>1) System.out.print(" < "+cmds[i]);
                                 System.out.print("\n\n");

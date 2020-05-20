@@ -163,8 +163,8 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         LOGGER.entry("*** Constructing Machine_Functionality ***");
         this.myAgent = agent;
         operationTimeout = Long.MAX_VALUE;
-        Element dompalletIn = (Element) myAgent.resourceModel.getElementsByTagName("PalletIn").item(0);
-        Element dompalletOut = (Element) myAgent.resourceModel.getElementsByTagName("PalletOut").item(0);
+        Element dompalletIn = (Element) myAgent.resourceModel.getElementsByTagName("palletIn").item(0);
+        Element dompalletOut = (Element) myAgent.resourceModel.getElementsByTagName("palletOut").item(0);
         palletIn = Pair.of(new Position(Float.valueOf(dompalletIn.getAttribute("xPos")),
                 Float.valueOf(dompalletIn.getAttribute("yPos"))), false);
         palletOut = Pair.of(new Position(Float.valueOf(dompalletOut.getAttribute("xPos")),

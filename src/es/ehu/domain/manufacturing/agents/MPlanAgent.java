@@ -14,7 +14,7 @@ public class MPlanAgent extends ApplicationAgentTemplate{
 
   @Override
   protected MessageTemplate variableInitialization(Object[] arguments, Behaviour behaviour) {
-    System.out.println("es.ehu.platform.template.ResourceAgentTemplate.variableInitialization()");
+    System.out.println("es.ehu.platform.template.ApplicationAgentTemplate.variableInitialization()");
     this.functionalityInstance = new MPlan_Functionality();
     return null;
   }
