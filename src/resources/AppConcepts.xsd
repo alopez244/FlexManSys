@@ -2,7 +2,7 @@
 <!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
 <xs:schema xmlns="Concepts" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="Concepts" elementFormDefault="qualified" attributeFormDefault="unqualified">
 	<xs:include schemaLocation="AppProperties.xsd"/>
-	<xs:element name="manufacturingPlan" type="ManufacturingPlan"/>
+	<xs:element name="mPlan" type="ManufacturingPlan"/>
 	<xs:element name="order" type="Order"/>
 	<xs:element name="batch" type="Batch"/>
 </xs:schema>
