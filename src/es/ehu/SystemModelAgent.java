@@ -902,7 +902,7 @@ public class SystemModelAgent extends Agent {
         String targets = processCmd("get * category=pNodeAgent"+((refServID.length()>0)?" refServID="+refServID:""), conversationId);
         if (targets.length()<=0) return "-4";
 
-        String seCategory = processCmd("get "+seID+"agent"+" attrib=category", conversationId);
+        String seCategory = processCmd("get "+seID+" attrib=category", conversationId);
         String seClass = "es.ehu.domain.manufacturing.agents.MPlanAgent";//processCmd("get "+seID+" attrib=class", conversationId);
 
         //mando negociar a todos
