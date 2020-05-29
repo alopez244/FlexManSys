@@ -47,7 +47,7 @@ public class ManResource_Functionality implements BasicFunctionality, NegFunctio
     }
 
     @Override
-    public long calculateNegotiationValue(String negCriterion, Object... negExternalData) {
+    public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData) {
         return 0;
     }
 

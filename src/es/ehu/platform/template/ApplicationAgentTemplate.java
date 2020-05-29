@@ -20,14 +20,14 @@ public class ApplicationAgentTemplate extends MWAgent {
   private static final String ST_BOOT = "boot";
 
   /**
-   * Resource Name
+   * Application Name
    */
-  public String resourceName;
+  public String applicationName;
 
   /**
-   * Resource Model DOM
+   * Application Model DOM
    */
-  public Document resourceModel;
+  public Document applicationModel;
 
   @Override
   protected void setup() {

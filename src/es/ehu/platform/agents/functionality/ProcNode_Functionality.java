@@ -35,7 +35,7 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
       if (args[i].toString().toLowerCase().startsWith("id=")) return "";
     }
 
-    String cmd = "reg procNode parent=system"+attribs;
+    String cmd = "reg pNodeAgent parent=system"+attribs;
 
     ACLMessage reply = null;
     try {
@@ -50,7 +50,7 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
   }
 
   @Override
-  public long calculateNegotiationValue(String negCriterion, Object... negExternalData) {
+  public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData) {
     // approximation to the total amount of memory currently available for future allocated objects, measured in bytes
     return Runtime.getRuntime().freeMemory();
   }

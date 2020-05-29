@@ -899,10 +899,10 @@ public class SystemModelAgent extends Agent {
         // si no hay negociarres return "-4"; //TODO
         String refServID=processCmd("get (get * parent=(get * parent="+seID+" category=restrictionList)) attrib=attribValue", conversationId);
         //si hay restricción la añado al filtro, en caso contrario solo busco procNode
-        String targets = processCmd("get * category=procNode"+((refServID.length()>0)?" refServID="+refServID:""), conversationId);
+        String targets = processCmd("get * category=pNodeAgent"+((refServID.length()>0)?" refServID="+refServID:""), conversationId);
         if (targets.length()<=0) return "-4";
 
-        String seCategory = processCmd("get "+seID+" attrib=category", conversationId);
+        String seCategory = processCmd("get "+seID+"agent"+" attrib=category", conversationId);
         String seClass = "es.ehu.domain.manufacturing.agents.MPlanAgent";//processCmd("get "+seID+" attrib=class", conversationId);
 
         //mando negociar a todos
@@ -1294,9 +1294,9 @@ public class SystemModelAgent extends Agent {
         if (!attribs.containsKey("ID")) {
             // si no llega un id lo genero
 
-            id = (prm.length() > 6)? prm.substring(0, 6): prm;
+            id = (prm.length() > 10)? prm.substring(0, 10): prm;
             id = id.toLowerCase();
-            if (!count.containsKey(id)) count.put(id, 101);
+            if (!count.containsKey(id)) count.put(id, 1);
             else count.put(id, (count.get(id)) + 1);
             id = id + count.get(id);
         } else { // si llega lo guardo

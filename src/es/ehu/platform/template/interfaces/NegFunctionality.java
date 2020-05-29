@@ -7,7 +7,7 @@ import jade.core.AID;
 public interface NegFunctionality extends Serializable{
 
   //
-	public long calculateNegotiationValue(String negCriterion, Object... negExternalData);
+	public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData);
 	
 	// negId - id de la negociación
 	// negReceivedValue - valor recibido para comparar

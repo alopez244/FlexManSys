@@ -81,15 +81,25 @@ public class MasReconAgent {
         String restrictionMatch = null;
         if (restrictionLists!=null) {
             for (Entry<String, ConcurrentHashMap<String, String>> restriction : restrictionLists.entrySet()) {
+
+                //Aquí se obtiene el tipo de recurso del que se quiere comprobar las restricciones
+                //String query = "get * category="+restriction.getKey();
                 String query = "get * category=service";
 
-                for (Entry<String, String> entry : restriction.getValue().entrySet())
-                    query = query +" "+ entry.getKey() + "=" + entry.getValue();
+                for (Entry<String, String> entry : restriction.getValue().entrySet()) {
+
+                    //Aquí se obtienen las restricciones asociadas a ese tipo de recurso
+                    query = query + " " + entry.getKey() + "=" + entry.getValue();
+                }
 
                 query = "get (get ("+query+") attrib=parent) category=" + restriction.getKey();
 
                 System.out.println("***************** Lanzo consulta de comprobación " + query);
                 String validateRestriction = sendCommand(mwm, query).getContent();
+                if (validateRestriction.isEmpty()) {
+                    LOGGER.info(query+">"+validateRestriction+": restricción incumplida");
+                    throw new Exception();
+                }
             }
         }
 

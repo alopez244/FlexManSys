@@ -220,7 +220,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
     }
 
     @Override
-    public long calculateNegotiationValue(String negCriterion, Object... negExternalData) {
+    public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData) {
         return 0;
     }
 

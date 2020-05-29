@@ -39,3 +39,4 @@ It will contain detail of every step.
 18/05/2020 ODK_JADE class has been created.
 19/05/2020 ODK_JADE class has been deleted (communication with the cognitive layer is designed in a different way). Minor changes have been performed for a first test.
 20/05/2020 Analysis to modify the resource boot behaviour to adapt it to the new requirements for the deployment of machine agents.
+30/05/2020 Changes have been performed in order to improve the ID asignation by the SystemModelAgent.
