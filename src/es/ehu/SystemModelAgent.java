@@ -695,7 +695,7 @@ public class SystemModelAgent extends Agent {
             String comienzo = (prm.length>1 && !prm[1].isEmpty())? prm[1].replace("*", ".*"):"system.*";
             for (String key : elements.keySet()) {
                 if (key.matches(comienzo)) {
-                    response.append(list(key)).append("\n");
+                    response.append("\n\n").append(list(key)).append("\n");
                     response.append(getChildren(key, "\t"));
                 }
             }
