@@ -13,9 +13,9 @@
 			</xs:complexContent>
 		</xs:complexType>
 		<!-- ============= MANUFACTURING=========== -->
-		<xs:complexType name="ManufacturingPlan">
+		<xs:complexType name="MPlan">
 			<xs:complexContent>
-				<xs:extension base="ManufacturingPlan">
+				<xs:extension base="MPlan">
 					<xs:sequence>
 						<xs:element name="order" type="Order" minOccurs="1" maxOccurs="unbounded"/>
 					</xs:sequence>
@@ -24,5 +24,5 @@
 		</xs:complexType>
 	</xs:redefine>
 	<!--system elements that can be validated-->
-	<xs:element name="mPlan" type="ManufacturingPlan"/>
+	<xs:element name="mPlan" type="MPlan"/>
 </xs:schema>
