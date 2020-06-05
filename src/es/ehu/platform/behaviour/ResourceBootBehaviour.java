@@ -81,6 +81,9 @@ public class ResourceBootBehaviour extends SimpleBehaviour {
             }
         }
 
+        //I must change the action method. This behaviour must be of use for all the different resources. This requires...
+        //...to remove part of the code in this method to embed it in the ProcNode_Functionality.init method.
+
         newID = myAgent.functionalityInstance.init(myAgent);
         if (ID == null) {
             LOGGER.info(myAgent.getLocalName()+": autoreg > ");
