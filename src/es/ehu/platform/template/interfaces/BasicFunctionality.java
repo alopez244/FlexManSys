@@ -11,7 +11,7 @@ public interface BasicFunctionality extends Serializable {
   
   static final Logger LOGGER = LogManager.getLogger(BasicFunctionality.class.getName()) ;
 	
-	public String init(MWAgent myAgent);
+	public Void init(MWAgent myAgent);
 		
 	public Object execute(Object[] input); //ejecutar funcionalidad y devuelve un objeto
 	

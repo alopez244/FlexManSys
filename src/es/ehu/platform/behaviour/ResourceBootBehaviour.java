@@ -47,7 +47,7 @@ public class ResourceBootBehaviour extends SimpleBehaviour {
     private String mwm;
 
     private boolean exit;
-    private String ID, newID, className;
+    private String ID, newID;
 
     // Constructor. Create a default template for the entry messages
     public ResourceBootBehaviour(MWAgent a) {
@@ -77,31 +77,42 @@ public class ResourceBootBehaviour extends SimpleBehaviour {
         for (int i=0; i<args.length; i++) {
             if (args[i].startsWith("ID=")) {
                 ID=args[i].substring(3);
-                newID=ID;
             }
         }
 
         //I must change the action method. This behaviour must be of use for all the different resources. This requires...
         //...to remove part of the code in this method to embed it in the ProcNode_Functionality.init method.
-
-        newID = myAgent.functionalityInstance.init(myAgent);
+        newID = "";
         if (ID == null) {
+            //if the agent has no ID, it means it is an auxiliary agent
+            //Therefore, we invoke functioinalityInstance.init
+
             LOGGER.info(myAgent.getLocalName()+": autoreg > ");
             if (myAgent==null) System.out.println("My agent is null");
             if (myAgent.functionalityInstance==null) System.out.println("functionalityInstance is null");
+            myAgent.functionalityInstance.init(myAgent);
+            exit = true;
 
-            try {
-                // Agent generation;
-                //TODO parametrizar la clase que se pasa al crear el agente
-                className = myAgent.getClass().getName();
-                ((AgentController)myAgent.getContainerController().createNewAgent(newID,className, new String[] { "ID="+newID, "description=description" })).start();
-
-                Thread.sleep(1000);
-                exit = true;
-            } catch (Exception e1) {
-                e1.printStackTrace();
-            }
         } else exit = true;
+
+//        newID = myAgent.functionalityInstance.init(myAgent);
+//        if (ID == null) {
+//            LOGGER.info(myAgent.getLocalName()+": autoreg > ");
+//            if (myAgent==null) System.out.println("My agent is null");
+//            if (myAgent.functionalityInstance==null) System.out.println("functionalityInstance is null");
+//
+//            try {
+//                // Agent generation;
+//                //TODO parametrizar la clase que se pasa al crear el agente
+//                className = myAgent.getClass().getName();
+//                ((AgentController)myAgent.getContainerController().createNewAgent(newID,className, new String[] { "ID="+newID, "description=description" })).start();
+//
+//                Thread.sleep(1000);
+//                exit = true;
+//            } catch (Exception e1) {
+//                e1.printStackTrace();
+//            }
+//        } else exit = true;
 
         LOGGER.exit();
     }

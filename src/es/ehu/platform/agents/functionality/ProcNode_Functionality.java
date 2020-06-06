@@ -21,19 +21,24 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
    */
   private static final long serialVersionUID = 1L;
   private Agent myAgent;
+  private String ID, className;
 
   @Override
-  public String init(MWAgent myAgent) {
+  public Void init(MWAgent myAgent) {
     this.myAgent = myAgent;
     LOGGER.entry();
 
     String attribs = "";
-    String [] args = (String[]) myAgent.getArguments(); 
-    
-    for (int i=0; i<args.length; i++){ 
+    String [] args = (String[]) myAgent.getArguments();
+
+    //First, the arguments of the auxiliar agent are read
+
+    for (int i=0; i<args.length; i++){
       if (!args[i].toString().toLowerCase().startsWith("id=")) attribs += " "+args[i];
-      if (args[i].toString().toLowerCase().startsWith("id=")) return "";
+      //if (args[i].toString().toLowerCase().startsWith("id=")) return null;
     }
+
+    //Secondly, the ProcessNodeAgent is registered in the System Model
 
     String cmd = "reg pNodeAgent parent=system"+attribs;
 
@@ -43,10 +48,25 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
     } catch (Exception e) {
       e.printStackTrace();
     }
-    String respuesta = reply.getContent();
-    
-    LOGGER.info(myAgent.getLocalName()+" ("+cmd+")"+" > mwm < "+respuesta);
-    return LOGGER.exit(respuesta);
+    ID = reply.getContent();
+
+    LOGGER.info(myAgent.getLocalName()+" ("+cmd+")"+" > mwm < "+ID);
+
+    //Finally, the ProcessNodeAgent is started
+
+    try {
+      // Agent generation;
+      //TODO parametrizar la clase que se pasa al crear el agente
+      className = myAgent.getClass().getName();
+      ((AgentController)myAgent.getContainerController().createNewAgent(ID,className, new String[] { "ID="+ID, "description=description" })).start();
+
+      Thread.sleep(1000);
+    } catch (Exception e1) {
+      e1.printStackTrace();
+    }
+
+
+    return null;
   }
 
   @Override
