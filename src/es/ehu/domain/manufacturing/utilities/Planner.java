@@ -132,6 +132,9 @@ public class Planner extends Agent {
             ConcurrentHashMap<String, ConcurrentHashMap<String, String>> restrictionLists = new ConcurrentHashMap<String, ConcurrentHashMap<String, String>>();
             ConcurrentHashMap<String, String> serviceList = new ConcurrentHashMap<String, String>();
             ConcurrentHashMap<String, ConcurrentHashMap<String, String>> serviceLists = new ConcurrentHashMap<String, ConcurrentHashMap<String, String>>();
+            ConcurrentHashMap<String, String> agentAttributes = new ConcurrentHashMap<String, String>();
+
+            agentAttributes.put("seClass", "es.ehu.domain.manufacturing.agents.MPlanAgent");
 
             String appPath="classes/resources/AppInstances/";
             String file="";
@@ -176,7 +179,7 @@ public class Planner extends Agent {
             mra.iValidate(app);
 
             //Start
-            mra.start(app,null);
+            mra.start(app,agentAttributes);
         }
 
         private boolean finished = false;
