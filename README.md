@@ -41,4 +41,4 @@ It will contain detail of every step.
 20/05/2020 Analysis to modify the resource boot behaviour to adapt it to the new requirements for the deployment of machine agents.
 30/05/2020 Changes have been performed in order to improve the ID asignation by the SystemModelAgent.
 05/06/2020 Changes in the schemas for the IFAC video.
-06/06/2020 Changes to send the class for switching on and agent in the start method.
+06/06/2020 Changes to send the class for switching on an agent in the start method.
