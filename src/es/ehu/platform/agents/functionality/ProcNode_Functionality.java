@@ -55,8 +55,7 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
     //Finally, the ProcessNodeAgent is started
 
     try {
-      // Agent generation;
-      //TODO parametrizar la clase que se pasa al crear el agente
+      // Agent generation
       className = myAgent.getClass().getName();
       ((AgentController)myAgent.getContainerController().createNewAgent(ID,className, new String[] { "ID="+ID, "description=description" })).start();
 
