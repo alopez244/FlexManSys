@@ -16,12 +16,12 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
   
   private Agent myAgent;
   @Override
-  public String init(MWAgent myAgent) {
+  public Void init(MWAgent myAgent) {
     LOGGER.entry(myAgent);
     this.myAgent = myAgent;
 
     // lanzo todos mis hijos
-    String hijos = ((MWAgent)myAgent).sendCommand("sestart (get * parent=(get "+myAgent.getLocalName()+" attrib=parent) category=application)").getContent();
+    //String hijos = ((MWAgent)myAgent).sendCommand("sestart (get * parent=(get "+myAgent.getLocalName()+" attrib=parent) category=application)").getContent();
     
         
     // localneg (entre quienes: con restricción en el xml, criterio (piñon), acción (newInstance, cambiar firstState)
