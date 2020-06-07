@@ -183,7 +183,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
      * @return The name used for registering the agent in the MWM (or SM)
      */
     @Override
-    public String init(MWAgent mwAgent) {
+    public Void init(MWAgent mwAgent) {
 
         //First of all, the connection with the asset must be checked
 
@@ -197,8 +197,9 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
         for (int i=0; i<args.length; i++){
             if (!args[i].toString().toLowerCase().startsWith("id=")) attribs += " "+args[i];
-            if (args[i].toString().toLowerCase().startsWith("id=")) return "";
         }
+
+        //Secondly, the ProcessNodeAgent is registered in the System Model
 
         String cmd = "reg machine parent=system"+attribs;
 
@@ -208,10 +209,15 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         } catch (Exception e) {
             e.printStackTrace();
         }
-        String respuesta = reply.getContent();
+        String seId = reply.getContent();
 
-        LOGGER.info(mwAgent.getLocalName()+" ("+cmd+")"+" > mwm < "+respuesta);
-        return LOGGER.exit(respuesta);
+        LOGGER.info(mwAgent.getLocalName()+" ("+cmd+")"+" > mwm < "+seId);
+
+        //Finally, the MachineAgent is started.
+
+        cmd = "sestart "+seId+" seClass=es.ehu.domain.manufacturing.agents.MachineAgent";
+
+        return null;
     }
 
     @Override
