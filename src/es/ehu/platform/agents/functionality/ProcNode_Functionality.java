@@ -73,8 +73,9 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
     }
 
     @Override
-    public int checkNegotiation(String conversationId, String sAction, double negReceivedValue, long negScalarValue, boolean tieBreak,
+    public int checkNegotiation(MWAgent myAgent, String conversationId, String sAction, double negReceivedValue, long negScalarValue, boolean tieBreak,
                                 boolean checkReplies, Object... negExternalData) {
+        this.myAgent = myAgent;
         LOGGER.entry(conversationId, sAction, negReceivedValue, negScalarValue);
 
         String seID = (String)negExternalData[0];

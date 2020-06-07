@@ -1,7 +1,7 @@
 package es.ehu.platform.template.interfaces;
 
 import java.io.Serializable;
-
+import es.ehu.platform.MWAgent;
 import jade.core.AID;
 
 public interface NegFunctionality extends Serializable{
@@ -16,6 +16,6 @@ public interface NegFunctionality extends Serializable{
 	// tieBreaker - criterio de desempate
 	// checkReplies - true si han competido todos
 	
-	public int checkNegotiation(String negId, String winnerAction, double negReceivedValue, long negScalarValue, boolean tieBreaker, boolean checkReplies, Object... negExternalData);
+	public int checkNegotiation(MWAgent myAgent, String negId, String winnerAction, double negReceivedValue, long negScalarValue, boolean tieBreaker, boolean checkReplies, Object... negExternalData);
 
 }
