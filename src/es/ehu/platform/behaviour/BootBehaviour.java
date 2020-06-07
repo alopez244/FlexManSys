@@ -23,9 +23,8 @@ public class BootBehaviour extends OneShotBehaviour {
     LOGGER.entry();
     try {
       // --------------- inicializacion ----------------
-      
-      myAgent.functionalityInstance.init(myAgent);
 
+      myAgent.functionalityInstance.init(myAgent);
       myAgent.MWInit(myAgent.targetComponentIDs, myAgent.sourceComponentIDs, myAgent);
 
       //if (myAgent.initialExecutionState!=null) myAgent.functionalityInstance.setState(myAgent.initialExecutionState);
