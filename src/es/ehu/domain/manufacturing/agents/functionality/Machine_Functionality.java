@@ -5,6 +5,7 @@ import es.ehu.domain.manufacturing.utilities.Position;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.NegFunctionality;
+import es.ehu.platform.utilities.XMLReader;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -14,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Element;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
 
@@ -192,11 +194,14 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         //this.mwAgent = myAgent;
         LOGGER.entry();
 
+        //First, the Machine Model is read
+
         String attribs = "";
         String [] args = (String[]) mwAgent.getArguments();
-
-        for (int i=0; i<args.length; i++){
-            if (!args[i].toString().toLowerCase().startsWith("id=")) attribs += " "+args[i];
+        XMLReader fileReader = new XMLReader();
+        ArrayList<ArrayList<ArrayList<String>>> xmlelements = fileReader.readFile(args[2]);
+        for (int j = 0; j < xmlelements.get(0).get(2).size(); j++){
+            attribs += " "+xmlelements.get(0).get(2).get(j)+"="+xmlelements.get(0).get(3).get(j);
         }
 
         //Secondly, the ProcessNodeAgent is registered in the System Model

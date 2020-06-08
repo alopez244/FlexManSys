@@ -46,3 +46,4 @@ It will contain detail of every step.
 07/06/2020 Checking why the ProcNode_Functionality breaks down when trying to start an MPlanAgent. 
 07/06/2020 Changes in the ProcNode_Functionality for solving the aforementioned problems.
 08/06/2020 Negotiated starting of the MachineAgent.
+09/06/2020 Optimized reading of the Machine Model attributes (not using Document type elements).

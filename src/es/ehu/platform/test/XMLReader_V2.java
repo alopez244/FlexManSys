@@ -4,25 +4,37 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.*;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class XMLReader_V2 {
 
-    public static ArrayList<ArrayList<ArrayList<String>>> readFile (String uri) throws Exception {
+    public static ArrayList<ArrayList<ArrayList<String>>> readFile (String uri) {
 
         //Build DOM
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true); // never forget this!
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document doc = builder.parse(String.valueOf(uri));
+        DocumentBuilder builder = null;
+        try {
+            builder = factory.newDocumentBuilder();
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        }
+        Document doc = null;
+        try {
+            doc = builder.parse(String.valueOf(uri));
+        } catch (SAXException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         //Create XPath
         XPathFactory xpathfactory = XPathFactory.newInstance();
@@ -36,8 +48,18 @@ public class XMLReader_V2 {
         //Reading Loop
         //Start for the first level
         //The nodeset of elements at this level is obtained
-        XPathExpression expr = xpath.compile(level);
-        Object result = expr.evaluate(doc, XPathConstants.NODESET);
+        XPathExpression expr = null;
+        try {
+            expr = xpath.compile(level);
+        } catch (XPathExpressionException e) {
+            e.printStackTrace();
+        }
+        Object result = null;
+        try {
+            result = expr.evaluate(doc, XPathConstants.NODESET);
+        } catch (XPathExpressionException e) {
+            e.printStackTrace();
+        }
         NodeList nodes = (NodeList) result;
 
         //Nested top-down element reading
@@ -73,8 +95,18 @@ public class XMLReader_V2 {
                 //Search for elements on the first element of the second level of the XML file
                 int i_1=i+1;
                 level="/*["+(i_1)+"]/*";
-                XPathExpression expr2 = xpath.compile(level);
-                Object result2 = expr2.evaluate(doc, XPathConstants.NODESET);
+                XPathExpression expr2 = null;
+                try {
+                    expr2 = xpath.compile(level);
+                } catch (XPathExpressionException e) {
+                    e.printStackTrace();
+                }
+                Object result2 = null;
+                try {
+                    result2 = expr2.evaluate(doc, XPathConstants.NODESET);
+                } catch (XPathExpressionException e) {
+                    e.printStackTrace();
+                }
                 NodeList nodes2 = (NodeList) result2;
 
                 //Now we want to register only the nodes of the second level related to an specific father
@@ -105,8 +137,18 @@ public class XMLReader_V2 {
                         //Search for elements on the third level of the XML file
                         int k_1=k+1;
                         level="/*["+i_1+"]/*["+k_1+"]/*";
-                        XPathExpression expr3 = xpath.compile(level);
-                        Object result3 = expr3.evaluate(doc, XPathConstants.NODESET);
+                        XPathExpression expr3 = null;
+                        try {
+                            expr3 = xpath.compile(level);
+                        } catch (XPathExpressionException e) {
+                            e.printStackTrace();
+                        }
+                        Object result3 = null;
+                        try {
+                            result3 = expr3.evaluate(doc, XPathConstants.NODESET);
+                        } catch (XPathExpressionException e) {
+                            e.printStackTrace();
+                        }
                         NodeList nodes3 = (NodeList) result3;
 
                         //Now we want to register only the nodes of the third level related to an specific father

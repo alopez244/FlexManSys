@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 public class XMLReadElement {
     public static Object[] XMLReadElement (Document doc, XPath xpath, String level,
-                                           Object[] solution) throws XPathExpressionException {
+                                           Object[] solution) {
 
         //Obtain elements from the solution object
         ArrayList<ArrayList<ArrayList<String>>> xmlelements = new ArrayList<ArrayList<ArrayList<String>>>();
@@ -22,8 +22,18 @@ public class XMLReadElement {
 
         //Start for the first level
         //The nodeset of elements at this level is obtained
-        XPathExpression expr = xpath.compile(level);
-        Object result = expr.evaluate(doc, XPathConstants.NODESET);
+        XPathExpression expr = null;
+        try {
+            expr = xpath.compile(level);
+        } catch (XPathExpressionException e) {
+            e.printStackTrace();
+        }
+        Object result = null;
+        try {
+            result = expr.evaluate(doc, XPathConstants.NODESET);
+        } catch (XPathExpressionException e) {
+            e.printStackTrace();
+        }
         NodeList nodes = (NodeList) result;
 
         //Reading Loop

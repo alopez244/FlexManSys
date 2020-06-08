@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class main {
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         String appPath="classes/resources/ResInstances/";
 //        String appPath = "classes/es/ehu/domain/manufacturing/test/";
         String file="";

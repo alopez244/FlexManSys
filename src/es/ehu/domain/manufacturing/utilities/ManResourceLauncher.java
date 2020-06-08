@@ -5,12 +5,13 @@ import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
+import jade.wrapper.StaleProxyException;
 
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ManResourceLauncher {
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         String uri="classes/resources/ResInstances/RA1.xml";
         XMLReader fileReader = new XMLReader();
         ArrayList<ArrayList<ArrayList<String>>> xmlelements = fileReader.readFile(uri);
@@ -35,7 +36,16 @@ public class ManResourceLauncher {
         Profile p = new ProfileImpl();
         // create the Main-container
         ContainerController cc = rt.createAgentContainer(p);
-        AgentController ac = cc.createNewAgent(nickname, className, command);
-        ac.start();
+        AgentController ac = null;
+        try {
+            ac = cc.createNewAgent(nickname, className, command);
+        } catch (StaleProxyException e) {
+            e.printStackTrace();
+        }
+        try {
+            ac.start();
+        } catch (StaleProxyException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -2,24 +2,36 @@ package es.ehu.platform.test;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.*;
+import java.io.IOException;
 
 public class XMLReader_V1 {
 
-    public static void readFile (String uri) throws Exception {
+    public static void readFile (String uri) {
 
         //Build DOM
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true); // never forget this!
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document doc = builder.parse(String.valueOf(uri));
+        DocumentBuilder builder = null;
+        try {
+            builder = factory.newDocumentBuilder();
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        }
+        Document doc = null;
+        try {
+            doc = builder.parse(String.valueOf(uri));
+        } catch (SAXException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         //Create XPath
 
@@ -44,8 +56,18 @@ public class XMLReader_V1 {
             parent = element;
 
             //The name of the element is obtained (name of the XPath node)
-            XPathExpression expr = xpath.compile("name("+level+")");
-            Object result1 = expr.evaluate(doc, XPathConstants.STRING);
+            XPathExpression expr = null;
+            try {
+                expr = xpath.compile("name("+level+")");
+            } catch (XPathExpressionException e) {
+                e.printStackTrace();
+            }
+            Object result1 = null;
+            try {
+                result1 = expr.evaluate(doc, XPathConstants.STRING);
+            } catch (XPathExpressionException e) {
+                e.printStackTrace();
+            }
             element = (String) result1;
             if (element == ""){
                 break;
@@ -54,8 +76,17 @@ public class XMLReader_V1 {
             System.out.println("Parent: "+parent);
 
             //The attributes of the element are obtained (attributes names and values)
-            expr = xpath.compile(level+"/@*");
-            Object result2 = expr.evaluate(doc, XPathConstants.NODESET);
+            try {
+                expr = xpath.compile(level+"/@*");
+            } catch (XPathExpressionException e) {
+                e.printStackTrace();
+            }
+            Object result2 = null;
+            try {
+                result2 = expr.evaluate(doc, XPathConstants.NODESET);
+            } catch (XPathExpressionException e) {
+                e.printStackTrace();
+            }
             NodeList nodes = (NodeList) result2;
             System.out.println("Element attributes:\n");
             for (int i = 0; i < nodes.getLength(); i++) {
