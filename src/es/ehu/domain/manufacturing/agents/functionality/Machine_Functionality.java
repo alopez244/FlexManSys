@@ -237,7 +237,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
     }
 
     @Override
-    public int checkNegotiation(MWAgent myAgent, String negId, String winnerAction, double negReceivedValue, long negScalarValue, boolean tieBreaker, boolean checkReplies, Object... negExternalData) {
+    public int checkNegotiation(String negId, String winnerAction, double negReceivedValue, long negScalarValue, boolean tieBreaker, boolean checkReplies, Object... negExternalData) {
         return 0;
     }
 }

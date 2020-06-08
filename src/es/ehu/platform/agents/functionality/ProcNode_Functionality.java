@@ -35,7 +35,14 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
 
         for (int i=0; i<args.length; i++){
             if (!args[i].toString().toLowerCase().startsWith("id=")) attribs += " "+args[i];
+            if (args[i].toString().toLowerCase().startsWith("id=")) return null;
         }
+
+        //if the agent has no ID, it means it is an auxiliary agent
+        //Therefore, a new agent is registered in the System Model and later it is started
+        LOGGER.info(myAgent.getLocalName()+": autoreg > ");
+        if (myAgent==null) System.out.println("My agent is null");
+        if (myAgent.functionalityInstance==null) System.out.println("functionalityInstance is null");
 
         //Secondly, the ProcessNodeAgent is registered in the System Model
 
@@ -73,9 +80,8 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
     }
 
     @Override
-    public int checkNegotiation(MWAgent myAgent, String conversationId, String sAction, double negReceivedValue, long negScalarValue, boolean tieBreak,
+    public int checkNegotiation(String conversationId, String sAction, double negReceivedValue, long negScalarValue, boolean tieBreak,
                                 boolean checkReplies, Object... negExternalData) {
-        this.myAgent = myAgent;
         LOGGER.entry(conversationId, sAction, negReceivedValue, negScalarValue);
 
         String seID = (String)negExternalData[0];

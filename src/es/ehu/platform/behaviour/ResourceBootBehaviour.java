@@ -80,17 +80,8 @@ public class ResourceBootBehaviour extends SimpleBehaviour {
             }
         }
 
-        if (ID == null) {
-            //if the agent has no ID, it means it is an auxiliary agent
-            //Therefore, we invoke functioinalityInstance.init
-
-            LOGGER.info(myAgent.getLocalName()+": autoreg > ");
-            if (myAgent==null) System.out.println("My agent is null");
-            if (myAgent.functionalityInstance==null) System.out.println("functionalityInstance is null");
-            myAgent.functionalityInstance.init(myAgent);
-            exit = true;
-
-        } else exit = true;
+        myAgent.functionalityInstance.init(myAgent);
+        exit = true;
 
         LOGGER.exit();
     }

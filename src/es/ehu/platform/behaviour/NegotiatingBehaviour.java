@@ -200,7 +200,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                         String seClass = (String) negotiationRuntime.get(conversationId).getExternalData()[2];
                         String seFirstTransition = (String) negotiationRuntime.get(conversationId).getExternalData()[3];
 
-                        switch (aNegFunctionality.checkNegotiation(myAgent, conversationId, negotiationRuntime.get(conversationId).getAction(), receivedVal,
+                        switch (aNegFunctionality.checkNegotiation(conversationId, negotiationRuntime.get(conversationId).getAction(), receivedVal,
                                 negotiationRuntime.get(conversationId).getScalarValue(), tieBreak, negotiationRuntime.get(conversationId).checkReplies(),
                                 seID, seType, seClass, seFirstTransition)) {
 
