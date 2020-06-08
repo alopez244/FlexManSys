@@ -15,7 +15,7 @@ public class ManResource_Functionality implements BasicFunctionality, NegFunctio
     private Agent myAgent;
 
     @Override
-    public String init(MWAgent myAgent) {
+    public Void init(MWAgent myAgent) {
         this.myAgent = myAgent;
         LOGGER.entry();
 
@@ -24,7 +24,7 @@ public class ManResource_Functionality implements BasicFunctionality, NegFunctio
 
         for (int i=0; i<args.length; i++){
             if (!args[i].toString().toLowerCase().startsWith("id=")) attribs += " "+args[i];
-            if (args[i].toString().toLowerCase().startsWith("id=")) return "";
+            if (args[i].toString().toLowerCase().startsWith("id=")) return null;
         }
 
         String cmd = "reg manResource parent=system"+attribs;
@@ -38,7 +38,8 @@ public class ManResource_Functionality implements BasicFunctionality, NegFunctio
         String respuesta = reply.getContent();
 
         LOGGER.info(myAgent.getLocalName()+" ("+cmd+")"+" > mwm < "+respuesta);
-        return LOGGER.exit(respuesta);
+        LOGGER.exit(respuesta);
+        return null;
     }
 
     @Override
