@@ -217,6 +217,12 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
         cmd = "sestart "+seId+" seClass=es.ehu.domain.manufacturing.agents.MachineAgent";
 
+        try {
+            reply = mwAgent.sendCommand(cmd);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         return null;
     }
 

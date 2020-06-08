@@ -45,3 +45,4 @@ It will contain detail of every step.
 06/06/2020 Changes in the ResourceBootBehaviour and the ProcNode_Functionality for embedding the start of the agent in the functionality.
 07/06/2020 Checking why the ProcNode_Functionality breaks down when trying to start an MPlanAgent. 
 07/06/2020 Changes in the ProcNode_Functionality for solving the aforementioned problems.
+08/06/2020 Negotiated starting of the MachineAgent.
