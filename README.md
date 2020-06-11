@@ -47,3 +47,4 @@ It will contain detail of every step.
 07/06/2020 Changes in the ProcNode_Functionality for solving the aforementioned problems.
 08/06/2020 Negotiated starting of the MachineAgent.
 09/06/2020 Optimized reading of the Machine Model attributes (not using Document type elements).
+11/06/2020 First changes in the Machine Agent for the DEMO implementation.

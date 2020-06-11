@@ -9,6 +9,7 @@ import es.ehu.platform.utilities.XMLReader;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.wrapper.AgentController;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -139,6 +140,9 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
     /** Identifier of the agent. */
     private MachineAgent myAgent;
 
+    /** Class name to switch on the agent */
+    private String className;
+
     /** Position and state (empty or not) of the machine palletin station. */
     private Pair<Position, Boolean> palletIn;
 
@@ -196,8 +200,15 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
         //First, the Machine Model is read
 
-        String attribs = "";
         String [] args = (String[]) mwAgent.getArguments();
+
+        String arguments = "";
+        for (int i=0; i<args.length; i++){
+            if (!args[i].toString().toLowerCase().startsWith("id=")) arguments += " "+args[i];
+            if (args[i].toString().toLowerCase().startsWith("id=")) return null;
+        }
+
+        String attribs = "";
         XMLReader fileReader = new XMLReader();
         ArrayList<ArrayList<ArrayList<String>>> xmlelements = fileReader.readFile(args[2]);
         for (int j = 0; j < xmlelements.get(0).get(2).size(); j++){
@@ -220,16 +231,19 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
         //Finally, the MachineAgent is started.
 
-        cmd = "sestart "+seId+" seClass=es.ehu.domain.manufacturing.agents.MachineAgent";
-
         try {
-            reply = mwAgent.sendCommand(cmd);
-        } catch (Exception e) {
-            e.printStackTrace();
+            // Agent generation
+            className = myAgent.getClass().getName();
+            ((AgentController)myAgent.getContainerController().createNewAgent(seId,className, new String[] {arguments, "ID="+seId, "description=description" })).start();
+
+            Thread.sleep(1000);
+        } catch (Exception e1) {
+            e1.printStackTrace();
         }
 
         return null;
-    }
+
+        }
 
     @Override
     public Object execute(Object[] input) {
