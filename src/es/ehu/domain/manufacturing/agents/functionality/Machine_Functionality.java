@@ -166,21 +166,21 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
     // Constructor
     public Machine_Functionality(MachineAgent agent) {
-        LOGGER.entry("*** Constructing Machine_Functionality ***");
-        this.myAgent = agent;
-        operationTimeout = Long.MAX_VALUE;
-        Element dompalletIn = (Element) myAgent.resourceModel.getElementsByTagName("palletIn").item(0);
-        Element dompalletOut = (Element) myAgent.resourceModel.getElementsByTagName("palletOut").item(0);
-        palletIn = Pair.of(new Position(Float.valueOf(dompalletIn.getAttribute("xPos")),
-                Float.valueOf(dompalletIn.getAttribute("yPos"))), false);
-        palletOut = Pair.of(new Position(Float.valueOf(dompalletOut.getAttribute("xPos")),
-                Float.valueOf(dompalletOut.getAttribute("yPos"))), false);
-
-        newTaskTemplate = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_NEGOTIATE),
-                MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-        debugPalletArrivedTemplate = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_DEBUG),
-                MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-        LOGGER.exit();
+//        LOGGER.entry("*** Constructing Machine_Functionality ***");
+//        this.myAgent = agent;
+//        operationTimeout = Long.MAX_VALUE;
+//        Element dompalletIn = (Element) myAgent.resourceModel.getElementsByTagName("palletIn").item(0);
+//        Element dompalletOut = (Element) myAgent.resourceModel.getElementsByTagName("palletOut").item(0);
+//        palletIn = Pair.of(new Position(Float.valueOf(dompalletIn.getAttribute("xPos")),
+//                Float.valueOf(dompalletIn.getAttribute("yPos"))), false);
+//        palletOut = Pair.of(new Position(Float.valueOf(dompalletOut.getAttribute("xPos")),
+//                Float.valueOf(dompalletOut.getAttribute("yPos"))), false);
+//
+//        newTaskTemplate = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_NEGOTIATE),
+//                MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+//        debugPalletArrivedTemplate = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_DEBUG),
+//                MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+//        LOGGER.exit();
     }
 
     /**

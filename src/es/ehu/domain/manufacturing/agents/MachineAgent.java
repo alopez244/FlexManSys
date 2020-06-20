@@ -3,6 +3,7 @@ package es.ehu.domain.manufacturing.agents;
 import es.ehu.domain.manufacturing.agents.functionality.Machine_Functionality;
 import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.ResourceAgentTemplate;
+import es.ehu.platform.utilities.XMLReader;
 import jade.core.behaviours.Behaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -14,6 +15,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
+import java.util.ArrayList;
 
 import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
 import static es.ehu.domain.manufacturing.utilities.FmsNegotiation.ONT_DEBUG;
@@ -28,7 +30,7 @@ public class MachineAgent extends ResourceAgentTemplate {
     public String machineServices;
 
     /** Machine Plan . */
-    public Document machinePlan;
+    public ArrayList<ArrayList<ArrayList<String>>> machinePlan;
 
     @Override
     protected MessageTemplate variableInitialization(Object[] arguments, Behaviour behaviour) {
@@ -42,32 +44,17 @@ public class MachineAgent extends ResourceAgentTemplate {
         if ((arguments != null) && (arguments.length >= 3)) {
             this.resourceName = arguments[0].toString();
             machineServices = arguments[1].toString();
-            File xmlFile = new File(arguments[2].toString());
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = null;
+            XMLReader fileReader = new XMLReader();
+
             try {
-                dBuilder = factory.newDocumentBuilder();
-            } catch (ParserConfigurationException e) {
-                LOGGER.info("Document can not be generated");
-                this.initTransition = ControlBehaviour.STOP;
-            }
-            try {
-                this.resourceModel = dBuilder.parse(xmlFile);
+                this.resourceModel = fileReader.readFile(arguments[2].toString());
             } catch (Exception e) {
                 LOGGER.info("Parse can not generate documents");
                 this.initTransition = ControlBehaviour.STOP;
             }
 
-            File xmlFile2 = new File(arguments[3].toString());
-
             try {
-                dBuilder = factory.newDocumentBuilder();
-            } catch (ParserConfigurationException e) {
-                LOGGER.info("Document can not be generated");
-                this.initTransition = ControlBehaviour.STOP;
-            }
-            try {
-                machinePlan = dBuilder.parse(xmlFile2);
+                machinePlan = fileReader.readFile(arguments[3].toString());
             } catch (Exception e) {
                 LOGGER.info("Parse can not generate documents");
                 this.initTransition = ControlBehaviour.STOP;

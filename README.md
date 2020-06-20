@@ -48,3 +48,4 @@ It will contain detail of every step.
 08/06/2020 Negotiated starting of the MachineAgent.
 09/06/2020 Optimized reading of the Machine Model attributes (not using Document type elements).
 11/06/2020 First changes in the Machine Agent for the DEMO implementation.
+20/06/2020 Parsing of ResourceModel and MachinePlan with my self-developed method (XMLReader).

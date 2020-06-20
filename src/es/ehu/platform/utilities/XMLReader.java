@@ -13,6 +13,8 @@ import org.xml.sax.SAXException;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import static es.ehu.platform.utilities.MasReconAgent.LOGGER;
+
 public class XMLReader {
 
     public static ArrayList<ArrayList<ArrayList<String>>> readFile (String uri) {
@@ -25,6 +27,7 @@ public class XMLReader {
             builder = factory.newDocumentBuilder();
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
+            LOGGER.info("Document can not be generated");
         }
         Document doc = null;
         try {

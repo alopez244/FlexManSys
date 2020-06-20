@@ -12,6 +12,8 @@ import es.ehu.platform.behaviour.*;
 import es.ehu.platform.utilities.*;
 import org.w3c.dom.Document;
 
+import java.util.ArrayList;
+
 public class ResourceAgentTemplate extends MWAgent {
 
     private static final long serialVersionUID = 2476743710831028702L;
@@ -27,7 +29,7 @@ public class ResourceAgentTemplate extends MWAgent {
     /**
      * Resource Model DOM
      */
-    public Document resourceModel;
+    public ArrayList<ArrayList<ArrayList<String>>> resourceModel;
 
     @Override
     protected void setup() {
