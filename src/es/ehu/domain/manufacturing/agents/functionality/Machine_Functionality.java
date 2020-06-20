@@ -10,6 +10,7 @@ import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.wrapper.AgentController;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -195,24 +196,20 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
 
         //Later, if the previous condition is accomplished, the agent is registered
-        //this.mwAgent = myAgent;
+        this.myAgent = (MachineAgent) mwAgent;
         LOGGER.entry();
 
         //First, the Machine Model is read
 
-        String [] args = (String[]) mwAgent.getArguments();
+        String [] args = (String[]) myAgent.getArguments();
 
-        String arguments = "";
         for (int i=0; i<args.length; i++){
-            if (!args[i].toString().toLowerCase().startsWith("id=")) arguments += " "+args[i];
-            if (args[i].toString().toLowerCase().startsWith("id=")) return null;
+            if (args[i].toLowerCase().startsWith("id=")) return null;
         }
 
         String attribs = "";
-        XMLReader fileReader = new XMLReader();
-        ArrayList<ArrayList<ArrayList<String>>> xmlelements = fileReader.readFile(args[2]);
-        for (int j = 0; j < xmlelements.get(0).get(2).size(); j++){
-            attribs += " "+xmlelements.get(0).get(2).get(j)+"="+xmlelements.get(0).get(3).get(j);
+        for (int j = 0; j < myAgent.resourceModel.get(0).get(2).size(); j++){
+            attribs += " "+myAgent.resourceModel.get(0).get(2).get(j)+"="+myAgent.resourceModel.get(0).get(3).get(j);
         }
 
         //Secondly, the ProcessNodeAgent is registered in the System Model
@@ -221,20 +218,22 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
         ACLMessage reply = null;
         try {
-            reply = mwAgent.sendCommand(cmd);
+            reply = myAgent.sendCommand(cmd);
         } catch (Exception e) {
             e.printStackTrace();
         }
         String seId = reply.getContent();
 
-        LOGGER.info(mwAgent.getLocalName()+" ("+cmd+")"+" > mwm < "+seId);
+        LOGGER.info(myAgent.getLocalName()+" ("+cmd+")"+" > mwm < "+seId);
 
         //Finally, the MachineAgent is started.
 
         try {
             // Agent generation
             className = myAgent.getClass().getName();
-            ((AgentController)myAgent.getContainerController().createNewAgent(seId,className, new String[] {arguments, "ID="+seId, "description=description" })).start();
+            String [] args2 = {"ID="+seId, "description=description" };
+            args = ArrayUtils.addAll(args,args2);
+            ((AgentController)myAgent.getContainerController().createNewAgent(seId,className, args)).start();
 
             Thread.sleep(1000);
         } catch (Exception e1) {
