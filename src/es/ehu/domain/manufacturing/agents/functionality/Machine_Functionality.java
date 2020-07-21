@@ -246,7 +246,27 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
     @Override
     public Object execute(Object[] input) {
-        return null;
+        LOGGER.entry(input);
+        ACLMessage msg = null;
+
+        for (int k =0; k<input.length; k=k+1){
+
+            if (input != null) {
+                try {
+                    msg = (ACLMessage) input[k];
+                    LOGGER.debug(msg);
+                } catch (Exception e) {
+                    LOGGER.debug("Execution input was not an ACLMessage");
+                }
+            }
+
+            if (msg == null) {
+                return LOGGER.exit(null);
+            }
+
+        }
+
+        return LOGGER.exit(null);
     }
 
     @Override
