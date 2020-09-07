@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<station xmlns="station" id="ST01" description="Station 1 (Work Unit)" resourceType="equipment" level="work_unit" sn="KR3-R540-001" physicalLocation="researchLab,productionLine1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="station ../Station.xsd">
-<palletIn id="PI1_ST01" xPos="80" yPos="80" zPos="50"/>
+<station xmlns="station" id="ST01" description="Station_1_Work_Unit" resourceType="equipment" level="work_unit" sn="KR3-R540-001" physicalLocation="researchLab,productionLine1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="station ../Station.xsd">
+		<palletIn id="PI1_ST01" xPos="80" yPos="80" zPos="50"/>
 		<palletIn id="PI2_ST01" xPos="520" yPos="80" zPos="50"/>
 		<palletOut id="PO1_ST01" xPos="620" yPos="380" zPos="50"/>
 		<buffer id="B1_ST01" description="Buffer 1 contains bearings" current="10" max="10" warning="5" xPos="220" yPos="580" zPos="40" consumable_id="C1_B1_ST01">

@@ -26,6 +26,13 @@
 	</st:station>
 	<up:updatedPlan id="MP01_ST01">
 		<up:station ref_id="ST01">
+			<up:complex_operation id="C_01" type="assembly" order="O_01" batch="B_01" startTime="08:00:10" finishTime="08:00:20">
+				<up:Product refProductID="Base_with_axis"/>
+				<up:Product refProductID="Cover"/>
+			</up:complex_operation>
+			<up:simple_operation id="S_02" type="insert_axis" order="O_01" batch="B_01" startTime="08:00:00" finishTime="08:00:10">
+				<up:Product refProductID="Base"/>
+			</up:simple_operation>
 		</up:station>
 	</up:updatedPlan>
 </equipment>
