@@ -51,3 +51,4 @@ It will contain detail of every step.
 20/06/2020 Parsing of ResourceModel and MachinePlan with my self-developed method (XMLReader).
 21/07/2020 Turning back to implementation.
 07/09/2020 Turning back to implementation.
+14/09/2020 Back to school.
