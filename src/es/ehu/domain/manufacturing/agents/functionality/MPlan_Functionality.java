@@ -28,6 +28,8 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
 
   @Override
   public Void init(MWAgent myAgent) {
+    //Aquí hay que arrancar los agentes Order asociados
+    //Para eso, hay que buscarlos en el modelo en primer lugar
     return null;
   }
 
