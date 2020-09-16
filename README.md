@@ -52,3 +52,4 @@ It will contain detail of every step.
 21/07/2020 Turning back to implementation.
 07/09/2020 Turning back to implementation.
 14/09/2020 Back to school.
+16/09/2020 Minor adjustment in MasReconAgent.java (the unused method "validate" was deleted).

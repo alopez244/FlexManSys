@@ -212,10 +212,6 @@ public class MasReconAgent {
     public int deRegister(String id){
         return 0; //0 correcto, 1 error
     }
-  
-    public String validate(String seId){
-        return sendCommand(mwm,"validate "+seId).getContent();
-    }
 
     /**
      * @param seId system element id
