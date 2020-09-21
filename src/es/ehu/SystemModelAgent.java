@@ -516,17 +516,6 @@ public class SystemModelAgent extends Agent {
         return ;//LOGGER.exit(response.toString());
     }
 
-    public void printDocument(Document doc, OutputStream out) throws IOException, TransformerException {
-        TransformerFactory tf = TransformerFactory.newInstance();
-        Transformer transformer = tf.newTransformer();
-        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-        transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-        transformer.transform(new DOMSource(doc), new StreamResult(new OutputStreamWriter(out, "UTF-8")));
-    }
-
     private String validate(String... _prm) throws Exception {
 
         String output = "valid";
@@ -751,66 +740,6 @@ public class SystemModelAgent extends Agent {
         } else response.append("not found!");
 
         return LOGGER.exit(response.toString());
-    }
-
-    private String negotiate (String prm, Hashtable<String, String> attribs, String conversationId){
-
-        LOGGER.info("condition="+attribs.get("condition"));
-        LOGGER.info("ids="+attribs.get("ids"));
-        String[] lids = attribs.get("ids").split(",");
-        String winner = null;
-
-        long bestValue=(prm.equals("max")?Long.MIN_VALUE:Long.MAX_VALUE);
-
-        int step=0;
-        int repliesCnt=0;
-        MessageTemplate mt = null;
-        while (step<2) {
-            switch (step) {
-                case 0:
-                    // Send the cfp to all sellers
-                    ACLMessage cfp = new ACLMessage(ACLMessage.CFP); //Call For Proposals
-                    for (String id: lids) cfp.addReceiver(new AID(id, AID.ISLOCALNAME));
-                    cfp.setContent(attribs.get("condition"));
-                    cfp.setOntology("control");
-                    cfp.setConversationId(conversationId);
-                    cfp.setReplyWith("cfp_"+System.currentTimeMillis()); // Unique value
-                    this.send(cfp);
-                    // Prepare the template to get proposals
-                    mt = MessageTemplate.MatchInReplyTo(cfp.getReplyWith());
-                    step = 1;
-                    break;
-                case 1:
-                    // Receive all proposals/refusals from seller agents
-                    ACLMessage reply = receive(mt);
-                    // esperar a mensaje
-                    if (reply != null) {
-                        // Reply received
-                        if (reply.getPerformative() == ACLMessage.PROPOSE) {
-                            // This is an offer
-                            long value = Long.parseLong(reply.getContent());
-                            LOGGER.debug(reply.getSender().getLocalName()+" PROPOSE "+value);
-                            value=(prm.equals("max")?value:-value);
-                            if (winner == null || value > bestValue) {
-                                // This is the best offer at present
-                                bestValue = value;
-                                winner = reply.getSender().getLocalName();
-                            }
-                        } else if (reply.getPerformative() == ACLMessage.FAILURE) {
-                            String name=reply.getContent().substring(reply.getContent().indexOf(":name ", reply.getContent().indexOf("MTS-error"))+":name ".length());
-                            name=name.substring(0, name.indexOf('@'));
-                            LOGGER.debug(name+" FAILURE");
-
-                        }
-
-                        repliesCnt++;
-                        if (repliesCnt >= lids.length)  // We received all replies
-                            step = 2;
-                    }
-            } // end switch
-        }
-
-        return winner;
     }
 
     public String localCmd(String id, Hashtable<String, String> attribs) throws Exception {
@@ -1058,29 +987,12 @@ public class SystemModelAgent extends Agent {
 
     }
 
-    public String startApplicationManager(String appID, String conversationId) throws Exception {
-        LOGGER.entry(appID);
-
-        StringBuilder response = new StringBuilder();
-        if (!elements.containsKey(appID)) LOGGER.exit(response.append(appID).append(" not found"));
-
-        Hashtable<String, String> param = new Hashtable<String, String>();
-        param.put("parent", appID);
-        String appManId = reg("appMan", param);
-        AgentController ac = ((AgentController) getContainerController().createNewAgent(appManId, "es.ehu.ApplicationManager", new String[] { "appID="+appID }));
-        ac.start();
-        this.objects.put(appManId, ac);
-        response.append("started ").append(appManId);
-
-        return LOGGER.exit(response.toString());
-
-    }
-
     public String startEventManager(String eventID, String conversationId) throws Exception {
         LOGGER.entry(eventID, conversationId);
         if (!elements.containsKey(eventID)) LOGGER.exit(eventID + " not found");
 
         StringBuilder response = new StringBuilder();
+
 
         Hashtable<String, String> param = new Hashtable<String, String>();
         param.put("parent", eventID);
@@ -1336,19 +1248,6 @@ public class SystemModelAgent extends Agent {
         return LOGGER.exit(response);
     }
 
-    public <T> String join(T[] array, String cement) {
-        LOGGER.entry(array, cement);
-        StringBuilder builder = new StringBuilder();
-
-        if(array == null || array.length == 0) return LOGGER.exit(null);
-
-        for (T t : array)  builder.append(t).append(cement);
-
-        builder.delete(builder.length() - cement.length(), builder.length());
-
-        return LOGGER.exit(builder.toString());
-    }
-
     public void saveObject(Serializable object, String file) {
         LOGGER.entry(object, file);
         try {
@@ -1377,24 +1276,6 @@ public class SystemModelAgent extends Agent {
             e.printStackTrace();
         }
         return LOGGER.exit(result);
-    }
-
-    class ShutdownThread extends Thread {
-        private Agent myAgent = null;
-
-        public ShutdownThread(Agent a) {
-            super(a);
-            //this.myAgent = myAgent;
-        }
-
-        public void run() {
-            LOGGER.info("Tarea de apagado");
-            try {
-                DFService.deregister(myAgent);
-                myAgent.doDelete();
-            } catch (Exception e) {
-            }
-        }
     }
 
     private void registerAgent(String localName) {

@@ -121,27 +121,6 @@ public class MWAgent extends Agent {
     }
 
     /**
-     * Register an agent in the repository of Middleware Manager
-     *
-     * @param attribs Registry attributes
-     * @return MWM response (ID of the agent if there were no errors)
-     * @throws Exception
-     */
-    public String registerAgent(String attribs) throws Exception {
-        LOGGER.entry(attribs);
-
-        String cmd = CMD_REGISTER + " " + attribs;
-        LOGGER.debug("*** Registering agent ***");
-
-        String response = sendCommand(cmd).getContent();
-        cmpID = response;
-
-        LOGGER.info(cmd + " > " + response);
-
-        return LOGGER.exit(cmpID);
-    }
-
-    /**
      * Eliminar un agente del registro del Middleware Manager
      *
      * @param localName

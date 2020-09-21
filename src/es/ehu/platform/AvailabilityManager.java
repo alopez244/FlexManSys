@@ -677,7 +677,7 @@ private Document listDom(String _prm) throws Exception{
    * Sends a command to a target agent. If sync=true the methods waits for and returns the response.
    * @param cmd
    * @param target
-   * @param sync
+   * @param conversationId
    * @return if sync returns ACLMessage, if asyn returns null
    * @throws FIPAException
    */
