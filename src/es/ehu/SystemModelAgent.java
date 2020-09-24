@@ -1,6 +1,7 @@
 package es.ehu;
 
 import es.ehu.platform.behaviour.ControlBehaviour;
+import es.ehu.platform.template.interfaces.IExecManagement;
 import es.ehu.platform.utilities.MWMCommand;
 import jade.core.AID;
 import jade.core.Agent;
@@ -38,7 +39,7 @@ import java.net.URLEncoder;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class SystemModelAgent extends Agent {
+public class SystemModelAgent extends Agent implements IExecManagement {
 
     private static final long serialVersionUID = 1L;
     static final Logger LOGGER = LogManager.getLogger(SystemModelAgent.class.getName()) ;
@@ -806,6 +807,9 @@ public class SystemModelAgent extends Agent {
         return LOGGER.exit("sent");
     }
 
+    //  IExecManagent   -->     Interfaz para arrancar y parar elementos del sistema
+
+    @Override
     public String seStart(String seID, Hashtable<String, String> attribs, String conversationId ) {
         LOGGER.entry(seID, attribs, conversationId);
 
@@ -962,6 +966,11 @@ public class SystemModelAgent extends Agent {
 
         return LOGGER.exit(cmpins + " started");
 
+    }
+
+    @Override
+    public String seStop(String... seID) {
+        return null;
     }
 
     public String startAvailabilityManager(//String appID, String conversationId) throws Exception
