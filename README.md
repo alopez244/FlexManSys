@@ -54,4 +54,5 @@ It will contain detail of every step.
 14/09/2020 Back to school.
 16/09/2020 Minor adjustment in MasReconAgent.java (the unused method "validate" was deleted).
 16/09/2020 Comments added in MPlan_Functionality.java.
-21/09/2020 Cleaning unused classes. fFlexmansys (Brais & Mikel folder) has been deleted (it is available in other branches).
+21/09/2020 Cleaning unused classes. Flexmansys (Brais & Mikel folder) has been deleted (it is available in other branches).
+24/09/2020 Ordering the SystemModelAgent according to the services it provides.
