@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:simpleType name="TResource">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="personnel"/>
+			<xs:enumeration value="equipment"/>
+			<xs:enumeration value="physical_asset"/>
+			<xs:enumeration value="material"/>
+			<xs:enumeration value="process_segment"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="TEquipmentLevel">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="enterprise"/>
+			<xs:enumeration value="site"/>
+			<xs:enumeration value="area"/>
+			<xs:enumeration value="work_center"/>
+			<xs:enumeration value="work_unit"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!-- IEC 62264-2 -->
+	<!-- Table 24 : attributes of material class -->
+	<xs:simpleType name="TAssemblyType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="physical"/>
+			<xs:enumeration value="logical"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="TAssemblyRelationShip">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="permanent"/>
+			<xs:enumeration value="transient"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!-- table 58 attributes of operations schedule -->
+	<xs:simpleType name="TScheduledState">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="forecast"/>
+			<xs:enumeration value="released"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!-- IEC 62264-4 : indica los elementos en los que se puede sub-dividir le plan de fabricación-->
+	<xs:simpleType name="TWorkType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="production"/>
+			<xs:enumeration value="maintenance"/>
+			<xs:enumeration value="quality"/>
+			<xs:enumeration value="inventory"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!-- ISA 88 figura 2 de ISA 88 se habla de receta cuando se particulariza a un equipamento concreto -->
+	<xs:simpleType name="TRecipeHLevel">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="process"/>
+			<xs:enumeration value="process_stage"/>
+			<xs:enumeration value="process_operation"/>
+			<xs:enumeration value="process_action"/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>
