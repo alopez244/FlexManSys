@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- editado con XMLSpy v2020 sp1 (x64) (http://www.altova.com) por  (University of the Basque Country) -->
+<!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
+<equipment xmlns:st="station" xmlns:up="updatedPlan" xmlns="ManufacturingPlan" id="PL2" description="Production Line 2 (Work Center)" resourceType="equipment" level="work_center" equipmentType="Machine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="ManufacturingPlan ../Equipment.xsd">
+	<st:station id="ST02" description="Station 2 (Work Unit)" resourceType="equipment" level="work_unit" sn="ABB-IRB120-001" physicalLocation="researchLab,productionLine2">
+		<st:palletIn id="PI1_ST02" xPos="80" yPos="80" zPos="50"/>
+		<st:palletIn id="PI2_ST02" xPos="520" yPos="80" zPos="50"/>
+		<st:palletOut id="PO1_ST02" xPos="620" yPos="380" zPos="50"/>
+		<st:buffer id="B1_ST02" description="Buffer 1 contains bearings" current="10" max="10" warning="5" xPos="220" yPos="580" zPos="40" consumable_id="C1_B1_ST02">
+			<st:consumable id="C1_B1_ST02" description="Lower Bearing" type="bearing" resourceType="material"/>
+		</st:buffer>
+		<st:buffer id="B2_ST02" description="Buffer 2 contains bearings" current="10" max="10" warning="5" xPos="220" yPos="580" zPos="40" consumable_id="C2_B2_ST02">
+			<st:consumable id="C2_B2_ST02" description="Higher Bearing" type="bearing" resourceType="material"/>
+		</st:buffer>
+		<st:buffer id="B3_ST02" description="Buffer 3 contains axes" current="10" max="10" warning="5" xPos="420" yPos="580" zPos="40" consumable_id="C3_B3_ST02">
+			<st:consumable id="C3_B3_ST02" description="Shaft" type="axle" resourceType="material"/>
+		</st:buffer>
+		<st:buffer id="B4_ST02" description="Buffer 4 contains covers" current="10" max="10" warning="5" xPos="520" yPos="580" zPos="40" consumable_id="C4_B4_ST02">
+			<st:consumable id="C4_B4_ST02" description="Cover" type="cover" resourceType="material"/>
+		</st:buffer>
+		<st:tool id="T1_ST02" type="gripper" changeoverT="00:15:00" description="Double gripper"/>
+		<st:simple_operation id="S_01" type="place_cover" executionTime="00:00:05"/>
+		<st:simple_operation id="S_02" type="insert_axis" executionTime="00:00:10"/>
+		<st:simple_operation id="S_03" type="insert_and_place" executionTime="00:00:20"/>
+		<st:complex_operation id="C_01" type="assembly" executionTime="00:00:10"/>
+	</st:station>
+	<up:updatedPlan id="MP02_ST02">
+		<up:station ref_id="ST02">
+			<up:complex_operation id="C_01" type="assembly" order="O_01" batch="B_01" startTime="08:00:10" finishTime="08:00:20">
+				<up:Product refProductID="Base_with_axis"/>
+				<up:Product refProductID="Cover"/>
+			</up:complex_operation>
+			<up:simple_operation id="S_02" type="insert_axis" order="O_01" batch="B_01" startTime="08:00:00" finishTime="08:00:10">
+				<up:Product refProductID="Base"/>
+			</up:simple_operation>
+		</up:station>
+	</up:updatedPlan>
+</equipment>
