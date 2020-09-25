@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- editado con XMLSpy v2020 sp1 (x64) (http://www.altova.com) por  (University of the Basque Country) -->
+<!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
+<xs:schema xmlns="station" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" targetNamespace="station" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:include schemaLocation="../Base Schemas/IEC62264.xsd"/>
+	<xs:redefine schemaLocation="../Base Schemas/Operations.xsd">
+		<xs:complexType name="SimpleOperation">
+			<xs:complexContent>
+				<xs:extension base="SimpleOperation">
+					<xs:attribute name="executionTime" type="xs:time" use="required"/>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+		<xs:complexType name="ComplexOperation">
+			<xs:complexContent>
+				<xs:extension base="ComplexOperation">
+					<xs:attribute name="executionTime" type="xs:time" use="required"/>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:redefine>
+	<!-- ========= STATION ============ -->
+	<xs:element name="palletIn">
+		<xs:complexType>
+			<xs:attribute name="id" type="xs:string" use="required"/>
+			<xs:attribute name="xPos" type="xs:double" use="required"/>
+			<xs:attribute name="yPos" type="xs:double" use="required"/>
+			<xs:attribute name="zPos" type="xs:double" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="palletOut">
+		<xs:complexType>
+			<xs:attribute name="id" type="xs:string" use="required"/>
+			<xs:attribute name="xPos" type="xs:double" use="required"/>
+			<xs:attribute name="yPos" type="xs:double" use="required"/>
+			<xs:attribute name="zPos" type="xs:double" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- TConsumable: material consumible de la estación -->
+	<xs:simpleType name="TypeOfConsumable">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="axle"/>
+			<xs:enumeration value="bearing"/>
+			<xs:enumeration value="bolt"/>
+			<xs:enumeration value="cover"/>
+			<xs:enumeration value="filter"/>
+			<xs:enumeration value="nut"/>
+			<xs:enumeration value="sleeve"/>
+			<xs:enumeration value="welding_wire"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:attributeGroup name="TCEquipmentRes">
+		<xs:attribute name="id" type="xs:string" use="required"/>
+		<xs:attribute name="description" type="xs:string" use="required"/>
+		<xs:attribute name="resourceType" type="TResource" use="required" fixed="material"/>
+		<xs:attribute name="assembly_type" type="TAssemblyType" use="optional"/>
+		<xs:attribute name="assembly_relationship" type="TAssemblyRelationShip" use="optional"/>
+	</xs:attributeGroup>
+	<xs:element name="consumable">
+		<xs:complexType>
+			<xs:attributeGroup ref="TCEquipmentRes"/>
+			<xs:attribute name="type" type="TypeOfConsumable" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- Buffer: almacenes intermedios de estaciones -->
+	<xs:element name="buffer">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="consumable" minOccurs="1" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="id" type="xs:string" use="required"/>
+			<xs:attribute name="description" type="xs:string" use="required"/>
+			<xs:attribute name="current" type="xs:integer" use="required"/>
+			<xs:attribute name="max" type="xs:integer" use="required"/>
+			<xs:attribute name="warning" type="xs:integer" use="required"/>
+			<xs:attribute name="xPos" type="xs:double" use="required"/>
+			<xs:attribute name="yPos" type="xs:double" use="required"/>
+			<xs:attribute name="zPos" type="xs:double" use="required"/>
+			<xs:attribute name="consumable_id" type="xs:string" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:simpleType name="TToolSet">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="cutter"/>
+			<xs:enumeration value="die_set"/>
+			<xs:enumeration value="drill"/>
+			<xs:enumeration value="gripper"/>
+			<xs:enumeration value="wleding_torch"/>
+		</xs:restriction>
+		<!-- definir qué herramienta tiene la máquina, en función de su valor el tiempo de cambio de utillaje cambia-->
+	</xs:simpleType>
+	<xs:element name="tool">
+		<xs:complexType>
+			<xs:attribute name="id" type="xs:string" use="required"/>
+			<xs:attribute name="type" type="TToolSet" use="required"/>
+			<xs:attribute name="changeoverT" type="xs:time" use="required"/>
+			<xs:attribute name="description" type="xs:string" use="optional"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- changeoverT: tiempo de cambio de herramienta -->
+	<xs:attributeGroup name="TSEquipmentRes">
+		<!-- Atributos de los recursos de tipo Equipment -->
+		<xs:attribute name="id" type="xs:string" use="required"/>
+		<xs:attribute name="description" type="xs:string" use="required"/>
+		<xs:attribute name="resourceType" type="TResource" use="required" fixed="equipment"/>
+		<xs:attribute name="level" type="TEquipmentLevel" use="required" fixed="work_unit"/>
+	</xs:attributeGroup>
+	<xs:attributeGroup name="TSPhysicalAssetRes">
+		<!-- Atributos de los recursos de tipo Physical Asset -->
+		<xs:attribute name="sn" type="xs:string" use="required"/>
+		<xs:attribute name="description_pa" type="xs:string" use="optional"/>
+		<xs:attribute name="physicalLocation" use="required">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="researchLab"/>
+					<xs:enumeration value="researchLab,productionLine1"/>
+					<xs:enumeration value="researchLab,productionLine2"/>
+					<xs:enumeration value="researchLab,productionLine3"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="fixedAssetId" type="xs:string" use="optional"/>
+		<xs:attribute name="vendorId" type="xs:string" use="optional"/>
+		<!-- sn: Serial Number del Physical Asset -->
+		<!-- description_pa: description Physical Asset, en caso de tener que añadir información adicional -->
+	</xs:attributeGroup>
+	<xs:element name="station">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="palletIn" minOccurs="1" maxOccurs="2"/>
+				<xs:element ref="palletOut" minOccurs="1" maxOccurs="2"/>
+				<xs:element ref="buffer" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="tool" minOccurs="1" maxOccurs="unbounded"/>
+				<xs:choice minOccurs="1" maxOccurs="unbounded">
+					<xs:element name="simple_operation" type="SimpleOperation"/>
+					<xs:element name="complex_operation" type="ComplexOperation"/>
+				</xs:choice>
+			</xs:sequence>
+			<xs:attributeGroup ref="TSEquipmentRes"/>
+			<xs:attributeGroup ref="TSPhysicalAssetRes"/>
+		</xs:complexType>
+		<xs:key name="consumableID">
+			<xs:selector xpath="./buffer/consumable"/>
+			<xs:field xpath="@id"/>
+		</xs:key>
+		<xs:keyref name="refConsumableID" refer="consumableID">
+			<xs:selector xpath="./buffer"/>
+			<xs:field xpath="@consumable_id"/>
+		</xs:keyref>
+	</xs:element>
+</xs:schema>

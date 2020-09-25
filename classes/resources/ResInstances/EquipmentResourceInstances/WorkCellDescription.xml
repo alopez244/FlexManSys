@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- editado con XMLSpy v2020 sp1 (x64) (http://www.altova.com) por  (University of the Basque Country) -->
+<!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
+<equipment xmlns:st="station" xmlns:up="updatedPlan" xmlns="ManufacturingPlan" id="MA_01" description="Machine 1 (Physical)" resourceType="equipment" level="process_cell" equipmentType="Machine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="ManufacturingPlan ../Equipment.xsd">
+	<st:station id="WU_01" description="Work Unit 01" resourceType="equipment" level="unit">
+		<st:palletIn id="I_01" xPos="80" yPos="80"/>
+		<st:palletIn id="I_02" xPos="520" yPos="80"/>
+		<st:palletOut id="O_01" xPos="620" yPos="380"/>
+		<st:buffer id="B_01" description="Buffer 01" current="10" max="10" warning="5" xPos="220" yPos="580" zPos="40">
+			<st:consumable id="C_01" description="Lower Bearing" type="bearing" resourceType="material"/>
+		</st:buffer>
+		<st:buffer id="B_02" description="Buffer 02" current="10" max="10" warning="5" xPos="220" yPos="580" zPos="40">
+			<st:consumable id="C_02" description="Higher Bearing" type="bearing" resourceType="material"/>
+		</st:buffer>
+		<st:buffer id="B_03" description="Buffer 03" current="10" max="10" warning="5" xPos="420" yPos="580" zPos="40">
+			<st:consumable id="C_03" description="Shaft" type="axle" resourceType="material"/>
+		</st:buffer>
+		<st:buffer id="B_04" description="Buffer 04" current="10" max="10" warning="5" xPos="520" yPos="580" zPos="40">
+			<st:consumable id="C_04" description="Cover" type="cover" resourceType="material"/>
+		</st:buffer>
+		<st:tool id="T_01" type="gripper" changeoverT="00:15:00" description="Double gripper"/>
+		<st:simple_operation id="S_01" type="place_cover" executionTime="00:00:05"/>
+		<st:simple_operation id="S_02" type="insert_axis" executionTime="00:00:10"/>
+		<st:simple_operation id="S_03" type="insert_and_place" executionTime="00:00:20"/>
+		<st:complex_operation id="C_01" type="assembly" executionTime="00:00:10"/>
+	</st:station>
+	<up:updatedPlan id="MP01_WU01">
+		<up:station ref_id="WU_01">
+			<up:complex_operation id="C_01" type="assembly" order="O_01" batch="B:01" startTime="08:00:15" finishTime="08:00:25">
+				<up:Product refProductID="Base_with_axis"/>
+				<up:Product refProductID="Cover"/>
+			</up:complex_operation>
+			<up:simple_operation id="S_02" type="insert_axis" order="O_01" batch="B_01" startTime="08:00:00" finishTime="08:00:15">
+				<up:Product refProductID="Base"/>
+			</up:simple_operation>
+		</up:station>
+	</up:updatedPlan>
+</equipment>

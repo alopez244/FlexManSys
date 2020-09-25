@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<updatedPlan xmlns="updatedPlan" id="MP03_ST03" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="updatedPlan ../UpdatedPlan.xsd">
+		<station ref_id="ST03">
+			<simple_operation id="S_01" type="place_cover" order="O_01" batch="B_01" startTime="08:00:00" finishTime="08:00:05">
+				<Product refProductID="Base"/>
+			</simple_operation>
+		</station>
+</updatedPlan>
