@@ -1,6 +1,5 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
-import es.ehu.SystemModelAgent;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
@@ -10,17 +9,14 @@ import jade.core.Agent;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
-import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunctionality, IExecManagement {
   /**
@@ -52,7 +48,7 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
 
     String status = seStart(myAgent.getLocalName(), attributes, null);
     if (status == null)
-      System.out.println("OrderAgent created");
+      System.out.println("OrderAgents created");
     else if (status == "-1")
       System.out.println("ERROR creating OrderAgent -> No existe el ID del plan");
     else if (status == "-4")
@@ -72,10 +68,12 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
 
     try {
       reply = sendCommand(parentQuery);
-      String planID = reply.getContent();
       // ID del plan con el cual el agente está relacionado
-      if (planID == null)   // Si no existe el id en el registro devuelve error
+      String planID = null;
+      if (reply == null)   // Si no existe el id en el registro devuelve error
         return "-1";
+      else
+        planID = reply.getContent();
 
       String query = "get order* parent="+ planID;  // Busco todos los order de los que el plan es parent (no se buscan todos los elementos porque pueden existir otros mPlanAgent en tracking)
       reply = sendCommand(query);
@@ -83,9 +81,11 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
       e.printStackTrace();
     }
 
-    String allOrders = reply.getContent();
-    if(allOrders == null)   // Si no existen orders en el registro devuelve error
+    String allOrders;
+    if (reply == null)    // Si no existen orders en el registro devuelve error
       return "-1";
+    else
+      allOrders = reply.getContent();
 
     List<String> items = Arrays.asList(allOrders.split("\\s*,\\s*"));
     for (String orderID: items) {
@@ -96,15 +96,22 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
           redundancy = attribs.get("redundancy");
 
         reply = sendCommand("get (get * parent=(get * parent=" + orderID + " category=restrictionList)) attrib=attribValue");
-        String refServID = reply.getContent();
+        String refServID = null;
+        if (reply != null)
+          refServID = reply.getContent();
 
         reply = sendCommand("get * category=pNodeAgent" + ((refServID.length()>0)?" refServID=" + refServID:""));
-        String targets = reply.getContent();
-        if (targets.length()<=0)
-          return "-4";
+        String targets = null;
+        if (reply != null) {
+          targets = reply.getContent();
+          if (targets.length() <= 0)
+            return "-4";
+        }
 
         reply = sendCommand("get " + orderID + " attrib=category");
-        String seCategory = reply.getContent();
+        String seCategory = null;
+        if (reply != null)
+          seCategory = reply.getContent();
         String seClass = attribs.get("seClass");
 
         // Orden de negociacion a todos los nodos
@@ -114,7 +121,6 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
       } catch (Exception e) {
         e.printStackTrace();
       }
-
     }
 
     return null;
