@@ -31,8 +31,6 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
   
   private Agent myAgent;
 
-  private String smaID;
-
   @Override
   public Object getState() {
     return null;
@@ -49,8 +47,17 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
     //Para eso, hay que buscarlos en el modelo en primer lugar
     this.myAgent = myAgent;
 
+    Hashtable<String, String> attributes = new Hashtable<String, String>();
+    attributes.put("seClass", "es.ehu.domain.manufacturing.agents.OrderAgent");
 
-    seStart(myAgent.getLocalName(), null, null);
+    String status = seStart(myAgent.getLocalName(), attributes, null);
+
+    if (status == null)
+      System.out.println("OrderAgent created");
+    else if (status == "-1")
+      System.out.println("ERROR creating OrderAgent");
+    else if (status == "-4")
+      System.out.println("ERROR creating OrderAgent > No targets");
 
     return null;
   }
@@ -65,6 +72,8 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
     try {
       reply = sendCommand(parentQuery);
       String planID = reply.getContent();
+      if (planID == null)   // Si no existe el id en el registro devuelve error
+        return "-1";
       System.out.println("PlanID: " + planID);  // ID del plan con el cual el agente está relacionado
 
       String query = "get * parent="+ planID;
@@ -75,19 +84,53 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
     }
 
     String allOrders = reply.getContent();
+    if(allOrders == null)   // Si no existen orders en el registro devuelve error
+      return "-1";
     allOrders = allOrders.replace(seID + ",", "");
     System.out.println("All orders> " + allOrders);
 
     List<String> items = Arrays.asList(allOrders.split("\\s*,\\s*"));
     for (String order: items) {
       System.out.println("Creating agent for order > " + order);
-      StringBuilder startOrder = new StringBuilder("sestart "+ order);
+      //StringBuilder startOrder = new StringBuilder("sestart "+ order);
 
-      ConcurrentHashMap<String, String> attributes = new ConcurrentHashMap<String, String>();
-      attributes.put("seClass", "es.ehu.domain.manufacturing.agents.OrderAgent");
+      try {
+        String redundancy = "1";
+        if ((attribs!=null) && (attribs.containsKey("redundancy")))
+          redundancy = attribs.get("redundancy");
 
-      if (attributes!=null)
-        attributes.entrySet().stream().forEach(entry -> startOrder.append(" " + entry.getKey() + "=" + entry.getValue()));
+        reply = sendCommand("get (get * parent=(get * parent=" + seID + " category=restrictionList)) attrib=attribValue");
+        String refServID = reply.getContent();
+
+
+        reply = sendCommand("get * category=pNodeAgent" + ((refServID.length()>0)?" refServID=" + refServID:""));
+        String targets = reply.getContent();
+        if (targets.length()<=0)
+          return "-4";
+
+        reply = sendCommand("get " + seID + " attrib=category");
+        String seCategory = reply.getContent();
+        String seClass = attribs.get("seClass");
+
+
+        System.out.println("\tATRIBUTOS: \n\t\tORDER:" + order + "\n\t\tREDUNDANCY:" + redundancy
+                + "\n\t\trefServID:" + refServID + "\n\t\tTARGETS:" + targets + "\n\t\tCategory:" + seCategory
+                + "\n\t\tClass:" + seClass);
+
+        // Orden de negociacion a todos los nodos
+        for (int i=0; i<Integer.parseInt(redundancy); i++) {
+          reply = sendCommand("localneg " + targets + " action=start "+seID+" criterion=max mem externaldata=" + seID + "," + seCategory + "," + seClass + "," + ((i==0)?"running":"tracking"));
+          //String neg = reply.getContent();
+
+        }
+
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+
+      /*
+      if (attribs!=null)
+        attribs.entrySet().stream().forEach(entry -> startOrder.append(" " + entry.getKey() + "=" + entry.getValue()));
 
       try {
         reply = sendCommand(startOrder.toString());
@@ -95,6 +138,7 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
       } catch (Exception e) {
         e.printStackTrace();
       }
+      */
 
     }
 
