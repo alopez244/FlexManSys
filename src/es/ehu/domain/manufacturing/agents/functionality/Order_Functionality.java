@@ -20,10 +20,19 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
     private static final long serialVersionUID = 1L;
     private Agent myAgent;
 
+    private String parentAgentID;
+
     @Override
     public Void init(MWAgent myAgent) {
 
         this.myAgent = myAgent;
+
+        // Envio un mensaje a mi parent diciendole que me he creado correctamente
+        parentAgentID = getParentAgentID(myAgent.getLocalName());
+        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+        msg.addReceiver(new AID(parentAgentID, AID.ISLOCALNAME));
+        msg.setContent("Order created successfully");
+        myAgent.send(msg);
 
         Hashtable<String, String> attributes = new Hashtable<String, String>();
         attributes.put("seClass", "es.ehu.domain.manufacturing.agents.BatchAgent");
@@ -153,5 +162,33 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
                 , 1000);
 
         return LOGGER.exit(reply);
+    }
+
+    private String getParentAgentID(String seID) {
+        String parentAgID = null;
+        String parentQuery = "get " + seID + " attrib=parent";
+        ACLMessage reply = null;
+
+        try {
+            reply = sendCommand(parentQuery);
+            // ID del order con el cual el agente está relacionado
+            String orderID;
+            if (reply == null)  // Si no existe el id en el registro devuelve error
+                return "-1";
+            else
+                orderID = reply.getContent();
+
+            reply = sendCommand("get " + orderID + " attrib=parent");
+            if (reply != null) {  // ID del plan
+                String planID = reply.getContent();     // Con el ID del plan conseguir su agente
+                reply = sendCommand("get * parent=" + planID + " category=mPlanAgent");
+                if (reply != null) {
+                    parentAgID = reply.getContent();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return parentAgID;
     }
 }

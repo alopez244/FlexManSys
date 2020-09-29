@@ -6,6 +6,7 @@ import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.IExecManagement;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.SimpleBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
@@ -14,9 +15,7 @@ import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Arrays;
-import java.util.Hashtable;
-import java.util.List;
+import java.util.*;
 
 public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunctionality, IExecManagement {
   /**
@@ -26,6 +25,8 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
   static final Logger LOGGER = LogManager.getLogger(MPlan_Functionality.class.getName()) ;
   
   private Agent myAgent;
+
+  private List<String> myOrders;
 
   @Override
   public Object getState() {
@@ -53,6 +54,50 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
       System.out.println("ERROR creating OrderAgent -> No existe el ID del plan");
     else if (status == "-4")
       System.out.println("ERROR creating OrderAgent -> No targets");
+
+    // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los orders cuadno se arranquen correctamente
+    myAgent.addBehaviour(new SimpleBehaviour() {
+      @Override
+      public void action() {
+        boolean moreMsg = true;
+        ACLMessage msg = myAgent.receive();
+        if(msg != null) {
+          if ((msg.getPerformative() == 7) && (msg.getContent().equals("Order created successfully"))) {
+            System.out.println("\tYa se ha creado el agente " + msg.getSender().getLocalName() + " - hay que borrarlo de la lista --> " + myOrders);
+            // Primero vamos a conseguir el ID del order (ya que el mensaje nos lo envia su agente)
+            String senderOrderID = null;
+            try {
+              ACLMessage reply = sendCommand("get " + msg.getSender().getLocalName() + " attrib=parent");
+              if (reply != null)
+                senderOrderID = reply.getContent();
+            } catch (Exception e) {
+              e.printStackTrace();
+            }
+            // Si la order es uno de los hijos (que solo los hijos nos enviaran los mensaje, pero por se acaso), lo borramos de la lista
+            if(myOrders.contains(senderOrderID))
+              myOrders.remove(senderOrderID);
+            // Si la lista esta vacia, todos los orders se han creado correctamente, y tendremos que pasar del estado BOOT al RUNNING
+            if (myOrders.isEmpty()) {
+              moreMsg = false;
+              // Pasar a estado running
+              System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
+              LOGGER.exit();
+              // TODO Mirar a ver como se puede hacer el cambio de estado (si lo hace la maquina de estados o hay que hacerlo desde aqui)
+              // ControlBehaviour --> cambio de estado
+            }
+          }
+        } else {
+          if (moreMsg)
+            // Se queda a la espera para cuadno le envien mas mensajes
+            block();
+        }
+      }
+
+      @Override
+      public boolean done() {
+        return false;
+      }
+    });
 
     return null;
 
@@ -87,7 +132,13 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
     else
       allOrders = reply.getContent();
 
-    List<String> items = Arrays.asList(allOrders.split("\\s*,\\s*"));
+    //List<String> items = Arrays.asList(allOrders.split("\\s*,\\s*"));
+    List<String> items = new ArrayList<>();
+    String[] aux = allOrders.split(",");
+    for (String a:aux)
+      items.add(a);
+
+    this.myOrders = items;
     for (String orderID: items) {
       // Creamos los agentes para cada order
       try {
