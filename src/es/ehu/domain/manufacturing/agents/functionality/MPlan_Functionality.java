@@ -82,9 +82,24 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
               moreMsg = false;
               // Pasar a estado running
               System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
-              LOGGER.exit();
+
+              System.out.println("Estado del agente " + myAgent.getLocalName() + ": " + myAgent.getState());
+
+              // SystemModelAgent linea 1422
+              String query = "set " + myAgent.getLocalName() + " state=running";
+              try {
+                ACLMessage reply = sendCommand(query);
+                System.out.println(reply.getContent());
+              } catch (Exception e) {
+                e.printStackTrace();
+              }
+
+              //LOGGER.exit();
               // TODO Mirar a ver como se puede hacer el cambio de estado (si lo hace la maquina de estados o hay que hacerlo desde aqui)
               // ControlBehaviour --> cambio de estado
+
+              System.out.println("Estado del agente " + myAgent.getLocalName() + ": " + myAgent.getState());
+
             }
           }
         } else {
