@@ -73,6 +73,7 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
             } catch (Exception e) {
               e.printStackTrace();
             }
+
             // Si la order es uno de los hijos (que solo los hijos nos enviaran los mensaje, pero por se acaso), lo borramos de la lista
             if(myOrders.contains(senderOrderID))
               myOrders.remove(senderOrderID);
