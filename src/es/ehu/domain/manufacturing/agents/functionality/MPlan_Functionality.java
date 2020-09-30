@@ -55,7 +55,7 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
     else if (status == "-4")
       System.out.println("ERROR creating OrderAgent -> No targets");
 
-    // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los orders cuadno se arranquen correctamente
+    // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los orders cuando se arranquen correctamente
     myAgent.addBehaviour(new SimpleBehaviour() {
       @Override
       public void action() {
@@ -104,7 +104,7 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
           }
         } else {
           if (moreMsg)
-            // Se queda a la espera para cuadno le envien mas mensajes
+            // Se queda a la espera para cuando le envien mas mensajes
             block();
         }
       }

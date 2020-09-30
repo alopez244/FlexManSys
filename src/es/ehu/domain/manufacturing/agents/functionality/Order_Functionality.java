@@ -5,12 +5,14 @@ import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.IExecManagement;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.SimpleBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
@@ -21,6 +23,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
     private Agent myAgent;
 
     private String parentAgentID;
+    private List<String> myBatches;
 
     @Override
     public Void init(MWAgent myAgent) {
@@ -44,6 +47,71 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
             System.out.println("ERROR creating BatchAgent -> No existe el ID del plan");
         else if (status == "-4")
             System.out.println("ERROR creating BatchAgent -> No targets");
+
+        // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los batch cuando se arranquen correctamente
+        myAgent.addBehaviour(new SimpleBehaviour() {
+            @Override
+            public void action() {
+                boolean moreMsg = true;
+                ACLMessage msg = myAgent.receive();
+                if(msg != null) {
+                    if ((msg.getPerformative() == 7) && (msg.getContent().equals("Batch created successfully"))) {
+                        System.out.println("\tYa se ha creado el agente " + msg.getSender().getLocalName() + " - hay que borrarlo de la lista --> " + myBatches);
+                        // Primero vamos a conseguir el ID del order (ya que el mensaje nos lo envia su agente)
+                        String senderOrderID = null;
+                        try {
+                            ACLMessage reply = sendCommand("get " + msg.getSender().getLocalName() + " attrib=parent");
+                            if (reply != null)
+                                senderOrderID = reply.getContent();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                        // Si el batch es uno de los hijos (que solo los hijos nos enviaran los mensaje, pero por se acaso), lo borramos de la lista
+                        if(myBatches.contains(senderOrderID))
+                            myBatches.remove(senderOrderID);
+                        // Si la lista esta vacia, todos los orders se han creado correctamente, y tendremos que pasar del estado BOOT al RUNNING
+                        if (myBatches.isEmpty()) {
+                            moreMsg = false;
+                            // Pasar a estado running
+                            System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
+
+                            System.out.println("Estado del agente " + myAgent.getLocalName() + ": " + myAgent.getState());
+
+                            // SystemModelAgent linea 1422
+                            String query1 = "get " + myAgent.getLocalName() + " attrib=state";
+                            String query = "set " + myAgent.getLocalName() + " state=running";
+                            try {
+                                ACLMessage reply = sendCommand(query1);
+                                System.out.println("Dame el estado: " + reply.getContent());
+                                reply = sendCommand(query);
+                                System.out.println("Cambio el estado: " + reply.getContent());
+                                reply = sendCommand(query1);
+                                System.out.println("Dame el estado cambiado: " + reply.getContent());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                            //LOGGER.exit();
+                            // TODO Mirar a ver como se puede hacer el cambio de estado (si lo hace la maquina de estados o hay que hacerlo desde aqui)
+                            // ControlBehaviour --> cambio de estado
+
+                            System.out.println("Estado del agente " + myAgent.getLocalName() + ": " + myAgent.getState());
+
+                        }
+                    }
+                } else {
+                    if (moreMsg)
+                        // Se queda a la espera para cuando le envien mas mensajes
+                        block();
+                }
+            }
+
+            @Override
+            public boolean done() {
+                return false;
+            }
+        });
 
         return null;
     }
@@ -76,7 +144,14 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
         else
             allBatches = reply.getContent();
 
-        List<String> items = Arrays.asList(allBatches.split("\\s*,\\s*"));
+        //List<String> items = Arrays.asList(allBatches.split("\\s*,\\s*"));
+
+        List<String> items = new ArrayList<>();
+        String[] aux = allBatches.split(",");
+        for (String a:aux)
+            items.add(a);
+
+        this.myBatches = items;
         for (String batchID: items) {
             // Creamos los agentes para cada batch
             try {
