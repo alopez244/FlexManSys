@@ -2,6 +2,7 @@ package es.ehu.domain.manufacturing.agents.functionality;
 
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
+import es.ehu.platform.utilities.XMLReader;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.DFService;
@@ -9,6 +10,10 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import org.apache.commons.io.FilenameUtils;
+
+import java.io.File;
+import java.util.ArrayList;
 
 public class Batch_Functionality implements BasicFunctionality {
 
@@ -16,6 +21,7 @@ public class Batch_Functionality implements BasicFunctionality {
     private Agent myAgent;
 
     private String parentAgentID;
+    private ArrayList<ArrayList<ArrayList<String>>> productInfo;
 
     @Override
     public Void init(MWAgent myAgent) {
@@ -30,6 +36,22 @@ public class Batch_Functionality implements BasicFunctionality {
         msg.setContent("Batch created successfully");
         myAgent.send(msg);
 
+
+        // Conseguir la referencia del producto
+        String productID = getProductID(myAgent.getLocalName());
+        System.out.println("La referencia de producto del batch del agente " + myAgent.getLocalName() + " es: " + productID);
+
+        // Conseguimos toda la informacion del producto utilizando su ID
+        productInfo = getProductInfo(productID);
+        System.out.println("ID del producto asociado al agente " + myAgent.getLocalName() + ": " + productInfo.get(0).get(3).get(2) + " - " + productID);
+
+        // Cambiar el estado del batch de BOOT a RUNNING
+        String query = "set " + myAgent.getLocalName() + " state=running";
+        try {
+            ACLMessage reply = sendCommand(query);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         return null;
     }
@@ -104,5 +126,63 @@ public class Batch_Functionality implements BasicFunctionality {
             e.printStackTrace();
         }
         return parentAgID;
+    }
+
+    private String getProductID(String seID) {
+        String productID = null;
+        String query = "get " + seID + " attrib=parent";
+        ACLMessage reply = null;
+
+
+        try {
+            reply = sendCommand(query);
+            // ID del batch con el cual el agente está relacionado
+            // Ya que es este objeto el que tiene la referencia del producto
+            String batchID = null;
+            if (reply != null) {
+                batchID = reply.getContent();
+                query = "get " + batchID + " attrib=refProductID";
+                reply = sendCommand(query);
+                if (reply != null)
+                    productID = reply.getContent();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+        return productID;
+    }
+
+    private ArrayList<ArrayList<ArrayList<String>>> getProductInfo(String productID) {
+
+        ArrayList<ArrayList<ArrayList<String>>> allProductInfo = null;
+
+        String productsURL = "/resources/ProductInstances";
+        String path = getClass().getResource(productsURL).getPath();
+        XMLReader fileReader = new XMLReader();
+        ArrayList<ArrayList<ArrayList<String>>> xmlelements = null;
+        File directory = new File(path);
+
+        if (directory.isDirectory()) {
+            // Recorremos toda la carpeta
+            for (File productXML: directory.listFiles()) {
+                // Miramos solo los archivos tipo XML
+                if (FilenameUtils.getExtension(productXML.getPath()).equals("xml")) {
+                    xmlelements = fileReader.readFile(productXML.getPath());
+                    String idValue = null;
+                    // Buscamos el atributo id para conseguir su valor
+                    for (int i = 0; i < xmlelements.get(0).get(2).size(); i++) {
+                        if (xmlelements.get(0).get(2).get(i).equals("id"))
+                            idValue = xmlelements.get(0).get(3).get(i);
+                    }
+                    // Si el id coincide, es el producto que buscamos
+                    if (idValue.equals(productID))
+                        allProductInfo = xmlelements;
+                }
+            }
+        }
+
+        return allProductInfo;
     }
 }
