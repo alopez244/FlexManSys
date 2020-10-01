@@ -30,12 +30,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
 
         this.myAgent = myAgent;
 
-        // Envio un mensaje a mi parent diciendole que me he creado correctamente
-        parentAgentID = getParentAgentID(myAgent.getLocalName());
-        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-        msg.addReceiver(new AID(parentAgentID, AID.ISLOCALNAME));
-        msg.setContent("Order created successfully");
-        myAgent.send(msg);
+
 
         Hashtable<String, String> attributes = new Hashtable<String, String>();
         attributes.put("seClass", "es.ehu.domain.manufacturing.agents.BatchAgent");
@@ -73,6 +68,14 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
                         // Si la lista esta vacia, todos los orders se han creado correctamente, y tendremos que pasar del estado BOOT al RUNNING
                         if (myBatches.isEmpty()) {
                             moreMsg = false;
+
+                            // Envio un mensaje a mi parent diciendole que me he creado correctamente
+                            parentAgentID = getParentAgentID(myAgent.getLocalName());
+                            ACLMessage msgOrder = new ACLMessage(ACLMessage.INFORM);
+                            msgOrder.addReceiver(new AID(parentAgentID, AID.ISLOCALNAME));
+                            msgOrder.setContent("Order created successfully");
+                            myAgent.send(msgOrder);
+
                             // Pasar a estado running
                             System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
 
