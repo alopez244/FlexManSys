@@ -27,6 +27,7 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
   private Agent myAgent;
 
   private List<String> myOrders;
+  private int chatID = 0; // Numero incremental para crear conversationID
 
   @Override
   public Object getState() {
@@ -182,12 +183,20 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
         String seClass = attribs.get("seClass");
 
         // Orden de negociacion a todos los nodos
-        for (int i=0; i<Integer.parseInt(redundancy); i++)
-          reply = sendCommand("localneg " + targets + " action=start " + orderID + " criterion=max mem externaldata=" + orderID + "," + seCategory + "," + seClass + "," + ((i==0)?"running":"tracking"));
+        for (int i=0; i<Integer.parseInt(redundancy); i++) {
+          // Crear un nuevo conversationID
+          conversationId = myAgent.getLocalName() + "_" + chatID++;
+          System.out.println("\tCONVERSATIONID for order " + orderID + " and plan " + myAgent.getLocalName() + ": " + conversationId);
+
+          //reply = sendCommand("localneg " + targets + " action=start " + orderID + " criterion=max mem externaldata=" + orderID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking"));
+          negotiate(targets, "max mem", "start", orderID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking"), conversationId);
+        }
 
       } catch (Exception e) {
         e.printStackTrace();
       }
+
+
     }
 
     return null;
@@ -240,4 +249,22 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
 
     return LOGGER.exit(reply);
   }
+
+  // TODO Mirar para meter el metodo negotiate en una interfaz
+  private String negotiate(String targets, String negotiationCriteria, String action, String externalData, String conversationId) {
+
+    //Request de nueva negociación
+    ACLMessage msg = new ACLMessage(ACLMessage.CFP);
+
+    for (String target: targets.split(","))
+      msg.addReceiver(new AID(target, AID.ISLOCALNAME));
+    msg.setConversationId(conversationId);
+    msg.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE );
+
+    msg.setContent("negotiate " +targets+ " criterion=" +negotiationCriteria+ " action=" +action+ " externaldata=" +externalData);
+    myAgent.send(msg);
+
+    return "Negotiation message sent";
+  }
+
 }

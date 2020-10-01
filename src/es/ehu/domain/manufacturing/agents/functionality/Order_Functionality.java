@@ -24,6 +24,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
 
     private String parentAgentID;
     private List<String> myBatches;
+    private int chatID = 0; // Numero incremental para crear conversationID
 
     @Override
     public Void init(MWAgent myAgent) {
@@ -183,8 +184,14 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
                 String seClass = attribs.get("seClass");
 
                 // Orden de negociacion a todos los nodos
-                for (int i=0; i<Integer.parseInt(redundancy); i++)
-                    reply = sendCommand("localneg " + targets + " action=start " + batchID + " criterion=max mem externaldata=" + batchID + "," + seCategory + "," + seClass + "," + ((i==0)?"running":"tracking"));
+                for (int i=0; i<Integer.parseInt(redundancy); i++) {
+                    // Crear un nuevo conversationID
+                    conversationId = myAgent.getLocalName() + "_" + chatID++;
+                    System.out.println("\tCONVERSATIONID for batch " + batchID + " and order " + myAgent.getLocalName() + ": " + conversationId);
+                    //reply = sendCommand("localneg " + targets + " action=start " + batchID + " criterion=max mem externaldata=" + batchID + "," + seCategory + "," + seClass + "," + ((i==0)?"running":"tracking"));
+                    negotiate(targets, "max mem", "start", batchID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking"), conversationId);
+                }
+
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -268,5 +275,22 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
             e.printStackTrace();
         }
         return parentAgID;
+    }
+
+    // TODO Mirar para meter el metodo negotiate en una interfaz
+    private String negotiate(String targets, String negotiationCriteria, String action, String externalData, String conversationId) {
+
+        //Request de nueva negociación
+        ACLMessage msg = new ACLMessage(ACLMessage.CFP);
+
+        for (String target: targets.split(","))
+            msg.addReceiver(new AID(target, AID.ISLOCALNAME));
+        msg.setConversationId(conversationId);
+        msg.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE );
+
+        msg.setContent("negotiate " +targets+ " criterion=" +negotiationCriteria+ " action=" +action+ " externaldata=" +externalData);
+        myAgent.send(msg);
+
+        return "Negotiation message sent";
     }
 }
