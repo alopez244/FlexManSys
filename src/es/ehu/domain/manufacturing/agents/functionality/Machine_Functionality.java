@@ -215,7 +215,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         //Secondly, the machine operations are appended to the attribs string
         attribs = attribs + " simpleOperations=";
         for (int j = 0; j < myAgent.resourceModel.size(); j++){
-            if (myAgent.resourceModel.get(j).get(0).toString().startsWith("[simple")){
+            if (myAgent.resourceModel.get(j).get(0).get(0).startsWith("simple")){
                 for (int k = 0; k < myAgent.resourceModel.get(j).get(2).size();k++){
                     if (myAgent.resourceModel.get(j).get(2).get(k).startsWith("id")) attribs += myAgent.resourceModel.get(j).get(3).get(k)+",";
                 }
@@ -225,7 +225,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
         attribs = attribs + " complexOperations=";
         for (int j = 0; j < myAgent.resourceModel.size(); j++){
-            if (myAgent.resourceModel.get(j).get(0).toString().startsWith("[complex")){
+            if (myAgent.resourceModel.get(j).get(0).get(0).startsWith("complex")){
                 for (int k = 0; k < myAgent.resourceModel.get(j).get(2).size();k++){
                     if (myAgent.resourceModel.get(j).get(2).get(k).startsWith("id")) attribs += myAgent.resourceModel.get(j).get(3).get(k)+",";
                 }
