@@ -56,3 +56,4 @@ It will contain detail of every step.
 16/09/2020 Comments added in MPlan_Functionality.java.
 21/09/2020 Cleaning unused classes. Flexmansys (Brais & Mikel folder) has been deleted (it is available in other branches).
 24/09/2020 Ordering the SystemModelAgent according to the services it provides.
+30/09/2020 Start of BatchAgent, Order Agent and MPlanAgent.

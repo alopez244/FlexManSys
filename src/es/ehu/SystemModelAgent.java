@@ -125,16 +125,6 @@ public class SystemModelAgent extends Agent implements IExecManagement {
                     }
 
                 } else { // ontología de control
-                      if (msg.getConversationId() != null) { //si hay id de conversación despertaremos la tarea que interviene en ella
-                          LOGGER.trace("***************** Conversation message *******************");
-                          if (behaviours.containsKey(msg.getConversationId())) { //si hay una coportamiento con ese id
-                              LOGGER.trace("Localizado comportamiento");
-                              myAgent.ds.put(msg.getConversationId(), msg); // guardamos el dato en el ds común
-                              LOGGER.trace("behaviours.get(" + msg.getConversationId() + ").resume()");
-                              myAgent.tbf.getThread(behaviours.get(msg.getConversationId())).resume();
-                          } // end existe la tarea
-                      } // end llega conversationId
-
                       LOGGER.trace("***************** New message *******************");
                       LOGGER.trace("received message from " + msg.getSender().getLocalName());
                       LOGGER.trace("msg.getContent()=" + msg.getContent());

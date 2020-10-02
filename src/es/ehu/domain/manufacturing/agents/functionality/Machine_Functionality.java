@@ -207,12 +207,33 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
             if (args[i].toLowerCase().startsWith("id=")) return null;
         }
 
+        //First, the machine attributes are included
         String attribs = "";
         for (int j = 0; j < myAgent.resourceModel.get(0).get(2).size(); j++){
             attribs += " "+myAgent.resourceModel.get(0).get(2).get(j)+"="+myAgent.resourceModel.get(0).get(3).get(j);
         }
+        //Secondly, the machine operations are appended to the attribs string
+        attribs = attribs + " simpleOperations=";
+        for (int j = 0; j < myAgent.resourceModel.size(); j++){
+            if (myAgent.resourceModel.get(j).get(0).get(0).startsWith("simple")){
+                for (int k = 0; k < myAgent.resourceModel.get(j).get(2).size();k++){
+                    if (myAgent.resourceModel.get(j).get(2).get(k).startsWith("id")) attribs += myAgent.resourceModel.get(j).get(3).get(k)+",";
+                }
+            }
+        }
+        attribs=attribs.substring(0,attribs.length()-1);
 
-        //Secondly, the ProcessNodeAgent is registered in the System Model
+        attribs = attribs + " complexOperations=";
+        for (int j = 0; j < myAgent.resourceModel.size(); j++){
+            if (myAgent.resourceModel.get(j).get(0).get(0).startsWith("complex")){
+                for (int k = 0; k < myAgent.resourceModel.get(j).get(2).size();k++){
+                    if (myAgent.resourceModel.get(j).get(2).get(k).startsWith("id")) attribs += myAgent.resourceModel.get(j).get(3).get(k)+",";
+                }
+            }
+        }
+        attribs=attribs.substring(0,attribs.length()-1);
+
+        //Thirdly, the ProcessNodeAgent is registered in the System Model
 
         String cmd = "reg machine parent=system"+attribs;
 

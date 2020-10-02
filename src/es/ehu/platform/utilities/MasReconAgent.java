@@ -158,6 +158,7 @@ public class MasReconAgent {
             LOGGER.info("error xsd concepts");
             throw new Exception();
             //throw new XSDException(validation);
+
         } else LOGGER.info("xsd concepts correcto");
 
         // mover a registering.xml
