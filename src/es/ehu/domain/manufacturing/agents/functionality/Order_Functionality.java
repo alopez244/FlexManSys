@@ -80,15 +80,13 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
                             // Pasar a estado running
                             System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
 
-                            System.out.println("Estado del agente " + myAgent.getLocalName() + ": " + myAgent.getState());
-
                             // SystemModelAgent linea 1422
                             String query1 = "get " + myAgent.getLocalName() + " attrib=state";
                             String query = "set " + myAgent.getLocalName() + " state=running";
                             try {
-                                ACLMessage reply = sendCommand(query1);
-                                System.out.println("Dame el estado: " + reply.getContent());
-                                reply = sendCommand(query);
+                                //ACLMessage reply = sendCommand(query1);
+                                //System.out.println("Dame el estado: " + reply.getContent());
+                                ACLMessage reply = sendCommand(query);
                                 System.out.println("Cambio el estado: " + reply.getContent());
                                 reply = sendCommand(query1);
                                 System.out.println("Dame el estado cambiado: " + reply.getContent());
@@ -100,7 +98,6 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
                             // TODO Mirar a ver como se puede hacer el cambio de estado (si lo hace la maquina de estados o hay que hacerlo desde aqui)
                             // ControlBehaviour --> cambio de estado
 
-                            System.out.println("Estado del agente " + myAgent.getLocalName() + ": " + myAgent.getState());
 
                         }
                     }

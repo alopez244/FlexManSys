@@ -14,6 +14,8 @@ import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class Batch_Functionality implements BasicFunctionality {
 
@@ -22,6 +24,7 @@ public class Batch_Functionality implements BasicFunctionality {
 
     private String parentAgentID;
     private ArrayList<ArrayList<ArrayList<String>>> productInfo;
+    private HashMap<String, String> machinesForOperations = new HashMap<>();
 
     @Override
     public Void init(MWAgent myAgent) {
@@ -45,6 +48,9 @@ public class Batch_Functionality implements BasicFunctionality {
         productInfo = getProductInfo(productID);
         System.out.println("ID del producto asociado al agente " + myAgent.getLocalName() + ": " + productInfo.get(0).get(3).get(2) + " - " + productID);
 
+        // Teniendo toda la informacion del producto vamos a conseguir las maquinas que vayan a realizar todas las operaciones
+        machinesForOperations = getMachines(myAgent.getLocalName(), productInfo);
+
         // Cambiar el estado del batch de BOOT a RUNNING
         String query = "set " + myAgent.getLocalName() + " state=running";
         try {
@@ -55,7 +61,6 @@ public class Batch_Functionality implements BasicFunctionality {
 
         return null;
     }
-
 
     @Override
     public Object execute(Object[] input) {
@@ -184,5 +189,73 @@ public class Batch_Functionality implements BasicFunctionality {
         }
 
         return allProductInfo;
+    }
+
+    private HashMap<String, String> getMachines(String localName, ArrayList<ArrayList<ArrayList<String>>> productInfo) {
+
+        // Por cada operacion que exista en el producto, vamos a buscar las maquinas que puedan realizar esa operacion
+        // y guardaremos esa informacion en el hashmap --> <"S_01", "machine1, machine3">
+        HashMap<String, String> machinesForOperations = new HashMap<>();
+
+        String operationID = null;
+        String operationType = null;
+        for (int i=0; i < productInfo.size(); i++) {
+            // Solo analizaremos cuando el atributo contenga la palabra operation
+            if (productInfo.get(i).get(0).get(0).contains("_operation")) {
+                operationType = productInfo.get(i).get(0).get(0);
+                // Teniendo el tipo de operacion conseguiremos su valor
+                for (int j=0; j < productInfo.get(i).get(2).size(); j++) {
+                    if (productInfo.get(i).get(2).get(j).equals("id"))
+                        operationID = productInfo.get(i).get(3).get(j);
+                }
+                System.out.println("\t\tOPERACION --> " + operationType + " y el ID:" + operationID);
+
+                // Ahora, primero conseguiremos todas las maquinas (sus ID)
+                String getAllMachines = "get * category=machine";
+                ACLMessage reply = null;
+                try {
+                    reply = sendCommand(getAllMachines);
+                    if (reply != null) {
+                        String allMachines = reply.getContent();
+                        System.out.println("ALL MACHINES: " + allMachines);
+                        List<String> items = new ArrayList<>();
+                        String[] aux = allMachines.split(",");
+                        // Ahora por cada maquina miraremos si contiene nuestra operacion
+                        for (String machineID:aux) {
+                            String simpleQuery = "get " + machineID + " attrib=simpleOperations";
+                            String complexQuery = "get " + machineID + " attrib=complexOperations";
+                            // Dependiendo del tipo de operacion miraremos en un atributo o en otro
+                            if (operationType.equals("simple_operation"))
+                                reply = sendCommand(simpleQuery);
+                            else
+                                reply = sendCommand(complexQuery);
+                            if (reply != null) {
+                                System.out.println("All "+operationType+"s of " +machineID+ ": " +reply.getContent());
+                                if (reply.getContent().contains(operationID)) {
+                                    // Si todavia no se ha añadido ninguna maquina a esa operacion, la meteremos directamente
+                                    if (machinesForOperations.get(operationID) == null)
+                                        machinesForOperations.put(operationID, machineID);
+                                    // En el caso de que tenga alguna maquina, sumaremos la nueva al final y la añadiremos
+                                    else {
+                                        String newMachine = machinesForOperations.get(operationID) + "," + machineID;
+                                        machinesForOperations.put(operationID, newMachine);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+
+        // Al final tendremos un HashMap con todas las operaciones, y las maquinas que las pueden realizar
+        System.out.println("All operations and the machines of each operation of the batch " +myAgent.getLocalName() + " --> "+machinesForOperations);
+        System.out.println();
+
+        return machinesForOperations;
+
     }
 }
