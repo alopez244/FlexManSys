@@ -13,9 +13,7 @@ import jade.lang.acl.MessageTemplate;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class Batch_Functionality implements BasicFunctionality {
 
@@ -25,6 +23,7 @@ public class Batch_Functionality implements BasicFunctionality {
     private String parentAgentID;
     private ArrayList<ArrayList<ArrayList<String>>> productInfo;
     private HashMap<String, String> machinesForOperations = new HashMap<>();
+    private int chatID = 0; // Numero incremental para crear conversationID
 
     @Override
     public Void init(MWAgent myAgent) {
@@ -40,16 +39,8 @@ public class Batch_Functionality implements BasicFunctionality {
         myAgent.send(msg);
 
 
-        // Conseguir la referencia del producto
-        String productID = getProductID(myAgent.getLocalName());
-        System.out.println("La referencia de producto del batch del agente " + myAgent.getLocalName() + " es: " + productID);
-
-        // Conseguimos toda la informacion del producto utilizando su ID
-        productInfo = getProductInfo(productID);
-        System.out.println("ID del producto asociado al agente " + myAgent.getLocalName() + ": " + productInfo.get(0).get(3).get(2) + " - " + productID);
-
-        // Teniendo toda la informacion del producto vamos a conseguir las maquinas que vayan a realizar todas las operaciones
-        machinesForOperations = getMachines(myAgent.getLocalName(), productInfo);
+        // sendPlan method of interface ITraceability
+        sendPlan(myAgent);
 
         // Cambiar el estado del batch de BOOT a RUNNING
         String query = "set " + myAgent.getLocalName() + " state=running";
@@ -105,6 +96,48 @@ public class Batch_Functionality implements BasicFunctionality {
         return LOGGER.exit(reply);
     }
 
+    //====================================================================
+    //ITRACEABILITY INTERFACE
+    //====================================================================
+
+    private void sendPlan(MWAgent myAgent) {
+
+        // Conseguir la referencia del producto
+        String productID = getProductID(myAgent.getLocalName());
+        System.out.println("La referencia de producto del batch del agente " + myAgent.getLocalName() + " es: " + productID);
+
+        // Conseguimos toda la informacion del producto utilizando su ID
+        productInfo = getProductInfo(productID);
+        System.out.println("ID del producto asociado al agente " + myAgent.getLocalName() + ": " + productInfo.get(0).get(3).get(2) + " - " + productID);
+
+        // Teniendo toda la informacion del producto vamos a conseguir las maquinas que vayan a realizar todas las operaciones
+        machinesForOperations = getMachines(myAgent.getLocalName(), productInfo);
+
+        // Conseguir la cantidad de productos
+        String numOfItems = getNumOfItems(myAgent.getLocalName());
+
+        // Por cada operacion vamos a negociar con todos sus maquinas para asignar a la mejor
+        for (Map.Entry<String, String> entry : machinesForOperations.entrySet()) {
+            String operationID = entry.getKey();
+            String machinesID = entry.getValue();
+            System.out.println(operationID + " - " + machinesID);
+
+            String conversationId = myAgent.getLocalName() + "_" + chatID++;
+
+            negotiate(machinesID, "lead time", "execute", myAgent.getLocalName() + "," + numOfItems + "," + operationID, conversationId);
+
+        }
+
+
+
+    }
+
+    private void readPlan() {
+        // TODO
+    }
+
+    //====================================================================
+
     private String getParentAgentID(String seID) {
         String parentAgID = null;
         String parentQuery = "get " + seID + " attrib=parent";
@@ -138,7 +171,6 @@ public class Batch_Functionality implements BasicFunctionality {
         String query = "get " + seID + " attrib=parent";
         ACLMessage reply = null;
 
-
         try {
             reply = sendCommand(query);
             // ID del batch con el cual el agente está relacionado
@@ -154,9 +186,30 @@ public class Batch_Functionality implements BasicFunctionality {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
         return productID;
+    }
+
+    private String getNumOfItems(String seID) {
+        String numOfItems = null;
+        String query = "get " + seID + " attrib=parent";
+        ACLMessage reply = null;
+
+        try {
+            reply = sendCommand(query);
+            // ID del batch con el cual el agente está relacionado
+            // Ya que es este objeto el que tiene la cantidad de productos
+            String batchID = null;
+            if (reply != null) {
+                batchID = reply.getContent();
+                query = "get " + batchID + " attrib=numberOfItems";
+                reply = sendCommand(query);
+                if (reply != null)
+                    numOfItems = reply.getContent();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return numOfItems;
     }
 
     private ArrayList<ArrayList<ArrayList<String>>> getProductInfo(String productID) {
@@ -258,4 +311,21 @@ public class Batch_Functionality implements BasicFunctionality {
         return machinesForOperations;
 
     }
+
+    private String negotiate(String targets, String negotiationCriteria, String action, String externalData, String conversationId) {
+
+        //Request de nueva negociación
+        ACLMessage msg = new ACLMessage(ACLMessage.CFP);
+
+        for (String target: targets.split(","))
+            msg.addReceiver(new AID(target, AID.ISLOCALNAME));
+        msg.setConversationId(conversationId);
+        msg.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE );
+
+        msg.setContent("negotiate " +targets+ " criterion=" +negotiationCriteria+ " action=" +action+ " externaldata=" +externalData);
+        myAgent.send(msg);
+
+        return "Negotiation message sent";
+    }
+
 }
