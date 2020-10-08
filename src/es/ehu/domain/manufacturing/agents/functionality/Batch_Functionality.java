@@ -226,9 +226,9 @@ public class Batch_Functionality implements BasicFunctionality {
 
     private HashMap<String,String> getNegotiationWinners() {
 
-        HashMap<String,String> aux = machinesForOperations;
         HashMap<String,String> operationsWithMachines = new HashMap<>();
 
+        // Le añadimos un comportamiento para recibir los mensajes de las maquinas
         myAgent.addBehaviour(new SimpleBehaviour() {
             @Override
             public void action() {
@@ -236,11 +236,14 @@ public class Batch_Functionality implements BasicFunctionality {
                 if(msg != null) {
                     if ((msg.getPerformative() == 7) && (msg.getContent().contains("I am the winner"))) {
                         String operationID = msg.getContent().split(":")[1];
-                        aux.remove(operationID);
+                        // Con la ID de la operacion lo borramos de la lista que teniamos, y añadimos a la nueva lista la maquina que se le ha asociado
+                        machinesForOperations.remove(operationID);
                         operationsWithMachines.put(operationID, msg.getSender().getLocalName());
-                        if (aux.isEmpty()) {
+                        // Si se han borrado todas las operaciones es que ya tenemos todas las maquinas asociadas a alguna operacion
+                        if (machinesForOperations.isEmpty()) {
                             System.out.println("Todas las operaciones tienen asociada una maquina");
                             moreMsg = false;
+                            // Ahora podremos proceder a conseguir la trazabilidad de los productos
                             getProductsTraceability(operationsWithMachines);
                         }
                     }
@@ -363,8 +366,8 @@ public class Batch_Functionality implements BasicFunctionality {
 
     private void getProductsTraceability(HashMap<String,String> operationsWithMachines) {
 
+        // Cogeremos como base la informacion del producto que ya hemos conseguido y añadiremos las nuevas variables
         ArrayList<ArrayList<ArrayList<String>>> aux = productInfo;
-
         for (int i=0; i < aux.size(); i++) {
             // Solo analizaremos cuando el atributo contenga la palabra operation
             if (aux.get(i).get(0).get(0).contains("_operation")) {
@@ -383,6 +386,7 @@ public class Batch_Functionality implements BasicFunctionality {
             }
         }
 
+        // Ya que de momento no tenemos mas informacion, añadiremos todos los productos del lote a lista (de momento todos son iguales)
         for (int i = 0; i < Integer.parseInt(numOfItems); i++) {
             productsTraceability.add(aux);
         }
