@@ -329,7 +329,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
             // Envio un mensaje al BatchAgent para avisarle de que soy el ganador para asociarme esa operacion
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
             msg.addReceiver(new AID(seID, AID.ISLOCALNAME));
-            msg.setContent("I am the winner of " + seOperationID);
+            msg.setContent("I am the winner of:" + seOperationID);
             msg.setConversationId(conversationId);
             myAgent.send(msg);
 

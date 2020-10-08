@@ -5,6 +5,7 @@ import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.utilities.XMLReader;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.SimpleBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
@@ -22,8 +23,13 @@ public class Batch_Functionality implements BasicFunctionality {
 
     private String parentAgentID;
     private ArrayList<ArrayList<ArrayList<String>>> productInfo;
+    private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> productsTraceability = new ArrayList<>();
     private HashMap<String, String> machinesForOperations = new HashMap<>();
+    private String numOfItems;
+
     private int chatID = 0; // Numero incremental para crear conversationID
+
+    private boolean moreMsg = true;
 
     @Override
     public Void init(MWAgent myAgent) {
@@ -114,7 +120,7 @@ public class Batch_Functionality implements BasicFunctionality {
         machinesForOperations = getMachines(myAgent.getLocalName(), productInfo);
 
         // Conseguir la cantidad de productos
-        String numOfItems = getNumOfItems(myAgent.getLocalName());
+        numOfItems = getNumOfItems(myAgent.getLocalName());
 
         // Por cada operacion vamos a negociar con todos sus maquinas para asignar a la mejor
         for (Map.Entry<String, String> entry : machinesForOperations.entrySet()) {
@@ -128,7 +134,13 @@ public class Batch_Functionality implements BasicFunctionality {
 
         }
 
-
+        // Comprobamos que todas las operaciones se han asociado a una maquina, y conseguimos dicha maquina para cada operacion
+        HashMap<String,String> operationsWithMachines = getNegotiationWinners();
+        for (Map.Entry<String, String> entry : operationsWithMachines.entrySet()) {
+            String operationID = entry.getKey();
+            String machineID = entry.getValue();
+            System.out.println(operationID + " - " + machineID);
+        }
 
     }
 
@@ -210,6 +222,43 @@ public class Batch_Functionality implements BasicFunctionality {
             e.printStackTrace();
         }
         return numOfItems;
+    }
+
+    private HashMap<String,String> getNegotiationWinners() {
+
+        HashMap<String,String> aux = machinesForOperations;
+        HashMap<String,String> operationsWithMachines = new HashMap<>();
+
+        myAgent.addBehaviour(new SimpleBehaviour() {
+            @Override
+            public void action() {
+                ACLMessage msg = myAgent.receive();
+                if(msg != null) {
+                    if ((msg.getPerformative() == 7) && (msg.getContent().contains("I am the winner"))) {
+                        String operationID = msg.getContent().split(":")[1];
+                        aux.remove(operationID);
+                        operationsWithMachines.put(operationID, msg.getSender().getLocalName());
+                        if (aux.isEmpty()) {
+                            System.out.println("Todas las operaciones tienen asociada una maquina");
+                            moreMsg = false;
+                            getProductsTraceability(operationsWithMachines);
+                        }
+                    }
+                } else {
+                    if (moreMsg)
+                        // Se queda a la espera para cuando le envien mas mensajes
+                        block();
+                }
+            }
+
+            @Override
+            public boolean done() {
+                return false;
+            }
+        });
+
+        return operationsWithMachines;
+
     }
 
     private ArrayList<ArrayList<ArrayList<String>>> getProductInfo(String productID) {
@@ -309,6 +358,35 @@ public class Batch_Functionality implements BasicFunctionality {
         System.out.println();
 
         return machinesForOperations;
+
+    }
+
+    private void getProductsTraceability(HashMap<String,String> operationsWithMachines) {
+
+        ArrayList<ArrayList<ArrayList<String>>> aux = productInfo;
+
+        for (int i=0; i < aux.size(); i++) {
+            // Solo analizaremos cuando el atributo contenga la palabra operation
+            if (aux.get(i).get(0).get(0).contains("_operation")) {
+                aux.get(i).get(2).add("actualMachineId");
+                aux.get(i).get(2).add("actualStationId");
+                aux.get(i).get(2).add("startTime");
+                aux.get(i).get(2).add("finishTime");
+
+                aux.get(i).get(3).add("");
+                for (int j=0; j < productInfo.get(i).get(2).size(); j++) {
+                    if (productInfo.get(i).get(2).get(j).equals("id"))
+                        aux.get(i).get(3).add(operationsWithMachines.get(aux.get(i).get(3).get(j)));
+                }
+                aux.get(i).get(3).add("");
+                aux.get(i).get(3).add("");
+            }
+        }
+
+        for (int i = 0; i < Integer.parseInt(numOfItems); i++) {
+            productsTraceability.add(aux);
+        }
+        System.out.println("PRODUCT TRACEABILITY OF " + myAgent.getLocalName() + ":\n" + productsTraceability);
 
     }
 
