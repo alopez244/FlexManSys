@@ -2,7 +2,7 @@
 <!-- editado con XMLSpy v2020 sp1 (x64) (http://www.altova.com) por  (University of the Basque Country) -->
 <!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
 <equipment xmlns:st="station" xmlns:up="updatedPlan" xmlns="ManufacturingPlan" id="PL1" description="Production Line 1 (Work Center)" resourceType="equipment" level="work_center" equipmentType="Machine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="ManufacturingPlan ../Equipment.xsd">
-	<st:station id="ST01" description="Station 1 (Work Unit)" resourceType="equipment" level="work_unit" sn="KR3-R540-001" physicalLocation="researchLab,productionLine1">
+	<st:station id="ST01" description="Station_1_Work_Unit" resourceType="equipment" level="work_unit" sn="KR3-R540-001" physicalLocation="researchLab,productionLine1">
 		<st:palletIn id="PI1_ST01" xPos="80" yPos="80" zPos="50"/>
 		<st:palletIn id="PI2_ST01" xPos="520" yPos="80" zPos="50"/>
 		<st:palletOut id="PO1_ST01" xPos="620" yPos="380" zPos="50"/>

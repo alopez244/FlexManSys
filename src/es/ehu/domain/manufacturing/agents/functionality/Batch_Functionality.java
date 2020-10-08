@@ -377,7 +377,7 @@ public class Batch_Functionality implements BasicFunctionality {
                 aux.get(i).get(2).add("finishTime");
 
                 aux.get(i).get(3).add("");
-                for (int j=0; j < productInfo.get(i).get(2).size(); j++) {
+                for (int j=0; j < productInfo.get(i).get(2).size(); j++) { //¿Por qué no utilizar la propia variable aux?
                     if (productInfo.get(i).get(2).get(j).equals("id"))
                         aux.get(i).get(3).add(operationsWithMachines.get(aux.get(i).get(3).get(j)));
                 }
