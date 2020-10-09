@@ -26,99 +26,145 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
     private List<String> myBatches;
     private int chatID = 0; // Numero incremental para crear conversationID
 
+    private String firstState;
+    private String redundancy;
+    private ArrayList<String> myReplicasID = new ArrayList<>();
+
     @Override
     public Void init(MWAgent myAgent) {
 
         this.myAgent = myAgent;
 
         String[] firstArgument = myAgent.getArguments()[0].toString().split("=");
-        String firstState = null;
         if (firstArgument[0].equals("firstState"))
             firstState = firstArgument[1];
 
-        Hashtable<String, String> attributes = new Hashtable<String, String>();
-        attributes.put("seClass", "es.ehu.domain.manufacturing.agents.BatchAgent");
+        String[] secondArgument = myAgent.getArguments()[1].toString().split("=");
+        if (secondArgument[0].equals("redundancy"))
+            redundancy = secondArgument[1];
 
-        String status = seStart(myAgent.getLocalName(), attributes, null);
-        if (status == null)
-            System.out.println("BatchAgents created");
-        else if (status == "-1")
-            System.out.println("ERROR creating BatchAgent -> No existe el ID del plan");
-        else if (status == "-4")
-            System.out.println("ERROR creating BatchAgent -> No targets");
+        if (firstState.equals("running")) {
 
-        // TODO primero comprobara que todas las replicas (tracking) se han creado correctamente, y despues comprobara los batches
-        // Es decir, antes de avisar a su padre que esta creado, comprueba las replicas y despues los batches
+            Hashtable<String, String> attributes = new Hashtable<String, String>();
+            attributes.put("seClass", "es.ehu.domain.manufacturing.agents.BatchAgent");
 
-        // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los batch cuando se arranquen correctamente
-        myAgent.addBehaviour(new SimpleBehaviour() {
-            @Override
-            public void action() {
-                boolean moreMsg = true;
-                ACLMessage msg = myAgent.receive();
-                if(msg != null) {
-                    if ((msg.getPerformative() == 7) && (msg.getContent().equals("Batch created successfully"))) {
-                        System.out.println("\tYa se ha creado el agente " + msg.getSender().getLocalName() + " - hay que borrarlo de la lista --> " + myBatches);
-                        // Primero vamos a conseguir el ID del order (ya que el mensaje nos lo envia su agente)
-                        String senderOrderID = null;
-                        try {
-                            ACLMessage reply = sendCommand("get " + msg.getSender().getLocalName() + " attrib=parent");
-                            if (reply != null)
-                                senderOrderID = reply.getContent();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+            String status = seStart(myAgent.getLocalName(), attributes, null);
+            if (status == null)
+                System.out.println("BatchAgents created");
+            else if (status == "-1")
+                System.out.println("ERROR creating BatchAgent -> No existe el ID del plan");
+            else if (status == "-4")
+                System.out.println("ERROR creating BatchAgent -> No targets");
 
-                        // Si el batch es uno de los hijos (que solo los hijos nos enviaran los mensaje, pero por se acaso), lo borramos de la lista
-                        if(myBatches.contains(senderOrderID))
-                            myBatches.remove(senderOrderID);
-                        // Si la lista esta vacia, todos los orders se han creado correctamente, y tendremos que pasar del estado BOOT al RUNNING
-                        if (myBatches.isEmpty()) {
-                            moreMsg = false;
+            // TODO primero comprobara que todas las replicas (tracking) se han creado correctamente, y despues comprobara los batches
+            // Es decir, antes de avisar a su padre que esta creado, comprueba las replicas y despues los batches
 
-                            // Envio un mensaje a mi parent diciendole que me he creado correctamente
-                            parentAgentID = getParentAgentID(myAgent.getLocalName());
-                            ACLMessage msgOrder = new ACLMessage(ACLMessage.INFORM);
-                            msgOrder.addReceiver(new AID(parentAgentID, AID.ISLOCALNAME));
-                            msgOrder.setContent("Order created successfully");
-                            myAgent.send(msgOrder);
+            // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los batch cuando se arranquen correctamente
+            myAgent.addBehaviour(new SimpleBehaviour() {
+                @Override
+                public void action() {
+                    boolean moreMsg = true;
+                    int replicaCount = 0;
+                    ACLMessage msg = myAgent.receive();
+                    if (msg != null) {
+                        if ((msg.getPerformative() == 7)) {
+                            if (msg.getContent().equals("Batch created successfully")) {
+                                System.out.println("\tYa se ha creado el agente " + msg.getSender().getLocalName() + " - hay que borrarlo de la lista --> " + myBatches);
+                                // Primero vamos a conseguir el ID del order (ya que el mensaje nos lo envia su agente)
+                                String senderOrderID = null;
+                                try {
+                                    ACLMessage reply = sendCommand("get " + msg.getSender().getLocalName() + " attrib=parent");
+                                    if (reply != null)
+                                        senderOrderID = reply.getContent();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
 
-                            // Pasar a estado running
-                            System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
-
-                            // SystemModelAgent linea 1422
-                            String query1 = "get " + myAgent.getLocalName() + " attrib=state";
-                            String query = "set " + myAgent.getLocalName() + " state=running";
-                            try {
-                                //ACLMessage reply = sendCommand(query1);
-                                //System.out.println("Dame el estado: " + reply.getContent());
-                                ACLMessage reply = sendCommand(query);
-                                System.out.println("Cambio el estado: " + reply.getContent());
-                                reply = sendCommand(query1);
-                                System.out.println("Dame el estado cambiado: " + reply.getContent());
-                            } catch (Exception e) {
-                                e.printStackTrace();
+                                // Si el batch es uno de los hijos (que solo los hijos nos enviaran los mensaje, pero por se acaso), lo borramos de la lista
+                                if (myBatches.contains(senderOrderID))
+                                    myBatches.remove(senderOrderID);
+                            } else if (msg.getContent().equals("Order replica created successfully")) {
+                                System.out.println("\tYa se ha creado la replica " + msg.getSender().getLocalName());
+                                replicaCount++;
+                                myReplicasID.add(msg.getSender().getLocalName());
                             }
+                            // Si la lista esta vacia, todos los orders se han creado correctamente, y miraremos si se han creado todos las replicas
+                            // Si se cumple t0do, tendremos que pasar del estado BOOT al RUNNING
+                            if ((myBatches.isEmpty()) && (replicaCount == Integer.parseInt(redundancy) - 1)) {
+                                moreMsg = false;
 
-                            //LOGGER.exit();
-                            // TODO Mirar a ver como se puede hacer el cambio de estado (si lo hace la maquina de estados o hay que hacerlo desde aqui)
-                            // ControlBehaviour --> cambio de estado
+                                // Envio un mensaje a mi parent diciendole que me he creado correctamente
+                                parentAgentID = getParentAgentID(myAgent.getLocalName());
+                                ACLMessage msgOrder = new ACLMessage(ACLMessage.INFORM);
+                                msgOrder.addReceiver(new AID(parentAgentID, AID.ISLOCALNAME));
+                                msgOrder.setContent("Order created successfully");
+                                myAgent.send(msgOrder);
+
+                                // Pasar a estado running
+                                System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
+
+                                // SystemModelAgent linea 1422
+                                String query1 = "get " + myAgent.getLocalName() + " attrib=state";
+                                String query = "set " + myAgent.getLocalName() + " state=running";
+                                try {
+                                    //ACLMessage reply = sendCommand(query1);
+                                    //System.out.println("Dame el estado: " + reply.getContent());
+                                    ACLMessage reply = sendCommand(query);
+                                    System.out.println("Cambio el estado: " + reply.getContent());
+                                    reply = sendCommand(query1);
+                                    System.out.println("Dame el estado cambiado: " + reply.getContent());
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+
+                                //LOGGER.exit();
+                                // TODO Mirar a ver como se puede hacer el cambio de estado (si lo hace la maquina de estados o hay que hacerlo desde aqui)
+                                // ControlBehaviour --> cambio de estado
 
 
+                            }
                         }
+                    } else {
+                        if (moreMsg)
+                            // Se queda a la espera para cuando le envien mas mensajes
+                            block();
                     }
-                } else {
-                    if (moreMsg)
-                        // Se queda a la espera para cuando le envien mas mensajes
-                        block();
                 }
+
+                @Override
+                public boolean done() {
+                    return false;
+                }
+            });
+
+        } else {
+            // Si su estado es tracking
+            String runningAgentID = null;
+            try {
+                String parentID = null;
+                ACLMessage reply = sendCommand("get " + myAgent.getLocalName() + " attrib=parent");
+                if (reply != null)
+                    parentID = reply.getContent();
+                reply = sendCommand("get * parent=" + parentID + " category=orderAgent state=running");
+                if (reply !=null) {
+                    runningAgentID = reply.getContent();
+
+                    ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+                    msg.addReceiver(new AID(runningAgentID, AID.ISLOCALNAME));
+                    msg.setContent("Order replica created successfully");
+                    myAgent.send(msg);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
-            @Override
-            public boolean done() {
-                return false;
+            // Una vez mande el mensaje, registra que su estado es el tracking
+            try {
+                sendCommand("set " + myAgent.getLocalName() + " state=" + firstState);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        });
+        }
 
         return null;
     }
@@ -162,10 +208,6 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
         for (String batchID: items) {
             // Creamos los agentes para cada batch
             try {
-                String redundancy = "1";
-                if ((attribs!=null) && (attribs.containsKey("redundancy")))
-                    redundancy = attribs.get("redundancy");
-
                 reply = sendCommand("get (get * parent=(get * parent=" + batchID + " category=restrictionList)) attrib=attribValue");
                 String refServID = null;
                 if (reply != null)
@@ -192,7 +234,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
                     conversationId = myAgent.getLocalName() + "_" + chatID++;
                     System.out.println("\tCONVERSATIONID for batch " + batchID + " and order " + myAgent.getLocalName() + ": " + conversationId);
                     //reply = sendCommand("localneg " + targets + " action=start " + batchID + " criterion=max mem externaldata=" + batchID + "," + seCategory + "," + seClass + "," + ((i==0)?"running":"tracking"));
-                    negotiate(targets, "max mem", "start", batchID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking"), conversationId);
+                    negotiate(targets, "max mem", "start", batchID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy, conversationId);
                 }
 
 

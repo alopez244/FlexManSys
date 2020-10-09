@@ -1047,7 +1047,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         //mando negociar a todos
         for (int i=0; i<Integer.parseInt(redundancy); i++) {
 
-            String neg = processCmd("localneg "+targets+" action=start criterion=max mem externaldata="+seID+","+seCategory+","+seClass+","+((i==0)?"running":"tracking"), conversationId);
+            String neg = processCmd("localneg "+targets+" action=start criterion=max mem externaldata="+seID+","+seCategory+","+seClass+","+((i==0)?"running":"tracking")+","+redundancy, conversationId);
             // TODO mirar el tiempo de espera, o como arreglarlo sin poner espera
             try {
                 Thread.sleep(1000);

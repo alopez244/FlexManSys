@@ -30,6 +30,8 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
   private int chatID = 0; // Numero incremental para crear conversationID
 
   private String firstState;
+  private String redundancy;
+  private ArrayList<String> myReplicasID = new ArrayList<>();
 
   @Override
   public Object getState() {
@@ -50,6 +52,10 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
     String[] firstArgument = myAgent.getArguments()[0].toString().split("=");
     if (firstArgument[0].equals("firstState"))
       firstState = firstArgument[1];
+
+    String[] secondArgument = myAgent.getArguments()[1].toString().split("=");
+    if (secondArgument[0].equals("redundancy"))
+      redundancy = secondArgument[1];
 
     // TODO SOLO HACER TODO ESTO SI NO ES UNA REPLICA?
     if (firstState.equals("running")) {
@@ -72,26 +78,36 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
       myAgent.addBehaviour(new SimpleBehaviour() {
         @Override
         public void action() {
+          int replicaCount = 0;
           boolean moreMsg = true;
           ACLMessage msg = myAgent.receive();
           if (msg != null) {
-            if ((msg.getPerformative() == 7) && (msg.getContent().equals("Order created successfully"))) {
-              System.out.println("\tYa se ha creado el agente " + msg.getSender().getLocalName() + " - hay que borrarlo de la lista --> " + myOrders);
-              // Primero vamos a conseguir el ID del order (ya que el mensaje nos lo envia su agente)
-              String senderOrderID = null;
-              try {
-                ACLMessage reply = sendCommand("get " + msg.getSender().getLocalName() + " attrib=parent");
-                if (reply != null)
-                  senderOrderID = reply.getContent();
-              } catch (Exception e) {
-                e.printStackTrace();
+            // TODO COMPROBAR TAMBIEN LOS TRACKING si esta bien programado (sin probar)
+            if ((msg.getPerformative() == 7)) {
+              if (msg.getContent().equals("Order created successfully")) {
+                System.out.println("\tYa se ha creado el agente " + msg.getSender().getLocalName() + " - hay que borrarlo de la lista --> " + myOrders);
+                // Primero vamos a conseguir el ID del order (ya que el mensaje nos lo envia su agente)
+                String senderOrderID = null;
+                try {
+                  ACLMessage reply = sendCommand("get " + msg.getSender().getLocalName() + " attrib=parent");
+                  if (reply != null)
+                    senderOrderID = reply.getContent();
+                } catch (Exception e) {
+                  e.printStackTrace();
+                }
+
+                // Si la order es uno de los hijos (que solo los hijos nos enviaran los mensaje, pero por se acaso), lo borramos de la lista
+                if (myOrders.contains(senderOrderID))
+                  myOrders.remove(senderOrderID);
+
+              } else if (msg.getContent().equals("MPlan replica created successfully")) {
+                System.out.println("\tYa se ha creado la replica " + msg.getSender().getLocalName());
+                replicaCount++;
+                myReplicasID.add(msg.getSender().getLocalName());
               }
 
-              // Si la order es uno de los hijos (que solo los hijos nos enviaran los mensaje, pero por se acaso), lo borramos de la lista
-              if (myOrders.contains(senderOrderID))
-                myOrders.remove(senderOrderID);
               // Si la lista esta vacia, todos los orders se han creado correctamente, y tendremos que pasar del estado BOOT al RUNNING
-              if (myOrders.isEmpty()) {
+              if ((myOrders.isEmpty() && (replicaCount == Integer.parseInt(redundancy) - 1))) {
                 moreMsg = false;
                 // Pasar a estado running
                 System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
@@ -129,6 +145,27 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
       });
 
     } else {
+      // Si su estado es tracking
+      String runningAgentID = null;
+      try {
+        String parentID = null;
+        ACLMessage reply = sendCommand("get " + myAgent.getLocalName() + " attrib=parent");
+        if (reply != null)
+          parentID = reply.getContent();
+        reply = sendCommand("get * parent=" + parentID + " category=mPlanAgent state=running");
+        if (reply !=null) {
+          runningAgentID = reply.getContent();
+
+          ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+          msg.addReceiver(new AID(runningAgentID, AID.ISLOCALNAME));
+          msg.setContent("MPlan replica created successfully");
+          myAgent.send(msg);
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+
+      // Una vez mande el mensaje, registra que su estado es el tracking
       try {
         sendCommand("set " + myAgent.getLocalName() + " state=" + firstState);
       } catch (Exception e) {
@@ -178,10 +215,6 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
     for (String orderID: items) {
       // Creamos los agentes para cada order
       try {
-        String redundancy = "1";
-        if ((attribs!=null) && (attribs.containsKey("redundancy")))
-          redundancy = attribs.get("redundancy");
-
         reply = sendCommand("get (get * parent=(get * parent=" + orderID + " category=restrictionList)) attrib=attribValue");
         String refServID = null;
         if (reply != null)
@@ -208,7 +241,7 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
           System.out.println("\tCONVERSATIONID for order " + orderID + " and plan " + myAgent.getLocalName() + ": " + conversationId);
 
           //reply = sendCommand("localneg " + targets + " action=start " + orderID + " criterion=max mem externaldata=" + orderID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking"));
-          negotiate(targets, "max mem", "start", orderID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking"), conversationId);
+          negotiate(targets, "max mem", "start", orderID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy, conversationId);
         }
 
       } catch (Exception e) {

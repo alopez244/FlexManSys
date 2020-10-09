@@ -31,36 +31,100 @@ public class Batch_Functionality implements BasicFunctionality {
 
     private boolean moreMsg = true;
 
+    private String firstState;
+    private String redundancy;
+    private ArrayList<String> myReplicasID = new ArrayList<>();
+
     @Override
     public Void init(MWAgent myAgent) {
 
         this.myAgent = myAgent;
 
         String[] firstArgument = myAgent.getArguments()[0].toString().split("=");
-        String firstState = null;
         if (firstArgument[0].equals("firstState"))
             firstState = firstArgument[1];
 
-        // TODO primero comprobara que todas las replicas (tracking) se han creado correctamente, y despues envia el mensaje de que se ha creado correctamente
+        String[] secondArgument = myAgent.getArguments()[1].toString().split("=");
+        if (secondArgument[0].equals("redundancy"))
+            redundancy = secondArgument[1];
 
-        // Envio un mensaje a mi parent diciendole que me he creado correctamente
-        parentAgentID = getParentAgentID(myAgent.getLocalName());
-        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-        msg.addReceiver(new AID(parentAgentID, AID.ISLOCALNAME));
-        msg.setContent("Batch created successfully");
-        myAgent.send(msg);
+        if(firstState.equals("running")) {
+
+            // TODO primero comprobara que todas las replicas (tracking) se han creado correctamente, y despues envia el mensaje de que se ha creado correctamente
+            myAgent.addBehaviour(new SimpleBehaviour() {
+                @Override
+                public void action() {
+                    boolean moreMsg = true;
+                    int replicaCount = 0;
+                    ACLMessage msg = myAgent.receive();
+                    if (msg != null) {
+                        if ((msg.getPerformative() == 7) && (msg.getContent().equals("Batch replica created successfully"))) {
+                            replicaCount++;
+                            myReplicasID.add(msg.getSender().getLocalName());
+                            if (replicaCount == Integer.parseInt(redundancy) - 1) {
+                                moreMsg = false;
+                                // Ya se han creado todas las replicas bien y puede enviarle el mensaje a su parent
+                                // Envio un mensaje a mi parent diciendole que me he creado correctamente
+                                parentAgentID = getParentAgentID(myAgent.getLocalName());
+                                msg = new ACLMessage(ACLMessage.INFORM);
+                                msg.addReceiver(new AID(parentAgentID, AID.ISLOCALNAME));
+                                msg.setContent("Batch created successfully");
+                                myAgent.send(msg);
+                            }
+                        }
+                    } else {
+                        if (moreMsg)
+                            // Se queda a la espera para cuando le envien mas mensajes
+                            block();
+                    }
+                }
+
+                @Override
+                public boolean done() {
+                    return false;
+                }
+            });
 
 
-        // sendPlan method of interface ITraceability
-        sendPlan(myAgent);
+            // sendPlan method of interface ITraceability
+            sendPlan(myAgent);
 
-        // Cambiar el estado del batch de BOOT a RUNNING
-        String query = "set " + myAgent.getLocalName() + " state=running";
-        try {
-            ACLMessage reply = sendCommand(query);
-        } catch (Exception e) {
-            e.printStackTrace();
+            // Cambiar el estado del batch de BOOT a RUNNING
+            String query = "set " + myAgent.getLocalName() + " state=running";
+            try {
+                ACLMessage reply = sendCommand(query);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            // Si su estado es tracking
+            String runningAgentID = null;
+            try {
+                String parentID = null;
+                ACLMessage reply = sendCommand("get " + myAgent.getLocalName() + " attrib=parent");
+                if (reply != null)
+                    parentID = reply.getContent();
+                reply = sendCommand("get * parent=" + parentID + " category=batchAgent state=running");
+                if (reply !=null) {
+                    runningAgentID = reply.getContent();
+
+                    ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+                    msg.addReceiver(new AID(runningAgentID, AID.ISLOCALNAME));
+                    msg.setContent("Batch replica created successfully");
+                    myAgent.send(msg);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            // Una vez mande el mensaje, registra que su estado es el tracking
+            try {
+                sendCommand("set " + myAgent.getLocalName() + " state=" + firstState);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+
 
         return null;
     }

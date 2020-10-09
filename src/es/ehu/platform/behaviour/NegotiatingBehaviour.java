@@ -179,10 +179,10 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                 MsgNegotiation negMsg = null;
                 if (actionValue.equals("start")) {
                     negMsg = new MsgNegotiation((Iterator<AID>) msg.getAllReceiver(), conversationId, cmd.attribs.get("action"), cmd.attribs.get("criterion"),
-                            externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString());
+                            externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString());
                     if(negMsg.getTargets().length<=1){
                         switch (aNegFunctionality.checkNegotiation(conversationId, cmd.attribs.get("action"), 0,
-                               1, true, true, negMsg.getExternalData()[0], negMsg.getExternalData()[1], negMsg.getExternalData()[2], negMsg.getExternalData()[3])) {
+                               1, true, true, negMsg.getExternalData()[0], negMsg.getExternalData()[1], negMsg.getExternalData()[2], negMsg.getExternalData()[3], negMsg.getExternalData()[4])) {
 
                             case NEG_LOST: //he perdido la negociación
                                 LOGGER.info("> " + myAgent.getLocalName() + " lost nego" + conversationId);
@@ -244,10 +244,11 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                         String seType = (String) negotiationRuntime.get(conversationId).getExternalData()[1];
                         String seClass = (String) negotiationRuntime.get(conversationId).getExternalData()[2];
                         String seFirstTransition = (String) negotiationRuntime.get(conversationId).getExternalData()[3];
+                        String redundancy = (String) negotiationRuntime.get(conversationId).getExternalData()[4];
 
                         switch (aNegFunctionality.checkNegotiation(conversationId, negotiationRuntime.get(conversationId).getAction(), receivedVal,
                                 negotiationRuntime.get(conversationId).getScalarValue(), tieBreak, negotiationRuntime.get(conversationId).checkReplies(),
-                                seID, seType, seClass, seFirstTransition)) {
+                                seID, seType, seClass, seFirstTransition, redundancy)) {
 
                             case NEG_LOST: //he perdido la negociación
                                 LOGGER.info("> " + myAgent.getLocalName() + "(" + negotiationRuntime.get(conversationId).getScalarValue() + ") lost nego" + conversationId);
