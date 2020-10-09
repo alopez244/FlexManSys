@@ -31,7 +31,10 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
 
         this.myAgent = myAgent;
 
-
+        String[] firstArgument = myAgent.getArguments()[0].toString().split("=");
+        String firstState = null;
+        if (firstArgument[0].equals("firstState"))
+            firstState = firstArgument[1];
 
         Hashtable<String, String> attributes = new Hashtable<String, String>();
         attributes.put("seClass", "es.ehu.domain.manufacturing.agents.BatchAgent");
@@ -43,6 +46,9 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
             System.out.println("ERROR creating BatchAgent -> No existe el ID del plan");
         else if (status == "-4")
             System.out.println("ERROR creating BatchAgent -> No targets");
+
+        // TODO primero comprobara que todas las replicas (tracking) se han creado correctamente, y despues comprobara los batches
+        // Es decir, antes de avisar a su padre que esta creado, comprueba las replicas y despues los batches
 
         // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los batch cuando se arranquen correctamente
         myAgent.addBehaviour(new SimpleBehaviour() {

@@ -29,6 +29,8 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
   private List<String> myOrders;
   private int chatID = 0; // Numero incremental para crear conversationID
 
+  private String firstState;
+
   @Override
   public Object getState() {
     return null;
@@ -45,77 +47,94 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
     //Para eso, hay que buscarlos en el modelo en primer lugar
     this.myAgent = myAgent;
 
-    Hashtable<String, String> attributes = new Hashtable<String, String>();
-    attributes.put("seClass", "es.ehu.domain.manufacturing.agents.OrderAgent");
+    String[] firstArgument = myAgent.getArguments()[0].toString().split("=");
+    if (firstArgument[0].equals("firstState"))
+      firstState = firstArgument[1];
 
-    String status = seStart(myAgent.getLocalName(), attributes, null);
-    if (status == null)
-      System.out.println("OrderAgents created");
-    else if (status == "-1")
-      System.out.println("ERROR creating OrderAgent -> No existe el ID del plan");
-    else if (status == "-4")
-      System.out.println("ERROR creating OrderAgent -> No targets");
+    // TODO SOLO HACER TODO ESTO SI NO ES UNA REPLICA?
+    if (firstState.equals("running")) {
 
-    // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los orders cuando se arranquen correctamente
-    myAgent.addBehaviour(new SimpleBehaviour() {
-      @Override
-      public void action() {
-        boolean moreMsg = true;
-        ACLMessage msg = myAgent.receive();
-        if(msg != null) {
-          if ((msg.getPerformative() == 7) && (msg.getContent().equals("Order created successfully"))) {
-            System.out.println("\tYa se ha creado el agente " + msg.getSender().getLocalName() + " - hay que borrarlo de la lista --> " + myOrders);
-            // Primero vamos a conseguir el ID del order (ya que el mensaje nos lo envia su agente)
-            String senderOrderID = null;
-            try {
-              ACLMessage reply = sendCommand("get " + msg.getSender().getLocalName() + " attrib=parent");
-              if (reply != null)
-                senderOrderID = reply.getContent();
-            } catch (Exception e) {
-              e.printStackTrace();
-            }
+      Hashtable<String, String> attributes = new Hashtable<String, String>();
+      attributes.put("seClass", "es.ehu.domain.manufacturing.agents.OrderAgent");
 
-            // Si la order es uno de los hijos (que solo los hijos nos enviaran los mensaje, pero por se acaso), lo borramos de la lista
-            if(myOrders.contains(senderOrderID))
-              myOrders.remove(senderOrderID);
-            // Si la lista esta vacia, todos los orders se han creado correctamente, y tendremos que pasar del estado BOOT al RUNNING
-            if (myOrders.isEmpty()) {
-              moreMsg = false;
-              // Pasar a estado running
-              System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
+      String status = seStart(myAgent.getLocalName(), attributes, null);
+      if (status == null)
+        System.out.println("OrderAgents created");
+      else if (status == "-1")
+        System.out.println("ERROR creating OrderAgent -> No existe el ID del plan");
+      else if (status == "-4")
+        System.out.println("ERROR creating OrderAgent -> No targets");
 
-              System.out.println("Estado del agente " + myAgent.getLocalName() + ": " + myAgent.getState());
+      // TODO primero comprobara que todas las replicas (tracking) se han creado correctamente, y despues comprobara los orders
+      // Es decir, antes de avisar a su padre que esta creado, comprueba las replicas y despues los orders
 
-              // SystemModelAgent linea 1422
-              String query = "set " + myAgent.getLocalName() + " state=running";
+      // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los orders cuando se arranquen correctamente
+      myAgent.addBehaviour(new SimpleBehaviour() {
+        @Override
+        public void action() {
+          boolean moreMsg = true;
+          ACLMessage msg = myAgent.receive();
+          if (msg != null) {
+            if ((msg.getPerformative() == 7) && (msg.getContent().equals("Order created successfully"))) {
+              System.out.println("\tYa se ha creado el agente " + msg.getSender().getLocalName() + " - hay que borrarlo de la lista --> " + myOrders);
+              // Primero vamos a conseguir el ID del order (ya que el mensaje nos lo envia su agente)
+              String senderOrderID = null;
               try {
-                ACLMessage reply = sendCommand(query);
-                System.out.println(reply.getContent());
+                ACLMessage reply = sendCommand("get " + msg.getSender().getLocalName() + " attrib=parent");
+                if (reply != null)
+                  senderOrderID = reply.getContent();
               } catch (Exception e) {
                 e.printStackTrace();
               }
 
-              //LOGGER.exit();
-              // TODO Mirar a ver como se puede hacer el cambio de estado (si lo hace la maquina de estados o hay que hacerlo desde aqui)
-              // ControlBehaviour --> cambio de estado
+              // Si la order es uno de los hijos (que solo los hijos nos enviaran los mensaje, pero por se acaso), lo borramos de la lista
+              if (myOrders.contains(senderOrderID))
+                myOrders.remove(senderOrderID);
+              // Si la lista esta vacia, todos los orders se han creado correctamente, y tendremos que pasar del estado BOOT al RUNNING
+              if (myOrders.isEmpty()) {
+                moreMsg = false;
+                // Pasar a estado running
+                System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
 
-              System.out.println("Estado del agente " + myAgent.getLocalName() + ": " + myAgent.getState());
+                System.out.println("Estado del agente " + myAgent.getLocalName() + ": " + myAgent.getState());
 
+                // SystemModelAgent linea 1422
+                String query = "set " + myAgent.getLocalName() + " state=" + firstState;
+                try {
+                  ACLMessage reply = sendCommand(query);
+                  System.out.println(reply.getContent());
+                } catch (Exception e) {
+                  e.printStackTrace();
+                }
+
+                //LOGGER.exit();
+                // TODO Mirar a ver como se puede hacer el cambio de estado (si lo hace la maquina de estados o hay que hacerlo desde aqui)
+                // ControlBehaviour --> cambio de estado
+
+                System.out.println("Estado del agente " + myAgent.getLocalName() + ": " + myAgent.getState());
+
+              }
             }
+          } else {
+            if (moreMsg)
+              // Se queda a la espera para cuando le envien mas mensajes
+              block();
           }
-        } else {
-          if (moreMsg)
-            // Se queda a la espera para cuando le envien mas mensajes
-            block();
         }
-      }
 
-      @Override
-      public boolean done() {
-        return false;
-      }
-    });
+        @Override
+        public boolean done() {
+          return false;
+        }
+      });
 
+    } else {
+      try {
+        sendCommand("set " + myAgent.getLocalName() + " state=" + firstState);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
     return null;
 
     //TODO El planAgent tiene que esperar a la confirmacion de que todos sus hijos se han creado para notificar que pasa al estado running (o tracking si es una réplica)

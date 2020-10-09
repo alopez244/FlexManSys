@@ -36,6 +36,12 @@ public class Batch_Functionality implements BasicFunctionality {
 
         this.myAgent = myAgent;
 
+        String[] firstArgument = myAgent.getArguments()[0].toString().split("=");
+        String firstState = null;
+        if (firstArgument[0].equals("firstState"))
+            firstState = firstArgument[1];
+
+        // TODO primero comprobara que todas las replicas (tracking) se han creado correctamente, y despues envia el mensaje de que se ha creado correctamente
 
         // Envio un mensaje a mi parent diciendole que me he creado correctamente
         parentAgentID = getParentAgentID(myAgent.getLocalName());
@@ -377,8 +383,8 @@ public class Batch_Functionality implements BasicFunctionality {
                 aux.get(i).get(2).add("finishTime");
 
                 aux.get(i).get(3).add("");
-                for (int j=0; j < productInfo.get(i).get(2).size(); j++) { //¿Por qué no utilizar la propia variable aux?
-                    if (productInfo.get(i).get(2).get(j).equals("id"))
+                for (int j=0; j < aux.get(i).get(2).size(); j++) {
+                    if (aux.get(i).get(2).get(j).equals("id"))
                         aux.get(i).get(3).add(operationsWithMachines.get(aux.get(i).get(3).get(j)));
                 }
                 aux.get(i).get(3).add("");

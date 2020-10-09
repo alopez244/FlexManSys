@@ -136,10 +136,18 @@ public class Planner extends Agent {
 
             agentAttributes.put("seClass", "es.ehu.domain.manufacturing.agents.MPlanAgent");
 
+            // TODO Para pruebas con replicas
+            Scanner in = new Scanner(System.in);
+            System.out.println("Please, introduce the number of replicas you want to register.");
+            System.out.print("Replicas: ");
+            String redundancy = in.nextLine();
+            if(!redundancy.equals(""))
+                agentAttributes.put("redundancy", redundancy);
+
             String appPath="classes/resources/AppInstances/";
             String file="";
-            Scanner in = new Scanner(System.in);
-            System.out.println("Please, introduce the name of the XML File you want to register.");
+            in = new Scanner(System.in);
+            System.out.println("\nPlease, introduce the name of the XML File you want to register.");
             System.out.print("File: ");
             file = in.nextLine();
             System.out.println();
