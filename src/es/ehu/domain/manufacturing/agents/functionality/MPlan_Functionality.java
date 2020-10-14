@@ -49,6 +49,9 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
     //Para eso, hay que buscarlos en el modelo en primer lugar
     this.myAgent = myAgent;
 
+    // Crear un nuevo conversationID
+    String conversationId = myAgent.getLocalName() + "_" + chatID++;
+
     String[] firstArgument = myAgent.getArguments()[0].toString().split("=");
     if (firstArgument[0].equals("firstState"))
       firstState = firstArgument[1];
@@ -63,7 +66,7 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
       Hashtable<String, String> attributes = new Hashtable<String, String>();
       attributes.put("seClass", "es.ehu.domain.manufacturing.agents.OrderAgent");
 
-      String status = seStart(myAgent.getLocalName(), attributes, null);
+      String status = seStart(myAgent.getLocalName(), attributes, conversationId);
       if (status == null)
         System.out.println("OrderAgents created");
       else if (status == "-1")
@@ -89,7 +92,7 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
                 // Primero vamos a conseguir el ID del order (ya que el mensaje nos lo envia su agente)
                 String senderOrderID = null;
                 try {
-                  ACLMessage reply = sendCommand("get " + msg.getSender().getLocalName() + " attrib=parent");
+                  ACLMessage reply = sendCommand("get " + msg.getSender().getLocalName() + " attrib=parent", conversationId);
                   if (reply != null)
                     senderOrderID = reply.getContent();
                 } catch (Exception e) {
@@ -117,7 +120,7 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
                 // SystemModelAgent linea 1422
                 String query = "set " + myAgent.getLocalName() + " state=" + firstState;
                 try {
-                  ACLMessage reply = sendCommand(query);
+                  ACLMessage reply = sendCommand(query, conversationId);
                   System.out.println(reply.getContent());
                 } catch (Exception e) {
                   e.printStackTrace();
@@ -149,10 +152,10 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
       String runningAgentID = null;
       try {
         String parentID = null;
-        ACLMessage reply = sendCommand("get " + myAgent.getLocalName() + " attrib=parent");
+        ACLMessage reply = sendCommand("get " + myAgent.getLocalName() + " attrib=parent", conversationId);
         if (reply != null)
           parentID = reply.getContent();
-        reply = sendCommand("get * parent=" + parentID + " category=mPlanAgent state=running");
+        reply = sendCommand("get * parent=" + parentID + " category=mPlanAgent state=running", conversationId);
         if (reply !=null) {
           runningAgentID = reply.getContent();
 
@@ -167,7 +170,7 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
 
       // Una vez mande el mensaje, registra que su estado es el tracking
       try {
-        sendCommand("set " + myAgent.getLocalName() + " state=" + firstState);
+        sendCommand("set " + myAgent.getLocalName() + " state=" + firstState, conversationId);
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -185,7 +188,7 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
     ACLMessage reply = null;
 
     try {
-      reply = sendCommand(parentQuery);
+      reply = sendCommand(parentQuery, conversationId);
       // ID del plan con el cual el agente está relacionado
       String planID = null;
       if (reply == null)   // Si no existe el id en el registro devuelve error
@@ -194,7 +197,7 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
         planID = reply.getContent();
 
       String query = "get order* parent="+ planID;  // Busco todos los order de los que el plan es parent (no se buscan todos los elementos porque pueden existir otros mPlanAgent en tracking)
-      reply = sendCommand(query);
+      reply = sendCommand(query, conversationId);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -215,12 +218,12 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
     for (String orderID: items) {
       // Creamos los agentes para cada order
       try {
-        reply = sendCommand("get (get * parent=(get * parent=" + orderID + " category=restrictionList)) attrib=attribValue");
+        reply = sendCommand("get (get * parent=(get * parent=" + orderID + " category=restrictionList)) attrib=attribValue", conversationId);
         String refServID = null;
         if (reply != null)
           refServID = reply.getContent();
 
-        reply = sendCommand("get * category=pNodeAgent" + ((refServID.length()>0)?" refServID=" + refServID:""));
+        reply = sendCommand("get * category=pNodeAgent" + ((refServID.length()>0)?" refServID=" + refServID:""), conversationId);
         String targets = null;
         if (reply != null) {
           targets = reply.getContent();
@@ -228,7 +231,7 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
             return "-4";
         }
 
-        reply = sendCommand("get " + orderID + " attrib=category");
+        reply = sendCommand("get " + orderID + " attrib=category", conversationId);
         String seCategory = null;
         if (reply != null)
           seCategory = reply.getContent();
@@ -236,8 +239,6 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
 
         // Orden de negociacion a todos los nodos
         for (int i=0; i<Integer.parseInt(redundancy); i++) {
-          // Crear un nuevo conversationID
-          conversationId = myAgent.getLocalName() + "_" + chatID++;
           System.out.println("\tCONVERSATIONID for order " + orderID + " and plan " + myAgent.getLocalName() + ": " + conversationId);
 
           //reply = sendCommand("localneg " + targets + " action=start " + orderID + " criterion=max mem externaldata=" + orderID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking"));
@@ -264,7 +265,7 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
     return null;
   }
 
-  public ACLMessage sendCommand(String cmd) throws Exception {
+  public ACLMessage sendCommand(String cmd, String conversationId) throws Exception {
 
     DFAgentDescription dfd = new DFAgentDescription();
     ServiceDescription sd = new ServiceDescription();
@@ -289,6 +290,7 @@ public class MPlan_Functionality implements BasicFunctionality, AvailabilityFunc
     LOGGER.entry(mwm, cmd);
     ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
     msg.addReceiver(new AID(mwm, AID.ISLOCALNAME));
+    msg.setConversationId(conversationId);
     msg.setOntology("control");
     msg.setContent(cmd);
     msg.setReplyWith(cmd);

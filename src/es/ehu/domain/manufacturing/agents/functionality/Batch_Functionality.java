@@ -40,6 +40,8 @@ public class Batch_Functionality implements BasicFunctionality {
 
         this.myAgent = myAgent;
 
+        String conversationId = myAgent.getLocalName() + "_" + chatID++;
+
         String[] firstArgument = myAgent.getArguments()[0].toString().split("=");
         if (firstArgument[0].equals("firstState"))
             firstState = firstArgument[1];
@@ -65,7 +67,7 @@ public class Batch_Functionality implements BasicFunctionality {
                                 moreMsg = false;
                                 // Ya se han creado todas las replicas bien y puede enviarle el mensaje a su parent
                                 // Envio un mensaje a mi parent diciendole que me he creado correctamente
-                                parentAgentID = getParentAgentID(myAgent.getLocalName());
+                                parentAgentID = getParentAgentID(myAgent.getLocalName(), conversationId);
                                 msg = new ACLMessage(ACLMessage.INFORM);
                                 msg.addReceiver(new AID(parentAgentID, AID.ISLOCALNAME));
                                 msg.setContent("Batch created successfully");
@@ -87,12 +89,12 @@ public class Batch_Functionality implements BasicFunctionality {
 
 
             // sendPlan method of interface ITraceability
-            sendPlan(myAgent);
+            sendPlan(myAgent, conversationId);
 
             // Cambiar el estado del batch de BOOT a RUNNING
             String query = "set " + myAgent.getLocalName() + " state=running";
             try {
-                ACLMessage reply = sendCommand(query);
+                ACLMessage reply = sendCommand(query, conversationId);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -101,10 +103,10 @@ public class Batch_Functionality implements BasicFunctionality {
             String runningAgentID = null;
             try {
                 String parentID = null;
-                ACLMessage reply = sendCommand("get " + myAgent.getLocalName() + " attrib=parent");
+                ACLMessage reply = sendCommand("get " + myAgent.getLocalName() + " attrib=parent", conversationId);
                 if (reply != null)
                     parentID = reply.getContent();
-                reply = sendCommand("get * parent=" + parentID + " category=batchAgent state=running");
+                reply = sendCommand("get * parent=" + parentID + " category=batchAgent state=running", conversationId);
                 if (reply !=null) {
                     runningAgentID = reply.getContent();
 
@@ -119,7 +121,7 @@ public class Batch_Functionality implements BasicFunctionality {
 
             // Una vez mande el mensaje, registra que su estado es el tracking
             try {
-                sendCommand("set " + myAgent.getLocalName() + " state=" + firstState);
+                sendCommand("set " + myAgent.getLocalName() + " state=" + firstState, conversationId);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -134,7 +136,7 @@ public class Batch_Functionality implements BasicFunctionality {
         return null;
     }
 
-    public ACLMessage sendCommand(String cmd) throws Exception {
+    public ACLMessage sendCommand(String cmd, String conversationId) throws Exception {
 
         DFAgentDescription dfd = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
@@ -159,6 +161,7 @@ public class Batch_Functionality implements BasicFunctionality {
         LOGGER.entry(mwm, cmd);
         ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
         msg.addReceiver(new AID(mwm, AID.ISLOCALNAME));
+        msg.setConversationId(conversationId);
         msg.setOntology("control");
         msg.setContent(cmd);
         msg.setReplyWith(cmd);
@@ -176,10 +179,10 @@ public class Batch_Functionality implements BasicFunctionality {
     //ITRACEABILITY INTERFACE
     //====================================================================
 
-    private void sendPlan(MWAgent myAgent) {
+    private void sendPlan(MWAgent myAgent, String conversationId) {
 
         // Conseguir la referencia del producto
-        String productID = getProductID(myAgent.getLocalName());
+        String productID = getProductID(myAgent.getLocalName(), conversationId);
         System.out.println("La referencia de producto del batch del agente " + myAgent.getLocalName() + " es: " + productID);
 
         // Conseguimos toda la informacion del producto utilizando su ID
@@ -187,18 +190,16 @@ public class Batch_Functionality implements BasicFunctionality {
         System.out.println("ID del producto asociado al agente " + myAgent.getLocalName() + ": " + productInfo.get(0).get(3).get(2) + " - " + productID);
 
         // Teniendo toda la informacion del producto vamos a conseguir las maquinas que vayan a realizar todas las operaciones
-        machinesForOperations = getMachines(myAgent.getLocalName(), productInfo);
+        machinesForOperations = getMachines(myAgent.getLocalName(), productInfo, conversationId);
 
         // Conseguir la cantidad de productos
-        numOfItems = getNumOfItems(myAgent.getLocalName());
+        numOfItems = getNumOfItems(myAgent.getLocalName(), conversationId);
 
         // Por cada operacion vamos a negociar con todos sus maquinas para asignar a la mejor
         for (Map.Entry<String, String> entry : machinesForOperations.entrySet()) {
             String operationID = entry.getKey();
             String machinesID = entry.getValue();
             System.out.println(operationID + " - " + machinesID);
-
-            String conversationId = myAgent.getLocalName() + "_" + chatID++;
 
             negotiate(machinesID, "lead time", "execute", myAgent.getLocalName() + "," + numOfItems + "," + operationID, conversationId);
 
@@ -220,13 +221,13 @@ public class Batch_Functionality implements BasicFunctionality {
 
     //====================================================================
 
-    private String getParentAgentID(String seID) {
+    private String getParentAgentID(String seID, String conversationId) {
         String parentAgID = null;
         String parentQuery = "get " + seID + " attrib=parent";
         ACLMessage reply = null;
 
         try {
-            reply = sendCommand(parentQuery);
+            reply = sendCommand(parentQuery, conversationId);
             // ID del batch con el cual el agente está relacionado
             String batchID;
             if (reply == null)  // Si no existe el id en el registro devuelve error
@@ -234,10 +235,10 @@ public class Batch_Functionality implements BasicFunctionality {
             else
                 batchID = reply.getContent();
 
-            reply = sendCommand("get " + batchID + " attrib=parent");
+            reply = sendCommand("get " + batchID + " attrib=parent", conversationId);
             if (reply != null) {  // ID del plan
                 String orderID = reply.getContent();     // Con el ID del order conseguir su agente
-                reply = sendCommand("get * parent=" + orderID + " category=orderAgent");
+                reply = sendCommand("get * parent=" + orderID + " category=orderAgent", conversationId);
                 if (reply != null) {
                     parentAgID = reply.getContent();
                 }
@@ -248,20 +249,20 @@ public class Batch_Functionality implements BasicFunctionality {
         return parentAgID;
     }
 
-    private String getProductID(String seID) {
+    private String getProductID(String seID, String conversationId) {
         String productID = null;
         String query = "get " + seID + " attrib=parent";
         ACLMessage reply = null;
 
         try {
-            reply = sendCommand(query);
+            reply = sendCommand(query, conversationId);
             // ID del batch con el cual el agente está relacionado
             // Ya que es este objeto el que tiene la referencia del producto
             String batchID = null;
             if (reply != null) {
                 batchID = reply.getContent();
                 query = "get " + batchID + " attrib=refProductID";
-                reply = sendCommand(query);
+                reply = sendCommand(query, conversationId);
                 if (reply != null)
                     productID = reply.getContent();
             }
@@ -271,20 +272,20 @@ public class Batch_Functionality implements BasicFunctionality {
         return productID;
     }
 
-    private String getNumOfItems(String seID) {
+    private String getNumOfItems(String seID, String conversationId) {
         String numOfItems = null;
         String query = "get " + seID + " attrib=parent";
         ACLMessage reply = null;
 
         try {
-            reply = sendCommand(query);
+            reply = sendCommand(query, conversationId);
             // ID del batch con el cual el agente está relacionado
             // Ya que es este objeto el que tiene la cantidad de productos
             String batchID = null;
             if (reply != null) {
                 batchID = reply.getContent();
                 query = "get " + batchID + " attrib=numberOfItems";
-                reply = sendCommand(query);
+                reply = sendCommand(query, conversationId);
                 if (reply != null)
                     numOfItems = reply.getContent();
             }
@@ -366,7 +367,7 @@ public class Batch_Functionality implements BasicFunctionality {
         return allProductInfo;
     }
 
-    private HashMap<String, String> getMachines(String localName, ArrayList<ArrayList<ArrayList<String>>> productInfo) {
+    private HashMap<String, String> getMachines(String localName, ArrayList<ArrayList<ArrayList<String>>> productInfo, String conversationId) {
 
         // Por cada operacion que exista en el producto, vamos a buscar las maquinas que puedan realizar esa operacion
         // y guardaremos esa informacion en el hashmap --> <"S_01", "machine1, machine3">
@@ -389,7 +390,7 @@ public class Batch_Functionality implements BasicFunctionality {
                 String getAllMachines = "get * category=machine";
                 ACLMessage reply = null;
                 try {
-                    reply = sendCommand(getAllMachines);
+                    reply = sendCommand(getAllMachines, conversationId);
                     if (reply != null) {
                         String allMachines = reply.getContent();
                         System.out.println("ALL MACHINES: " + allMachines);
@@ -401,9 +402,9 @@ public class Batch_Functionality implements BasicFunctionality {
                             String complexQuery = "get " + machineID + " attrib=complexOperations";
                             // Dependiendo del tipo de operacion miraremos en un atributo o en otro
                             if (operationType.equals("simple_operation"))
-                                reply = sendCommand(simpleQuery);
+                                reply = sendCommand(simpleQuery, conversationId);
                             else
-                                reply = sendCommand(complexQuery);
+                                reply = sendCommand(complexQuery, conversationId);
                             if (reply != null) {
                                 System.out.println("All "+operationType+"s of " +machineID+ ": " +reply.getContent());
                                 if (reply.getContent().contains(operationID)) {

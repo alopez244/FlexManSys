@@ -194,7 +194,7 @@ public class AvailabilityManager extends Agent {
 
   public String processCmd(String cmd, String conversationId) {
     LOGGER.entry(cmd, conversationId);
-    if (conversationId==null) conversationId=String.valueOf(cmdId++);
+    //if (conversationId==null) conversationId=String.valueOf(cmdId++); // TODO tambien aparece el conversationId
 //    if (!cmd.startsWith("getins "))
 //      LOGGER.info(cmd + "("+conversationId+")");
     StringBuilder result = new StringBuilder();

@@ -35,6 +35,9 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
 
         this.myAgent = myAgent;
 
+        // Crear un nuevo conversationID
+        String conversationId = myAgent.getLocalName() + "_" + chatID++;
+
         String[] firstArgument = myAgent.getArguments()[0].toString().split("=");
         if (firstArgument[0].equals("firstState"))
             firstState = firstArgument[1];
@@ -48,7 +51,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
             Hashtable<String, String> attributes = new Hashtable<String, String>();
             attributes.put("seClass", "es.ehu.domain.manufacturing.agents.BatchAgent");
 
-            String status = seStart(myAgent.getLocalName(), attributes, null);
+            String status = seStart(myAgent.getLocalName(), attributes, conversationId);
             if (status == null)
                 System.out.println("BatchAgents created");
             else if (status == "-1")
@@ -73,7 +76,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
                                 // Primero vamos a conseguir el ID del order (ya que el mensaje nos lo envia su agente)
                                 String senderOrderID = null;
                                 try {
-                                    ACLMessage reply = sendCommand("get " + msg.getSender().getLocalName() + " attrib=parent");
+                                    ACLMessage reply = sendCommand("get " + msg.getSender().getLocalName() + " attrib=parent", conversationId);
                                     if (reply != null)
                                         senderOrderID = reply.getContent();
                                 } catch (Exception e) {
@@ -94,7 +97,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
                                 moreMsg = false;
 
                                 // Envio un mensaje a mi parent diciendole que me he creado correctamente
-                                parentAgentID = getParentAgentID(myAgent.getLocalName());
+                                parentAgentID = getParentAgentID(myAgent.getLocalName(), conversationId);
                                 ACLMessage msgOrder = new ACLMessage(ACLMessage.INFORM);
                                 msgOrder.addReceiver(new AID(parentAgentID, AID.ISLOCALNAME));
                                 msgOrder.setContent("Order created successfully");
@@ -109,9 +112,9 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
                                 try {
                                     //ACLMessage reply = sendCommand(query1);
                                     //System.out.println("Dame el estado: " + reply.getContent());
-                                    ACLMessage reply = sendCommand(query);
+                                    ACLMessage reply = sendCommand(query, conversationId);
                                     System.out.println("Cambio el estado: " + reply.getContent());
-                                    reply = sendCommand(query1);
+                                    reply = sendCommand(query1, conversationId);
                                     System.out.println("Dame el estado cambiado: " + reply.getContent());
                                 } catch (Exception e) {
                                     e.printStackTrace();
@@ -142,10 +145,10 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
             String runningAgentID = null;
             try {
                 String parentID = null;
-                ACLMessage reply = sendCommand("get " + myAgent.getLocalName() + " attrib=parent");
+                ACLMessage reply = sendCommand("get " + myAgent.getLocalName() + " attrib=parent", conversationId);
                 if (reply != null)
                     parentID = reply.getContent();
-                reply = sendCommand("get * parent=" + parentID + " category=orderAgent state=running");
+                reply = sendCommand("get * parent=" + parentID + " category=orderAgent state=running", conversationId);
                 if (reply !=null) {
                     runningAgentID = reply.getContent();
 
@@ -160,7 +163,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
 
             // Una vez mande el mensaje, registra que su estado es el tracking
             try {
-                sendCommand("set " + myAgent.getLocalName() + " state=" + firstState);
+                sendCommand("set " + myAgent.getLocalName() + " state=" + firstState, conversationId);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -177,7 +180,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
         ACLMessage reply = null;
 
         try {
-            reply = sendCommand(parentQuery);
+            reply = sendCommand(parentQuery, conversationId);
             // ID del order con el cual el agente está relacionado
             String orderID = null;
             if (reply == null)  // Si no existe el id en el registro devuelve error
@@ -186,7 +189,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
                 orderID = reply.getContent();
 
             String query = "get batch* parent="+ orderID;  // Busco todos los batch de los que el order es parent (no se buscan todos los elementos porque pueden existir otros orderAgent en tracking)
-            reply = sendCommand(query);
+            reply = sendCommand(query, conversationId);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -208,12 +211,12 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
         for (String batchID: items) {
             // Creamos los agentes para cada batch
             try {
-                reply = sendCommand("get (get * parent=(get * parent=" + batchID + " category=restrictionList)) attrib=attribValue");
+                reply = sendCommand("get (get * parent=(get * parent=" + batchID + " category=restrictionList)) attrib=attribValue", conversationId);
                 String refServID = null;
                 if (reply != null)
                     refServID = reply.getContent();
 
-                reply = sendCommand("get * category=pNodeAgent" + ((refServID.length()>0)?" refServID=" + refServID:""));
+                reply = sendCommand("get * category=pNodeAgent" + ((refServID.length()>0)?" refServID=" + refServID:""), conversationId);
                 String targets = null;
                 if (reply != null) {
                     targets = reply.getContent();
@@ -222,7 +225,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
                 }
 
 
-                reply = sendCommand("get " + batchID + " attrib=category");
+                reply = sendCommand("get " + batchID + " attrib=category", conversationId);
                 String seCategory = null;
                 if (reply != null)
                     seCategory = reply.getContent();
@@ -230,8 +233,6 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
 
                 // Orden de negociacion a todos los nodos
                 for (int i=0; i<Integer.parseInt(redundancy); i++) {
-                    // Crear un nuevo conversationID
-                    conversationId = myAgent.getLocalName() + "_" + chatID++;
                     System.out.println("\tCONVERSATIONID for batch " + batchID + " and order " + myAgent.getLocalName() + ": " + conversationId);
                     //reply = sendCommand("localneg " + targets + " action=start " + batchID + " criterion=max mem externaldata=" + batchID + "," + seCategory + "," + seClass + "," + ((i==0)?"running":"tracking"));
                     negotiate(targets, "max mem", "start", batchID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy, conversationId);
@@ -256,7 +257,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
         return null;
     }
 
-    public ACLMessage sendCommand(String cmd) throws Exception {
+    public ACLMessage sendCommand(String cmd, String conversationId) throws Exception {
 
         DFAgentDescription dfd = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
@@ -281,6 +282,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
         LOGGER.entry(mwm, cmd);
         ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
         msg.addReceiver(new AID(mwm, AID.ISLOCALNAME));
+        msg.setConversationId(conversationId);
         msg.setOntology("control");
         msg.setContent(cmd);
         msg.setReplyWith(cmd);
@@ -294,13 +296,13 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
         return LOGGER.exit(reply);
     }
 
-    private String getParentAgentID(String seID) {
+    private String getParentAgentID(String seID, String conversationId) {
         String parentAgID = null;
         String parentQuery = "get " + seID + " attrib=parent";
         ACLMessage reply = null;
 
         try {
-            reply = sendCommand(parentQuery);
+            reply = sendCommand(parentQuery, conversationId);
             // ID del order con el cual el agente está relacionado
             String orderID;
             if (reply == null)  // Si no existe el id en el registro devuelve error
@@ -308,10 +310,10 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
             else
                 orderID = reply.getContent();
 
-            reply = sendCommand("get " + orderID + " attrib=parent");
+            reply = sendCommand("get " + orderID + " attrib=parent", conversationId);
             if (reply != null) {  // ID del plan
                 String planID = reply.getContent();     // Con el ID del plan conseguir su agente
-                reply = sendCommand("get * parent=" + planID + " category=mPlanAgent");
+                reply = sendCommand("get * parent=" + planID + " category=mPlanAgent", conversationId);
                 if (reply != null) {
                     parentAgID = reply.getContent();
                 }

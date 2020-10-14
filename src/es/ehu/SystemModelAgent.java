@@ -129,7 +129,11 @@ public class SystemModelAgent extends Agent implements IExecManagement {
                       LOGGER.trace("received message from " + msg.getSender().getLocalName());
                       LOGGER.trace("msg.getContent()=" + msg.getContent());
 
-                      String key = String.valueOf(cmdId++);
+                      String key = null;
+                      if (msg.getConversationId() == null)
+                          key = "";
+                      else
+                          key = msg.getConversationId();
                       ds.put(key, msg);
                       behaviours.put(key, new ThreadedCommandProcessor(key, myAgent));
                       myAgent.addBehaviour(tbf.wrap(behaviours.get(key)));
@@ -164,7 +168,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
     public String processCmd(String cmd, String conversationId) {
         LOGGER.entry(cmd, conversationId);
         LOGGER.info ("cmd_"+conversationId+" \""+cmd+"\"..." );
-        if (conversationId==null) conversationId=String.valueOf(cmdId++);
+        //if (conversationId==null) conversationId=String.valueOf(cmdId++); // De momento, el conversationId lo va a crear quien empiecen las conversaciones, no se van a crear siempre
         StringBuilder result = new StringBuilder();
 
         // soporte de subcomandos como:
@@ -1024,6 +1028,9 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         // si no existe el id en el registro devuelve error (irá al launcher)
         if (!elements.containsKey(seID)) return "-1";
 
+        // Si no me han pasado conversationId es que yo empiezo la conversacion, por lo que tengo que crearlo
+        if (conversationId==null) conversationId=String.valueOf(cmdId++);
+
         //Calcular quiénes negocian:
         // leer del registro para este "seID" la lista entera de procNodes cada uno con sus refServId. - leo del registro los serviceid que requiere el seID
         // buscar procnodes que tengan estas refServId > lista de los procNodes negociadores
@@ -1258,6 +1265,9 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         ACLMessage msg = new ACLMessage(ACLMessage.CFP);
 
         for (String target: targets.split(",")) msg.addReceiver(new AID(target, AID.ISLOCALNAME));
+
+        // Si no me han pasado negotiationId, el sa es el que inicia la conversacion
+        if (conversationId==null) conversationId=String.valueOf(cmdId++);
 
         msg.setConversationId(conversationId);
         msg.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE );
