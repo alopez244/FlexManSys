@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 
-public class Order_Functionality implements BasicFunctionality, IExecManagement {
+public class Order_Functionality extends DomApp_Functionality implements BasicFunctionality, IExecManagement {
 
     private static final long serialVersionUID = 1L;
     private Agent myAgent;
@@ -48,6 +48,14 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
 
         if (firstState.equals("running")) {
 
+            // Cambiar a estado bootToRunning para que los tracking le puedan enviar mensajes
+            String query = "set " + myAgent.getLocalName() + " state=bootToRunning";
+            try {
+                sendCommand(myAgent, query, conversationId);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
             Hashtable<String, String> attributes = new Hashtable<String, String>();
             attributes.put("seClass", "es.ehu.domain.manufacturing.agents.BatchAgent");
 
@@ -67,7 +75,6 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
                 @Override
                 public void action() {
                     boolean moreMsg = true;
-                    int replicaCount = 0;
                     ACLMessage msg = myAgent.receive();
                     if (msg != null) {
                         if ((msg.getPerformative() == 7)) {
@@ -76,7 +83,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
                                 // Primero vamos a conseguir el ID del order (ya que el mensaje nos lo envia su agente)
                                 String senderOrderID = null;
                                 try {
-                                    ACLMessage reply = sendCommand("get " + msg.getSender().getLocalName() + " attrib=parent", conversationId);
+                                    ACLMessage reply = sendCommand(myAgent, "get " + msg.getSender().getLocalName() + " attrib=parent", conversationId);
                                     if (reply != null)
                                         senderOrderID = reply.getContent();
                                 } catch (Exception e) {
@@ -88,37 +95,31 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
                                     myBatches.remove(senderOrderID);
                             } else if (msg.getContent().equals("Order replica created successfully")) {
                                 System.out.println("\tYa se ha creado la replica " + msg.getSender().getLocalName());
-                                replicaCount++;
                                 myReplicasID.add(msg.getSender().getLocalName());
                             }
                             // Si la lista esta vacia, todos los orders se han creado correctamente, y miraremos si se han creado todos las replicas
                             // Si se cumple t0do, tendremos que pasar del estado BOOT al RUNNING
-                            if ((myBatches.isEmpty()) && (replicaCount == Integer.parseInt(redundancy) - 1)) {
+                            if ((myBatches.isEmpty()) && (myReplicasID.size() == Integer.parseInt(redundancy) - 1)) {
                                 moreMsg = false;
 
-                                // Envio un mensaje a mi parent diciendole que me he creado correctamente
-                                parentAgentID = getParentAgentID(myAgent.getLocalName(), conversationId);
-                                ACLMessage msgOrder = new ACLMessage(ACLMessage.INFORM);
-                                msgOrder.addReceiver(new AID(parentAgentID, AID.ISLOCALNAME));
-                                msgOrder.setContent("Order created successfully");
-                                myAgent.send(msgOrder);
-
-                                // Pasar a estado running
-                                System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
-
                                 // SystemModelAgent linea 1422
-                                String query1 = "get " + myAgent.getLocalName() + " attrib=state";
                                 String query = "set " + myAgent.getLocalName() + " state=running";
                                 try {
-                                    //ACLMessage reply = sendCommand(query1);
-                                    //System.out.println("Dame el estado: " + reply.getContent());
-                                    ACLMessage reply = sendCommand(query, conversationId);
-                                    System.out.println("Cambio el estado: " + reply.getContent());
-                                    reply = sendCommand(query1, conversationId);
+                                    ACLMessage reply = sendCommand(myAgent, query, conversationId);
                                     System.out.println("Dame el estado cambiado: " + reply.getContent());
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
+
+                                // Pasar a estado running
+                                System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
+
+                                // Envio un mensaje a mi parent diciendole que me he creado correctamente
+                                parentAgentID = getRunningParentAgentID(myAgent, conversationId);
+                                ACLMessage msgOrder = new ACLMessage(ACLMessage.INFORM);
+                                msgOrder.addReceiver(new AID(parentAgentID, AID.ISLOCALNAME));
+                                msgOrder.setContent("Order created successfully");
+                                myAgent.send(msgOrder);
 
                                 //LOGGER.exit();
                                 // TODO Mirar a ver como se puede hacer el cambio de estado (si lo hace la maquina de estados o hay que hacerlo desde aqui)
@@ -142,13 +143,14 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
 
         } else {
             // Si su estado es tracking
+
             String runningAgentID = null;
             try {
                 String parentID = null;
-                ACLMessage reply = sendCommand("get " + myAgent.getLocalName() + " attrib=parent", conversationId);
+                ACLMessage reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", conversationId);
                 if (reply != null)
                     parentID = reply.getContent();
-                reply = sendCommand("get * parent=" + parentID + " category=orderAgent state=running", conversationId);
+                reply = sendCommand(myAgent, "get * parent=" + parentID + " category=orderAgent state=bootToRunning", conversationId);
                 if (reply !=null) {
                     runningAgentID = reply.getContent();
 
@@ -163,7 +165,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
 
             // Una vez mande el mensaje, registra que su estado es el tracking
             try {
-                sendCommand("set " + myAgent.getLocalName() + " state=" + firstState, conversationId);
+                sendCommand(myAgent, "set " + myAgent.getLocalName() + " state=" + firstState, conversationId);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -180,7 +182,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
         ACLMessage reply = null;
 
         try {
-            reply = sendCommand(parentQuery, conversationId);
+            reply = sendCommand(myAgent, parentQuery, conversationId);
             // ID del order con el cual el agente está relacionado
             String orderID = null;
             if (reply == null)  // Si no existe el id en el registro devuelve error
@@ -189,7 +191,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
                 orderID = reply.getContent();
 
             String query = "get batch* parent="+ orderID;  // Busco todos los batch de los que el order es parent (no se buscan todos los elementos porque pueden existir otros orderAgent en tracking)
-            reply = sendCommand(query, conversationId);
+            reply = sendCommand(myAgent, query, conversationId);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -211,12 +213,12 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
         for (String batchID: items) {
             // Creamos los agentes para cada batch
             try {
-                reply = sendCommand("get (get * parent=(get * parent=" + batchID + " category=restrictionList)) attrib=attribValue", conversationId);
+                reply = sendCommand(myAgent, "get (get * parent=(get * parent=" + batchID + " category=restrictionList)) attrib=attribValue", conversationId);
                 String refServID = null;
                 if (reply != null)
                     refServID = reply.getContent();
 
-                reply = sendCommand("get * category=pNodeAgent" + ((refServID.length()>0)?" refServID=" + refServID:""), conversationId);
+                reply = sendCommand(myAgent, "get * category=pNodeAgent" + ((refServID.length()>0)?" refServID=" + refServID:""), conversationId);
                 String targets = null;
                 if (reply != null) {
                     targets = reply.getContent();
@@ -225,7 +227,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
                 }
 
 
-                reply = sendCommand("get " + batchID + " attrib=category", conversationId);
+                reply = sendCommand(myAgent, "get " + batchID + " attrib=category", conversationId);
                 String seCategory = null;
                 if (reply != null)
                     seCategory = reply.getContent();
@@ -233,9 +235,12 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
 
                 // Orden de negociacion a todos los nodos
                 for (int i=0; i<Integer.parseInt(redundancy); i++) {
+
+                    conversationId = myAgent.getLocalName() + "_" + chatID++;
+
                     System.out.println("\tCONVERSATIONID for batch " + batchID + " and order " + myAgent.getLocalName() + ": " + conversationId);
                     //reply = sendCommand("localneg " + targets + " action=start " + batchID + " criterion=max mem externaldata=" + batchID + "," + seCategory + "," + seClass + "," + ((i==0)?"running":"tracking"));
-                    negotiate(targets, "max mem", "start", batchID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy, conversationId);
+                    negotiate(myAgent, targets, "max mem", "start", batchID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy, conversationId);
                 }
 
 
@@ -257,44 +262,6 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
         return null;
     }
 
-    public ACLMessage sendCommand(String cmd, String conversationId) throws Exception {
-
-        DFAgentDescription dfd = new DFAgentDescription();
-        ServiceDescription sd = new ServiceDescription();
-
-        sd.setType("sa");
-        dfd.addServices(sd);
-        String mwm;
-
-        while (true) {
-            DFAgentDescription[] result = DFService.search(myAgent,dfd);
-
-            if ((result != null) && (result.length > 0)) {
-                dfd = result[0];
-                mwm = dfd.getName().getLocalName();
-                break;
-            }
-            LOGGER.info(".");
-            Thread.sleep(100);
-
-        } //end while (true)
-
-        LOGGER.entry(mwm, cmd);
-        ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-        msg.addReceiver(new AID(mwm, AID.ISLOCALNAME));
-        msg.setConversationId(conversationId);
-        msg.setOntology("control");
-        msg.setContent(cmd);
-        msg.setReplyWith(cmd);
-        myAgent.send(msg);
-        ACLMessage reply = myAgent.blockingReceive(
-                MessageTemplate.and(
-                        MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
-                        MessageTemplate.MatchPerformative(ACLMessage.INFORM))
-                , 1000);
-
-        return LOGGER.exit(reply);
-    }
 
     private String getParentAgentID(String seID, String conversationId) {
         String parentAgID = null;
@@ -302,7 +269,7 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
         ACLMessage reply = null;
 
         try {
-            reply = sendCommand(parentQuery, conversationId);
+            reply = sendCommand(myAgent, parentQuery, conversationId);
             // ID del order con el cual el agente está relacionado
             String orderID;
             if (reply == null)  // Si no existe el id en el registro devuelve error
@@ -310,10 +277,10 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
             else
                 orderID = reply.getContent();
 
-            reply = sendCommand("get " + orderID + " attrib=parent", conversationId);
+            reply = sendCommand(myAgent, "get " + orderID + " attrib=parent", conversationId);
             if (reply != null) {  // ID del plan
                 String planID = reply.getContent();     // Con el ID del plan conseguir su agente
-                reply = sendCommand("get * parent=" + planID + " category=mPlanAgent", conversationId);
+                reply = sendCommand(myAgent, "get * parent=" + planID + " category=mPlanAgent", conversationId);
                 if (reply != null) {
                     parentAgID = reply.getContent();
                 }
@@ -322,22 +289,5 @@ public class Order_Functionality implements BasicFunctionality, IExecManagement 
             e.printStackTrace();
         }
         return parentAgID;
-    }
-
-    // TODO Mirar para meter el metodo negotiate en una interfaz
-    private String negotiate(String targets, String negotiationCriteria, String action, String externalData, String conversationId) {
-
-        //Request de nueva negociación
-        ACLMessage msg = new ACLMessage(ACLMessage.CFP);
-
-        for (String target: targets.split(","))
-            msg.addReceiver(new AID(target, AID.ISLOCALNAME));
-        msg.setConversationId(conversationId);
-        msg.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE );
-
-        msg.setContent("negotiate " +targets+ " criterion=" +negotiationCriteria+ " action=" +action+ " externaldata=" +externalData);
-        myAgent.send(msg);
-
-        return "Negotiation message sent";
     }
 }

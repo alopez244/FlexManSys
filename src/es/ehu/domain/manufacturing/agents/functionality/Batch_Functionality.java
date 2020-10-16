@@ -16,7 +16,7 @@ import org.apache.commons.io.FilenameUtils;
 import java.io.File;
 import java.util.*;
 
-public class Batch_Functionality implements BasicFunctionality {
+public class Batch_Functionality extends DomApp_Functionality implements BasicFunctionality {
 
     private static final long serialVersionUID = 1L;
     private Agent myAgent;
@@ -46,67 +46,100 @@ public class Batch_Functionality implements BasicFunctionality {
         if (firstArgument[0].equals("firstState"))
             firstState = firstArgument[1];
 
+
         String[] secondArgument = myAgent.getArguments()[1].toString().split("=");
         if (secondArgument[0].equals("redundancy"))
             redundancy = secondArgument[1];
 
         if(firstState.equals("running")) {
 
-            // TODO primero comprobara que todas las replicas (tracking) se han creado correctamente, y despues envia el mensaje de que se ha creado correctamente
-            myAgent.addBehaviour(new SimpleBehaviour() {
-                @Override
-                public void action() {
-                    boolean moreMsg = true;
-                    int replicaCount = 0;
-                    ACLMessage msg = myAgent.receive();
-                    if (msg != null) {
-                        if ((msg.getPerformative() == 7) && (msg.getContent().equals("Batch replica created successfully"))) {
-                            replicaCount++;
-                            myReplicasID.add(msg.getSender().getLocalName());
-                            if (replicaCount == Integer.parseInt(redundancy) - 1) {
-                                moreMsg = false;
-                                // Ya se han creado todas las replicas bien y puede enviarle el mensaje a su parent
-                                // Envio un mensaje a mi parent diciendole que me he creado correctamente
-                                parentAgentID = getParentAgentID(myAgent.getLocalName(), conversationId);
-                                msg = new ACLMessage(ACLMessage.INFORM);
-                                msg.addReceiver(new AID(parentAgentID, AID.ISLOCALNAME));
-                                msg.setContent("Batch created successfully");
-                                myAgent.send(msg);
+            // Cambiar a estado bootToRunning para que los tracking le puedan enviar mensajes
+            String query = "set " + myAgent.getLocalName() + " state=bootToRunning";
+            try {
+                sendCommand(myAgent, query, conversationId);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            if (Integer.parseInt(redundancy) == 1) {
+
+                parentAgentID = getParentAgentID(myAgent.getLocalName(), conversationId);
+                ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+                msg.addReceiver(new AID(parentAgentID, AID.ISLOCALNAME));
+                msg.setContent("Batch created successfully");
+                myAgent.send(msg);
+
+                // todo mirar si ponerlo despues de enviarle en mensaje
+                // Cambiar el estado del batch de BOOT a RUNNING
+                query = "set " + myAgent.getLocalName() + " state=running";
+                try {
+                    ACLMessage reply = sendCommand(myAgent, query, conversationId);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            } else {
+
+                // TODO primero comprobara que todas las replicas (tracking) se han creado correctamente, y despues envia el mensaje de que se ha creado correctamente
+                myAgent.addBehaviour(new SimpleBehaviour() {
+                    @Override
+                    public void action() {
+                        boolean moreMsg = true;
+                        ACLMessage msg = myAgent.receive();
+                        if (msg != null) {
+                            if ((msg.getPerformative() == 7) && (msg.getContent().equals("Batch replica created successfully"))) {
+
+                                myReplicasID.add(msg.getSender().getLocalName());
+                                if (myReplicasID.size() == Integer.parseInt(redundancy) - 1) {
+                                    moreMsg = false;
+
+                                    // Ya se han creado todas las replicas bien y puede enviarle el mensaje a su parent
+                                    // Envio un mensaje a mi parent diciendole que me he creado correctamente
+
+                                    parentAgentID = getRunningParentAgentID(myAgent, conversationId);
+                                    msg = new ACLMessage(ACLMessage.INFORM);
+                                    msg.addReceiver(new AID(parentAgentID, AID.ISLOCALNAME));
+                                    msg.setContent("Batch created successfully");
+                                    myAgent.send(msg);
+
+                                    // todo mirar si ponerlo despues de enviarle en mensaje
+                                    // Cambiar el estado del batch de BOOT a RUNNING
+                                    String query = "set " + myAgent.getLocalName() + " state=running";
+                                    try {
+                                        ACLMessage reply = sendCommand(myAgent, query, conversationId);
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                }
                             }
+                        } else {
+                            if (moreMsg)
+                                // Se queda a la espera para cuando le envien mas mensajes
+                                block();
                         }
-                    } else {
-                        if (moreMsg)
-                            // Se queda a la espera para cuando le envien mas mensajes
-                            block();
                     }
-                }
 
-                @Override
-                public boolean done() {
-                    return false;
-                }
-            });
+                    @Override
+                    public boolean done() {
+                        return false;
+                    }
+                });
 
+            }
 
             // sendPlan method of interface ITraceability
             sendPlan(myAgent, conversationId);
 
-            // Cambiar el estado del batch de BOOT a RUNNING
-            String query = "set " + myAgent.getLocalName() + " state=running";
-            try {
-                ACLMessage reply = sendCommand(query, conversationId);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         } else {
             // Si su estado es tracking
+
             String runningAgentID = null;
             try {
                 String parentID = null;
-                ACLMessage reply = sendCommand("get " + myAgent.getLocalName() + " attrib=parent", conversationId);
+                ACLMessage reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", conversationId);
                 if (reply != null)
                     parentID = reply.getContent();
-                reply = sendCommand("get * parent=" + parentID + " category=batchAgent state=running", conversationId);
+                reply = sendCommand(myAgent, "get * parent=" + parentID + " category=batchAgent state=bootToRunning", conversationId);
                 if (reply !=null) {
                     runningAgentID = reply.getContent();
 
@@ -121,7 +154,7 @@ public class Batch_Functionality implements BasicFunctionality {
 
             // Una vez mande el mensaje, registra que su estado es el tracking
             try {
-                sendCommand("set " + myAgent.getLocalName() + " state=" + firstState, conversationId);
+                sendCommand(myAgent, "set " + myAgent.getLocalName() + " state=" + firstState, conversationId);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -136,6 +169,7 @@ public class Batch_Functionality implements BasicFunctionality {
         return null;
     }
 
+    /*
     public ACLMessage sendCommand(String cmd, String conversationId) throws Exception {
 
         DFAgentDescription dfd = new DFAgentDescription();
@@ -174,6 +208,8 @@ public class Batch_Functionality implements BasicFunctionality {
 
         return LOGGER.exit(reply);
     }
+
+     */
 
     //====================================================================
     //ITRACEABILITY INTERFACE
@@ -227,7 +263,7 @@ public class Batch_Functionality implements BasicFunctionality {
         ACLMessage reply = null;
 
         try {
-            reply = sendCommand(parentQuery, conversationId);
+            reply = sendCommand(myAgent, parentQuery, conversationId);
             // ID del batch con el cual el agente está relacionado
             String batchID;
             if (reply == null)  // Si no existe el id en el registro devuelve error
@@ -235,10 +271,10 @@ public class Batch_Functionality implements BasicFunctionality {
             else
                 batchID = reply.getContent();
 
-            reply = sendCommand("get " + batchID + " attrib=parent", conversationId);
+            reply = sendCommand(myAgent, "get " + batchID + " attrib=parent", conversationId);
             if (reply != null) {  // ID del plan
                 String orderID = reply.getContent();     // Con el ID del order conseguir su agente
-                reply = sendCommand("get * parent=" + orderID + " category=orderAgent", conversationId);
+                reply = sendCommand(myAgent, "get * parent=" + orderID + " category=orderAgent", conversationId);
                 if (reply != null) {
                     parentAgID = reply.getContent();
                 }
@@ -249,20 +285,22 @@ public class Batch_Functionality implements BasicFunctionality {
         return parentAgID;
     }
 
+
+
     private String getProductID(String seID, String conversationId) {
         String productID = null;
         String query = "get " + seID + " attrib=parent";
         ACLMessage reply = null;
 
         try {
-            reply = sendCommand(query, conversationId);
+            reply = sendCommand(myAgent, query, conversationId);
             // ID del batch con el cual el agente está relacionado
             // Ya que es este objeto el que tiene la referencia del producto
             String batchID = null;
             if (reply != null) {
                 batchID = reply.getContent();
                 query = "get " + batchID + " attrib=refProductID";
-                reply = sendCommand(query, conversationId);
+                reply = sendCommand(myAgent, query, conversationId);
                 if (reply != null)
                     productID = reply.getContent();
             }
@@ -278,14 +316,14 @@ public class Batch_Functionality implements BasicFunctionality {
         ACLMessage reply = null;
 
         try {
-            reply = sendCommand(query, conversationId);
+            reply = sendCommand(myAgent, query, conversationId);
             // ID del batch con el cual el agente está relacionado
             // Ya que es este objeto el que tiene la cantidad de productos
             String batchID = null;
             if (reply != null) {
                 batchID = reply.getContent();
                 query = "get " + batchID + " attrib=numberOfItems";
-                reply = sendCommand(query, conversationId);
+                reply = sendCommand(myAgent, query, conversationId);
                 if (reply != null)
                     numOfItems = reply.getContent();
             }
@@ -390,7 +428,7 @@ public class Batch_Functionality implements BasicFunctionality {
                 String getAllMachines = "get * category=machine";
                 ACLMessage reply = null;
                 try {
-                    reply = sendCommand(getAllMachines, conversationId);
+                    reply = sendCommand(myAgent, getAllMachines, conversationId);
                     if (reply != null) {
                         String allMachines = reply.getContent();
                         System.out.println("ALL MACHINES: " + allMachines);
@@ -402,9 +440,9 @@ public class Batch_Functionality implements BasicFunctionality {
                             String complexQuery = "get " + machineID + " attrib=complexOperations";
                             // Dependiendo del tipo de operacion miraremos en un atributo o en otro
                             if (operationType.equals("simple_operation"))
-                                reply = sendCommand(simpleQuery, conversationId);
+                                reply = sendCommand(myAgent, simpleQuery, conversationId);
                             else
-                                reply = sendCommand(complexQuery, conversationId);
+                                reply = sendCommand(myAgent, complexQuery, conversationId);
                             if (reply != null) {
                                 System.out.println("All "+operationType+"s of " +machineID+ ": " +reply.getContent());
                                 if (reply.getContent().contains(operationID)) {

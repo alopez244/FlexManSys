@@ -356,7 +356,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 
         long value = aNegFunctionality.calculateNegotiationValue(negMsg.getNegAction(), negMsg.getCriterion(), negMsg.getExternalData());
 
-        LOGGER.info("Negotiation value: " + value);
+        LOGGER.info("Negotiation value: " + value + " of conversationId: " + negId);
 
         try {
             cfp.setContentObject(new Long(value));
