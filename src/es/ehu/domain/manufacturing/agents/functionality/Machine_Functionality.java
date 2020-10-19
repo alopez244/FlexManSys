@@ -3,8 +3,10 @@ package es.ehu.domain.manufacturing.agents.functionality;
 import es.ehu.domain.manufacturing.agents.MachineAgent;
 import es.ehu.domain.manufacturing.utilities.Position;
 import es.ehu.platform.MWAgent;
+import es.ehu.platform.behaviour.NegotiatingBehaviour;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.NegFunctionality;
+import es.ehu.platform.utilities.Cmd;
 import es.ehu.platform.utilities.XMLReader;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
@@ -20,6 +22,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
+import java.util.Random;
 
 import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
 import static es.ehu.domain.manufacturing.utilities.FmsNegotiation.ONT_DEBUG;
@@ -292,11 +295,47 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
     @Override
     public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData) {
-        return 0;
+        // TODO
+        // negExternalData --> batchAgentID, numOfItems
+        String seID = (String)negExternalData[0];
+        String seNumOfItems = (String) negExternalData[1];
+        int numItems = Integer.parseInt(seNumOfItems);
+        String seOperationID = (String)negExternalData[2];
+
+        Random r = new Random();
+        return r.nextInt(1000)*numItems;
     }
 
     @Override
-    public int checkNegotiation(String negId, String winnerAction, double negReceivedValue, long negScalarValue, boolean tieBreaker, boolean checkReplies, Object... negExternalData) {
-        return 0;
+    public int checkNegotiation(String conversationId, String sAction, double negReceivedValue, long negScalarValue, boolean tieBreak, boolean checkReplies, Object... negExternalData) {
+
+        LOGGER.entry(conversationId, sAction, negReceivedValue, negScalarValue);
+
+        String seID = (String)negExternalData[0];
+        String seNumOfItems = (String)negExternalData[1];
+        String seOperationID = (String)negExternalData[2];
+
+        if (negReceivedValue<negScalarValue) return NegotiatingBehaviour.NEG_LOST; //pierde negociación
+        if ((negReceivedValue==negScalarValue) && !tieBreak ) return NegotiatingBehaviour.NEG_LOST; //empata negocicación pero no es quien fija desempate
+
+        LOGGER.info("es el ganador ("+negScalarValue+")");
+        if (!checkReplies) return NegotiatingBehaviour.NEG_PARTIAL_WON; // es ganador parcial, faltan negociaciones por finalizar
+
+        LOGGER.info("ejecutar "+sAction);
+
+        Cmd action = new Cmd(sAction);
+
+        if (action.cmd.equals("execute")) {
+            // Envio un mensaje al BatchAgent para avisarle de que soy el ganador para asociarme esa operacion
+            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+            msg.addReceiver(new AID(seID, AID.ISLOCALNAME));
+            msg.setContent("I am the winner of:" + seOperationID);
+            msg.setConversationId(conversationId);
+            myAgent.send(msg);
+
+            System.out.println("\tI am the winner to get operation " +seOperationID+ " from batch " + seID + ". NumItems: " + seNumOfItems);
+        }
+
+        return NegotiatingBehaviour.NEG_WON;
     }
 }

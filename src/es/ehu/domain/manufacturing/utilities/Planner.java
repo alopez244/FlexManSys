@@ -20,6 +20,8 @@ public class Planner extends Agent {
     private static final long serialVersionUID = 1L;
     static final Logger LOGGER = LogManager.getLogger(Planner.class.getName()) ;
 
+    private int chatID = 0;
+
     protected void setup() {
         LOGGER.entry();
         LOGGER.warn("warning output sample");
@@ -78,6 +80,9 @@ public class Planner extends Agent {
                         flush = receive();
                     }
 
+                    // Create conversationId
+                    String conversationId = myAgent.getLocalName() + "_" + chatID++;
+
                     //The field cmd is checked.
                     //If it is not empty, it is spplited with respect to the character ; as separation.
                     //Each new String is stored in a position of the array "cmds".
@@ -97,7 +102,7 @@ public class Planner extends Agent {
                                 break;
                             }
                             else {
-                                ACLMessage reply = mra.sendCommand(cmds[i]);
+                                ACLMessage reply = mra.sendCommand(cmds[i], conversationId);
                                 if (reply!=null) {
                                     if (cmds.length>1) System.out.print(" < "+cmds[i]);
                                     System.out.print("\n\n");
@@ -136,10 +141,18 @@ public class Planner extends Agent {
 
             agentAttributes.put("seClass", "es.ehu.domain.manufacturing.agents.MPlanAgent");
 
+            // TODO Para pruebas con replicas
+            Scanner in = new Scanner(System.in);
+            System.out.println("Please, introduce the number of replicas you want to register.");
+            System.out.print("Replicas: ");
+            String redundancy = in.nextLine();
+            if(!redundancy.equals(""))
+                agentAttributes.put("redundancy", redundancy);
+
             String appPath="classes/resources/AppInstances/";
             String file="";
-            Scanner in = new Scanner(System.in);
-            System.out.println("Please, introduce the name of the XML File you want to register.");
+            in = new Scanner(System.in);
+            System.out.println("\nPlease, introduce the name of the XML File you want to register.");
             System.out.print("File: ");
             file = in.nextLine();
             System.out.println();
@@ -152,6 +165,8 @@ public class Planner extends Agent {
             parentIdList.add(0,"system");
             String parentId = "";
             String seId = "";
+
+            String conversationId = myAgent.getLocalName() + "_" + chatID++;
 
             //For structure is used to register all the elements
             for (int i = 0; i < xmlelements.size(); i++){
@@ -166,7 +181,7 @@ public class Planner extends Agent {
                 parentId = parentIdList.get(Integer.parseInt(xmlelements.get(i).get(1).get(0))-1);
 
                 //Now the register is performed and the element name is obtained
-                seId = mra.seRegister(xmlelements.get(i).get(0).get(0),parentId,attributes,restrictionLists);
+                seId = mra.seRegister(xmlelements.get(i).get(0).get(0),parentId,attributes,restrictionLists, conversationId);
 
                 //Finally, the new seId is added to the parent Id list
                 parentIdList.add(Integer.parseInt(xmlelements.get(i).get(1).get(0)),seId);
@@ -176,10 +191,10 @@ public class Planner extends Agent {
             String app = parentIdList.get(1);
 
             //Validation
-            mra.iValidate(app);
+            mra.iValidate(app, conversationId);
 
             //Start
-            mra.start(app,agentAttributes);
+            mra.start(app,agentAttributes, conversationId);
         }
 
         private boolean finished = false;

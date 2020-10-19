@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<station xmlns="station" id="ST02" description="Station 2 (Work Unit)" resourceType="equipment" level="work_unit" sn="ABB-IRB120-001" physicalLocation="researchLab,productionLine2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="station ../Station.xsd">
+<station xmlns="station" id="ST02" description="Station_2_Work_Unit" resourceType="equipment" level="work_unit" sn="ABB-IRB120-001" physicalLocation="researchLab,productionLine2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="station ../Station.xsd">
 		<palletIn id="PI1_ST02" xPos="80" yPos="80" zPos="50"/>
 		<palletIn id="PI2_ST02" xPos="520" yPos="80" zPos="50"/>
 		<palletOut id="PO1_ST02" xPos="620" yPos="380" zPos="50"/>

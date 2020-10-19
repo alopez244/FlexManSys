@@ -52,7 +52,7 @@ public class MasReconAgent {
         LOGGER.exit();
     }
 
-    public String register(String seType, String parentId,ConcurrentHashMap<String, String> attributes) {
+    public String register(String seType, String parentId,ConcurrentHashMap<String, String> attributes, String conversationId) {
         LOGGER.entry(seType, parentId, attributes);
         String command = "reg "+seType+" parent="+parentId;
         if (attributes!=null) {
@@ -60,7 +60,7 @@ public class MasReconAgent {
                 command = command + " " + entry.getKey() + "=" + entry.getValue();
         }
         
-        return LOGGER.exit(sendCommand(mwm,command).getContent());
+        return LOGGER.exit(sendCommand(mwm,command, conversationId).getContent());
     }
 
     /**
@@ -73,8 +73,8 @@ public class MasReconAgent {
      * @throws XSDException
      */
 
-    public String seRegister(String seType, String parentId, ConcurrentHashMap<String, String> attributes, ConcurrentHashMap<String,ConcurrentHashMap<String, String>> restrictionLists) throws Exception {
-        LOGGER.entry(seType, parentId, attributes, restrictionLists);
+    public String seRegister(String seType, String parentId, ConcurrentHashMap<String, String> attributes, ConcurrentHashMap<String,ConcurrentHashMap<String, String>> restrictionLists, String conversationId) throws Exception {
+        LOGGER.entry(seType, parentId, attributes, restrictionLists, conversationId);
 
         //compruebo restricciones
 
@@ -95,7 +95,7 @@ public class MasReconAgent {
                 query = "get (get ("+query+") attrib=parent) category=" + restriction.getKey();
 
                 System.out.println("***************** Lanzo consulta de comprobación " + query);
-                String validateRestriction = sendCommand(mwm, query).getContent();
+                String validateRestriction = sendCommand(mwm, query, conversationId).getContent();
                 if (validateRestriction.isEmpty()) {
                     LOGGER.info(query+">"+validateRestriction+": restricción incumplida");
                     throw new Exception();
@@ -111,7 +111,7 @@ public class MasReconAgent {
         // si es extensible el padre traigo la estructura desde el hijo de system con los atributos, (resolver su ID **registering**), validar appvalidar.xsd
         // si valida > volver a montarlo en systemmodel
 
-        String parentType = sendCommand (mwm, "get "+parentId+" attrib=category").getContent();
+        String parentType = sendCommand (mwm, "get "+parentId+" attrib=category", conversationId).getContent();
         if (parentType.equals("")) {
             LOGGER.info("ERROR: parent id not found"); //no existe padre
             throw new Exception();
@@ -120,7 +120,7 @@ public class MasReconAgent {
 
         //compruebo jerarquía // TODO si el padre es "system" comprobar que el se es raiz del appvalidation xsd -> dom
 
-        String validateHierarchy = sendCommand(mwm,"validate hierarchy "+seType+" "+parentType).getContent();
+        String validateHierarchy = sendCommand(mwm,"validate hierarchy "+seType+" "+parentType, conversationId).getContent();
         if (!validateHierarchy.equals("valid")) {
             LOGGER.info(seType+">"+parentType+": jerarquía incorrecta");
             throw new Exception();
@@ -135,26 +135,26 @@ public class MasReconAgent {
                 command = command+" "+entry.getKey()+"="+entry.getValue();
             }
         }
-        String ID = sendCommand(mwm,command).getContent();
+        String ID = sendCommand(mwm,command, conversationId).getContent();
 
         // TODO: por cada restrictionList una llamada al get y comprobar que existen en el SystemModel
         for (String keyi: restrictionLists.keySet()){
             System.out.println("*******************key="+keyi);
-            String restrictionList = sendCommand(mwm,"reg restrictionList se="+keyi+" parent="+ID).getContent();
+            String restrictionList = sendCommand(mwm,"reg restrictionList se="+keyi+" parent="+ID, conversationId).getContent();
 
             for (String keyj: restrictionLists.get(keyi).keySet()){
-                String restriction = sendCommand(mwm,"reg restriction attribName="+keyj+" attribValue="+restrictionLists.get(keyi).get(keyj)+" parent="+restrictionList).getContent();
+                String restriction = sendCommand(mwm,"reg restriction attribName="+keyj+" attribValue="+restrictionLists.get(keyi).get(keyj)+" parent="+restrictionList, conversationId).getContent();
                 System.out.println("keyj="+keyj);
             }
         }
 
         //validar elemento contra esquema systemElements
 
-        String validation =  sendCommand(mwm,"validate systemElement "+ID).getContent();
+        String validation =  sendCommand(mwm,"validate systemElement "+ID, conversationId).getContent();
         LOGGER.info(validation);
 
         if (!validation.equals("valid")) {
-            sendCommand(mwm,"del "+ID).getContent();
+            sendCommand(mwm,"del "+ID, conversationId).getContent();
             LOGGER.info("error xsd concepts");
             throw new Exception();
             //throw new XSDException(validation);
@@ -163,18 +163,18 @@ public class MasReconAgent {
 
         // mover a registering.xml
 
-        if (parentId.equals("system")) sendCommand(mwm, "set " + ID + " parent=registering").getContent();
-        else sendCommand(mwm, "set " + ID + " parent=(get " + ID + " attrib=seParent) seParent=").getContent();
+        if (parentId.equals("system")) sendCommand(mwm, "set " + ID + " parent=registering", conversationId).getContent();
+        else sendCommand(mwm, "set " + ID + " parent=(get " + ID + " attrib=seParent) seParent=", conversationId).getContent();
 
         return ID;
     }
 
-    public String iValidate(String se) throws Exception {
+    public String iValidate(String se, String conversationId) throws Exception {
 
         //localizo tipo
 
         LOGGER.info("iValidate("+se+")");
-        String seType = sendCommand (mwm, "get "+se+" attrib=category").getContent();
+        String seType = sendCommand (mwm, "get "+se+" attrib=category", conversationId).getContent();
 
         //no existe
 
@@ -185,7 +185,7 @@ public class MasReconAgent {
         LOGGER.info(seType+" type="+seType);
 
         //compruebo jerarquía
-        String validateHierarchy = sendCommand(mwm,"validate appValidation "+se+" "+seType).getContent();
+        String validateHierarchy = sendCommand(mwm,"validate appValidation "+se+" "+seType, conversationId).getContent();
         if (!validateHierarchy.equals("valid")) {
             LOGGER.info(se+">"+seType+": xsd incorrecta");
             throw new Exception();
@@ -196,18 +196,18 @@ public class MasReconAgent {
 
         // mover a registering
 
-        sendCommand(mwm,"set "+se+" parent=(get "+se+" attrib=seParent) seParent=").getContent();
+        sendCommand(mwm,"set "+se+" parent=(get "+se+" attrib=seParent) seParent=", conversationId).getContent();
 
         return se;
     }
 
-    public String iStart(String se) throws Exception {
+    public String iStart(String se, String conversationId) throws Exception {
 
         //VALIDACION
         // TODO: comprobar si es de tipo "startable"
         //EJECUCIÓN
 
-        return sendCommand(mwm,"start "+se).getContent();
+        return sendCommand(mwm,"start "+se, conversationId).getContent();
     }
 
     public int deRegister(String id){
@@ -219,18 +219,18 @@ public class MasReconAgent {
      * @return element xml structure
      */
 
-    public String getSeInfo (String seId) {
-        String xml = sendCommand(mwm,"listXml "+seId).getContent();
+    public String getSeInfo (String seId, String conversationId) {
+        String xml = sendCommand(mwm,"listXml "+seId, conversationId).getContent();
         return xml; //xml a partir de la estructura o vacío si no existe el seID
     }
   
-    public String[] getAttribInfo(String attribName, ConcurrentHashMap<String, String> filtro){
+    public String[] getAttribInfo(String attribName, ConcurrentHashMap<String, String> filtro, String conversationId){
         StringBuilder command = new StringBuilder("get "+attribName);
 
         if (filtro!=null)
             filtro.entrySet().stream().forEach(entry -> command.append(" " + entry.getKey() + "=" + entry.getValue()));
 
-        return sendCommand(mwm,command.toString()).getContent().split(",");
+        return sendCommand(mwm,command.toString(), conversationId).getContent().split(",");
     }
   
     /**
@@ -239,16 +239,16 @@ public class MasReconAgent {
      * @return
      */
 
-    public String setAtribInf(String seId, ConcurrentHashMap<String, String> attributes){
+    public String setAtribInf(String seId, ConcurrentHashMap<String, String> attributes, String conversationId){
         StringBuilder command = new StringBuilder("set "+seId);
 
         if (attributes!=null)
             attributes.entrySet().stream().forEach(entry -> command.append(" " + entry.getKey() + "=" + entry.getValue()));
 
-        return sendCommand(mwm,command.toString()).getContent();
+        return sendCommand(mwm,command.toString(), conversationId).getContent();
     }
   
-    public String start(String seId, ConcurrentHashMap<String, String> attributes){
+    public String start(String seId, ConcurrentHashMap<String, String> attributes, String conversationId){
         LOGGER.entry(seId, attributes);
 
         StringBuilder command = new StringBuilder("sestart "+seId);
@@ -256,7 +256,7 @@ public class MasReconAgent {
         if (attributes!=null)
             attributes.entrySet().stream().forEach(entry -> command.append(" " + entry.getKey() + "=" + entry.getValue()));
     
-        return LOGGER.exit(sendCommand(mwm,command.toString()).getContent());
+        return LOGGER.exit(sendCommand(mwm,command.toString(), conversationId).getContent());
     }
   
     public int stop(String seId){
@@ -271,11 +271,13 @@ public class MasReconAgent {
         return 0; //0 correcto, 1 error
     }
 
-    public ACLMessage sendCommand(String cmd) {
-        return sendCommand(mwm, cmd);
+
+    public ACLMessage sendCommand(String cmd, String conversationId) {
+        return sendCommand(mwm, cmd, conversationId);
     }
 
-    public ACLMessage sendCommand(String mwm, String cmd) {
+
+    public ACLMessage sendCommand(String mwm, String cmd, String conversationId) {
         LOGGER.entry(mwm, cmd);
         if (mwm==null) {
             try {
@@ -285,6 +287,7 @@ public class MasReconAgent {
       
         ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
         msg.addReceiver(new AID(mwm, AID.ISLOCALNAME));
+        msg.setConversationId(conversationId);
         msg.setOntology("control");
         msg.setContent(cmd);
         msg.setReplyWith(cmd);

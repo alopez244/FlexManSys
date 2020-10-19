@@ -129,7 +129,11 @@ public class SystemModelAgent extends Agent implements IExecManagement {
                       LOGGER.trace("received message from " + msg.getSender().getLocalName());
                       LOGGER.trace("msg.getContent()=" + msg.getContent());
 
-                      String key = String.valueOf(cmdId++);
+                      String key = null;
+                      if (msg.getConversationId() == null)
+                          key = "";
+                      else
+                          key = msg.getConversationId();
                       ds.put(key, msg);
                       behaviours.put(key, new ThreadedCommandProcessor(key, myAgent));
                       myAgent.addBehaviour(tbf.wrap(behaviours.get(key)));
@@ -164,7 +168,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
     public String processCmd(String cmd, String conversationId) {
         LOGGER.entry(cmd, conversationId);
         LOGGER.info ("cmd_"+conversationId+" \""+cmd+"\"..." );
-        if (conversationId==null) conversationId=String.valueOf(cmdId++);
+        //if (conversationId==null) conversationId=String.valueOf(cmdId++); // De momento, el conversationId lo va a crear quien empiecen las conversaciones, no se van a crear siempre
         StringBuilder result = new StringBuilder();
 
         // soporte de subcomandos como:
@@ -218,7 +222,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
 
             else if (cmds[0].equals("sestart")) result.append(seStart(cmds[1], attribs, conversationId)); // threaded#condition
 
-//            else if (cmds[0].equals("start")) result.append(start(cmds[1], attribs, conversationId)); // threaded#condition
+            else if (cmds[0].equals("start")) result.append(start(cmds[1], attribs, conversationId)); // threaded#condition
             else if (cmds[0].equals("stop")) result.append(processCmd("localcmd " + cmds[1] + " cmd=setstate stop", conversationId));
             else if (cmds[0].equals("pause")) result.append(processCmd("localcmd " + cmds[1] + " cmd=setstate paused", conversationId));
             else if (cmds[0].equals("resume")) result.append(processCmd("localcmd " + cmds[1] + " cmd=setstate running", conversationId));
@@ -711,13 +715,6 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         return LOGGER.exit(result.toString());
     }
 
-    /**
-     * Sets new attributes or values for already defined attributes in the selected element of the system model
-     * @param prm
-     * @param attribs
-     * @param conversationId
-     * @return
-     */
     private String set(String prm, Hashtable<String, String> attribs, String conversationId) {
         LOGGER.entry(prm, attribs);
 
@@ -750,173 +747,6 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         }
 
         return LOGGER.exit("done");
-    }
-
-    //====================================================================
-    //IEXECMANAGEMENT INTERFACE IMPLEMENTATION
-    //====================================================================
-
-    /**
-     * Start of application agents.
-     * To that end, the target ProcNodeAgents that can deploy the agent are identified.
-     * These ProcNodeAgents are called to negotiate to start the agent and its instances (if required).
-     * @param seID
-     * @param attribs
-     * @param conversationId
-     * @return
-     */
-    @Override
-    public String seStart(String seID, Hashtable<String, String> attribs, String conversationId ) {
-        LOGGER.entry(seID, attribs, conversationId);
-
-        if (seID.indexOf(",")>0) {
-            String[] tokens = seID.split(",");
-            for (int j=0; j<tokens.length; j++) seStart(tokens[j], attribs, conversationId);
-            return "";
-        }
-
-        String redundancy = "1";
-        if ((attribs!=null) && (attribs.containsKey("redundancy")))
-            redundancy = attribs.get("redundancy"); //redundancy must be an attribute?
-
-        // si no existe el id en el registro devuelve error (irá al launcher)
-        if (!elements.containsKey(seID)) return "-1";
-
-        //Calcular quiénes negocian:
-        // leer del registro para este "seID" la lista entera de procNodes cada uno con sus refServId. - leo del registro los serviceid que requiere el seID
-        // buscar procnodes que tengan estas refServId > lista de los procNodes negociadores
-        // si no hay negociarres return "-4"; //TODO
-        String refServID=processCmd("get (get * parent=(get * parent="+seID+" category=restrictionList)) attrib=attribValue", conversationId);
-        //si hay restricción la añado al filtro, en caso contrario solo busco procNode
-        String targets = processCmd("get * category=pNodeAgent"+((refServID.length()>0)?" refServID="+refServID:""), conversationId);
-        if (targets.length()<=0) return "-4";
-
-        String seCategory = processCmd("get "+seID+" attrib=category", conversationId);
-        String seClass = "";
-        if (attribs.containsKey("seClass")){
-            //Si se ha pasado clase, arranco el agente con esa clase
-            seClass = attribs.get("seClass");
-        } else {
-            //Si no se ha pasado clase, la clase por defecto será MPlanAgent
-            seClass = "es.ehu.domain.manufacturing.agents.MPlanAgent";
-        }
-
-        //mando negociar a todos
-        for (int i=0; i<Integer.parseInt(redundancy); i++) {
-
-            String neg = processCmd("localneg "+targets+" action=start "+seID+" criterion=max mem externaldata="+seID+","+seCategory+","+seClass+","+((i==0)?"running":"tracking"), conversationId);
-
-            LOGGER.exit();
-        }
-
-        return "";
-
-    }
-
-    @Override
-    public String seStop(String... seID) {
-        return null;
-    }
-
-    //====================================================================
-    //AGENT INTERACTION METHODS
-    //====================================================================
-
-    /**
-     * Sends a command to a target agent. If sync=true the methods waits for and returns the response.
-     * @param cmd
-     * @param target
-     * @param conversationId
-     * @return if sync returns ACLMessage, if asyn returns null
-     * @throws FIPAException
-     */
-    protected String sendCommand(StringBuilder cmd, String target, String conversationId) throws FIPAException {
-        LOGGER.entry(cmd, target, conversationId);
-        if (!elements.containsKey(target)) return LOGGER.exit("element not found");
-
-        ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-        msg.setContent(cmd.toString());
-        msg.setOntology("control");
-        msg.addReceiver(new AID(target, AID.ISLOCALNAME));
-        msg.setReplyWith(cmd.append("#").append(System.currentTimeMillis()).toString());
-        msg.setConversationId(conversationId);
-
-        send(msg);
-        LOGGER.info(msg);
-
-        if (conversationId!=null) return "threaded#"; //si no hay conversationId
-
-        ACLMessage reply=blockingReceive(MessageTemplate.MatchInReplyTo(msg.getReplyWith()), 1000);
-
-        return LOGGER.exit((reply!=null)? reply.getContent() : "");
-    }
-
-    /**
-     * Order the target agents to negotiate to perform an specific action under a concrete negotiationCriteria
-     * @param targets
-     * @param negotiationCriteria
-     * @param action
-     * @param externalData
-     * @param conversationId
-     * @return
-     */
-    private String negotiate(String targets, String negotiationCriteria, String action, String externalData, String conversationId){
-        LOGGER.entry(targets, negotiationCriteria, action, conversationId);
-
-        //Request de nueva negociación
-        ACLMessage msg = new ACLMessage(ACLMessage.CFP);
-
-        for (String target: targets.split(",")) msg.addReceiver(new AID(target, AID.ISLOCALNAME));
-
-        msg.setConversationId(conversationId);
-        msg.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE );
-        System.out.println("****************");
-
-        msg.setContent("negotiate "+targets+" criterion="+negotiationCriteria+" action="+action+" externaldata="+externalData);
-        LOGGER.debug(msg);
-        send(msg);
-
-        return LOGGER.exit("threaded#localcmd .* setstate=running");
-    }
-
-    /**
-     * Executes a command in a remote agent.
-     * @param target
-     * @param attribs
-     * @param conversationId
-     * @return
-     * @throws Exception
-     */
-    private String localCmd(String target, Hashtable<String, String> attribs, String conversationId) throws Exception {
-        LOGGER.entry(target, attribs, conversationId);
-
-        if (target.contains(",")) {
-            StringBuilder result = new StringBuilder();
-            for (String targ: target.split(","))
-                result.append(localCmd(targ, attribs, conversationId)).append(",");
-            return LOGGER.exit(result.toString());
-        }
-
-        if (!elements.containsKey(target)) return LOGGER.exit("element not found");
-
-        if (target.startsWith("cmpins")) { //es un ComponentInstance
-            StringBuilder cmd = new StringBuilder();
-            for (String key: new String[] {"cmd", "command", "prm", "value"}) {
-                if (attribs.containsKey(key)) {
-                    cmd.append(attribs.get(key)).append(" ");
-                }
-            }
-            if (cmd.length()>0) cmd.deleteCharAt(cmd.length()-1);
-            return LOGGER.exit(sendCommand(cmd, target, conversationId));
-
-        } else if (target.startsWith("compon") || target.startsWith("applic")|| target.startsWith("node") ) { //es un Component
-            StringBuilder result = new StringBuilder();
-            for (String cmpins: getIns(target, null).split(","))
-                result.append(localCmd(cmpins, attribs, conversationId)).append(",");
-            return LOGGER.exit(result.toString());
-        }
-
-        return LOGGER.exit("no commandable element");
     }
 
 
@@ -1177,7 +1007,313 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         return LOGGER.exit("sent");
     }
 
+    //====================================================================
+    //IEXECMANAGEMENT INTERFACE IMPLEMENTATION
+    //====================================================================
 
+    @Override
+    public String seStart(String seID, Hashtable<String, String> attribs, String conversationId ) {
+        LOGGER.entry(seID, attribs, conversationId);
+
+        if (seID.indexOf(",")>0) {
+            String[] tokens = seID.split(",");
+            for (int j=0; j<tokens.length; j++) seStart(tokens[j], attribs, conversationId);
+            return "";
+        }
+
+        String redundancy = "1";
+        if ((attribs!=null) && (attribs.containsKey("redundancy")))
+            redundancy = attribs.get("redundancy");
+
+        // si no existe el id en el registro devuelve error (irá al launcher)
+        if (!elements.containsKey(seID)) return "-1";
+
+        // Si no me han pasado conversationId es que yo empiezo la conversacion, por lo que tengo que crearlo
+        if (conversationId==null) conversationId=String.valueOf(cmdId++);
+
+        //Calcular quiénes negocian:
+        // leer del registro para este "seID" la lista entera de procNodes cada uno con sus refServId. - leo del registro los serviceid que requiere el seID
+        // buscar procnodes que tengan estas refServId > lista de los procNodes negociadores
+        // si no hay negociarres return "-4"; //TODO
+        String refServID=processCmd("get (get * parent=(get * parent="+seID+" category=restrictionList)) attrib=attribValue", conversationId);
+        //si hay restricción la añado al filtro, en caso contrario solo busco procNode
+        String targets = processCmd("get * category=pNodeAgent"+((refServID.length()>0)?" refServID="+refServID:""), conversationId);
+        if (targets.length()<=0) return "-4";
+
+        String seCategory = processCmd("get "+seID+" attrib=category", conversationId);
+        String seClass = "";
+        if (attribs.containsKey("seClass")){
+            //Si se ha pasado clase, arranco el agente con esa clase
+            seClass = attribs.get("seClass");
+        } else {
+            //Si no se ha pasado clase, la clase por defecto será MPlanAgent
+            seClass = "es.ehu.domain.manufacturing.agents.MPlanAgent";
+        }
+
+
+        //mando negociar a todos
+        for (int i=0; i<Integer.parseInt(redundancy); i++) {
+
+            // Cada peticion de negociacion necesita un ID distinto
+            conversationId = getLocalName() + "_" + cmdId++;
+
+            String neg = processCmd("localneg "+targets+" action=start criterion=max mem externaldata="+seID+","+seCategory+","+seClass+","+((i==0)?"running":"tracking")+","+redundancy, conversationId);
+
+
+            LOGGER.exit();
+        }
+
+        return "";
+
+    }
+
+    public String start(final String element, final Hashtable<String, String> attribs, final String conversationId) {
+        LOGGER.entry(element, conversationId);
+
+        if (element.startsWith("avail")) return startAvailabilityManager();
+
+        //if (element.equals("cmpins")) return LOGGER.exit(startNewInstance(element, attribs, conversationId));
+        if (!elements.containsKey(element) && !element.equals("cmpins")) {
+
+            StringBuilder result = new StringBuilder();
+            for (String candidato: elements.keySet())
+                if (candidato.matches(element.replace("*", ".*")))
+                    result.append(candidato).append(" ").append(start(candidato, attribs, conversationId));
+            return LOGGER.exit((result.length()>0)? result.toString() : element + " not found" );
+
+        }
+
+        if (element.startsWith("cmpins")) return LOGGER.exit("threaded#"+startInstance(element, attribs, conversationId));
+
+        return LOGGER.exit(element + " no runnable element");
+    }
+
+    public String startInstance(String cmpins, final Hashtable<String, String> attribs, final String conversationId) {
+        LOGGER.entry(cmpins, attribs, conversationId);
+
+        if (objects.containsKey(cmpins)) return LOGGER.exit(cmpins + " already instantiated");
+        if (cmpins.equals("cmpins")) {
+            final String cmpimp = processCmd("get cmpimp* parent="+attribs.get("compon"), conversationId).split(",")[0];
+            cmpins = reg("cmpins", new Hashtable<String, String>() {{put("parent", cmpimp);}});
+        }
+
+        String compon = getCmp(cmpins);
+        String cmpimp = elements.get(cmpins).get("parent");
+
+        StringBuilder nodes = new StringBuilder();
+        nodes.append((attribs!=null && attribs.containsKey("node")) ? attribs.get("node")+"," : "")
+                .append((elements.get(compon).containsKey("defaultNode")) ? elements.get(compon).get("defaultNode")+"," : "") // si node por defecto en la definición
+                .append((elements.get(compon).containsKey("node")) ? elements.get(compon).get("node")+"," : "")
+                .append(get("node*", null,conversationId)); // cualquier node
+
+        LOGGER.debug("nodes="+nodes);
+        String node= "";
+        forTestNode: for (String testNode : nodes.toString().split(",")) {
+            String containsCompon = processCmd("getins "+compon+" node="+testNode, conversationId);
+            if ((containsCompon.isEmpty() || containsCompon.equals("null")) && elements.containsKey(testNode)) {
+                node = testNode;
+                break forTestNode;
+            }
+        }
+
+        LOGGER.debug("node = " + node);
+        String defaultNode =  (attribs!=null && attribs.containsKey("defaultNode")) ? attribs.get("defaultNode"): // si node forzado
+                (elements.get(compon).containsKey("defaultNode")) ? elements.get(compon).get("defaultNode"): ""; // si no en modelo
+        LOGGER.debug("defaultNode = " + defaultNode);
+
+        String negotiation = (attribs!=null && attribs.containsKey("negotiation")) ? attribs.get("negotiation"): // si negotiation forzado
+                (elements.get(compon).containsKey("negotiation")) ? elements.get(compon).get("negotiation") : "";
+        LOGGER.debug("negotiation = " + negotiation);
+
+        String sInitState = (attribs!=null && attribs.containsKey("initState")) ? attribs.get("initState"): // si initState forzado
+                (processCmd("getins "+compon+" state=running|boot", conversationId).isEmpty()) ? "running" : "tracking"; //si no hay instancias en running
+
+        Integer initialFSMState = (sInitState.equals("running"))? ControlBehaviour.RUNNING:
+                (sInitState.equals("tracking"))? ControlBehaviour.TRACKING:
+                        ControlBehaviour.RUNNING;
+
+        Integer period = (attribs!=null && attribs.containsKey("period")) ? Integer.parseInt(attribs.get("period")) : // si period forzado, si no lo hereda
+                (elements.get(compon).containsKey("period"))? Integer.parseInt(elements.get(compon).get("period")) :
+                        -1;
+
+        Object executionState = (executionStates.containsKey(compon))?executionStates.get(compon):null;
+
+        LOGGER.debug("Info de entrada cmpins: "+cmpins+" nodo: "+attribs.get("node")+" estado inicial: "+attribs.get("initState"));
+        LOGGER.debug("Info de enviada agente cmpins: "+cmpins+" nodo: "+node+" estado inicial: "+initialFSMState);
+
+        AgentController ac = null;
+        try {
+
+            if (elements.get(compon).containsKey("sourceComponentIDs") || elements.get(compon).containsKey("targetComponentIDs")) {
+                LOGGER.info("*********** arranca con source y target");
+                ac = ((AgentController) getContainerController().createNewAgent(cmpins, elements.get(cmpimp).get("class"),
+                        new Object[] { getCmp(cmpins), node, initialFSMState, period, executionState, conversationId,
+                                (elements.get(compon).containsKey("sourceComponentIDs")? new String[]{elements.get(compon).get("sourceComponentIDs")}: new String[]{}),
+                                (elements.get(compon).containsKey("targetComponentIDs")? new String[]{elements.get(compon).get("targetComponentIDs")}: new String[]{})
+                        }));
+
+                LOGGER.debug("getContainerController().createNewAgent("+cmpins+", "+elements.get(cmpimp).get("class")+
+                        ", new Object[] { "+getCmp(cmpins)+", "+node+", "+initialFSMState+", "+period+", "+
+                        executionState+", "+conversationId + ", "+elements.get(compon).get("sourceComponentIDs")+
+                        ", "+elements.get(compon).get("targetComponentIDs")+"})");
+
+            } else {
+                LOGGER.info("*********** arranca SIN source y target");
+                ac = ((AgentController) getContainerController().createNewAgent(cmpins, elements.get(cmpimp).get("class"),
+                        new Object[] { getCmp(cmpins), node, initialFSMState, period, executionState, conversationId }));
+                LOGGER.debug("getContainerController().createNewAgent("+cmpins+", "+elements.get(cmpimp).get("class")+
+                        ", new Object[] { "+getCmp(cmpins)+", "+node+", "+initialFSMState+", "+period+", "+
+                        executionState+", "+conversationId +"})");
+            }
+
+            ac.start();
+        } catch (StaleProxyException e) {
+            LOGGER.warn(e.getLocalizedMessage());
+            e.printStackTrace();
+        }
+        objects.put(cmpins, ac);
+
+        return LOGGER.exit(cmpins + " started");
+
+    }
+
+    @Override
+    public String seStop(String... seID) {
+        return null;
+    }
+
+    public String startAvailabilityManager(//String appID, String conversationId) throws Exception
+    ) {
+        LOGGER.entry();
+
+        StringBuilder response = new StringBuilder();
+
+        Hashtable<String, String> param = new Hashtable<String, String>();
+        String avaManId = reg("avaMan", param);
+
+        AgentController ac = null;
+
+        try {
+            ac = ((AgentController) getContainerController().createNewAgent(avaManId, "es.ehu.AvailabilityManager", new String[] { "sysID=sys001" }));
+            ac.start();
+        } catch (Exception e) {e.printStackTrace();}
+
+        this.objects.put(avaManId, ac);
+        response.append("started ").append(avaManId);
+
+        return LOGGER.exit(response.toString());
+
+    }
+
+    public String startEventManager(String eventID, String conversationId) throws Exception {
+        LOGGER.entry(eventID, conversationId);
+        if (!elements.containsKey(eventID)) LOGGER.exit(eventID + " not found");
+
+        StringBuilder response = new StringBuilder();
+
+
+        Hashtable<String, String> param = new Hashtable<String, String>();
+        param.put("parent", eventID);
+        String eventManId = reg("eventManager", param);
+        AgentController ac = ((AgentController) getContainerController().createNewAgent(eventID, "es.ehu.EventManager", new String[] { "eventID="+eventID }));
+        ac.start();
+        this.objects.put(eventManId, ac);
+        response.append("started ").append(eventManId);
+
+        return LOGGER.exit(response.toString());
+
+    }
+
+    //====================================================================
+    //GENERAL PURPOSE METHODS
+    //====================================================================
+
+    /**
+     * Sends a command to a target agent. If sync=true the methods waits for and returns the response.
+     * @param cmd
+     * @param target
+     * @param conversationId
+     * @return if sync returns ACLMessage, if asyn returns null
+     * @throws FIPAException
+     */
+    protected String sendCommand(StringBuilder cmd, String target, String conversationId) throws FIPAException {
+        LOGGER.entry(cmd, target, conversationId);
+        if (!elements.containsKey(target)) return LOGGER.exit("element not found");
+
+        ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+        msg.setContent(cmd.toString());
+        msg.setOntology("control");
+        msg.addReceiver(new AID(target, AID.ISLOCALNAME));
+        msg.setReplyWith(cmd.append("#").append(System.currentTimeMillis()).toString());
+        msg.setConversationId(conversationId);
+
+        send(msg);
+        LOGGER.info(msg);
+
+        if (conversationId!=null) return "threaded#"; //si no hay conversationId
+
+        ACLMessage reply=blockingReceive(MessageTemplate.MatchInReplyTo(msg.getReplyWith()), 1000);
+
+        return LOGGER.exit((reply!=null)? reply.getContent() : "");
+    }
+
+    private String negotiate(String targets, String negotiationCriteria, String action, String externalData, String conversationId){
+        LOGGER.entry(targets, negotiationCriteria, action, conversationId);
+
+        //Request de nueva negociación
+        ACLMessage msg = new ACLMessage(ACLMessage.CFP);
+
+        for (String target: targets.split(",")) msg.addReceiver(new AID(target, AID.ISLOCALNAME));
+
+        // Si no me han pasado negotiationId, el sa es el que inicia la conversacion
+        if (conversationId==null) conversationId=String.valueOf(cmdId++);
+
+        msg.setConversationId(conversationId);
+        msg.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE );
+        System.out.println("****************");
+
+        msg.setContent("negotiate "+targets+" criterion="+negotiationCriteria+" action="+action+" externaldata="+externalData);
+        LOGGER.debug(msg);
+        send(msg);
+
+        return LOGGER.exit("threaded#localcmd .* setstate=running");
+    }
+
+
+
+
+
+    private String localCmd(String target, Hashtable<String, String> attribs, String conversationId) throws Exception {
+        LOGGER.entry(target, attribs, conversationId);
+
+        if (target.contains(",")) {
+            StringBuilder result = new StringBuilder();
+            for (String targ: target.split(","))
+                result.append(localCmd(targ, attribs, conversationId)).append(",");
+            return LOGGER.exit(result.toString());
+        }
+
+        if (!elements.containsKey(target)) return LOGGER.exit("element not found");
+
+        if (target.startsWith("cmpins")) { //es un ComponentInstance
+            StringBuilder cmd = new StringBuilder();
+            for (String key: new String[] {"cmd", "command", "prm", "value"}) {
+                if (attribs.containsKey(key)) {
+                    cmd.append(attribs.get(key)).append(" ");
+                }
+            }
+            if (cmd.length()>0) cmd.deleteCharAt(cmd.length()-1);
+            return LOGGER.exit(sendCommand(cmd, target, conversationId));
+
+        } else if (target.startsWith("compon") || target.startsWith("applic")|| target.startsWith("node") ) { //es un Component
+            StringBuilder result = new StringBuilder();
+            for (String cmpins: getIns(target, null).split(","))
+                result.append(localCmd(cmpins, attribs, conversationId)).append(",");
+            return LOGGER.exit(result.toString());
+        }
+
+        return LOGGER.exit("no commandable element");
+    }
 
     /**
      * Esta función devuelve el componente o componentes asociados a una instancia/implementación o aplicación
@@ -1245,158 +1381,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         return LOGGER.exit("type not found");
     }
 
-//
-//    public String startAvailabilityManager(//String appID, String conversationId) throws Exception
-//    ) {
-//        LOGGER.entry();
-//
-//        StringBuilder response = new StringBuilder();
-//
-//        Hashtable<String, String> param = new Hashtable<String, String>();
-//        String avaManId = reg("avaMan", param);
-//
-//        AgentController ac = null;
-//
-//        try {
-//            ac = ((AgentController) getContainerController().createNewAgent(avaManId, "es.ehu.AvailabilityManager", new String[] { "sysID=sys001" }));
-//            ac.start();
-//        } catch (Exception e) {e.printStackTrace();}
-//
-//        this.objects.put(avaManId, ac);
-//        response.append("started ").append(avaManId);
-//
-//        return LOGGER.exit(response.toString());
-//
-//    }
-//
-//    public String startEventManager(String eventID, String conversationId) throws Exception {
-//        LOGGER.entry(eventID, conversationId);
-//        if (!elements.containsKey(eventID)) LOGGER.exit(eventID + " not found");
-//
-//        StringBuilder response = new StringBuilder();
-//
-//
-//        Hashtable<String, String> param = new Hashtable<String, String>();
-//        param.put("parent", eventID);
-//        String eventManId = reg("eventManager", param);
-//        AgentController ac = ((AgentController) getContainerController().createNewAgent(eventID, "es.ehu.EventManager", new String[] { "eventID="+eventID }));
-//        ac.start();
-//        this.objects.put(eventManId, ac);
-//        response.append("started ").append(eventManId);
-//
-//        return LOGGER.exit(response.toString());
-//
-//    }
-//
-//    public String start(final String element, final Hashtable<String, String> attribs, final String conversationId) {
-//        LOGGER.entry(element, conversationId);
-//
-//        if (element.startsWith("avail")) return startAvailabilityManager();
-//
-//        //if (element.equals("cmpins")) return LOGGER.exit(startNewInstance(element, attribs, conversationId));
-//        if (!elements.containsKey(element) && !element.equals("cmpins")) {
-//
-//            StringBuilder result = new StringBuilder();
-//            for (String candidato: elements.keySet())
-//                if (candidato.matches(element.replace("*", ".*")))
-//                    result.append(candidato).append(" ").append(start(candidato, attribs, conversationId));
-//            return LOGGER.exit((result.length()>0)? result.toString() : element + " not found" );
-//
-//        }
-//
-//        if (element.startsWith("cmpins")) return LOGGER.exit("threaded#"+startInstance(element, attribs, conversationId));
-//
-//        return LOGGER.exit(element + " no runnable element");
-//    }
-//
-//    public String startInstance(String cmpins, final Hashtable<String, String> attribs, final String conversationId) {
-//        LOGGER.entry(cmpins, attribs, conversationId);
-//
-//        if (objects.containsKey(cmpins)) return LOGGER.exit(cmpins + " already instantiated");
-//        if (cmpins.equals("cmpins")) {
-//            final String cmpimp = processCmd("get cmpimp* parent="+attribs.get("compon"), conversationId).split(",")[0];
-//            cmpins = reg("cmpins", new Hashtable<String, String>() {{put("parent", cmpimp);}});
-//        }
-//
-//        String compon = getCmp(cmpins);
-//        String cmpimp = elements.get(cmpins).get("parent");
-//
-//        StringBuilder nodes = new StringBuilder();
-//        nodes.append((attribs!=null && attribs.containsKey("node")) ? attribs.get("node")+"," : "")
-//                .append((elements.get(compon).containsKey("defaultNode")) ? elements.get(compon).get("defaultNode")+"," : "") // si node por defecto en la definición
-//                .append((elements.get(compon).containsKey("node")) ? elements.get(compon).get("node")+"," : "")
-//                .append(get("node*", null,conversationId)); // cualquier node
-//
-//        LOGGER.debug("nodes="+nodes);
-//        String node= "";
-//        forTestNode: for (String testNode : nodes.toString().split(",")) {
-//            String containsCompon = processCmd("getins "+compon+" node="+testNode, conversationId);
-//            if ((containsCompon.isEmpty() || containsCompon.equals("null")) && elements.containsKey(testNode)) {
-//                node = testNode;
-//                break forTestNode;
-//            }
-//        }
-//
-//        LOGGER.debug("node = " + node);
-//        String defaultNode =  (attribs!=null && attribs.containsKey("defaultNode")) ? attribs.get("defaultNode"): // si node forzado
-//                (elements.get(compon).containsKey("defaultNode")) ? elements.get(compon).get("defaultNode"): ""; // si no en modelo
-//        LOGGER.debug("defaultNode = " + defaultNode);
-//
-//        String negotiation = (attribs!=null && attribs.containsKey("negotiation")) ? attribs.get("negotiation"): // si negotiation forzado
-//                (elements.get(compon).containsKey("negotiation")) ? elements.get(compon).get("negotiation") : "";
-//        LOGGER.debug("negotiation = " + negotiation);
-//
-//        String sInitState = (attribs!=null && attribs.containsKey("initState")) ? attribs.get("initState"): // si initState forzado
-//                (processCmd("getins "+compon+" state=running|boot", conversationId).isEmpty()) ? "running" : "tracking"; //si no hay instancias en running
-//
-//        Integer initialFSMState = (sInitState.equals("running"))? ControlBehaviour.RUNNING:
-//                (sInitState.equals("tracking"))? ControlBehaviour.TRACKING:
-//                        ControlBehaviour.RUNNING;
-//
-//        Integer period = (attribs!=null && attribs.containsKey("period")) ? Integer.parseInt(attribs.get("period")) : // si period forzado, si no lo hereda
-//                (elements.get(compon).containsKey("period"))? Integer.parseInt(elements.get(compon).get("period")) :
-//                        -1;
-//
-//        Object executionState = (executionStates.containsKey(compon))?executionStates.get(compon):null;
-//
-//        LOGGER.debug("Info de entrada cmpins: "+cmpins+" nodo: "+attribs.get("node")+" estado inicial: "+attribs.get("initState"));
-//        LOGGER.debug("Info de enviada agente cmpins: "+cmpins+" nodo: "+node+" estado inicial: "+initialFSMState);
-//
-//        AgentController ac = null;
-//        try {
-//
-//            if (elements.get(compon).containsKey("sourceComponentIDs") || elements.get(compon).containsKey("targetComponentIDs")) {
-//                LOGGER.info("*********** arranca con source y target");
-//                ac = ((AgentController) getContainerController().createNewAgent(cmpins, elements.get(cmpimp).get("class"),
-//                        new Object[] { getCmp(cmpins), node, initialFSMState, period, executionState, conversationId,
-//                                (elements.get(compon).containsKey("sourceComponentIDs")? new String[]{elements.get(compon).get("sourceComponentIDs")}: new String[]{}),
-//                                (elements.get(compon).containsKey("targetComponentIDs")? new String[]{elements.get(compon).get("targetComponentIDs")}: new String[]{})
-//                        }));
-//
-//                LOGGER.debug("getContainerController().createNewAgent("+cmpins+", "+elements.get(cmpimp).get("class")+
-//                        ", new Object[] { "+getCmp(cmpins)+", "+node+", "+initialFSMState+", "+period+", "+
-//                        executionState+", "+conversationId + ", "+elements.get(compon).get("sourceComponentIDs")+
-//                        ", "+elements.get(compon).get("targetComponentIDs")+"})");
-//
-//            } else {
-//                LOGGER.info("*********** arranca SIN source y target");
-//                ac = ((AgentController) getContainerController().createNewAgent(cmpins, elements.get(cmpimp).get("class"),
-//                        new Object[] { getCmp(cmpins), node, initialFSMState, period, executionState, conversationId }));
-//                LOGGER.debug("getContainerController().createNewAgent("+cmpins+", "+elements.get(cmpimp).get("class")+
-//                        ", new Object[] { "+getCmp(cmpins)+", "+node+", "+initialFSMState+", "+period+", "+
-//                        executionState+", "+conversationId +"})");
-//            }
-//
-//            ac.start();
-//        } catch (StaleProxyException e) {
-//            LOGGER.warn(e.getLocalizedMessage());
-//            e.printStackTrace();
-//        }
-//        objects.put(cmpins, ac);
-//
-//        return LOGGER.exit(cmpins + " started");
-//
-//    }
+
 //
 //    private String report(String element, Hashtable<String, String> attribs, String conversationId){
 //        LOGGER.entry(element, conversationId);

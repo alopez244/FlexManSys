@@ -102,7 +102,7 @@ public class Planner_old extends Agent {
                                 break;
                             }
                             else {
-                                ACLMessage reply = mra.sendCommand(cmds[i]);
+                                ACLMessage reply = mra.sendCommand(cmds[i], null);
                                 if (reply!=null) {
 
                                     //La salida por pantalla  del mensaje está comentada porque...
@@ -155,16 +155,18 @@ public class Planner_old extends Agent {
 
                 // Registro del elemento MANUFACTURING PLAN
 
+                // Todos los conversationId estan en null!
+
                 attributes.clear();
                 attributes.put("name","MP1");
-                String mp1 = mra.seRegister("manufacturingPlan", "system", attributes, restrictionLists);
+                String mp1 = mra.seRegister("manufacturingPlan", "system", attributes, restrictionLists, null);
 
                 // Registro del elemento ORDER
 
                 attributes.clear();
                 attributes.put("reference","O1_MP1");
                 attributes.put("customer","Marga");
-                String o1_1 = mra.seRegister("order", mp1, attributes, restrictionLists);
+                String o1_1 = mra.seRegister("order", mp1, attributes, restrictionLists, null);
 
                 // Registro del elemento BATCH
 
@@ -172,15 +174,15 @@ public class Planner_old extends Agent {
                 attributes.put("reference","B1_O1_MP1");
                 attributes.put("numberOfItems", "6");
                 attributes.put("refProductID", "P_01");
-                String b1_1_1 = mra.seRegister("batch", o1_1, attributes, restrictionLists);
+                String b1_1_1 = mra.seRegister("batch", o1_1, attributes, restrictionLists, null);
 
                 //Validación de la aplicación MANUFACTURING PLAN
 
-                mra.iValidate(mp1);
+                mra.iValidate(mp1, null);
 
                 //Arranque de la aplicación MANUFACTURING PLAN
 
-                mra.start(mp1,null);
+                mra.start(mp1,null, null);
 
                 this.finished=true;
                 LOGGER.info("register process finished.");
@@ -191,14 +193,14 @@ public class Planner_old extends Agent {
 
                 attributes.clear();
                 attributes.put("name","MP2");
-                String mp2 = mra.seRegister("manufacturingPlan", "system", attributes, restrictionLists);
+                String mp2 = mra.seRegister("manufacturingPlan", "system", attributes, restrictionLists, null);
 
                 // Registro del elemento ORDER
 
                 attributes.clear();
                 attributes.put("reference","O1_MP2");
                 attributes.put("customer","Oskar");
-                String o1_2 = mra.seRegister("order", mp2, attributes, restrictionLists);
+                String o1_2 = mra.seRegister("order", mp2, attributes, restrictionLists, null);
 
                 // Registro del elemento BATCH 1
 
@@ -206,7 +208,7 @@ public class Planner_old extends Agent {
                 attributes.put("reference","B1_O1_MP2");
                 attributes.put("numberOfItems", "2");
                 attributes.put("refProductID", "P_01");
-                String b1_1_2 = mra.seRegister("batch", o1_2, attributes, restrictionLists);
+                String b1_1_2 = mra.seRegister("batch", o1_2, attributes, restrictionLists, null);
 
                 // Registro del elemento BATCH 2
 
@@ -214,15 +216,15 @@ public class Planner_old extends Agent {
                 attributes.put("reference","B2_O1_MP2");
                 attributes.put("numberOfItems", "4");
                 attributes.put("refProductID", "P_03");
-                String b2_1_2 = mra.seRegister("batch", o1_2, attributes, restrictionLists);
+                String b2_1_2 = mra.seRegister("batch", o1_2, attributes, restrictionLists, null);
 
                 //Validación de la aplicación MANUFACTURING PLAN
 
-                mra.iValidate(mp2);
+                mra.iValidate(mp2, null);
 
                 //Arranque de la aplicación MANUFACTURING PLAN
 
-                mra.start(mp2,null);
+                mra.start(mp2,null, null);
 
                 this.finished=true;
                 LOGGER.info("register process finished.");
@@ -233,14 +235,14 @@ public class Planner_old extends Agent {
 
                 attributes.clear();
                 attributes.put("name","MP3");
-                String mp3 = mra.seRegister("manufacturingPlan", "system", attributes, restrictionLists);
+                String mp3 = mra.seRegister("manufacturingPlan", "system", attributes, restrictionLists, null);
 
                 // Registro del elemento ORDER 1
 
                 attributes.clear();
                 attributes.put("reference","O1_MP3");
                 attributes.put("customer","Ekatiz");
-                String o1_3 = mra.seRegister("order", mp3, attributes, restrictionLists);
+                String o1_3 = mra.seRegister("order", mp3, attributes, restrictionLists, null);
 
                 // Registro del elemento BATCH 1 (ORDER 1)
 
@@ -248,14 +250,14 @@ public class Planner_old extends Agent {
                 attributes.put("reference","B1_O1_MP3");
                 attributes.put("numberOfItems", "3");
                 attributes.put("refProductID", "P_02");
-                String b1_1_3 = mra.seRegister("batch", o1_3, attributes, restrictionLists);
+                String b1_1_3 = mra.seRegister("batch", o1_3, attributes, restrictionLists, null);
 
                 // Registro del elemento ORDER 2
 
                 attributes.clear();
                 attributes.put("reference","O2_MP3");
                 attributes.put("customer","Jon");
-                String o2_3 = mra.seRegister("order", mp3, attributes, restrictionLists);
+                String o2_3 = mra.seRegister("order", mp3, attributes, restrictionLists, null);
 
                 // Registro del elemento BATCH 1 (ORDER 2)
 
@@ -263,15 +265,15 @@ public class Planner_old extends Agent {
                 attributes.put("reference","B1_O2_MP3");
                 attributes.put("numberOfItems", "3");
                 attributes.put("refProductID", "P_02");
-                String b1_2_3 = mra.seRegister("batch", o2_3, attributes, restrictionLists);
+                String b1_2_3 = mra.seRegister("batch", o2_3, attributes, restrictionLists, null);
 
                 //Validación de la aplicación MANUFACTURING PLAN
 
-                mra.iValidate(mp3);
+                mra.iValidate(mp3, null);
 
                 //Arranque de la aplicación MANUFACTURING PLAN
 
-                mra.start(mp3,null);
+                mra.start(mp3,null, null);
 
                 this.finished=true;
                 LOGGER.info("register process finished.");
