@@ -51,7 +51,6 @@ public class DomApp_Functionality {
         this.myAgent = agent;
         ArrayList<String> replicasID = new ArrayList<>();
 
-
         moreMsg = true;
 
         myAgent.addBehaviour(new SimpleBehaviour() {
@@ -61,8 +60,9 @@ public class DomApp_Functionality {
                 ACLMessage msg = myAgent.receive();
                 if (msg != null) {
                     // TODO COMPROBAR TAMBIEN LOS TRACKING si esta bien programado (sin probar)
-                    if ((msg.getPerformative() == 7)) {
-                        if (msg.getContent().equals(elementType + " created successfully")) {
+                    if ((msg.getPerformative() == ACLMessage.INFORM)) {
+                        // TODO Hacer un for para cada tipo de elemento? --> Porque elementType es String...
+                        if (msg.getContent().equals(elementType[0] + " created successfully")) {    //ElementType puede contener mas de un atributo, el primero siempre sera para la replica
                             System.out.println("\tYa se ha creado el agente " + msg.getSender().getLocalName() + " - hay que borrarlo de la lista --> " + myElements);
 
                             // Primero vamos a conseguir el ID del order (ya que el mensaje nos lo envia su agente)
@@ -79,7 +79,7 @@ public class DomApp_Functionality {
                             if (myElements.contains(senderOrderID))
                                 myElements.remove(senderOrderID);
 
-                        } else if (msg.getContent().equals(seType + " replica created successfully")) {     //ElementType puede contener mas de un atributo, el primero siempre sera para la replica
+                        } else if (msg.getContent().equals(seType + " replica created successfully")) {     // La replica sera del mismo tipo que el del agente
                             System.out.println("\tYa se ha creado la replica " + msg.getSender().getLocalName());
                             replicasID.add(msg.getSender().getLocalName());
                         }
@@ -100,13 +100,18 @@ public class DomApp_Functionality {
                                 e.printStackTrace();
                             }
 
+                            if (seType.equals("Order")) {
+                                String parentAgentID = getRunningParentAgentID(myAgent, conversationId);
+                                sendElementCreatedMessage(myAgent, parentAgentID, seType, false);
+                            }
+
                         }
 
                     }
                 } else {
                     if (moreMsg)
                         // Se queda a la espera para cuando le envien mas mensajes
-                        myAgent.blockingReceive();
+                       block();
                 }
             }
 
@@ -121,13 +126,13 @@ public class DomApp_Functionality {
         return null;
     }
 
-    public void sendElementCreatedMessage(Agent agent, String receiver, String elementType, boolean isReplica) {
+    public void sendElementCreatedMessage(Agent agent, String receiver, String seType, boolean isReplica) {
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
         msg.addReceiver(new AID(receiver, AID.ISLOCALNAME));
         if (isReplica)
-            msg.setContent(elementType + " replica created successfully");
+            msg.setContent(seType + " replica created successfully");
         else
-            msg.setContent(elementType + " created successfully");
+            msg.setContent(seType + " created successfully");
         agent.send(msg);
     }
 

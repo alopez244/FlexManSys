@@ -42,14 +42,8 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
         String conversationId = myAgent.getLocalName() + "_" + chatID++;
 
-        String[] firstArgument = myAgent.getArguments()[0].toString().split("=");
-        if (firstArgument[0].equals("firstState"))
-            firstState = firstArgument[1];
-
-
-        String[] secondArgument = myAgent.getArguments()[1].toString().split("=");
-        if (secondArgument[0].equals("redundancy"))
-            redundancy = secondArgument[1];
+        firstState = getArgumentOfAgent(myAgent, "firstState");
+        redundancy = getArgumentOfAgent(myAgent, "redundancy");
 
         if(firstState.equals("running")) {
 
@@ -63,13 +57,9 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
             if (Integer.parseInt(redundancy) == 1) {
 
-                parentAgentID = getParentAgentID(myAgent.getLocalName(), conversationId);
-                ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-                msg.addReceiver(new AID(parentAgentID, AID.ISLOCALNAME));
-                msg.setContent("Batch created successfully");
-                myAgent.send(msg);
+                String parentAgentID = getRunningParentAgentID(myAgent, conversationId);
+                sendElementCreatedMessage(myAgent, parentAgentID, "Batch", false);
 
-                // todo mirar si ponerlo despues de enviarle en mensaje
                 // Cambiar el estado del batch de BOOT a RUNNING
                 query = "set " + myAgent.getLocalName() + " state=running";
                 try {
@@ -97,10 +87,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                                     // Envio un mensaje a mi parent diciendole que me he creado correctamente
 
                                     parentAgentID = getRunningParentAgentID(myAgent, conversationId);
-                                    msg = new ACLMessage(ACLMessage.INFORM);
-                                    msg.addReceiver(new AID(parentAgentID, AID.ISLOCALNAME));
-                                    msg.setContent("Batch created successfully");
-                                    myAgent.send(msg);
+                                    sendElementCreatedMessage(myAgent, parentAgentID, "Batch", false);
 
                                     // todo mirar si ponerlo despues de enviarle en mensaje
                                     // Cambiar el estado del batch de BOOT a RUNNING
@@ -142,11 +129,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 reply = sendCommand(myAgent, "get * parent=" + parentID + " category=batchAgent state=bootToRunning", conversationId);
                 if (reply !=null) {
                     runningAgentID = reply.getContent();
-
-                    ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-                    msg.addReceiver(new AID(runningAgentID, AID.ISLOCALNAME));
-                    msg.setContent("Batch replica created successfully");
-                    myAgent.send(msg);
+                    sendElementCreatedMessage(myAgent, runningAgentID, "Batch", true);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -168,48 +151,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     public Object execute(Object[] input) {
         return null;
     }
-
-    /*
-    public ACLMessage sendCommand(String cmd, String conversationId) throws Exception {
-
-        DFAgentDescription dfd = new DFAgentDescription();
-        ServiceDescription sd = new ServiceDescription();
-
-        sd.setType("sa");
-        dfd.addServices(sd);
-        String mwm;
-
-        while (true) {
-            DFAgentDescription[] result = DFService.search(myAgent,dfd);
-
-            if ((result != null) && (result.length > 0)) {
-                dfd = result[0];
-                mwm = dfd.getName().getLocalName();
-                break;
-            }
-            LOGGER.info(".");
-            Thread.sleep(100);
-
-        } //end while (true)
-
-        LOGGER.entry(mwm, cmd);
-        ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-        msg.addReceiver(new AID(mwm, AID.ISLOCALNAME));
-        msg.setConversationId(conversationId);
-        msg.setOntology("control");
-        msg.setContent(cmd);
-        msg.setReplyWith(cmd);
-        myAgent.send(msg);
-        ACLMessage reply = myAgent.blockingReceive(
-                MessageTemplate.and(
-                        MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
-                        MessageTemplate.MatchPerformative(ACLMessage.INFORM))
-                , 1000);
-
-        return LOGGER.exit(reply);
-    }
-
-     */
 
     //====================================================================
     //ITRACEABILITY INTERFACE
@@ -237,7 +178,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             String machinesID = entry.getValue();
             System.out.println(operationID + " - " + machinesID);
 
-            negotiate(machinesID, "lead time", "execute", myAgent.getLocalName() + "," + numOfItems + "," + operationID, conversationId);
+            negotiate(myAgent, machinesID, "lead time", "execute", myAgent.getLocalName() + "," + numOfItems + "," + operationID, conversationId);
 
         }
 
@@ -257,33 +198,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
     //====================================================================
 
-    private String getParentAgentID(String seID, String conversationId) {
-        String parentAgID = null;
-        String parentQuery = "get " + seID + " attrib=parent";
-        ACLMessage reply = null;
-
-        try {
-            reply = sendCommand(myAgent, parentQuery, conversationId);
-            // ID del batch con el cual el agente está relacionado
-            String batchID;
-            if (reply == null)  // Si no existe el id en el registro devuelve error
-                return "-1";
-            else
-                batchID = reply.getContent();
-
-            reply = sendCommand(myAgent, "get " + batchID + " attrib=parent", conversationId);
-            if (reply != null) {  // ID del plan
-                String orderID = reply.getContent();     // Con el ID del order conseguir su agente
-                reply = sendCommand(myAgent, "get * parent=" + orderID + " category=orderAgent", conversationId);
-                if (reply != null) {
-                    parentAgID = reply.getContent();
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return parentAgID;
-    }
 
 
 
@@ -501,22 +415,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         }
         System.out.println("PRODUCT TRACEABILITY OF " + myAgent.getLocalName() + ":\n" + productsTraceability);
 
-    }
-
-    private String negotiate(String targets, String negotiationCriteria, String action, String externalData, String conversationId) {
-
-        //Request de nueva negociación
-        ACLMessage msg = new ACLMessage(ACLMessage.CFP);
-
-        for (String target: targets.split(","))
-            msg.addReceiver(new AID(target, AID.ISLOCALNAME));
-        msg.setConversationId(conversationId);
-        msg.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE );
-
-        msg.setContent("negotiate " +targets+ " criterion=" +negotiationCriteria+ " action=" +action+ " externaldata=" +externalData);
-        myAgent.send(msg);
-
-        return "Negotiation message sent";
     }
 
 }
