@@ -1,6 +1,7 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
 import es.ehu.platform.MWAgent;
+import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.utilities.XMLReader;
 import jade.core.AID;
@@ -16,12 +17,11 @@ import org.apache.commons.io.FilenameUtils;
 import java.io.File;
 import java.util.*;
 
-public class Batch_Functionality extends DomApp_Functionality implements BasicFunctionality {
+public class Batch_Functionality extends DomApp_Functionality implements BasicFunctionality, AvailabilityFunctionality {
 
     private static final long serialVersionUID = 1L;
     private Agent myAgent;
 
-    private String parentAgentID;
     private ArrayList<ArrayList<ArrayList<String>>> productInfo;
     private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> productsTraceability = new ArrayList<>();
     private HashMap<String, String> machinesForOperations = new HashMap<>();
@@ -33,7 +33,19 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
     private String firstState;
     private String redundancy;
+    private String parentAgentID;
+    private String mySeType;
     private ArrayList<String> myReplicasID = new ArrayList<>();
+
+    @Override
+    public Object getState() {
+        return null;
+    }
+
+    @Override
+    public void setState(Object state) {
+
+    }
 
     @Override
     public Void init(MWAgent myAgent) {
@@ -44,6 +56,8 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
         firstState = getArgumentOfAgent(myAgent, "firstState");
         redundancy = getArgumentOfAgent(myAgent, "redundancy");
+        parentAgentID = getArgumentOfAgent(myAgent, "parentAgent");
+        mySeType = getMySeType(myAgent, conversationId);
 
         if(firstState.equals("running")) {
 
@@ -55,92 +69,14 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 e.printStackTrace();
             }
 
-            if (Integer.parseInt(redundancy) == 1) {
-
-                String parentAgentID = getRunningParentAgentID(myAgent, conversationId);
-                sendElementCreatedMessage(myAgent, parentAgentID, "Batch", false);
-
-                // Cambiar el estado del batch de BOOT a RUNNING
-                query = "set " + myAgent.getLocalName() + " state=running";
-                try {
-                    ACLMessage reply = sendCommand(myAgent, query, conversationId);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-            } else {
-
-                // TODO primero comprobara que todas las replicas (tracking) se han creado correctamente, y despues envia el mensaje de que se ha creado correctamente
-                myAgent.addBehaviour(new SimpleBehaviour() {
-                    @Override
-                    public void action() {
-                        boolean moreMsg = true;
-                        ACLMessage msg = myAgent.receive();
-                        if (msg != null) {
-                            if ((msg.getPerformative() == 7) && (msg.getContent().equals("Batch replica created successfully"))) {
-
-                                myReplicasID.add(msg.getSender().getLocalName());
-                                if (myReplicasID.size() == Integer.parseInt(redundancy) - 1) {
-                                    moreMsg = false;
-
-                                    // Ya se han creado todas las replicas bien y puede enviarle el mensaje a su parent
-                                    // Envio un mensaje a mi parent diciendole que me he creado correctamente
-
-                                    parentAgentID = getRunningParentAgentID(myAgent, conversationId);
-                                    sendElementCreatedMessage(myAgent, parentAgentID, "Batch", false);
-
-                                    // todo mirar si ponerlo despues de enviarle en mensaje
-                                    // Cambiar el estado del batch de BOOT a RUNNING
-                                    String query = "set " + myAgent.getLocalName() + " state=running";
-                                    try {
-                                        ACLMessage reply = sendCommand(myAgent, query, conversationId);
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            }
-                        } else {
-                            if (moreMsg)
-                                // Se queda a la espera para cuando le envien mas mensajes
-                                block();
-                        }
-                    }
-
-                    @Override
-                    public boolean done() {
-                        return false;
-                    }
-                });
-
-            }
+            processACLMessages(myAgent, mySeType, new ArrayList<>(), conversationId, redundancy, parentAgentID, null);
 
             // sendPlan method of interface ITraceability
             sendPlan(myAgent, conversationId);
 
         } else {
             // Si su estado es tracking
-
-            String runningAgentID = null;
-            try {
-                String parentID = null;
-                ACLMessage reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", conversationId);
-                if (reply != null)
-                    parentID = reply.getContent();
-                reply = sendCommand(myAgent, "get * parent=" + parentID + " category=batchAgent state=bootToRunning", conversationId);
-                if (reply !=null) {
-                    runningAgentID = reply.getContent();
-                    sendElementCreatedMessage(myAgent, runningAgentID, "Batch", true);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            // Una vez mande el mensaje, registra que su estado es el tracking
-            try {
-                sendCommand(myAgent, "set " + myAgent.getLocalName() + " state=" + firstState, conversationId);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            trackingOnBoot(myAgent, mySeType, conversationId);
         }
 
 

@@ -89,6 +89,7 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
         String seClass = (String)negExternalData[2];
         String seFirstTransition = (String)negExternalData[3];
         String redundancy = (String)negExternalData[4];
+        String parentAgentID = (String)negExternalData[5];
 
         if (negReceivedValue>negScalarValue) return NegotiatingBehaviour.NEG_LOST; //pierde negociación
         if ((negReceivedValue==negScalarValue) && !tieBreak ) return NegotiatingBehaviour.NEG_LOST; //empata negocicación pero no es quien fija desempate
@@ -107,7 +108,7 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
                 // Registro el agente id>appagn101. seTypeAgent ASA, APA
                 String agnID = sendCommand("reg "+seType+"Agent parent="+seID).getContent();
                 // Instancio nuevo agente
-                AgentController ac = ((AgentController) myAgent.getContainerController().createNewAgent(agnID, seClass, new Object[] { "firstState="+seFirstTransition , "redundancy="+redundancy }));
+                AgentController ac = ((AgentController) myAgent.getContainerController().createNewAgent(agnID, seClass, new Object[] { "firstState="+seFirstTransition , "redundancy="+redundancy , "parentAgent=" + parentAgentID }));
                 ac.start();
             }catch (Exception e) {e.printStackTrace();}
         }

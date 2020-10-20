@@ -7,7 +7,6 @@ import jade.core.behaviours.SimpleBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
-import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
@@ -33,23 +32,29 @@ public class DomApp_Functionality {
     //////////////////////////
     //  BOOT STATE METHODS
     //////////////////////////
-    public String getArgumentOfAgent(MWAgent agent, String argumentName) {
 
-        Object[] allArguments = agent.getArguments();
-
-        for (int i = 0; i < allArguments.length; i++) {
-            String[] argument = allArguments[i].toString().split("=");
-            if (argument[0].equals(argumentName))
-                return argument[1];
-        }
-        return null;
-
-    }
-
-    public ArrayList<String> behaviourToGetMyElementsMessages(MWAgent agent, String seType, List<String> myElements, String conversationId, String redundancy, String... elementType) {
+    public ArrayList<String> processACLMessages(MWAgent agent, String seType, List<String> myElements, String conversationId, String redundancy, String parentAgentID, String... elementType) {
 
         this.myAgent = agent;
         ArrayList<String> replicasID = new ArrayList<>();
+
+        if (myElements.isEmpty()) {
+            // Si myElements esta vacio significa que es el elemento del ultimo nivel (p.e: Batch)
+            if (Integer.parseInt(redundancy) == 1) {
+                sendElementCreatedMessage(myAgent, parentAgentID, seType, false);
+
+                // Cambiar el estado del elemento de BOOT a RUNNING
+                String query = "set " + myAgent.getLocalName() + " state=" + getArgumentOfAgent(agent, "firstState");
+                try {
+                    sendCommand(myAgent, query, conversationId);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                return null;
+            }
+
+        }
 
         moreMsg = true;
 
@@ -61,37 +66,37 @@ public class DomApp_Functionality {
                 if (msg != null) {
                     // TODO COMPROBAR TAMBIEN LOS TRACKING si esta bien programado (sin probar)
                     if ((msg.getPerformative() == ACLMessage.INFORM)) {
-                        // TODO Hacer un for para cada tipo de elemento? --> Porque elementType es String...
-                        if (msg.getContent().equals(elementType[0] + " created successfully")) {    //ElementType puede contener mas de un atributo, el primero siempre sera para la replica
-                            System.out.println("\tYa se ha creado el agente " + msg.getSender().getLocalName() + " - hay que borrarlo de la lista --> " + myElements);
-
-                            // Primero vamos a conseguir el ID del order (ya que el mensaje nos lo envia su agente)
-                            String senderOrderID = null;
-                            try {
-                                ACLMessage reply = sendCommand(myAgent,"get " + msg.getSender().getLocalName() + " attrib=parent", conversationId);
-                                if (reply != null)
-                                    senderOrderID = reply.getContent();
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-
-                            // Si el elemento es uno de los hijos (que solo los hijos nos enviaran los mensaje, pero por se acaso), lo borramos de la lista
-                            if (myElements.contains(senderOrderID))
-                                myElements.remove(senderOrderID);
-
-                        } else if (msg.getContent().equals(seType + " replica created successfully")) {     // La replica sera del mismo tipo que el del agente
+                        if (msg.getContent().equals(seType + " replica created successfully")) {     // La replica sera del mismo tipo que el del agente
                             System.out.println("\tYa se ha creado la replica " + msg.getSender().getLocalName());
                             replicasID.add(msg.getSender().getLocalName());
                         }
+                        // TODO Hacer un for para cada tipo de elemento? --> Porque elementType es String...
+                         if (elementType != null) {
+                            if (msg.getContent().equals(elementType[0] + " created successfully")) {    //ElementType puede contener mas de un atributo, de momento cogemos el primero
+                                System.out.println("\tYa se ha creado el agente " + msg.getSender().getLocalName() + " - hay que borrarlo de la lista --> " + myElements);
 
-                        // Si la lista esta vacia, todos los orders se han creado correctamente, y tendremos que pasar del estado BOOT al RUNNING
-                        if ((myElements.isEmpty() && (replicasID.size() == Integer.parseInt(redundancy) - 1))) {
+                                // Primero vamos a conseguir el ID del elemento (ya que el mensaje nos lo envia su agente)
+                                String senderID = null;
+                                try {
+                                    ACLMessage reply = sendCommand(myAgent, "get " + msg.getSender().getLocalName() + " attrib=parent", conversationId);
+                                    if (reply != null)
+                                        senderID = reply.getContent();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
 
+                                // Si el elemento es uno de los hijos (que solo los hijos nos enviaran los mensaje, pero por se acaso), lo borramos de la lista
+                                if (myElements.contains(senderID))
+                                    myElements.remove(senderID);
+                            }
+                        }
+
+                        // Si la lista esta vacia, todos los elementos se han creado correctamente, y tendremos que pasar del estado BOOT al RUNNING
+                        if ((myElements.isEmpty()) && (replicasID.size() == Integer.parseInt(redundancy) - 1)) {
                             moreMsg = false;
                             // Pasar a estado running
                             System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
 
-                            // SystemModelAgent linea 1422
                             String query = "set " + myAgent.getLocalName() + " state=" + getArgumentOfAgent(agent, "firstState");
                             try {
                                 ACLMessage reply = sendCommand(myAgent, query, conversationId);
@@ -100,11 +105,8 @@ public class DomApp_Functionality {
                                 e.printStackTrace();
                             }
 
-                            if (seType.equals("Order")) {
-                                String parentAgentID = getRunningParentAgentID(myAgent, conversationId);
+                            if (!parentAgentID.equals("sa"))
                                 sendElementCreatedMessage(myAgent, parentAgentID, seType, false);
-                            }
-
                         }
 
                     }
@@ -124,6 +126,19 @@ public class DomApp_Functionality {
         if(!moreMsg)
             return replicasID;
         return null;
+    }
+
+    public String getArgumentOfAgent(MWAgent agent, String argumentName) {
+
+        Object[] allArguments = agent.getArguments();
+
+        for (int i = 0; i < allArguments.length; i++) {
+            String[] argument = allArguments[i].toString().split("=");
+            if (argument[0].equals(argumentName))
+                return argument[1];
+        }
+        return null;
+
     }
 
     public void sendElementCreatedMessage(Agent agent, String receiver, String seType, boolean isReplica) {
@@ -160,7 +175,7 @@ public class DomApp_Functionality {
         }
 
         String allElements = null;
-        if (reply != null)    // Si no existen orders en el registro devuelve error
+        if (reply != null)
             allElements = reply.getContent();
 
         List<String> items = new ArrayList<>();
@@ -178,7 +193,7 @@ public class DomApp_Functionality {
 
         ACLMessage reply = null;
         for (String elementID: allElementsID) {
-            // Creamos los agentes para cada order
+            // Creamos los agentes para cada elemento
             try {
                 reply = sendCommand(myAgent, "get (get * parent=(get * parent=" + elementID + " category=restrictionList)) attrib=attribValue", conversationId);
                 String refServID = null;
@@ -202,7 +217,7 @@ public class DomApp_Functionality {
 
                     conversationId = myAgent.getLocalName() + "_" + chatID++;
 
-                    negotiate(myAgent, targets, "max mem", "start", elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy, conversationId);
+                    negotiate(myAgent, targets, "max mem", "start", elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy+","+myAgent.getLocalName(), conversationId);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -212,37 +227,54 @@ public class DomApp_Functionality {
         return chatID;
     }
 
-    public String getRunningParentAgentID(Agent agent, String conversationId) {
+    public void trackingOnBoot(MWAgent agent, String seType, String conversationId) {
 
         this.myAgent = agent;
 
-        String parentAgID = null;
-        String parentQuery = "get " + myAgent.getLocalName() + " attrib=parent";
-        ACLMessage reply = null;
-
+        String runningAgentID = null;
+        String seCategory = null;
         try {
-            reply = sendCommand(myAgent, parentQuery, conversationId);
-            // ID del batch con el cual el agente está relacionado
-            String batchID;
-            if (reply == null)  // Si no existe el id en el registro devuelve error
-                return "-1";
-            else
-                batchID = reply.getContent();
+            String parentID = null;
+            ACLMessage reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", conversationId);
+            if (reply != null)
+                parentID = reply.getContent();
+            reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=category", conversationId);
+            if (reply != null)
+                seCategory = reply.getContent();
 
-            reply = sendCommand(myAgent, "get " + batchID + " attrib=parent", conversationId);
-            if (reply != null) {  // ID del plan
-                String orderID = reply.getContent();     // Con el ID del order conseguir su agente
-                reply = sendCommand(myAgent, "get " + orderID + " attrib=category", conversationId);
-                String parentCategory = reply.getContent();
-                reply = sendCommand(myAgent, "get * parent=" + orderID + " category="+ parentCategory + "Agent" +" state=bootToRunning", conversationId);
-                if (reply != null) {
-                    parentAgID = reply.getContent();
-                }
+            reply = sendCommand(myAgent, "get * parent=" + parentID + " category=" + seCategory + " state=bootToRunning", conversationId);
+            if (reply !=null) {
+                runningAgentID = reply.getContent();
+                sendElementCreatedMessage(myAgent, runningAgentID, seType, true);
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return parentAgID;
+
+        // Una vez mande el mensaje, registra que su estado es el tracking
+        try {
+            sendCommand(myAgent, "set " + myAgent.getLocalName() + " state=" + getArgumentOfAgent(agent, "firstState"), conversationId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public String getMySeType(MWAgent agent, String conversationId) {
+
+        this.myAgent = agent;
+
+        String seCategory = null;
+        ACLMessage reply = null;
+        try {
+            reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=category", conversationId);
+            if (reply != null)
+                seCategory = reply.getContent();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return String.valueOf(seCategory.charAt(0)).toUpperCase() + seCategory.substring(1).replace("Agent","");
     }
 
     //////////////////////////

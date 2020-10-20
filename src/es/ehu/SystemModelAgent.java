@@ -1057,7 +1057,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
             // Cada peticion de negociacion necesita un ID distinto
             conversationId = getLocalName() + "_" + cmdId++;
 
-            String neg = processCmd("localneg "+targets+" action=start criterion=max mem externaldata="+seID+","+seCategory+","+seClass+","+((i==0)?"running":"tracking")+","+redundancy, conversationId);
+            String neg = processCmd("localneg "+targets+" action=start criterion=max mem externaldata="+seID+","+seCategory+","+seClass+","+((i==0)?"running":"tracking")+","+redundancy+","+getLocalName(), conversationId);
 
 
             LOGGER.exit();
