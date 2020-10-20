@@ -4,14 +4,8 @@ import es.ehu.platform.MWAgent;
 import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.IExecManagement;
-import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.SimpleBehaviour;
-import jade.domain.DFService;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -31,6 +25,8 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 
   private String firstState;
   private String redundancy;
+  private String parentAgentID;
+  private String mySeType;
   private ArrayList<String> myReplicasID = new ArrayList<>();
 
   @Override
@@ -53,6 +49,8 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 
     firstState = getArgumentOfAgent(myAgent, "firstState");
     redundancy = getArgumentOfAgent(myAgent, "redundancy");
+    parentAgentID = getArgumentOfAgent(myAgent, "parentAgent");
+    mySeType = getMySeType(myAgent, conversationId);
 
     // TODO SOLO HACER TODO ESTO SI NO ES UNA REPLICA?
     if (firstState.equals("running")) {
@@ -69,45 +67,17 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
       // TODO ponerlo en DomApp --> parametro para la clase
       attributes.put("seClass", "es.ehu.domain.manufacturing.agents.OrderAgent");
 
-      String status = seStart(myAgent.getLocalName(), attributes, conversationId);
-      if (status == null)
-        System.out.println("OrderAgents created");
-      else if (status == "-1")
-        System.out.println("ERROR creating OrderAgent -> No existe el ID del plan");
-      else if (status == "-4")
-        System.out.println("ERROR creating OrderAgent -> No targets");
+      seStart(myAgent.getLocalName(), attributes, conversationId);
 
       // TODO primero comprobara que todas las replicas (tracking) y los orders se han creado correctamente
       // Es decir, antes de avisar a su padre que esta creado, comprueba las replicas y los orders
       // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los orders cuando se arranquen correctamente
 
-      myReplicasID = behaviourToGetMyElementsMessages(myAgent, "MPlan", myOrders, conversationId, redundancy, "Order");
+      myReplicasID = processACLMessages(myAgent, mySeType, myOrders, conversationId, redundancy, parentAgentID, "Order");
 
     } else {
       // Si su estado es tracking
-
-
-      String runningAgentID = null;
-      try {
-        String parentID = null;
-        ACLMessage reply = sendCommand(myAgent,"get " + myAgent.getLocalName() + " attrib=parent", conversationId);
-        if (reply != null)
-          parentID = reply.getContent();
-        reply = sendCommand(myAgent, "get * parent=" + parentID + " category=mPlanAgent state=bootToRunning", conversationId);
-        if (reply !=null) {
-          runningAgentID = reply.getContent();
-          sendElementCreatedMessage(myAgent, runningAgentID, "MPlan", true);
-        }
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-
-      // Una vez mande el mensaje, registra que su estado es el tracking
-      try {
-        sendCommand(myAgent, "set " + myAgent.getLocalName() + " state=" + firstState, conversationId);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
+      trackingOnBoot(myAgent, mySeType, conversationId);
     }
 
     return null;
