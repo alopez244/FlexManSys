@@ -5,7 +5,6 @@ import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.IExecManagement;
 import jade.core.Agent;
-import jade.lang.acl.ACLMessage;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -67,7 +66,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             // Es decir, antes de avisar a su padre que esta creado, comprueba las replicas y despues los batches
             // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los batch cuando se arranquen correctamente
 
-            myReplicasID = processACLMessages(myAgent, mySeType, myBatches, conversationId, redundancy, parentAgentID, "Batch");
+            myReplicasID = processACLMessages(myAgent, mySeType, myBatches, conversationId, redundancy, parentAgentID);
 
         } else {
             // Si su estado es tracking
@@ -80,7 +79,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
     @Override
     public String seStart(String seID, Hashtable<String, String> attribs, String conversationId) {
 
-        this.myBatches = getAllElements(myAgent, seID, "batch", conversationId);
+        this.myBatches = getAllElements(myAgent, seID, conversationId);
 
         chatID = createAllElementsAgents(myAgent, myBatches, attribs, conversationId, redundancy, chatID);
 

@@ -5,7 +5,6 @@ import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.IExecManagement;
 import jade.core.Agent;
-import jade.lang.acl.ACLMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -73,7 +72,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
       // Es decir, antes de avisar a su padre que esta creado, comprueba las replicas y los orders
       // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los orders cuando se arranquen correctamente
 
-      myReplicasID = processACLMessages(myAgent, mySeType, myOrders, conversationId, redundancy, parentAgentID, "Order");
+      myReplicasID = processACLMessages(myAgent, mySeType, myOrders, conversationId, redundancy, parentAgentID);
 
     } else {
       // Si su estado es tracking
@@ -88,7 +87,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   @Override
   public String seStart(String seID, Hashtable<String, String> attribs, String conversationId){
 
-    this.myOrders = getAllElements(myAgent, seID, "order", conversationId);
+    this.myOrders = getAllElements(myAgent, seID, conversationId);  // Antes al mySeType le hemos quitado la parte de Agent, se la añadimos para este metodo
 
     chatID = createAllElementsAgents(myAgent, myOrders, attribs, conversationId, redundancy, chatID);
 

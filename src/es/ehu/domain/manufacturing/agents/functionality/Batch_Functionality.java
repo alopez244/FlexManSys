@@ -4,14 +4,9 @@ import es.ehu.platform.MWAgent;
 import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.utilities.XMLReader;
-import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.SimpleBehaviour;
-import jade.domain.DFService;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
@@ -69,7 +64,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 e.printStackTrace();
             }
 
-            processACLMessages(myAgent, mySeType, new ArrayList<>(), conversationId, redundancy, parentAgentID, null);
+            processACLMessages(myAgent, mySeType, new ArrayList<>(), conversationId, redundancy, parentAgentID);
 
             // sendPlan method of interface ITraceability
             sendPlan(myAgent, conversationId);
