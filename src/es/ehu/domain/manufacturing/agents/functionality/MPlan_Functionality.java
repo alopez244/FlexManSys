@@ -73,6 +73,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
       // Es decir, antes de avisar a su padre que esta creado, comprueba las replicas y los orders
       // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los orders cuando se arranquen correctamente
 
+      //Aqui cuiado con el myOrders, si utilizamos elementsToCreate en seStart aqui tambien hay que meterlo
       myReplicasID = processACLMessages(myAgent, mySeType, myOrders, conversationId, redundancy, parentAgentID);
 
     } else {
