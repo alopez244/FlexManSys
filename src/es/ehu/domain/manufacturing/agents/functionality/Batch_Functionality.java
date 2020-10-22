@@ -64,10 +64,12 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 e.printStackTrace();
             }
 
-            processACLMessages(myAgent, mySeType, new ArrayList<>(), conversationId, redundancy, parentAgentID);
+            myReplicasID = processACLMessages(myAgent, mySeType, new ArrayList<>(), conversationId, redundancy, parentAgentID);
 
+            // TODO esta comentado ya que peta al estar en el init --> La ejecucion sigue adelante antes de recoger todos los mensajes y despues da problemas
             // sendPlan method of interface ITraceability
-            sendPlan(myAgent, conversationId);
+            //sendPlan(myAgent, conversationId);
+
 
         } else {
             // Si su estado es tracking

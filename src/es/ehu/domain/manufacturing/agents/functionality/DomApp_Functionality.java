@@ -118,9 +118,7 @@ public class DomApp_Functionality {
             }
         });
 
-        if(!moreMsg)
-            return replicasID;
-        return null;
+        return replicasID;
     }
 
     public String getArgumentOfAgent(MWAgent agent, String argumentName) {
