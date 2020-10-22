@@ -81,6 +81,14 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
         this.myBatches = getAllElements(myAgent, seID, conversationId);
 
+        List<String> aux = new ArrayList<>();
+        for (String el:myBatches) {
+            if (el.contains("batch"))
+                aux.add(el);
+        }
+
+        myBatches = aux;
+
         chatID = createAllElementsAgents(myAgent, myBatches, attribs, conversationId, redundancy, chatID);
 
         return null;

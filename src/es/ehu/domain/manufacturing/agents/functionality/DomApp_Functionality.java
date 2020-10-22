@@ -12,9 +12,7 @@ import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
+import java.util.*;
 
 public class DomApp_Functionality {
 
@@ -144,6 +142,13 @@ public class DomApp_Functionality {
         agent.send(msg);
     }
 
+    /**
+     * Metodo para conseguir todos mis elementos (p.e. si es un MPlan todos los orders y batch asociados a ese MPlan)
+     * @param agent
+     * @param seID
+     * @param conversationId
+     * @return
+     */
     public List<String> getAllElements(Agent agent, String seID, String conversationId){
 
         this.myAgent = agent;
@@ -153,44 +158,57 @@ public class DomApp_Functionality {
         // seID --> ID del Agent
         String parentQuery = "get " + seID + " attrib=parent";
         ACLMessage reply = null;
+        String seCategory = null;
+        Stack<String> elementsToAnalyze = new Stack<>();
+        elementsToAnalyze.push(seID);
 
+        // Consigo la categoria del agente
         try {
-            // Consigo el padre del agente
-            reply = sendCommand(myAgent, parentQuery, conversationId);
-            // ID del elemento con el cual el agente está relacionado (p.e: mplanagent1 --> mplan1)
-            String planID = null;
-            if (reply != null)   // Si no existe el id en el registro devuelve error
-                planID = reply.getContent();
-
-            String query = "get * parent="+ planID; // Busco todos sus hijos
-            reply = sendCommand(myAgent, query, conversationId);
-
-            String allElements = null;
-            if (reply != null)
-                allElements = reply.getContent();
-
-            // Consigo la categoria del agente
             reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=category", conversationId);
-            String seCategory = null;
             if (reply != null)
                 seCategory = reply.getContent();
-
-            String[] aux = allElements.split(",");
-            for (String element:aux) {
-                query = "get " + element + " attrib=category";
-                try {
-                    reply = sendCommand(myAgent, query, conversationId);
-                    if (reply != null) {
-                        String category = reply.getContent();
-                        if (!category.equals(seCategory))   // Filtro y me quedo con los que no sean del mismo tipo que el agente, asi filtro los agentes en tracking
-                            items.add(element);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+
+        while(!elementsToAnalyze.isEmpty()) {
+            try {
+                // Consigo el padre del agente
+                String element = elementsToAnalyze.pop();
+                //reply = sendCommand(myAgent, parentQuery, conversationId);
+                String query = "get " + element + " attrib=category";
+                reply = sendCommand(myAgent, query, conversationId);
+                String category2 = reply.getContent();
+                if (category2.equals(seCategory)) {
+                    reply = sendCommand(myAgent, "get " + element + " attrib=parent", conversationId);
+                    // ID del elemento con el cual el agente está relacionado (p.e: mplanagent1 --> mplan1)
+                    if (reply != null)   // Si no existe el id en el registro devuelve error
+                        element = reply.getContent();   // Sobreescribo el elemento ya que el agente no tiene los hijos, los tiene el elemento con el que esta asociado
+                }
+
+                query = "get * parent=" + element; // Busco todos sus hijos
+                reply = sendCommand(myAgent, query, conversationId);
+
+                String allElements = null;
+                if (!reply.getContent().equals("")) {
+                    allElements = reply.getContent();
+                    String[] aux = allElements.split(",");
+                    for (String elem : aux) {
+                        query = "get " + elem + " attrib=category";
+                        reply = sendCommand(myAgent, query, conversationId);
+                        if (reply != null) {
+                            String category = reply.getContent();
+                            if ((!category.equals(seCategory)) && (!category.contains("Agent"))) {  // Filtro y me quedo con los que no sean del mismo tipo que el agente, asi filtro los agentes en tracking
+                                items.add(elem);
+                                elementsToAnalyze.add(elem);
+                            }
+                        }
+                    }
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         return items;
@@ -351,6 +369,51 @@ public class DomApp_Functionality {
         agent.send(msg);
 
         return "Negotiation message sent";
+    }
+
+    public HashMap<String,String> getMyElementsClasses(Agent agent, List<String> allElements) {
+
+        this.myAgent = agent;
+        HashMap<String,String> result = new HashMap<>();
+        String category = null;
+        String categoryClass = null;
+
+        for(String elem: allElements) {
+            try {
+                ACLMessage reply = sendCommand(myAgent, "get " + elem + " attrib=category", "");
+                if (reply != null)
+                    category = reply.getContent();
+                categoryClass = String.valueOf(category.charAt(0)).toUpperCase() + category.substring(1) + "Agent";
+                if (result.get(category) == null)
+                    result.put(category, "es.ehu.domain.manufacturing.agents." + categoryClass);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        return result;
+    }
+
+    public List<String> getELementsToCreate(Agent agent, List<String> allElements, String creationCategory) {
+
+        this.myAgent = agent;
+        List<String> result = new ArrayList<>();
+        String category = null;
+
+        for (String elem: allElements) {
+            try {
+                ACLMessage reply = sendCommand(myAgent, "get " + elem + " attrib=category", "");
+                if (reply != null)
+                    category = reply.getContent();
+                if (category.equals(creationCategory))
+                    result.add(elem);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        return result;
     }
 
 }
