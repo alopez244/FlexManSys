@@ -7,6 +7,7 @@ import es.ehu.platform.template.interfaces.IExecManagement;
 import jade.core.Agent;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -15,7 +16,9 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
     private static final long serialVersionUID = 1L;
     private Agent myAgent;
 
-    private List<String> myBatches;
+    private List<String> myElements;
+    private List<String> elementsToCreate = new ArrayList<>();
+    private HashMap<String, String> elementsClasses;
     private int chatID = 0; // Numero incremental para crear conversationID
 
     private String firstState;
@@ -66,7 +69,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             // Es decir, antes de avisar a su padre que esta creado, comprueba las replicas y despues los batches
             // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los batch cuando se arranquen correctamente
 
-            myReplicasID = processACLMessages(myAgent, mySeType, myBatches, conversationId, redundancy, parentAgentID);
+            myReplicasID = processACLMessages(myAgent, mySeType, elementsToCreate, conversationId, redundancy, parentAgentID);
 
         } else {
             // Si su estado es tracking
@@ -79,17 +82,21 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
     @Override
     public String seStart(String seID, Hashtable<String, String> attribs, String conversationId) {
 
-        this.myBatches = getAllElements(myAgent, seID, conversationId);
+        this.myElements = getAllElements(myAgent, seID, conversationId);
 
-        List<String> aux = new ArrayList<>();
-        for (String el:myBatches) {
-            if (el.contains("batch"))
-                aux.add(el);
+        this.elementsClasses = getMyElementsClasses(myAgent, myElements);
+
+        ArrayList<String> creationCategories = new ArrayList<>();
+        creationCategories.add("batch");  // Aqui decidiremos que tipos de elementos queremos crear --> Order, Batch, las dos...
+        this.elementsToCreate.clear();
+
+        for (String creationCategory : creationCategories) {
+
+            attribs.put("seClass", elementsClasses.get(creationCategory));
+            elementsToCreate.addAll(getELementsToCreate(myAgent, myElements, creationCategory));
+
+            chatID = createAllElementsAgents(myAgent, elementsToCreate, attribs, conversationId, redundancy, chatID);
         }
-
-        myBatches = aux;
-
-        chatID = createAllElementsAgents(myAgent, myBatches, attribs, conversationId, redundancy, chatID);
 
         return null;
     }

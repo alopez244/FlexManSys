@@ -19,7 +19,8 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   
   private Agent myAgent;
 
-  private List<String> myOrders;
+  private List<String> myElements;
+  private List<String> elementsToCreate = new ArrayList<>();
   private HashMap<String, String> elementsClasses;
   private int chatID = 0; // Numero incremental para crear conversationID
 
@@ -74,7 +75,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
       // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los orders cuando se arranquen correctamente
 
       //Aqui cuiado con el myOrders, si utilizamos elementsToCreate en seStart aqui tambien hay que meterlo
-      myReplicasID = processACLMessages(myAgent, mySeType, myOrders, conversationId, redundancy, parentAgentID);
+      myReplicasID = processACLMessages(myAgent, mySeType, elementsToCreate, conversationId, redundancy, parentAgentID);
 
     } else {
       // Si su estado es tracking
@@ -89,16 +90,20 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   @Override
   public String seStart(String seID, Hashtable<String, String> attribs, String conversationId){
 
-    this.myOrders = getAllElements(myAgent, seID, conversationId);  // Antes al mySeType le hemos quitado la parte de Agent, se la añadimos para este metodo
+    this.myElements = getAllElements(myAgent, seID, conversationId);  // Antes al mySeType le hemos quitado la parte de Agent, se la añadimos para este metodo
     
-    this.elementsClasses = getMyElementsClasses(myAgent, myOrders);
+    this.elementsClasses = getMyElementsClasses(myAgent, myElements);
 
-    String creationCategory = "order";  // Aqui decidiremos que tipos de elementos queremos crear --> Order, Batch, las dos...
-    attribs.put("seClass", elementsClasses.get(creationCategory));
-    List<String> elementsToCreate = getELementsToCreate(myAgent, myOrders, creationCategory);
+    ArrayList<String> creationCategories = new ArrayList<>();
+    creationCategories.add("order");  // Aqui decidiremos que tipos de elementos queremos crear --> Order, Batch, las dos...
+    elementsToCreate.clear();
 
-    chatID = createAllElementsAgents(myAgent, elementsToCreate, attribs, conversationId, redundancy, chatID);
+    for (String creationCategory : creationCategories) {
+        attribs.put("seClass", elementsClasses.get(creationCategory));
+        elementsToCreate.addAll(getELementsToCreate(myAgent, myElements, creationCategory));
 
+        chatID = createAllElementsAgents(myAgent, elementsToCreate, attribs, conversationId, redundancy, chatID);
+    }
 
     return null;
   }
