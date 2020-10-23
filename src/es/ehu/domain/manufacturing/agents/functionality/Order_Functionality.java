@@ -1,6 +1,7 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
 import es.ehu.platform.MWAgent;
+import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.IExecManagement;
@@ -74,6 +75,8 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         } else {
             // Si su estado es tracking
             trackingOnBoot(myAgent, mySeType, conversationId);
+
+            myAgent.initTransition = ControlBehaviour.TRACKING;
         }
 
         return null;
@@ -108,6 +111,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
     @Override
     public Object execute(Object[] input) {
+        System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
         return null;
     }
 }

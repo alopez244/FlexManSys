@@ -1,6 +1,7 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
 import es.ehu.platform.MWAgent;
+import es.ehu.platform.behaviour.ControlBehaviour;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.SimpleBehaviour;
@@ -38,7 +39,6 @@ public class DomApp_Functionality {
 
         if ((myElements.isEmpty()) && (Integer.parseInt(redundancy) == 1)) {
             // Si myElements esta vacio significa que es el elemento del ultimo nivel (p.e: Batch)
-            sendElementCreatedMessage(myAgent, parentAgentID, seType, false);
 
             // Cambiar el estado del elemento de BOOT a RUNNING
             String query = "set " + myAgent.getLocalName() + " state=" + getArgumentOfAgent(agent, "firstState");
@@ -47,6 +47,11 @@ public class DomApp_Functionality {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
+            sendElementCreatedMessage(myAgent, parentAgentID, seType, false);
+
+            System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
+            agent.initTransition = ControlBehaviour.RUNNING;
 
             return null;
         }
@@ -88,8 +93,6 @@ public class DomApp_Functionality {
                         if ((myElements.isEmpty()) && (replicasID.size() == Integer.parseInt(redundancy) - 1)) {
                             moreMsg = false;
                             // Pasar a estado running
-                            System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
-
                             String query = "set " + myAgent.getLocalName() + " state=" + getArgumentOfAgent(agent, "firstState");
                             try {
                                 ACLMessage reply = sendCommand(myAgent, query, conversationId);
@@ -100,6 +103,9 @@ public class DomApp_Functionality {
 
                             if (!parentAgentID.equals("sa"))
                                 sendElementCreatedMessage(myAgent, parentAgentID, seType, false);
+
+                            System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
+                            agent.initTransition = ControlBehaviour.RUNNING;
                         }
 
                     }
@@ -286,6 +292,8 @@ public class DomApp_Functionality {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado TRACKING");
 
     }
 

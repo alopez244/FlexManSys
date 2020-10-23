@@ -140,7 +140,9 @@ public class TrackingBehaviour extends SimpleBehaviour {
 					block();
 				}
 			}
-			
+
+			// TODO prueba para ver el cambio de estados --> luego borrar
+			System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo action del TrackingBehaviour");
 			
 			LOGGER.exit();
 		
