@@ -37,90 +37,52 @@ public class DomApp_Functionality {
         this.myAgent = agent;
         ArrayList<String> replicasID = new ArrayList<>();
 
-        if ((myElements.isEmpty()) && (Integer.parseInt(redundancy) == 1)) {
-            // Si myElements esta vacio significa que es el elemento del ultimo nivel (p.e: Batch)
-
-            // Cambiar el estado del elemento de BOOT a RUNNING
-            String query = "set " + myAgent.getLocalName() + " state=" + getArgumentOfAgent(agent, "firstState");
-            try {
-                sendCommand(myAgent, query, conversationId);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            sendElementCreatedMessage(myAgent, parentAgentID, seType, false);
-
-            System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
-            agent.initTransition = ControlBehaviour.RUNNING;
-
-            return null;
-        }
-
-        moreMsg = true;
-
-        myAgent.addBehaviour(new SimpleBehaviour() {
-            @Override
-            public void action() {
-
-                ACLMessage msg = myAgent.receive();
-                if (msg != null) {
-                    // TODO COMPROBAR TAMBIEN LOS TRACKING si esta bien programado (sin probar)
-                    if ((msg.getPerformative() == ACLMessage.INFORM)) {
-                        String senderParentID = null;
-                        String myParentID = null;
-                        try {
-                            ACLMessage reply = sendCommand(myAgent, "get " + msg.getSender().getLocalName() + " attrib=parent", conversationId);
-                            if (reply != null)
-                                senderParentID = reply.getContent();
-                            reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", conversationId);
-                            if (reply != null)
-                                myParentID = reply.getContent();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-
-                        if (myParentID.equals(senderParentID)) {
-                            // Si el padre del emisor y el receptor son iguales, el que le envia el mensaje es una replica
-                            System.out.println("\tYa se ha creado la replica " + msg.getSender().getLocalName());
-                            replicasID.add(msg.getSender().getLocalName());
-                        } else {
-                            // Si los padres son diferentes, se trata de un hijo
-                            if (myElements.contains(senderParentID))
-                                myElements.remove(senderParentID);
-                        }
-
-                        // Si la lista esta vacia, todos los elementos se han creado correctamente, y tendremos que pasar del estado BOOT al RUNNING
-                        if ((myElements.isEmpty()) && (replicasID.size() == Integer.parseInt(redundancy) - 1)) {
-                            moreMsg = false;
-                            // Pasar a estado running
-                            String query = "set " + myAgent.getLocalName() + " state=" + getArgumentOfAgent(agent, "firstState");
-                            try {
-                                ACLMessage reply = sendCommand(myAgent, query, conversationId);
-                                System.out.println(reply.getContent());
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-
-                            if (!parentAgentID.equals("sa"))
-                                sendElementCreatedMessage(myAgent, parentAgentID, seType, false);
-
-                            System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
-                            agent.initTransition = ControlBehaviour.RUNNING;
-                        }
-
+        while ((!myElements.isEmpty()) && (replicasID.size() != Integer.parseInt(redundancy) - 1)) {
+            ACLMessage msg = myAgent.receive();
+            if (msg != null) {
+                // TODO COMPROBAR TAMBIEN LOS TRACKING si esta bien programado (sin probar)
+                if ((msg.getPerformative() == ACLMessage.INFORM)) {
+                    String senderParentID = null;
+                    String myParentID = null;
+                    try {
+                        ACLMessage reply = sendCommand(myAgent, "get " + msg.getSender().getLocalName() + " attrib=parent", conversationId);
+                        if (reply != null)
+                            senderParentID = reply.getContent();
+                        reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", conversationId);
+                        if (reply != null)
+                            myParentID = reply.getContent();
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                } else {
-                    if (moreMsg)
-                        // Se queda a la espera para cuando le envien mas mensajes
-                       block();
+
+                    if (myParentID.equals(senderParentID)) {
+                        // Si el padre del emisor y el receptor son iguales, el que le envia el mensaje es una replica
+                        System.out.println("\tYa se ha creado la replica " + msg.getSender().getLocalName());
+                        replicasID.add(msg.getSender().getLocalName());
+                    } else {
+                        // Si los padres son diferentes, se trata de un hijo
+                        if (myElements.contains(senderParentID))
+                            myElements.remove(senderParentID);
+                    }
                 }
             }
+        }
 
-            @Override
-            public boolean done() {
-                return false;
-            }
-        });
+        // Si la lista esta vacia, todos los elementos se han creado correctamente, y tendremos que pasar del estado BOOT al RUNNING
+        // Pasar a estado running
+        if (!parentAgentID.equals("sa"))
+            sendElementCreatedMessage(myAgent, parentAgentID, seType, false);
+
+        String query = "set " + myAgent.getLocalName() + " state=" + getArgumentOfAgent(agent, "firstState");
+        try {
+            ACLMessage reply = sendCommand(myAgent, query, conversationId);
+            System.out.println(reply.getContent());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
+        agent.initTransition = ControlBehaviour.RUNNING;
 
         return replicasID;
     }
