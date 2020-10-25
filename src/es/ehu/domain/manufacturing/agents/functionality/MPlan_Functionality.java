@@ -1,11 +1,11 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
 import es.ehu.platform.MWAgent;
+import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.IExecManagement;
 import jade.core.Agent;
-import jade.lang.acl.ACLMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,7 +20,9 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   
   private Agent myAgent;
 
-  private List<String> myOrders;
+  private List<String> myElements;
+  private List<String> elementsToCreate = new ArrayList<>();
+  private HashMap<String, String> elementsClasses;
   private int chatID = 0; // Numero incremental para crear conversationID
 
   private String firstState;
@@ -47,12 +49,12 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     // Crear un nuevo conversationID
     String conversationId = myAgent.getLocalName() + "_" + chatID;
 
+    // Conseguir los datos de los parametros del agente
     firstState = getArgumentOfAgent(myAgent, "firstState");
     redundancy = getArgumentOfAgent(myAgent, "redundancy");
     parentAgentID = getArgumentOfAgent(myAgent, "parentAgent");
     mySeType = getMySeType(myAgent, conversationId);
 
-    // TODO SOLO HACER TODO ESTO SI NO ES UNA REPLICA?
     if (firstState.equals("running")) {
 
       // Cambiar a estado bootToRunning para que los tracking le puedan enviar mensajes
@@ -65,7 +67,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 
       Hashtable<String, String> attributes = new Hashtable<String, String>();
       // TODO ponerlo en DomApp --> parametro para la clase
-      attributes.put("seClass", "es.ehu.domain.manufacturing.agents.OrderAgent");
+      //attributes.put("seClass", "es.ehu.domain.manufacturing.agents.OrderAgent");
 
       seStart(myAgent.getLocalName(), attributes, conversationId);
 
@@ -73,11 +75,14 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
       // Es decir, antes de avisar a su padre que esta creado, comprueba las replicas y los orders
       // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los orders cuando se arranquen correctamente
 
-      myReplicasID = processACLMessages(myAgent, mySeType, myOrders, conversationId, redundancy, parentAgentID, "Order");
+      //Aqui cuiado con el myOrders, si utilizamos elementsToCreate en seStart aqui tambien hay que meterlo
+      myReplicasID = processACLMessages(myAgent, mySeType, elementsToCreate, conversationId, redundancy, parentAgentID);
 
     } else {
       // Si su estado es tracking
       trackingOnBoot(myAgent, mySeType, conversationId);
+
+      myAgent.initTransition = ControlBehaviour.TRACKING;
     }
 
     return null;
@@ -88,10 +93,20 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   @Override
   public String seStart(String seID, Hashtable<String, String> attribs, String conversationId){
 
-    this.myOrders = getAllElements(myAgent, seID, "order", conversationId);
+    this.myElements = getAllElements(myAgent, seID, conversationId);  // Antes al mySeType le hemos quitado la parte de Agent, se la añadimos para este metodo
+    
+    this.elementsClasses = getMyElementsClasses(myAgent, myElements);
 
-    chatID = createAllElementsAgents(myAgent, myOrders, attribs, conversationId, redundancy, chatID);
+    ArrayList<String> creationCategories = new ArrayList<>();
+    creationCategories.add("order");  // Aqui decidiremos que tipos de elementos queremos crear --> Order, Batch, las dos...
+    elementsToCreate.clear();
 
+    for (String creationCategory : creationCategories) {
+        attribs.put("seClass", elementsClasses.get(creationCategory));
+        elementsToCreate.addAll(getELementsToCreate(myAgent, myElements, creationCategory));
+
+        chatID = createAllElementsAgents(myAgent, elementsToCreate, attribs, conversationId, redundancy, chatID);
+    }
 
     return null;
   }
@@ -103,6 +118,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 
   @Override
   public Object execute(Object[] input) {
+    System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
     return null;
   }
 

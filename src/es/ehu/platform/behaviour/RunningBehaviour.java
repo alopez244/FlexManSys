@@ -99,6 +99,10 @@ public class RunningBehaviour extends SimpleBehaviour {
 			LOGGER.debug("Block time: " + t);
 			block(t);
 		}
+
+		// TODO prueba para ver el cambio de estados --> luego borrar
+		System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo action del RunningBehaviour");
+
 		LOGGER.exit();
 	}
 

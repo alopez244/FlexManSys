@@ -1,6 +1,7 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
 import es.ehu.platform.MWAgent;
+import es.ehu.platform.behaviour.ControlBehaviour;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.SimpleBehaviour;
@@ -12,9 +13,7 @@ import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
+import java.util.*;
 
 public class DomApp_Functionality {
 
@@ -33,27 +32,28 @@ public class DomApp_Functionality {
     //  BOOT STATE METHODS
     //////////////////////////
 
-    public ArrayList<String> processACLMessages(MWAgent agent, String seType, List<String> myElements, String conversationId, String redundancy, String parentAgentID, String... elementType) {
+    public ArrayList<String> processACLMessages(MWAgent agent, String seType, List<String> myElements, String conversationId, String redundancy, String parentAgentID) {
 
         this.myAgent = agent;
         ArrayList<String> replicasID = new ArrayList<>();
 
-        if (myElements.isEmpty()) {
+        if ((myElements.isEmpty()) && (Integer.parseInt(redundancy) == 1)) {
             // Si myElements esta vacio significa que es el elemento del ultimo nivel (p.e: Batch)
-            if (Integer.parseInt(redundancy) == 1) {
-                sendElementCreatedMessage(myAgent, parentAgentID, seType, false);
 
-                // Cambiar el estado del elemento de BOOT a RUNNING
-                String query = "set " + myAgent.getLocalName() + " state=" + getArgumentOfAgent(agent, "firstState");
-                try {
-                    sendCommand(myAgent, query, conversationId);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                return null;
+            // Cambiar el estado del elemento de BOOT a RUNNING
+            String query = "set " + myAgent.getLocalName() + " state=" + getArgumentOfAgent(agent, "firstState");
+            try {
+                sendCommand(myAgent, query, conversationId);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
+            sendElementCreatedMessage(myAgent, parentAgentID, seType, false);
+
+            System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
+            agent.initTransition = ControlBehaviour.RUNNING;
+
+            return null;
         }
 
         moreMsg = true;
@@ -66,37 +66,33 @@ public class DomApp_Functionality {
                 if (msg != null) {
                     // TODO COMPROBAR TAMBIEN LOS TRACKING si esta bien programado (sin probar)
                     if ((msg.getPerformative() == ACLMessage.INFORM)) {
-                        if (msg.getContent().equals(seType + " replica created successfully")) {     // La replica sera del mismo tipo que el del agente
+                        String senderParentID = null;
+                        String myParentID = null;
+                        try {
+                            ACLMessage reply = sendCommand(myAgent, "get " + msg.getSender().getLocalName() + " attrib=parent", conversationId);
+                            if (reply != null)
+                                senderParentID = reply.getContent();
+                            reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", conversationId);
+                            if (reply != null)
+                                myParentID = reply.getContent();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                        if (myParentID.equals(senderParentID)) {
+                            // Si el padre del emisor y el receptor son iguales, el que le envia el mensaje es una replica
                             System.out.println("\tYa se ha creado la replica " + msg.getSender().getLocalName());
                             replicasID.add(msg.getSender().getLocalName());
-                        }
-                        // TODO Hacer un for para cada tipo de elemento? --> Porque elementType es String...
-                         if (elementType != null) {
-                            if (msg.getContent().equals(elementType[0] + " created successfully")) {    //ElementType puede contener mas de un atributo, de momento cogemos el primero
-                                System.out.println("\tYa se ha creado el agente " + msg.getSender().getLocalName() + " - hay que borrarlo de la lista --> " + myElements);
-
-                                // Primero vamos a conseguir el ID del elemento (ya que el mensaje nos lo envia su agente)
-                                String senderID = null;
-                                try {
-                                    ACLMessage reply = sendCommand(myAgent, "get " + msg.getSender().getLocalName() + " attrib=parent", conversationId);
-                                    if (reply != null)
-                                        senderID = reply.getContent();
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-
-                                // Si el elemento es uno de los hijos (que solo los hijos nos enviaran los mensaje, pero por se acaso), lo borramos de la lista
-                                if (myElements.contains(senderID))
-                                    myElements.remove(senderID);
-                            }
+                        } else {
+                            // Si los padres son diferentes, se trata de un hijo
+                            if (myElements.contains(senderParentID))
+                                myElements.remove(senderParentID);
                         }
 
                         // Si la lista esta vacia, todos los elementos se han creado correctamente, y tendremos que pasar del estado BOOT al RUNNING
                         if ((myElements.isEmpty()) && (replicasID.size() == Integer.parseInt(redundancy) - 1)) {
                             moreMsg = false;
                             // Pasar a estado running
-                            System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
-
                             String query = "set " + myAgent.getLocalName() + " state=" + getArgumentOfAgent(agent, "firstState");
                             try {
                                 ACLMessage reply = sendCommand(myAgent, query, conversationId);
@@ -107,6 +103,9 @@ public class DomApp_Functionality {
 
                             if (!parentAgentID.equals("sa"))
                                 sendElementCreatedMessage(myAgent, parentAgentID, seType, false);
+
+                            System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
+                            agent.initTransition = ControlBehaviour.RUNNING;
                         }
 
                     }
@@ -123,9 +122,7 @@ public class DomApp_Functionality {
             }
         });
 
-        if(!moreMsg)
-            return replicasID;
-        return null;
+        return replicasID;
     }
 
     public String getArgumentOfAgent(MWAgent agent, String argumentName) {
@@ -151,37 +148,74 @@ public class DomApp_Functionality {
         agent.send(msg);
     }
 
-    public List<String> getAllElements(Agent agent, String seID, String myElementType, String conversationId){
+    /**
+     * Metodo para conseguir todos mis elementos (p.e. si es un MPlan todos los orders y batch asociados a ese MPlan)
+     * @param agent
+     * @param seID
+     * @param conversationId
+     * @return
+     */
+    public List<String> getAllElements(Agent agent, String seID, String conversationId){
 
         this.myAgent = agent;
+        List<String> items = new ArrayList<>();
         // myElementType --> Tipo del hijo (p.e. En el caso de MPlan seria order)
 
         // seID --> ID del Agent
         String parentQuery = "get " + seID + " attrib=parent";
         ACLMessage reply = null;
+        String seCategory = null;
+        Stack<String> elementsToAnalyze = new Stack<>();
+        elementsToAnalyze.push(seID);
 
-        // Get parent
+        // Consigo la categoria del agente
         try {
-            reply = sendCommand(myAgent, parentQuery, conversationId);
-            // ID del plan con el cual el agente está relacionado
-            String planID = null;
-            if (reply != null)   // Si no existe el id en el registro devuelve error
-                planID = reply.getContent();
-
-            String query = "get " + myElementType + "* parent="+ planID;  // Busco todos los elementos de los que es parent (no se buscan todos los elementos porque pueden existir otros en tracking)
-            reply = sendCommand(myAgent, query, conversationId);
+            reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=category", conversationId);
+            if (reply != null)
+                seCategory = reply.getContent();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        String allElements = null;
-        if (reply != null)
-            allElements = reply.getContent();
+        while(!elementsToAnalyze.isEmpty()) {
+            try {
+                // Consigo el padre del agente
+                String element = elementsToAnalyze.pop();
+                //reply = sendCommand(myAgent, parentQuery, conversationId);
+                String query = "get " + element + " attrib=category";
+                reply = sendCommand(myAgent, query, conversationId);
+                String category2 = reply.getContent();
+                if (category2.equals(seCategory)) {
+                    reply = sendCommand(myAgent, "get " + element + " attrib=parent", conversationId);
+                    // ID del elemento con el cual el agente está relacionado (p.e: mplanagent1 --> mplan1)
+                    if (reply != null)   // Si no existe el id en el registro devuelve error
+                        element = reply.getContent();   // Sobreescribo el elemento ya que el agente no tiene los hijos, los tiene el elemento con el que esta asociado
+                }
 
-        List<String> items = new ArrayList<>();
-        String[] aux = allElements.split(",");
-        for (String a:aux)
-            items.add(a);
+                query = "get * parent=" + element; // Busco todos sus hijos
+                reply = sendCommand(myAgent, query, conversationId);
+
+                String allElements = null;
+                if (!reply.getContent().equals("")) {
+                    allElements = reply.getContent();
+                    String[] aux = allElements.split(",");
+                    for (String elem : aux) {
+                        query = "get " + elem + " attrib=category";
+                        reply = sendCommand(myAgent, query, conversationId);
+                        if (reply != null) {
+                            String category = reply.getContent();
+                            if ((!category.equals(seCategory)) && (!category.contains("Agent"))) {  // Filtro y me quedo con los que no sean del mismo tipo que el agente, asi filtro los agentes en tracking
+                                items.add(elem);
+                                elementsToAnalyze.add(elem);
+                            }
+                        }
+                    }
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
         return items;
 
@@ -258,6 +292,8 @@ public class DomApp_Functionality {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado TRACKING");
 
     }
 
@@ -341,6 +377,51 @@ public class DomApp_Functionality {
         agent.send(msg);
 
         return "Negotiation message sent";
+    }
+
+    public HashMap<String,String> getMyElementsClasses(Agent agent, List<String> allElements) {
+
+        this.myAgent = agent;
+        HashMap<String,String> result = new HashMap<>();
+        String category = null;
+        String categoryClass = null;
+
+        for(String elem: allElements) {
+            try {
+                ACLMessage reply = sendCommand(myAgent, "get " + elem + " attrib=category", "");
+                if (reply != null)
+                    category = reply.getContent();
+                categoryClass = String.valueOf(category.charAt(0)).toUpperCase() + category.substring(1) + "Agent";
+                if (result.get(category) == null)
+                    result.put(category, "es.ehu.domain.manufacturing.agents." + categoryClass);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        return result;
+    }
+
+    public List<String> getELementsToCreate(Agent agent, List<String> allElements, String creationCategory) {
+
+        this.myAgent = agent;
+        List<String> result = new ArrayList<>();
+        String category = null;
+
+        for (String elem: allElements) {
+            try {
+                ACLMessage reply = sendCommand(myAgent, "get " + elem + " attrib=category", "");
+                if (reply != null)
+                    category = reply.getContent();
+                if (category.equals(creationCategory))
+                    result.add(elem);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        return result;
     }
 
 }

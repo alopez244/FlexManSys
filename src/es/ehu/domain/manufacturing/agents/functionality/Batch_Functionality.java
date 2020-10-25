@@ -1,17 +1,13 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
 import es.ehu.platform.MWAgent;
+import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.utilities.XMLReader;
-import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.SimpleBehaviour;
-import jade.domain.DFService;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
@@ -69,14 +65,18 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 e.printStackTrace();
             }
 
-            processACLMessages(myAgent, mySeType, new ArrayList<>(), conversationId, redundancy, parentAgentID, null);
+            myReplicasID = processACLMessages(myAgent, mySeType, new ArrayList<>(), conversationId, redundancy, parentAgentID);
 
+            // TODO esta comentado ya que peta al estar en el init --> La ejecucion sigue adelante antes de recoger todos los mensajes y despues da problemas
             // sendPlan method of interface ITraceability
-            sendPlan(myAgent, conversationId);
+            //sendPlan(myAgent, conversationId);
+
 
         } else {
             // Si su estado es tracking
             trackingOnBoot(myAgent, mySeType, conversationId);
+
+            myAgent.initTransition = ControlBehaviour.TRACKING;
         }
 
 
@@ -85,6 +85,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
     @Override
     public Object execute(Object[] input) {
+        System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
         return null;
     }
 
