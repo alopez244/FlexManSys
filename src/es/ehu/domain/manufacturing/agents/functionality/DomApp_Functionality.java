@@ -258,8 +258,9 @@ public class DomApp_Functionality {
         return String.valueOf(seCategory.charAt(0)).toUpperCase() + seCategory.substring(1).replace("Agent","");
     }
 
-    public List seStart(String seID, Hashtable<String, String> attribs, String conversationId, ArrayList<String> creationCategories, int chatID, String redundancy) {
+    public List seStart(Agent agent, String seID, Hashtable<String, String> attribs, String conversationId, ArrayList<String> creationCategories, int chatID, String redundancy) {
 
+        this.myAgent = agent;
         List result = new ArrayList();
         ArrayList<String> elementsToCreate = new ArrayList<>();
 

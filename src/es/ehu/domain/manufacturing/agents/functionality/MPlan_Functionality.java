@@ -96,7 +96,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     ArrayList<String> creationCategories = new ArrayList<>();
     creationCategories.add("order");  // Aqui decidiremos que tipos de elementos queremos crear --> Order, Batch, las dos...
 
-    List result = seStart(seID, attribs, conversationId, creationCategories, chatID, redundancy);
+    List result = seStart(myAgent, seID, attribs, conversationId, creationCategories, chatID, redundancy);
     elementsToCreate = (List<String>) result.get(0);
     chatID = (int) result.get(1);
 
