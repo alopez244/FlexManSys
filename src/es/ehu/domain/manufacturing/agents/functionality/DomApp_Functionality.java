@@ -26,8 +26,6 @@ public class DomApp_Functionality {
 
     private Agent myAgent;
 
-    private static boolean moreMsg = true;
-
     //////////////////////////
     //  BOOT STATE METHODS
     //////////////////////////
