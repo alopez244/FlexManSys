@@ -85,21 +85,12 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
     @Override
     public String seStart(String seID, Hashtable<String, String> attribs, String conversationId) {
 
-        this.myElements = getAllElements(myAgent, seID, conversationId);
-
-        this.elementsClasses = getMyElementsClasses(myAgent, myElements);
-
         ArrayList<String> creationCategories = new ArrayList<>();
         creationCategories.add("batch");  // Aqui decidiremos que tipos de elementos queremos crear --> Order, Batch, las dos...
-        this.elementsToCreate.clear();
 
-        for (String creationCategory : creationCategories) {
-
-            attribs.put("seClass", elementsClasses.get(creationCategory));
-            elementsToCreate.addAll(getELementsToCreate(myAgent, myElements, creationCategory));
-
-            chatID = createAllElementsAgents(myAgent, elementsToCreate, attribs, conversationId, redundancy, chatID);
-        }
+        List result = seStart(seID, attribs, conversationId, creationCategories, chatID, redundancy);
+        elementsToCreate = (List<String>) result.get(0);
+        chatID = (int) result.get(1);
 
         return null;
     }

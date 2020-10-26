@@ -4,7 +4,6 @@ import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.ControlBehaviour;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.SimpleBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
@@ -85,6 +84,42 @@ public class DomApp_Functionality {
         return replicasID;
     }
 
+    public void trackingOnBoot(MWAgent agent, String seType, String conversationId) {
+
+        this.myAgent = agent;
+
+        String runningAgentID = null;
+        String seCategory = null;
+        try {
+            String parentID = null;
+            ACLMessage reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", conversationId);
+            if (reply != null)
+                parentID = reply.getContent();
+            reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=category", conversationId);
+            if (reply != null)
+                seCategory = reply.getContent();
+
+            reply = sendCommand(myAgent, "get * parent=" + parentID + " category=" + seCategory + " state=bootToRunning", conversationId);
+            if (reply !=null) {
+                runningAgentID = reply.getContent();
+                sendElementCreatedMessage(myAgent, runningAgentID, seType, true);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Una vez mande el mensaje, registra que su estado es el tracking
+        try {
+            sendCommand(myAgent, "set " + myAgent.getLocalName() + " state=" + getArgumentOfAgent(agent, "firstState"), conversationId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado TRACKING");
+
+    }
+
     public String getArgumentOfAgent(MWAgent agent, String argumentName) {
 
         Object[] allArguments = agent.getArguments();
@@ -119,20 +154,16 @@ public class DomApp_Functionality {
 
         this.myAgent = agent;
         List<String> items = new ArrayList<>();
-        // myElementType --> Tipo del hijo (p.e. En el caso de MPlan seria order)
 
         // seID --> ID del Agent
-        String parentQuery = "get " + seID + " attrib=parent";
         ACLMessage reply = null;
-        String seCategory = null;
         Stack<String> elementsToAnalyze = new Stack<>();
-        elementsToAnalyze.push(seID);
 
-        // Consigo la categoria del agente
         try {
-            reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=category", conversationId);
-            if (reply != null)
-                seCategory = reply.getContent();
+            reply = sendCommand(myAgent, "get " + seID + " attrib=parent", conversationId);
+            // ID del elemento con el cual el agente está relacionado (p.e: mplanagent1 --> mplan1)
+            if (reply != null)   // Si no existe el id en el registro devuelve error
+                elementsToAnalyze.push(reply.getContent()); // El primer elemento a analizar sera el padre del agente
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -141,18 +172,8 @@ public class DomApp_Functionality {
             try {
                 // Consigo el padre del agente
                 String element = elementsToAnalyze.pop();
-                //reply = sendCommand(myAgent, parentQuery, conversationId);
-                String query = "get " + element + " attrib=category";
-                reply = sendCommand(myAgent, query, conversationId);
-                String category2 = reply.getContent();
-                if (category2.equals(seCategory)) {
-                    reply = sendCommand(myAgent, "get " + element + " attrib=parent", conversationId);
-                    // ID del elemento con el cual el agente está relacionado (p.e: mplanagent1 --> mplan1)
-                    if (reply != null)   // Si no existe el id en el registro devuelve error
-                        element = reply.getContent();   // Sobreescribo el elemento ya que el agente no tiene los hijos, los tiene el elemento con el que esta asociado
-                }
 
-                query = "get * parent=" + element; // Busco todos sus hijos
+                String query = "get * parent=" + element; // Busco todos sus hijos
                 reply = sendCommand(myAgent, query, conversationId);
 
                 String allElements = null;
@@ -164,7 +185,7 @@ public class DomApp_Functionality {
                         reply = sendCommand(myAgent, query, conversationId);
                         if (reply != null) {
                             String category = reply.getContent();
-                            if ((!category.equals(seCategory)) && (!category.contains("Agent"))) {  // Filtro y me quedo con los que no sean del mismo tipo que el agente, asi filtro los agentes en tracking
+                            if (!category.contains("Agent")) {  // Filtro y me quedo con los que no sean del mismo tipo que el agente, asi filtro los agentes en tracking
                                 items.add(elem);
                                 elementsToAnalyze.add(elem);
                             }
@@ -221,42 +242,6 @@ public class DomApp_Functionality {
         return chatID;
     }
 
-    public void trackingOnBoot(MWAgent agent, String seType, String conversationId) {
-
-        this.myAgent = agent;
-
-        String runningAgentID = null;
-        String seCategory = null;
-        try {
-            String parentID = null;
-            ACLMessage reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", conversationId);
-            if (reply != null)
-                parentID = reply.getContent();
-            reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=category", conversationId);
-            if (reply != null)
-                seCategory = reply.getContent();
-
-            reply = sendCommand(myAgent, "get * parent=" + parentID + " category=" + seCategory + " state=bootToRunning", conversationId);
-            if (reply !=null) {
-                runningAgentID = reply.getContent();
-                sendElementCreatedMessage(myAgent, runningAgentID, seType, true);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        // Una vez mande el mensaje, registra que su estado es el tracking
-        try {
-            sendCommand(myAgent, "set " + myAgent.getLocalName() + " state=" + getArgumentOfAgent(agent, "firstState"), conversationId);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado TRACKING");
-
-    }
-
     public String getMySeType(MWAgent agent, String conversationId) {
 
         this.myAgent = agent;
@@ -271,6 +256,56 @@ public class DomApp_Functionality {
             e.printStackTrace();
         }
         return String.valueOf(seCategory.charAt(0)).toUpperCase() + seCategory.substring(1).replace("Agent","");
+    }
+
+    public List seStart(String seID, Hashtable<String, String> attribs, String conversationId, ArrayList<String> creationCategories, int chatID, String redundancy) {
+
+        List result = new ArrayList();
+        ArrayList<String> elementsToCreate = new ArrayList<>();
+
+        for (String creationCategory : creationCategories) {
+            // Conseguimos los elementos de la categoria y su clase
+            List elementsInfo = getElementsToCreate(myAgent, seID, creationCategory, conversationId);
+            elementsToCreate.addAll((List<String>) elementsInfo.get(0));
+            attribs.put("seClass", (String) elementsInfo.get(1));
+
+            // Creamos los elementos
+            chatID = createAllElementsAgents(myAgent, (List<String>) elementsInfo.get(0), attribs, conversationId, redundancy, chatID);
+        }
+
+        result.add(elementsToCreate);
+        result.add(chatID);
+        return result;
+    }
+
+    public List getElementsToCreate(Agent agent, String seID, String creationCategory, String conversationId) {
+
+        this.myAgent = agent;
+        List result = new ArrayList();
+        List<String> elementsList = new ArrayList<>();
+        String category = null;
+        String categoryClass = null;
+
+        List<String> allElements = getAllElements(myAgent, seID, conversationId);
+
+        for (String elem: allElements) {
+            try {
+                ACLMessage reply = sendCommand(myAgent, "get " + elem + " attrib=category", conversationId);
+                if (reply != null)
+                    category = reply.getContent();
+                if (category.equals(creationCategory)) {
+                    elementsList.add(elem);
+                    categoryClass = String.valueOf(category.charAt(0)).toUpperCase() + category.substring(1) + "Agent";
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        result.add(elementsList);
+        result.add("es.ehu.domain.manufacturing.agents." + categoryClass);
+
+        return result;
     }
 
     //////////////////////////
@@ -339,49 +374,6 @@ public class DomApp_Functionality {
         return "Negotiation message sent";
     }
 
-    public HashMap<String,String> getMyElementsClasses(Agent agent, List<String> allElements) {
 
-        this.myAgent = agent;
-        HashMap<String,String> result = new HashMap<>();
-        String category = null;
-        String categoryClass = null;
-
-        for(String elem: allElements) {
-            try {
-                ACLMessage reply = sendCommand(myAgent, "get " + elem + " attrib=category", "");
-                if (reply != null)
-                    category = reply.getContent();
-                categoryClass = String.valueOf(category.charAt(0)).toUpperCase() + category.substring(1) + "Agent";
-                if (result.get(category) == null)
-                    result.put(category, "es.ehu.domain.manufacturing.agents." + categoryClass);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-        }
-
-        return result;
-    }
-
-    public List<String> getELementsToCreate(Agent agent, List<String> allElements, String creationCategory) {
-
-        this.myAgent = agent;
-        List<String> result = new ArrayList<>();
-        String category = null;
-
-        for (String elem: allElements) {
-            try {
-                ACLMessage reply = sendCommand(myAgent, "get " + elem + " attrib=category", "");
-                if (reply != null)
-                    category = reply.getContent();
-                if (category.equals(creationCategory))
-                    result.add(elem);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        return result;
-    }
 
 }

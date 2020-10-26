@@ -51,6 +51,7 @@ public class ControlBehaviour extends SimpleBehaviour {
                 MessageTemplate.and(
                         MessageTemplate.MatchOntology(ONT_CONTROL),
                         MessageTemplate.MatchPerformative(ACLMessage.REQUEST))
+
         );
 
         LOGGER.exit();

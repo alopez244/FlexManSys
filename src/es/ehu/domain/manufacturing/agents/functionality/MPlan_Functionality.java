@@ -93,20 +93,12 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   @Override
   public String seStart(String seID, Hashtable<String, String> attribs, String conversationId){
 
-    this.myElements = getAllElements(myAgent, seID, conversationId);  // Antes al mySeType le hemos quitado la parte de Agent, se la añadimos para este metodo
-    
-    this.elementsClasses = getMyElementsClasses(myAgent, myElements);
-
     ArrayList<String> creationCategories = new ArrayList<>();
     creationCategories.add("order");  // Aqui decidiremos que tipos de elementos queremos crear --> Order, Batch, las dos...
-    elementsToCreate.clear();
 
-    for (String creationCategory : creationCategories) {
-        attribs.put("seClass", elementsClasses.get(creationCategory));
-        elementsToCreate.addAll(getELementsToCreate(myAgent, myElements, creationCategory));
-
-        chatID = createAllElementsAgents(myAgent, elementsToCreate, attribs, conversationId, redundancy, chatID);
-    }
+    List result = seStart(seID, attribs, conversationId, creationCategories, chatID, redundancy);
+    elementsToCreate = (List<String>) result.get(0);
+    chatID = (int) result.get(1);
 
     return null;
   }
