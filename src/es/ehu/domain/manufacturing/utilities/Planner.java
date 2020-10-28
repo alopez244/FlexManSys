@@ -1,17 +1,21 @@
 package es.ehu.domain.manufacturing.utilities;
 
-import es.ehu.platform.utilities.MasReconAgent;
 import es.ehu.platform.utilities.XMLReader;
 
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.domain.DFService;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,16 +35,15 @@ public class Planner extends Agent {
         } catch (Throwable t) {
             LOGGER.debug(" *** Error: No se ha podido añadir tarea de apagado");
         }
-        addBehaviour(new Mra(this));
+        addBehaviour(new PlannerInterface(this));
         LOGGER.exit();
     }
 
-    class Mra extends SimpleBehaviour {
+    class PlannerInterface extends SimpleBehaviour {
 
-        private MasReconAgent mra = new MasReconAgent(myAgent);
         private static final long serialVersionUID = 6711046229173067015L;
 
-        public Mra(Agent a) {
+        public PlannerInterface(Agent a) {
             super(a);
         }
 
@@ -50,9 +53,6 @@ public class Planner extends Agent {
             try {
 
                 LOGGER.info("start.");
-
-                //This method checks the SystemModelAgent is active. If so, retrieves its LocalName.
-                mra.searchMwm();
 
                 //User interface. The operator will use it for the register of mannufacturing applications.
                 String cmd = "";
@@ -102,7 +102,7 @@ public class Planner extends Agent {
                                 break;
                             }
                             else {
-                                ACLMessage reply = mra.sendCommand(cmds[i], conversationId);
+                                ACLMessage reply = sendCommand(cmds[i], conversationId);
                                 if (reply!=null) {
                                     if (cmds.length>1) System.out.print(" < "+cmds[i]);
                                     System.out.print("\n\n");
@@ -129,7 +129,7 @@ public class Planner extends Agent {
 
         }
 
-        public void registerPredefined(String cmd) throws Exception {
+        public void registerPredefined(String cmd){
 
             //Definition of the HashMaps
             ConcurrentHashMap<String, String> attributes = new ConcurrentHashMap<String, String>();
@@ -146,22 +146,35 @@ public class Planner extends Agent {
             System.out.println("Please, introduce the number of replicas you want to register.");
             System.out.print("Replicas: ");
             String redundancy = in.nextLine();
+            try {
+                Integer.parseInt(redundancy);
+            } catch (NumberFormatException e) {
+                LOGGER.error("ERROR GETTING REDUNDANCY NUMBER IN PLANNER");
+                System.out.println("\nSorry, but you have not introduce a number, repeat the action please.\n");
+                return;
+            }
             if(!redundancy.equals(""))
                 agentAttributes.put("redundancy", redundancy);
 
             String appPath="classes/resources/AppInstances/";
             String file="";
-            in = new Scanner(System.in);
             System.out.println("\nPlease, introduce the name of the XML File you want to register.");
             System.out.print("File: ");
             file = in.nextLine();
             System.out.println();
             String uri=appPath+file;
             XMLReader fileReader = new XMLReader();
-            ArrayList<ArrayList<ArrayList<String>>> xmlelements = fileReader.readFile(uri);
+            ArrayList<ArrayList<ArrayList<String>>> xmlelements = null;
+            try {
+                xmlelements = fileReader.readFile(uri);
+            } catch (Exception e) {
+                LOGGER.error("ERROR GETTING FILE IN PLANNER");
+                System.out.println("\nSorry, but you have not introduce the right file name, repeat the action please.\n");
+                return;
+            }
 
             //Variable initialization at their first levels
-            ArrayList<String> parentIdList = new ArrayList<String>();
+            ArrayList<String> parentIdList = new ArrayList<>();
             parentIdList.add(0,"system");
             String parentId = "";
             String seId = "";
@@ -169,32 +182,47 @@ public class Planner extends Agent {
             String conversationId = myAgent.getLocalName() + "_" + chatID++;
 
             //For structure is used to register all the elements
-            for (int i = 0; i < xmlelements.size(); i++){
+            for (int i = 0; i < xmlelements.size(); i++) {
 
                 //First the attributes are collected
                 attributes.clear();
-                for (int j = 0; j < xmlelements.get(i).get(2).size(); j++){
-                    attributes.put(xmlelements.get(i).get(2).get(j),xmlelements.get(i).get(3).get(j));
+                for (int j = 0; j < xmlelements.get(i).get(2).size(); j++) {
+                    attributes.put(xmlelements.get(i).get(2).get(j), xmlelements.get(i).get(3).get(j));
                 }
 
                 //The parent Id is always the last element Id of the upper level
-                parentId = parentIdList.get(Integer.parseInt(xmlelements.get(i).get(1).get(0))-1);
+                parentId = parentIdList.get(Integer.parseInt(xmlelements.get(i).get(1).get(0)) - 1);
 
                 //Now the register is performed and the element name is obtained
-                seId = mra.seRegister(xmlelements.get(i).get(0).get(0),parentId,attributes,restrictionLists, conversationId);
+                try {
+                    seId = seRegister(xmlelements.get(i).get(0).get(0), parentId, attributes, restrictionLists, conversationId);
+                } catch (Exception e) {
+                    LOGGER.error("ERROR IN seRegister METHOD OF PLANNER");
+                    e.printStackTrace();
+                }
 
                 //Finally, the new seId is added to the parent Id list
-                parentIdList.add(Integer.parseInt(xmlelements.get(i).get(1).get(0)),seId);
+                parentIdList.add(Integer.parseInt(xmlelements.get(i).get(1).get(0)), seId);
             }
 
             //After the register, the element to be validated and started will be the second on the list (the level 1 element)
             String app = parentIdList.get(1);
 
             //Validation
-            mra.iValidate(app, conversationId);
+            try {
+                iValidate(app, conversationId);
+            } catch (Exception e) {
+                LOGGER.error("ERROR IN iValidate METHOD OF PLANNER");
+                e.printStackTrace();
+            }
 
             //Start
-            mra.start(app,agentAttributes, conversationId);
+            try {
+                start(app, agentAttributes, conversationId);
+            } catch (Exception e) {
+                LOGGER.error("ERROR IN start METHOD OF PLANNER: Sending command to systemModelAgent");
+                e.printStackTrace();
+            }
         }
 
         private boolean finished = false;
@@ -223,4 +251,184 @@ public class Planner extends Agent {
             LOGGER.exit();
         }
     }
+
+    // METHODS OF MasReconAgent
+    public String seRegister(String seType, String parentId, ConcurrentHashMap<String, String> attributes, ConcurrentHashMap<String,ConcurrentHashMap<String, String>> restrictionLists, String conversationId) throws Exception {
+        LOGGER.entry(seType, parentId, attributes, restrictionLists, conversationId);
+
+        //compruebo restricciones
+
+        String restrictionMatch = null;
+        if (restrictionLists!=null) {
+            for (Map.Entry<String, ConcurrentHashMap<String, String>> restriction : restrictionLists.entrySet()) {
+
+                //Aquí se obtiene el tipo de recurso del que se quiere comprobar las restricciones
+                //String query = "get * category="+restriction.getKey();
+                String query = "get * category=service";
+
+                for (Map.Entry<String, String> entry : restriction.getValue().entrySet()) {
+
+                    //Aquí se obtienen las restricciones asociadas a ese tipo de recurso
+                    query = query + " " + entry.getKey() + "=" + entry.getValue();
+                }
+
+                query = "get (get ("+query+") attrib=parent) category=" + restriction.getKey();
+
+                System.out.println("***************** Lanzo consulta de comprobación " + query);
+                String validateRestriction = sendCommand(query, conversationId).getContent();
+                if (validateRestriction.isEmpty()) {
+                    LOGGER.info(query+">"+validateRestriction+": restricción incumplida");
+                    throw new Exception();
+                }
+            }
+        }
+
+        //localizo tipo del padre    // TODO si el padre es "system" no comprobar
+        // TODO si el padre está en systemmodel.xml:
+        // ir a systemmodel.xsd y buscar <xs:extension base="tipo" y en sus hijos
+        // getFixed (tipo, atributo) > buscar <xs:extension base="tipo" y en sus hijos devuelve el fixed del que tenga nombre atributo
+
+        // si es extensible el padre traigo la estructura desde el hijo de system con los atributos, (resolver su ID **registering**), validar appvalidar.xsd
+        // si valida > volver a montarlo en systemmodel
+
+        String parentType = sendCommand ("get "+parentId+" attrib=category", conversationId).getContent();
+        if (parentType.equals("")) {
+            LOGGER.info("ERROR: parent id not found"); //no existe padre
+            throw new Exception();
+        }
+        LOGGER.info(parentId+" type="+parentType);
+
+        //compruebo jerarquía // TODO si el padre es "system" comprobar que el se es raiz del appvalidation xsd -> dom
+
+        String validateHierarchy = sendCommand("validate hierarchy "+seType+" "+parentType, conversationId).getContent();
+        if (!validateHierarchy.equals("valid")) {
+            LOGGER.info(seType+">"+parentType+": jerarquía incorrecta");
+            throw new Exception();
+        }
+        LOGGER.info(seType+">"+parentType+": jerarquía correcta");
+
+        // registro elemento en xml elements
+
+        String command = "reg "+seType+" seParent="+parentId+ " parent=concepts";
+        if (attributes!=null) {
+            for (Map.Entry<String, String> entry : attributes.entrySet()) {
+                command = command+" "+entry.getKey()+"="+entry.getValue();
+            }
+        }
+        String ID = sendCommand(command, conversationId).getContent();
+
+        // TODO: por cada restrictionList una llamada al get y comprobar que existen en el SystemModel
+        for (String keyi: restrictionLists.keySet()){
+            System.out.println("*******************key="+keyi);
+            String restrictionList = sendCommand("reg restrictionList se="+keyi+" parent="+ID, conversationId).getContent();
+
+            for (String keyj: restrictionLists.get(keyi).keySet()){
+                String restriction = sendCommand("reg restriction attribName="+keyj+" attribValue="+restrictionLists.get(keyi).get(keyj)+" parent="+restrictionList, conversationId).getContent();
+                System.out.println("keyj="+keyj);
+            }
+        }
+
+        //validar elemento contra esquema systemElements
+
+        String validation =  sendCommand("validate systemElement "+ID, conversationId).getContent();
+        LOGGER.info(validation);
+
+        if (!validation.equals("valid")) {
+            sendCommand("del "+ID, conversationId).getContent();
+            LOGGER.info("error xsd concepts");
+            throw new Exception();
+            //throw new XSDException(validation);
+
+        } else LOGGER.info("xsd concepts correcto");
+
+        // mover a registering.xml
+
+        if (parentId.equals("system")) sendCommand("set " + ID + " parent=registering", conversationId).getContent();
+        else sendCommand("set " + ID + " parent=(get " + ID + " attrib=seParent) seParent=", conversationId).getContent();
+
+        return ID;
+    }
+
+    public String iValidate(String se, String conversationId) throws Exception {
+
+        //localizo tipo
+
+        LOGGER.info("iValidate("+se+")");
+        String seType = sendCommand ("get "+se+" attrib=category", conversationId).getContent();
+
+        //no existe
+
+        if (seType.equals("")) {
+            LOGGER.info("ERROR: id not found");
+            return "";
+        }
+        LOGGER.info(seType+" type="+seType);
+
+        //compruebo jerarquía
+        String validateHierarchy = sendCommand("validate appValidation "+se+" "+seType, conversationId).getContent();
+        if (!validateHierarchy.equals("valid")) {
+            LOGGER.info(se+">"+seType+": xsd incorrecta");
+            throw new Exception();
+
+            // TODO: Borrar
+        }
+        LOGGER.info(validateHierarchy+">"+seType+": xsd correcta");
+
+        // mover a registering
+
+        sendCommand("set "+se+" parent=(get "+se+" attrib=seParent) seParent=", conversationId).getContent();
+
+        return se;
+    }
+
+    public String start(String seId, ConcurrentHashMap<String, String> attributes, String conversationId) throws InterruptedException, FIPAException {
+        LOGGER.entry(seId, attributes);
+
+        StringBuilder command = new StringBuilder("sestart "+seId);
+
+        if (attributes!=null)
+            attributes.entrySet().stream().forEach(entry -> command.append(" " + entry.getKey() + "=" + entry.getValue()));
+
+        return LOGGER.exit(sendCommand(command.toString(), conversationId).getContent());
+    }
+
+    public ACLMessage sendCommand(String cmd, String conversationId) throws FIPAException, InterruptedException {
+        DFAgentDescription dfd = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+
+        sd.setType("sa");
+        dfd.addServices(sd);
+        String mwm;
+
+        while (true) {
+            DFAgentDescription[] result = DFService.search(this,dfd);
+
+            if ((result != null) && (result.length > 0)) {
+                dfd = result[0];
+                mwm = dfd.getName().getLocalName();
+                break;
+            }
+            LOGGER.info(".");
+            Thread.sleep(100);
+
+        } //end while (true)
+
+        LOGGER.entry(mwm, cmd);
+
+        ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+        msg.addReceiver(new AID(mwm, AID.ISLOCALNAME));
+        msg.setConversationId(conversationId);
+        msg.setOntology("control");
+        msg.setContent(cmd);
+        msg.setReplyWith(cmd);
+
+        this.send(msg);
+
+        ACLMessage reply = this.blockingReceive();
+
+        LOGGER.info((cmd.startsWith("validate"))?"xsd: "+reply.getContent(): cmd+" > "+reply.getContent());
+
+        return LOGGER.exit(reply);
+    }
+
 }
