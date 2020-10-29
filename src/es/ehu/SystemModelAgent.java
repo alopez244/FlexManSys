@@ -202,7 +202,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         while (cmd.contains(" =")) cmd=cmd.replace(" =", "=");
 
         String[] cmds = cmd.split(" ");
-        Hashtable<String, String> attribs = processAttribs(cmds);
+        Hashtable<String, String> attribs = processAttribs(2, cmds);
 
         try {
             if (cmds[0].equals("reg")) result.append(reg(cmds[1], attribs));
@@ -221,6 +221,8 @@ public class SystemModelAgent extends Agent implements IExecManagement {
                 //else if (cmds[0].equals("localneg")) result.append(negotiate(cmds[1], attribs, conversationId));
 
             else if (cmds[0].equals("sestart")) result.append(seStart(cmds[1], attribs, conversationId)); // threaded#condition
+
+            else if (cmds[0].equals("seregister")) result.append(seRegister(cmd, conversationId)); // threaded#condition
 
             else if (cmds[0].equals("start")) result.append(start(cmds[1], attribs, conversationId)); // threaded#condition
             else if (cmds[0].equals("stop")) result.append(processCmd("localcmd " + cmds[1] + " cmd=setstate stop", conversationId));
@@ -350,7 +352,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
      * @param cmdLine
      * @return
      */
-    public Hashtable<String, String> processAttribs(String... cmdLine){
+    public Hashtable<String, String> processAttribs(int firstAttribPos, String... cmdLine){
         LOGGER.entry((Object[])cmdLine);
 
         if (cmdLine.length < 3) return null; //no hay atributos
@@ -358,7 +360,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         Hashtable<String, String> attribs = new Hashtable<String, String>();
         String attrib = "attrib";
 
-        for (int i = 2; i < cmdLine.length; i++) {
+        for (int i = firstAttribPos; i < cmdLine.length; i++) {
             if (cmdLine[i].contains("=")) { // encuentro otro atributo
                 String[] attribDef = cmdLine[i].split("=");
                 attrib = attribDef[0];
@@ -373,6 +375,29 @@ public class SystemModelAgent extends Agent implements IExecManagement {
 
         }
         return LOGGER.exit(attribs);
+    }
+
+    public ConcurrentHashMap<String, String> processRestrictions(String... cmdLine){
+        LOGGER.entry((Object[])cmdLine);
+
+        ConcurrentHashMap<String, String> restrictions = new ConcurrentHashMap<>();
+        String attrib = "attrib";
+
+        for (int i = 1; i < cmdLine.length; i++) {
+            if (cmdLine[i].contains("=")) { // encuentro otro atributo
+                String[] attribDef = cmdLine[i].split("=");
+                attrib = attribDef[0];
+
+                restrictions.put(attrib, (attribDef.length>1)?attribDef[1]:""); // puede estar vacío
+            } else restrictions.put(attrib, restrictions.get(attrib) + " " + cmdLine[i]);
+            String attribValue = restrictions.get(attrib);
+            while (attribValue.contains("{")) attribValue = attribValue.replace("{", "(");
+            while (attribValue.contains("}")) attribValue = attribValue.replace("}", ")");
+            while (attribValue.contains("#")) attribValue = attribValue.replace("#", "=");
+            restrictions.put(attrib, attribValue);
+
+        }
+        return LOGGER.exit(restrictions);
     }
 
     //====================================================================
@@ -1067,7 +1092,91 @@ public class SystemModelAgent extends Agent implements IExecManagement {
 
     }
 
-    public String start(final String element, final Hashtable<String, String> attribs, final String conversationId) {
+    public String seRegister(String cmd, String conversationId) throws Exception {
+
+        // Collect all the data from cmd
+        Hashtable<String, String> attribs = null;
+        ConcurrentHashMap<String, ConcurrentHashMap<String, String>> restrictionLists = null;
+        if (cmd.contains("&")) {
+            String[] aux = cmd.split(" & ");
+            attribs = processAttribs(1, aux[0].split(" "));
+            restrictionLists = new ConcurrentHashMap<>();
+            String restrictionValue = aux[1].split(" ")[0];
+            ConcurrentHashMap<String, String> restrictList = processRestrictions(aux[1].split(" "));
+            restrictionLists.put(restrictionValue, restrictList);
+        } else
+            attribs = processAttribs(1, cmd.split(" "));
+
+        String seType = attribs.get("seType");
+        String parentId = attribs.get("parentId");
+        String parent = attribs.get("parent");
+
+        LOGGER.entry("seType", parentId, attribs, restrictionLists, conversationId);
+
+        String name = attribs.get("name");
+        System.out.println("Attribs--> " + attribs);
+
+        //compruebo restricciones
+        String restrictionMatch = null;
+        if (restrictionLists!=null) {
+            for (Map.Entry<String, ConcurrentHashMap<String, String>> restriction : restrictionLists.entrySet()) {
+                //Aquí se obtiene el tipo de recurso del que se quiere comprobar las restricciones
+                //String query = "get * category="+restriction.getKey();
+                String query = "get * category=service";
+
+                for (Map.Entry<String, String> entry : restriction.getValue().entrySet()) {
+                    //Aquí se obtienen las restricciones asociadas a ese tipo de recurso
+                    query = query + " " + entry.getKey() + "=" + entry.getValue();
+                }
+
+                query = "get (get ("+query+") attrib=parent) category=" + restriction.getKey();
+
+                System.out.println("***************** Lanzo consulta de comprobación " + query);
+                //String validateRestriction = sendCommand(query, conversationId).getContent();
+                String validateRestriction = get(query.split(" ")[1], processAttribs(2, query.split(" ")), conversationId);
+                if (validateRestriction.isEmpty()) {
+                    LOGGER.info(query+">"+validateRestriction+": restricción incumplida");
+                    throw new Exception();
+                }
+            }
+        }
+
+        //localizo tipo del padre    // TODO si el padre es "system" no comprobar
+        // TODO si el padre está en systemmodel.xml:
+        // ir a systemmodel.xsd y buscar <xs:extension base="tipo" y en sus hijos
+        // getFixed (tipo, atributo) > buscar <xs:extension base="tipo" y en sus hijos devuelve el fixed del que tenga nombre atributo
+
+        // si es extensible el padre traigo la estructura desde el hijo de system con los atributos, (resolver su ID **registering**), validar appvalidar.xsd
+        // si valida > volver a montarlo en systemmodel
+
+        //String parentType = sendCommand ("get "+parentId+" attrib=category", conversationId).getContent();
+        Hashtable<String, String> auxAttribs = new Hashtable<>();
+        auxAttribs.put("attrib", "category");
+        String parentType = get(parentId, auxAttribs, conversationId);
+        if (parentType.equals("")) {
+            LOGGER.info("ERROR: parent id not found"); //no existe padre
+            throw new Exception();
+        }
+        LOGGER.info(parentId+" type="+parentType);
+
+        //compruebo jerarquía // TODO si el padre es "system" comprobar que el se es raiz del appvalidation xsd -> dom
+
+        //String validateHierarchy = sendCommand("validate hierarchy "+seType+" "+parentType, conversationId).getContent();
+        String validateHierarchy = validate("hierarchy", seType, parentType);
+        if (!validateHierarchy.equals("valid")) {
+            LOGGER.info(seType+">"+parentType+": jerarquía incorrecta");
+            throw new Exception();
+        }
+        LOGGER.info(seType+">"+parentType+": jerarquía correcta");
+
+        // Vamos por la linea 345 de Planner
+
+
+
+        return "";
+    }
+
+        public String start(final String element, final Hashtable<String, String> attribs, final String conversationId) {
         LOGGER.entry(element, conversationId);
 
         if (element.startsWith("avail")) return startAvailabilityManager();

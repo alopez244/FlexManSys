@@ -193,6 +193,41 @@ public class Planner extends Agent {
                 //The parent Id is always the last element Id of the upper level
                 parentId = parentIdList.get(Integer.parseInt(xmlelements.get(i).get(1).get(0)) - 1);
 
+                // TODO BORRAR --> prueba seRegister systemModelAgent
+                String commandReg = "seregister parentId="+parentId+ " parent=concepts seType=" + xmlelements.get(i).get(0).get(0);
+                for (Map.Entry<String, String> entry : attributes.entrySet()) {
+                    commandReg = commandReg+" "+entry.getKey()+"="+entry.getValue();
+                }
+
+                restrictionList.put("refServID", "id56");
+                restrictionList.put("aaa", "bbb");
+                restrictionLists.put("procNode", restrictionList);
+
+                restrictionLists.clear();
+
+                if (!restrictionLists.isEmpty()) {
+                    commandReg = commandReg + " & " + restrictionLists.keys().nextElement();
+
+                    for (Map.Entry<String, ConcurrentHashMap<String, String>> restriction : restrictionLists.entrySet()) {
+                        for (Map.Entry<String, String> entry : restriction.getValue().entrySet()) {
+
+                            //Aquí se obtienen las restricciones asociadas a ese tipo de recurso
+                            commandReg = commandReg + " " + entry.getKey() + "=" + entry.getValue();
+                        }
+                    }
+                }
+
+                try {
+                    sendCommand(commandReg, conversationId);
+                } catch (FIPAException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+
+                // TODO acaba el borrar
+
                 //Now the register is performed and the element name is obtained
                 try {
                     seId = seRegister(xmlelements.get(i).get(0).get(0), parentId, attributes, restrictionLists, conversationId);
