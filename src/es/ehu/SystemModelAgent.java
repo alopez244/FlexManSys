@@ -223,6 +223,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
             else if (cmds[0].equals("sestart")) result.append(seStart(cmds[1], attribs, conversationId)); // threaded#condition
 
             else if (cmds[0].equals("seregister")) result.append(seRegister(cmd, conversationId)); // threaded#condition
+            else if (cmds[0].equals("ivalidate")) result.append(iValidate(cmds[1], conversationId)); // threaded#condition
 
             else if (cmds[0].equals("start")) result.append(start(cmds[1], attribs, conversationId)); // threaded#condition
             else if (cmds[0].equals("stop")) result.append(processCmd("localcmd " + cmds[1] + " cmd=setstate stop", conversationId));
@@ -690,6 +691,47 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         return output;
     }
 
+    private String iValidate(String se, String conversationId) throws Exception {
+
+        //localizo tipo
+
+        LOGGER.info("iValidate("+se+")");
+        //String seType = sendCommand ("get "+se+" attrib=category", conversationId).getContent();
+        Hashtable<String, String> aux = new Hashtable<>();
+        aux.put("attrib", "category");
+        String seType = get(se, aux, conversationId);
+
+        //no existe
+
+        if (seType.equals("")) {
+            LOGGER.info("ERROR: id not found");
+            return "";
+        }
+        LOGGER.info(seType+" type="+seType);
+
+        //compruebo jerarquía
+        //String validateHierarchy = sendCommand("validate appValidation "+se+" "+seType, conversationId).getContent();
+        String validateHierarchy = validate("appValidation", se, seType);
+        if (!validateHierarchy.equals("valid")) {
+            LOGGER.info(se+">"+seType+": xsd incorrecta");
+            throw new Exception();
+
+            // TODO: Borrar
+        }
+        LOGGER.info(validateHierarchy+">"+seType+": xsd correcta");
+
+        // mover a registering
+
+        aux.clear();
+        aux.put("attrib","seParent");
+        String parentID = get(se, aux, conversationId);
+        //sendCommand("set "+se+" parent=(get "+se+" attrib=seParent) seParent=", conversationId).getContent();
+        String command = "set " + se + " parent="+parentID+" seParent=";
+        set(command.split(" ")[1], processAttribs(2, command.split(" ")), conversationId);
+
+        return se;
+    }
+
     //====================================================================
     //ISYSTEMINFO INTERFACE IMPLEMENTATION
     //====================================================================
@@ -1096,7 +1138,8 @@ public class SystemModelAgent extends Agent implements IExecManagement {
 
         // Collect all the data from cmd
         Hashtable<String, String> attribs = null;
-        ConcurrentHashMap<String, ConcurrentHashMap<String, String>> restrictionLists = null;
+        Hashtable<String, String> auxAttribs = new Hashtable<>();
+        ConcurrentHashMap<String, ConcurrentHashMap<String, String>> restrictionLists = new ConcurrentHashMap<String, ConcurrentHashMap<String, String>>();
         if (cmd.contains("&")) {
             String[] aux = cmd.split(" & ");
             attribs = processAttribs(1, aux[0].split(" "));
@@ -1108,8 +1151,8 @@ public class SystemModelAgent extends Agent implements IExecManagement {
             attribs = processAttribs(1, cmd.split(" "));
 
         String seType = attribs.get("seType");
-        String parentId = attribs.get("parentId");
-        String parent = attribs.get("parent");
+        attribs.remove("seType");   // No tiene que ir en los atributos --> Al validar da fallo sino
+        String parentId = attribs.get("seParent");
 
         LOGGER.entry("seType", parentId, attribs, restrictionLists, conversationId);
 
@@ -1121,19 +1164,26 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         if (restrictionLists!=null) {
             for (Map.Entry<String, ConcurrentHashMap<String, String>> restriction : restrictionLists.entrySet()) {
                 //Aquí se obtiene el tipo de recurso del que se quiere comprobar las restricciones
-                //String query = "get * category="+restriction.getKey();
-                String query = "get * category=service";
+                String query = "get * category="+restriction.getKey();
+                //String query = "get * category=service";
 
                 for (Map.Entry<String, String> entry : restriction.getValue().entrySet()) {
                     //Aquí se obtienen las restricciones asociadas a ese tipo de recurso
                     query = query + " " + entry.getKey() + "=" + entry.getValue();
                 }
 
-                query = "get (get ("+query+") attrib=parent) category=" + restriction.getKey();
+                // TODO mirarlo porque igual falla --> un get dentro de otro get (mejor hacerlos separados)
+                //query = "get (get ("+query+") attrib=parent) category=" + restriction.getKey();
 
                 System.out.println("***************** Lanzo consulta de comprobación " + query);
-                //String validateRestriction = sendCommand(query, conversationId).getContent();
-                String validateRestriction = get(query.split(" ")[1], processAttribs(2, query.split(" ")), conversationId);
+
+                String[] querys = query.split(" ");
+                auxAttribs.clear();
+                auxAttribs = processAttribs(2, querys);
+                String validateRestriction = get(querys[1], auxAttribs, conversationId);
+                auxAttribs.clear();
+                //String validateRestriction = sendCommand(new StringBuilder(query), "sa", conversationId);
+                //String validateRestriction = get(query.split(" ")[1], processAttribs(2, query.split(" ")), conversationId);
                 if (validateRestriction.isEmpty()) {
                     LOGGER.info(query+">"+validateRestriction+": restricción incumplida");
                     throw new Exception();
@@ -1150,7 +1200,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         // si valida > volver a montarlo en systemmodel
 
         //String parentType = sendCommand ("get "+parentId+" attrib=category", conversationId).getContent();
-        Hashtable<String, String> auxAttribs = new Hashtable<>();
+        auxAttribs.clear();
         auxAttribs.put("attrib", "category");
         String parentType = get(parentId, auxAttribs, conversationId);
         if (parentType.equals("")) {
@@ -1169,11 +1219,61 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         }
         LOGGER.info(seType+">"+parentType+": jerarquía correcta");
 
-        // Vamos por la linea 345 de Planner
+        // registro elemento en xml elements
+        String command = "reg "+seType+" seParent="+parentId+ " parent=concepts";
+        if (attribs!=null) {
+            for (Map.Entry<String, String> entry : attribs.entrySet()) {
+                command = command+" "+entry.getKey()+"="+entry.getValue();
+            }
+        }
+        //String ID = sendCommand(command, conversationId).getContent();
+        String ID = reg(command.split(" ")[1], processAttribs(2, command.split(" ")));
+
+        // TODO: por cada restrictionList una llamada al get y comprobar que existen en el SystemModel
+        for (String keyi: restrictionLists.keySet()){
+            System.out.println("*******************key="+keyi);
+            //String restrictionList = sendCommand("reg restrictionList se="+keyi+" parent="+ID, conversationId).getContent();
+            String query = "reg restrictionList se="+keyi+" parent="+ID;
+            String restrictionList = reg(query.split(" ")[1], processAttribs(2, query.split(" ")));
+
+            for (String keyj: restrictionLists.get(keyi).keySet()){
+                query = "reg restriction attribName="+keyj+" attribValue="+restrictionLists.get(keyi).get(keyj)+" parent="+restrictionList;
+                //String restriction = sendCommand("reg restriction attribName="+keyj+" attribValue="+restrictionLists.get(keyi).get(keyj)+" parent="+restrictionList, conversationId).getContent();
+                String restriction = reg(query.split(" ")[1], processAttribs(2, query.split(" ")));
+                System.out.println("keyj="+keyj);
+            }
+        }
+
+        //validar elemento contra esquema systemElements
+
+        //String validation =  sendCommand("validate systemElement "+ID, conversationId).getContent();
+        String validation =  validate("systemElement", ID);
+        LOGGER.info(validation);
+
+        if (!validation.equals("valid")) {
+            //sendCommand("del "+ID, conversationId).getContent();
+            del(ID);
+            LOGGER.info("error xsd concepts");
+            throw new Exception();
+            //throw new XSDException(validation);
+
+        } else LOGGER.info("xsd concepts correcto");
+
+        // mover a registering.xml
 
 
-
-        return "";
+        if (parentId.equals("system")) { //sendCommand("set " + ID + " parent=registering", conversationId).getContent();
+            command = "set " + ID + " parent=registering";
+            set(command.split(" ")[1], processAttribs(2, command.split(" ")), conversationId);
+        } else { //sendCommand("set " + ID + " parent=(get " + ID + " attrib=seParent) seParent=", conversationId).getContent();
+            auxAttribs.clear();
+            auxAttribs.put("attrib", "seParent");
+            String parentID = get(ID, auxAttribs, conversationId);
+            //command = "set " + ID + " parent=(get " + ID + " attrib=seParent) seParent=";
+            command = "set " + ID + " parent="+parentID+" seParent=";
+            set(command.split(" ")[1], processAttribs(2, command.split(" ")), conversationId);
+        }
+        return ID;
     }
 
         public String start(final String element, final Hashtable<String, String> attribs, final String conversationId) {

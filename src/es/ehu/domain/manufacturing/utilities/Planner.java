@@ -181,6 +181,9 @@ public class Planner extends Agent {
 
             String conversationId = myAgent.getLocalName() + "_" + chatID++;
 
+            restrictionList.put("refServID", "id55");
+            restrictionLists.put("pNodeAgent", restrictionList);
+
             //For structure is used to register all the elements
             for (int i = 0; i < xmlelements.size(); i++) {
 
@@ -193,46 +196,28 @@ public class Planner extends Agent {
                 //The parent Id is always the last element Id of the upper level
                 parentId = parentIdList.get(Integer.parseInt(xmlelements.get(i).get(1).get(0)) - 1);
 
-                // TODO BORRAR --> prueba seRegister systemModelAgent
-                String commandReg = "seregister parentId="+parentId+ " parent=concepts seType=" + xmlelements.get(i).get(0).get(0);
+                String commandSeReg = "seregister seParent="+parentId+ " parent=concepts seType=" + xmlelements.get(i).get(0).get(0);
                 for (Map.Entry<String, String> entry : attributes.entrySet()) {
-                    commandReg = commandReg+" "+entry.getKey()+"="+entry.getValue();
+                    commandSeReg = commandSeReg+" "+entry.getKey()+"="+entry.getValue();
                 }
 
-                restrictionList.put("refServID", "id56");
-                restrictionList.put("aaa", "bbb");
-                restrictionLists.put("procNode", restrictionList);
-
-                restrictionLists.clear();
-
                 if (!restrictionLists.isEmpty()) {
-                    commandReg = commandReg + " & " + restrictionLists.keys().nextElement();
-
+                    commandSeReg = commandSeReg + " & " + restrictionLists.keys().nextElement();
                     for (Map.Entry<String, ConcurrentHashMap<String, String>> restriction : restrictionLists.entrySet()) {
                         for (Map.Entry<String, String> entry : restriction.getValue().entrySet()) {
-
                             //Aquí se obtienen las restricciones asociadas a ese tipo de recurso
-                            commandReg = commandReg + " " + entry.getKey() + "=" + entry.getValue();
+                            commandSeReg = commandSeReg + " " + entry.getKey() + "=" + entry.getValue();
                         }
                     }
                 }
 
+
                 try {
-                    sendCommand(commandReg, conversationId);
+                    ACLMessage reply = sendCommand(commandSeReg, conversationId);
+                    seId = reply.getContent();
                 } catch (FIPAException e) {
                     e.printStackTrace();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-
-                // TODO acaba el borrar
-
-                //Now the register is performed and the element name is obtained
-                try {
-                    seId = seRegister(xmlelements.get(i).get(0).get(0), parentId, attributes, restrictionLists, conversationId);
-                } catch (Exception e) {
-                    LOGGER.error("ERROR IN seRegister METHOD OF PLANNER");
                     e.printStackTrace();
                 }
 
@@ -243,13 +228,15 @@ public class Planner extends Agent {
             //After the register, the element to be validated and started will be the second on the list (the level 1 element)
             String app = parentIdList.get(1);
 
-            //Validation
+            String commandIValid = "ivalidate " + app;
             try {
-                iValidate(app, conversationId);
-            } catch (Exception e) {
-                LOGGER.error("ERROR IN iValidate METHOD OF PLANNER");
+                sendCommand(commandIValid, conversationId);
+            } catch (FIPAException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+
 
             //Start
             try {
@@ -285,135 +272,6 @@ public class Planner extends Agent {
             } catch (Exception e) {}
             LOGGER.exit();
         }
-    }
-
-    // METHODS OF MasReconAgent
-    public String seRegister(String seType, String parentId, ConcurrentHashMap<String, String> attributes, ConcurrentHashMap<String,ConcurrentHashMap<String, String>> restrictionLists, String conversationId) throws Exception {
-        LOGGER.entry(seType, parentId, attributes, restrictionLists, conversationId);
-
-        //compruebo restricciones
-
-        String restrictionMatch = null;
-        if (restrictionLists!=null) {
-            for (Map.Entry<String, ConcurrentHashMap<String, String>> restriction : restrictionLists.entrySet()) {
-
-                //Aquí se obtiene el tipo de recurso del que se quiere comprobar las restricciones
-                //String query = "get * category="+restriction.getKey();
-                String query = "get * category=service";
-
-                for (Map.Entry<String, String> entry : restriction.getValue().entrySet()) {
-
-                    //Aquí se obtienen las restricciones asociadas a ese tipo de recurso
-                    query = query + " " + entry.getKey() + "=" + entry.getValue();
-                }
-
-                query = "get (get ("+query+") attrib=parent) category=" + restriction.getKey();
-
-                System.out.println("***************** Lanzo consulta de comprobación " + query);
-                String validateRestriction = sendCommand(query, conversationId).getContent();
-                if (validateRestriction.isEmpty()) {
-                    LOGGER.info(query+">"+validateRestriction+": restricción incumplida");
-                    throw new Exception();
-                }
-            }
-        }
-
-        //localizo tipo del padre    // TODO si el padre es "system" no comprobar
-        // TODO si el padre está en systemmodel.xml:
-        // ir a systemmodel.xsd y buscar <xs:extension base="tipo" y en sus hijos
-        // getFixed (tipo, atributo) > buscar <xs:extension base="tipo" y en sus hijos devuelve el fixed del que tenga nombre atributo
-
-        // si es extensible el padre traigo la estructura desde el hijo de system con los atributos, (resolver su ID **registering**), validar appvalidar.xsd
-        // si valida > volver a montarlo en systemmodel
-
-        String parentType = sendCommand ("get "+parentId+" attrib=category", conversationId).getContent();
-        if (parentType.equals("")) {
-            LOGGER.info("ERROR: parent id not found"); //no existe padre
-            throw new Exception();
-        }
-        LOGGER.info(parentId+" type="+parentType);
-
-        //compruebo jerarquía // TODO si el padre es "system" comprobar que el se es raiz del appvalidation xsd -> dom
-
-        String validateHierarchy = sendCommand("validate hierarchy "+seType+" "+parentType, conversationId).getContent();
-        if (!validateHierarchy.equals("valid")) {
-            LOGGER.info(seType+">"+parentType+": jerarquía incorrecta");
-            throw new Exception();
-        }
-        LOGGER.info(seType+">"+parentType+": jerarquía correcta");
-
-        // registro elemento en xml elements
-
-        String command = "reg "+seType+" seParent="+parentId+ " parent=concepts";
-        if (attributes!=null) {
-            for (Map.Entry<String, String> entry : attributes.entrySet()) {
-                command = command+" "+entry.getKey()+"="+entry.getValue();
-            }
-        }
-        String ID = sendCommand(command, conversationId).getContent();
-
-        // TODO: por cada restrictionList una llamada al get y comprobar que existen en el SystemModel
-        for (String keyi: restrictionLists.keySet()){
-            System.out.println("*******************key="+keyi);
-            String restrictionList = sendCommand("reg restrictionList se="+keyi+" parent="+ID, conversationId).getContent();
-
-            for (String keyj: restrictionLists.get(keyi).keySet()){
-                String restriction = sendCommand("reg restriction attribName="+keyj+" attribValue="+restrictionLists.get(keyi).get(keyj)+" parent="+restrictionList, conversationId).getContent();
-                System.out.println("keyj="+keyj);
-            }
-        }
-
-        //validar elemento contra esquema systemElements
-
-        String validation =  sendCommand("validate systemElement "+ID, conversationId).getContent();
-        LOGGER.info(validation);
-
-        if (!validation.equals("valid")) {
-            sendCommand("del "+ID, conversationId).getContent();
-            LOGGER.info("error xsd concepts");
-            throw new Exception();
-            //throw new XSDException(validation);
-
-        } else LOGGER.info("xsd concepts correcto");
-
-        // mover a registering.xml
-
-        if (parentId.equals("system")) sendCommand("set " + ID + " parent=registering", conversationId).getContent();
-        else sendCommand("set " + ID + " parent=(get " + ID + " attrib=seParent) seParent=", conversationId).getContent();
-
-        return ID;
-    }
-
-    public String iValidate(String se, String conversationId) throws Exception {
-
-        //localizo tipo
-
-        LOGGER.info("iValidate("+se+")");
-        String seType = sendCommand ("get "+se+" attrib=category", conversationId).getContent();
-
-        //no existe
-
-        if (seType.equals("")) {
-            LOGGER.info("ERROR: id not found");
-            return "";
-        }
-        LOGGER.info(seType+" type="+seType);
-
-        //compruebo jerarquía
-        String validateHierarchy = sendCommand("validate appValidation "+se+" "+seType, conversationId).getContent();
-        if (!validateHierarchy.equals("valid")) {
-            LOGGER.info(se+">"+seType+": xsd incorrecta");
-            throw new Exception();
-
-            // TODO: Borrar
-        }
-        LOGGER.info(validateHierarchy+">"+seType+": xsd correcta");
-
-        // mover a registering
-
-        sendCommand("set "+se+" parent=(get "+se+" attrib=seParent) seParent=", conversationId).getContent();
-
-        return se;
     }
 
     public String start(String seId, ConcurrentHashMap<String, String> attributes, String conversationId) throws InterruptedException, FIPAException {
