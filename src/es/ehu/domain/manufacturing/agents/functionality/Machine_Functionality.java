@@ -1,8 +1,10 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
+import FIPA.DateTime;
 import es.ehu.domain.manufacturing.agents.MachineAgent;
 import es.ehu.domain.manufacturing.utilities.Position;
 import es.ehu.platform.MWAgent;
+import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.behaviour.NegotiatingBehaviour;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.NegFunctionality;
@@ -19,10 +21,8 @@ import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Element;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Objects;
-import java.util.Random;
+import java.security.Timestamp;
+import java.util.*;
 
 import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
 import static es.ehu.domain.manufacturing.utilities.FmsNegotiation.ONT_DEBUG;
@@ -31,6 +31,8 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
+
+    private HashMap<String, String> operationsWithBatchAgents = new HashMap<>();
 
     /** Class to represent the state of a machine. */
     private class machineState implements Serializable {
@@ -264,12 +266,16 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
             e1.printStackTrace();
         }
 
+        //myAgent.initTransition = ControlBehaviour.RUNNING;
+
         return null;
 
         }
 
     @Override
     public Object execute(Object[] input) {
+        // TODO mirarlo, de momento peta porque el input es null
+        /*
         LOGGER.entry(input);
         ACLMessage msg = null;
 
@@ -289,8 +295,84 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
             }
 
         }
+         */
+
+        System.out.println("El agente recurso " + myAgent.getLocalName() + " ya esta en el metodo execute");
+
+        if (!operationsWithBatchAgents.isEmpty())
+            System.out.println("I have the operation: " + operationsWithBatchAgents.entrySet().iterator().next().getKey()
+                    + " and the batchAgent: " + operationsWithBatchAgents.entrySet().iterator().next().getValue());
+
+        PLCInformation info = new PLCInformation(true, "batch1", 1, 3, new DateTime(), new DateTime(), false);
+
+        String batchAgentID = null;  // Tiene que tener el ID del agente batch
+        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+        msg.addReceiver(new AID(batchAgentID, AID.ISLOCALNAME));
+        msg.setConversationId("info a mano");
+        msg.setContent(info.toString());
+        myAgent.send(msg);
 
         return LOGGER.exit(null);
+    }
+
+    private class PLCInformation  {
+
+        private boolean flagItemCompleted;
+        private String batchReference;
+        private int refSubproductType;
+        private int itemNumber;
+        private DateTime initialTimeStamp;
+        private DateTime finalTimeStamp;
+        private boolean flagServiceCompleted;
+
+        public PLCInformation(boolean flagItemCompleted, String batchReference, int refSubproductType, int itemNumber, DateTime initialTimeStamp, DateTime finalTimeStamp, boolean flagServiceCompleted) {
+            this.flagItemCompleted = flagItemCompleted;
+            this.batchReference = batchReference;
+            this.refSubproductType = refSubproductType;
+            this.itemNumber = itemNumber;
+            this.initialTimeStamp = initialTimeStamp;
+            this.finalTimeStamp = finalTimeStamp;
+            this.flagServiceCompleted = flagServiceCompleted;
+        }
+
+        public boolean isFlagItemCompleted() {
+            return flagItemCompleted;
+        }
+
+        public String getBatchReference() {
+            return batchReference;
+        }
+
+        public int getRefSubproductType() {
+            return refSubproductType;
+        }
+
+        public int getItemNumber() {
+            return itemNumber;
+        }
+
+        public DateTime getInitialTimeStamp() {
+            return initialTimeStamp;
+        }
+
+        public DateTime getFinalTimeStamp() {
+            return finalTimeStamp;
+        }
+
+        public boolean isFlagServiceCompleted() {
+            return flagServiceCompleted;
+        }
+
+        @Override
+        public String toString() {
+            return "flagItemCompleted=" + flagItemCompleted +
+                    ", batchReference='" + batchReference +
+                    ", refSubproductType=" + refSubproductType +
+                    ", itemNumber=" + itemNumber +
+                    ", initialTimeStamp=" + initialTimeStamp +
+                    ", finalTimeStamp=" + finalTimeStamp +
+                    ", flagServiceCompleted=" + flagServiceCompleted;
+        }
     }
 
     @Override
@@ -326,6 +408,8 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         Cmd action = new Cmd(sAction);
 
         if (action.cmd.equals("execute")) {
+            operationsWithBatchAgents.put(seOperationID, seID);
+
             // Envio un mensaje al BatchAgent para avisarle de que soy el ganador para asociarme esa operacion
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
             msg.addReceiver(new AID(seID, AID.ISLOCALNAME));

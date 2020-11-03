@@ -70,6 +70,10 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
             //lo que haga en el running
         }
 
+        // TODO CUIDADO --> Se ha copiado de RunningBehaviour
+        Object[] receivedMsgs = manageReceivedMsg(msg);
+        Object result = myAgent.functionalityInstance.execute(receivedMsgs);
+
         long t = manageBlockingTimes();
 
         if (msg == null) {
@@ -113,5 +117,38 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
             }
         }
         return LOGGER.exit(t);
+    }
+
+
+    // TODO mirarlo bien --> Metodo conseguido de RunningBehaviour
+    private Object[] manageReceivedMsg(ACLMessage msg) {
+        LOGGER.entry(msg);
+        if (msg != null) {
+            LOGGER.debug("Message received from: " + msg.getSender().getLocalName());
+            if (myAgent.sourceComponentIDs != null && myAgent.sourceComponentIDs.length > 0) {
+                String senderCmp = myAgent.getComponent(msg.getSender().getLocalName());
+                LOGGER.debug("senderCmp = " + senderCmp);
+                buscar: for (int i = 0; i < myAgent.sourceComponentIDs.length; i++) {
+                    if (senderCmp == null) {
+                        break buscar;
+                    }
+                    LOGGER.info(senderCmp + " checked with " + myAgent.sourceComponentIDs[i]);
+                    if ((myAgent.sourceComponentIDs[i]).contains(senderCmp)) {
+                        LOGGER.trace("found " + senderCmp);
+                        try {
+                            return new Object[] {msg.getContentObject()};
+                        } catch (UnreadableException e) {
+                            LOGGER.debug("Received message without an object in its content");
+                            e.printStackTrace();
+                        }
+                        break buscar;
+                    }
+                }
+            } else {
+                LOGGER.debug("Received message in an agent withou sourceComponentIDs");
+                return LOGGER.exit(new Object[] {msg});
+            }
+        }
+        return LOGGER.exit(null);
     }
 }

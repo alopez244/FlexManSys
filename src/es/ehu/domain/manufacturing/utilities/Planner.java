@@ -181,8 +181,9 @@ public class Planner extends Agent {
 
             String conversationId = myAgent.getLocalName() + "_" + chatID++;
 
-            restrictionList.put("refServID", "id55");
-            restrictionLists.put("pNodeAgent", restrictionList);
+            // TODO mas adelante mirar lo de las restricciones --> Si no hay que escribirlas en el SystemModelAgent buscar una solucion
+            //restrictionList.put("refServID", "id55");
+            //restrictionLists.put("pNodeAgent", restrictionList);
 
             //For structure is used to register all the elements
             for (int i = 0; i < xmlelements.size(); i++) {
