@@ -6,7 +6,6 @@ import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.utilities.XMLReader;
 import jade.core.Agent;
-import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import org.apache.commons.io.FilenameUtils;
 
@@ -24,9 +23,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private String numOfItems;
 
     private int chatID = 0; // Numero incremental para crear conversationID
-
-    private boolean moreMsg = true;
-
     private String firstState;
     private String redundancy;
     private String parentAgentID;
@@ -86,6 +82,20 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     @Override
     public Object execute(Object[] input) {
         System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
+
+        System.out.println("Ahora el agente " + myAgent.getLocalName() + " se va a quedar a la espera de la informacion de las operaciones");
+
+
+        ACLMessage msg = myAgent.receive();
+        if (msg != null) {
+            if (msg.getPerformative() == ACLMessage.INFORM) {
+                System.out.println("Quien envia el mensaje: " + msg.getSender());
+                System.out.println("Contenido: " + msg.getContent());
+                System.out.println("ConversationId: " + msg.getConversationId());
+            }
+        }
+
+
         return null;
     }
 
@@ -188,37 +198,32 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
         HashMap<String,String> operationsWithMachines = new HashMap<>();
 
-        // Le añadimos un comportamiento para recibir los mensajes de las maquinas
-        myAgent.addBehaviour(new SimpleBehaviour() {
-            @Override
-            public void action() {
-                ACLMessage msg = myAgent.receive();
-                if(msg != null) {
-                    if ((msg.getPerformative() == 7) && (msg.getContent().contains("I am the winner"))) {
-                        String operationID = msg.getContent().split(":")[1];
-                        // Con la ID de la operacion lo borramos de la lista que teniamos, y añadimos a la nueva lista la maquina que se le ha asociado
-                        machinesForOperations.remove(operationID);
-                        operationsWithMachines.put(operationID, msg.getSender().getLocalName());
-                        // Si se han borrado todas las operaciones es que ya tenemos todas las maquinas asociadas a alguna operacion
-                        if (machinesForOperations.isEmpty()) {
-                            System.out.println("Todas las operaciones tienen asociada una maquina");
-                            moreMsg = false;
-                            // Ahora podremos proceder a conseguir la trazabilidad de los productos
-                            getProductsTraceability(operationsWithMachines);
-                        }
-                    }
-                } else {
-                    if (moreMsg)
-                        // Se queda a la espera para cuando le envien mas mensajes
-                        block();
+        while (!machinesForOperations.isEmpty()) {
+            ACLMessage msg = myAgent.receive();
+            if (msg != null) {
+                // TODO COMPROBAR TAMBIEN LOS TRACKING si esta bien programado (sin probar)
+                if ((msg.getPerformative() == ACLMessage.INFORM) && (msg.getContent().contains("I am the winner"))) {
+
+                    String operationID = msg.getContent().split(":")[1];
+                    // Con la ID de la operacion lo borramos de la lista que teniamos, y añadimos a la nueva lista la maquina que se le ha asociado
+                    machinesForOperations.remove(operationID);
+                    operationsWithMachines.put(operationID, msg.getSender().getLocalName());
+
                 }
             }
+        }
 
-            @Override
-            public boolean done() {
-                return false;
-            }
-        });
+        // Si se han borrado todas las operaciones es que ya tenemos todas las maquinas asociadas a alguna operacion
+        System.out.println("Todas las operaciones tienen asociada una maquina");
+
+        Iterator it =operationsWithMachines.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            System.out.println("Operation " + pair.getKey() + " is for machine " + pair.getValue());
+        }
+
+        // Ahora podremos proceder a conseguir la trazabilidad de los productos
+        getProductsTraceability(operationsWithMachines);
 
         return operationsWithMachines;
 

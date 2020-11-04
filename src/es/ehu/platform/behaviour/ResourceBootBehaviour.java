@@ -80,9 +80,6 @@ public class ResourceBootBehaviour extends SimpleBehaviour {
             }
         }
 
-        // TODO mirarlo porque no lo entiendo, de momento ponemos esto para que no pete
-        ID=args[0];
-
         myAgent.functionalityInstance.init(myAgent);
         exit = true;
 

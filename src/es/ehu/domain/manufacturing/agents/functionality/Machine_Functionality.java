@@ -1,15 +1,12 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
-import FIPA.DateTime;
 import es.ehu.domain.manufacturing.agents.MachineAgent;
 import es.ehu.domain.manufacturing.utilities.Position;
 import es.ehu.platform.MWAgent;
-import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.behaviour.NegotiatingBehaviour;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.platform.utilities.Cmd;
-import es.ehu.platform.utilities.XMLReader;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -18,10 +15,10 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.w3c.dom.Element;
 
 import java.io.Serializable;
-import java.security.Timestamp;
+import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.*;
 
 import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
@@ -297,20 +294,36 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         }
          */
 
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         System.out.println("El agente recurso " + myAgent.getLocalName() + " ya esta en el metodo execute");
 
-        if (!operationsWithBatchAgents.isEmpty())
-            System.out.println("I have the operation: " + operationsWithBatchAgents.entrySet().iterator().next().getKey()
-                    + " and the batchAgent: " + operationsWithBatchAgents.entrySet().iterator().next().getValue());
+        if (input != null) {
 
-        PLCInformation info = new PLCInformation(true, "batch1", 1, 3, new DateTime(), new DateTime(), false);
+            String operation = (String) input[0];
+            String agentID = (String) input[1];
+            System.out.println("I have the operation: " + operation
+                    + " and the batchAgent: " + agentID);
 
-        String batchAgentID = null;  // Tiene que tener el ID del agente batch
-        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-        msg.addReceiver(new AID(batchAgentID, AID.ISLOCALNAME));
-        msg.setConversationId("info a mano");
-        msg.setContent(info.toString());
-        myAgent.send(msg);
+            PLCInformation info = new PLCInformation(true, "batch1", 1, 3, LocalDateTime.now(), LocalDateTime.of(2020, Month.NOVEMBER, 04, 11, 30), false);
+
+            String plcInfoString = info.toString();
+            System.out.println("Informacion del PLC--> " + plcInfoString);
+
+            System.out.println("El agente recurso " + myAgent.getLocalName() + " le va a enviar la informacion de la operacion "
+                    +operation + " al agente " + agentID);
+
+            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+            msg.addReceiver(new AID(agentID, AID.ISLOCALNAME));
+            msg.setConversationId("PLC information about operation " + operation);
+            msg.setContent(plcInfoString);
+            myAgent.send(msg);
+
+        }
 
         return LOGGER.exit(null);
     }
@@ -321,11 +334,11 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         private String batchReference;
         private int refSubproductType;
         private int itemNumber;
-        private DateTime initialTimeStamp;
-        private DateTime finalTimeStamp;
+        private LocalDateTime initialTimeStamp;
+        private LocalDateTime finalTimeStamp;
         private boolean flagServiceCompleted;
 
-        public PLCInformation(boolean flagItemCompleted, String batchReference, int refSubproductType, int itemNumber, DateTime initialTimeStamp, DateTime finalTimeStamp, boolean flagServiceCompleted) {
+        public PLCInformation(boolean flagItemCompleted, String batchReference, int refSubproductType, int itemNumber, LocalDateTime initialTimeStamp, LocalDateTime finalTimeStamp, boolean flagServiceCompleted) {
             this.flagItemCompleted = flagItemCompleted;
             this.batchReference = batchReference;
             this.refSubproductType = refSubproductType;
@@ -351,11 +364,11 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
             return itemNumber;
         }
 
-        public DateTime getInitialTimeStamp() {
+        public LocalDateTime getInitialTimeStamp() {
             return initialTimeStamp;
         }
 
-        public DateTime getFinalTimeStamp() {
+        public LocalDateTime getFinalTimeStamp() {
             return finalTimeStamp;
         }
 
@@ -366,7 +379,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         @Override
         public String toString() {
             return "flagItemCompleted=" + flagItemCompleted +
-                    ", batchReference='" + batchReference +
+                    ", batchReference=" + batchReference +
                     ", refSubproductType=" + refSubproductType +
                     ", itemNumber=" + itemNumber +
                     ", initialTimeStamp=" + initialTimeStamp +
@@ -418,6 +431,12 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
             myAgent.send(msg);
 
             System.out.println("\tI am the winner to get operation " +seOperationID+ " from batch " + seID + ". NumItems: " + seNumOfItems);
+
+            Object[] data = new Object[2];
+            data[0]=seOperationID;
+            data[1]=seID;
+            execute(data);
+
         }
 
         return NegotiatingBehaviour.NEG_WON;
