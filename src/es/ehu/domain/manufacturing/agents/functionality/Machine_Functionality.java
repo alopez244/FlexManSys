@@ -302,10 +302,14 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
         System.out.println("El agente recurso " + myAgent.getLocalName() + " ya esta en el metodo execute");
 
-        if (input != null) {
+        //if (input != null) {
+        if (!operationsWithBatchAgents.isEmpty()) {
 
-            String operation = (String) input[0];
-            String agentID = (String) input[1];
+            //String operation = (String) input[0];
+            //String agentID = (String) input[1];
+            Map.Entry<String,String> data = operationsWithBatchAgents.entrySet().iterator().next();
+            String operation = data.getKey();
+            String agentID = data.getValue();
             System.out.println("I have the operation: " + operation
                     + " and the batchAgent: " + agentID);
 
@@ -319,10 +323,11 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
             msg.addReceiver(new AID(agentID, AID.ISLOCALNAME));
-            msg.setConversationId("PLC information about operation " + operation);
-            msg.setContent(plcInfoString);
+            msg.setConversationId("PLC information about operations");
+            msg.setContent(operation + " operation INFO--> " + plcInfoString);
             myAgent.send(msg);
 
+            operationsWithBatchAgents.remove(operation);
         }
 
         return LOGGER.exit(null);
