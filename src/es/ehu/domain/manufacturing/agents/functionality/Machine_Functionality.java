@@ -295,7 +295,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
          */
 
         try {
-            Thread.sleep(2000);
+            Thread.sleep(5000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -307,9 +307,10 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
             //String operation = (String) input[0];
             //String agentID = (String) input[1];
-            Map.Entry<String,String> data = operationsWithBatchAgents.entrySet().iterator().next();
+            Map.Entry<String, String> data = operationsWithBatchAgents.entrySet().iterator().next();
             String operation = data.getKey();
             String agentID = data.getValue();
+
             System.out.println("I have the operation: " + operation
                     + " and the batchAgent: " + agentID);
 
@@ -319,12 +320,18 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
             System.out.println("Informacion del PLC--> " + plcInfoString);
 
             System.out.println("El agente recurso " + myAgent.getLocalName() + " le va a enviar la informacion de la operacion "
-                    +operation + " al agente " + agentID);
+                    + operation + " al agente " + agentID);
 
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
             msg.addReceiver(new AID(agentID, AID.ISLOCALNAME));
-            msg.setConversationId("PLC information about operations");
-            msg.setContent(operation + " operation INFO--> " + plcInfoString);
+            if (!operation.equals("C_01")) {
+                //msg.setConversationId("PLC information about operations");
+                msg.setConversationId(operation + " " + Math.random());
+                msg.setContent(operation + " operation INFO--> " + plcInfoString);
+            } else {
+                msg.setConversationId("Hola");
+                msg.setContent("Ahora va o no");
+            }
             myAgent.send(msg);
 
             operationsWithBatchAgents.remove(operation);

@@ -85,10 +85,10 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
         System.out.println("Ahora el agente " + myAgent.getLocalName() + " se va a quedar a la espera de la informacion de las operaciones");
 
-
         ACLMessage msg = myAgent.receive();
         if (msg != null) {
             if (msg.getPerformative() == ACLMessage.INFORM) {
+                System.out.println("Mensaje con la informacion del PLC");
                 System.out.println("Quien envia el mensaje: " + msg.getSender());
                 System.out.println("Contenido: " + msg.getContent());
                 System.out.println("ConversationId: " + msg.getConversationId());
