@@ -173,6 +173,9 @@ public class Planner extends Agent {
                 return;
             }
 
+            //The plan has been successfully read
+            //Next step is to interpret the set of masterRecipes to compose the hierarchy of applications
+
             //Variable initialization at their first levels
             ArrayList<String> parentIdList = new ArrayList<>();
             parentIdList.add(0,"system");
