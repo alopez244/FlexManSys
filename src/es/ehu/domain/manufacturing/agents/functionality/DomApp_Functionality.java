@@ -232,7 +232,9 @@ public class DomApp_Functionality {
 
                     conversationId = myAgent.getLocalName() + "_" + chatID++;
 
-                    negotiate(myAgent, targets, "max mem", "start", elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy+","+myAgent.getLocalName(), conversationId);
+                    //negotiate(myAgent, targets, "max mem", "start", elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy+","+myAgent.getLocalName(), conversationId);
+                    String negotiationQuery = "localneg " +targets+ " criterion=max mem action=start externaldata="+ elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy+","+myAgent.getLocalName();
+                    reply = sendCommand(myAgent, negotiationQuery, conversationId);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

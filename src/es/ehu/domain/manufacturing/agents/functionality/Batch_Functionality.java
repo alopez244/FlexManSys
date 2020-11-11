@@ -125,7 +125,13 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             String machinesID = entry.getValue();
             System.out.println(operationID + " - " + machinesID);
 
-            negotiate(myAgent, machinesID, "lead time", "execute", myAgent.getLocalName() + "," + numOfItems + "," + operationID, conversationId);
+            //negotiate(myAgent, machinesID, "lead time", "execute", myAgent.getLocalName() + "," + numOfItems + "," + operationID, conversationId);
+            String negotiationQuery = "localneg " +machinesID+ " criterion=lead time action=execute externaldata="+ myAgent.getLocalName() + "," + numOfItems + "," + operationID;
+            try {
+                ACLMessage reply = sendCommand(myAgent, negotiationQuery, conversationId);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
         }
 
