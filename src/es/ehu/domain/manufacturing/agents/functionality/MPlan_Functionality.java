@@ -11,7 +11,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
-public class MPlan_Functionality extends DomApp_Functionality implements BasicFunctionality, AvailabilityFunctionality, IExecManagement {
+public class MPlan_Functionality extends DomApp_Functionality implements BasicFunctionality, AvailabilityFunctionality {
   /**
    * 
    */
@@ -55,6 +55,13 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     parentAgentID = getArgumentOfAgent(myAgent, "parentAgent");
     mySeType = getMySeType(myAgent, conversationId);
 
+    // TODO PRUEBA --> BORRAR
+    try {
+      sendCommand(myAgent, "sestart " +myAgent.getLocalName()+ " category=" + mySeType, conversationId);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
     if (firstState.equals("running")) {
 
       // Cambiar a estado bootToRunning para que los tracking le puedan enviar mensajes
@@ -85,12 +92,19 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
       myAgent.initTransition = ControlBehaviour.TRACKING;
     }
 
+    // TODO PRUEBA --> BORRAR
+    try {
+      sendCommand(myAgent, "set " +myAgent.getLocalName()+ " execution_phase=started", conversationId);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
     return null;
 
     //TODO El planAgent tiene que esperar a la confirmacion de que todos sus hijos se han creado para notificar que pasa al estado running (o tracking si es una réplica)
   }
 
-  @Override
+
   public String seStart(String seID, Hashtable<String, String> attribs, String conversationId){
 
     ArrayList<String> creationCategories = new ArrayList<>();
@@ -103,7 +117,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     return null;
   }
 
-  @Override
+
   public String seStop(String... seID) {
     return null;
   }

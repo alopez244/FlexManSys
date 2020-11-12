@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 
-public class Order_Functionality extends DomApp_Functionality implements BasicFunctionality, AvailabilityFunctionality, IExecManagement {
+public class Order_Functionality extends DomApp_Functionality implements BasicFunctionality, AvailabilityFunctionality {
 
     private static final long serialVersionUID = 1L;
     private Agent myAgent;
@@ -82,7 +82,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         return null;
     }
 
-    @Override
+    // TODO quitamos el atributo attribs y lo creamos dentro del metodo seStart ???
     public String seStart(String seID, Hashtable<String, String> attribs, String conversationId) {
 
         ArrayList<String> creationCategories = new ArrayList<>();
@@ -95,7 +95,6 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         return null;
     }
 
-    @Override
     public String seStop(String... seID) {
         return null;
     }

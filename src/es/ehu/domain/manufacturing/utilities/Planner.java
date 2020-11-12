@@ -281,7 +281,7 @@ public class Planner extends Agent {
     public String start(String seId, ConcurrentHashMap<String, String> attributes, String conversationId) throws InterruptedException, FIPAException {
         LOGGER.entry(seId, attributes);
 
-        StringBuilder command = new StringBuilder("sestart "+seId);
+        StringBuilder command = new StringBuilder("appstart "+seId);
 
         if (attributes!=null)
             attributes.entrySet().stream().forEach(entry -> command.append(" " + entry.getKey() + "=" + entry.getValue()));

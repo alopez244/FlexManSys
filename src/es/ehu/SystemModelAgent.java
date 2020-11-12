@@ -220,6 +220,8 @@ public class SystemModelAgent extends Agent implements IExecManagement {
             else if (cmds[0].equals("localneg")) result.append(negotiate(cmds[1], attribs.get("criterion"), attribs.get("action"),attribs.get("externaldata"), conversationId));
                 //else if (cmds[0].equals("localneg")) result.append(negotiate(cmds[1], attribs, conversationId));
 
+            else if (cmds[0].equals("appstart")) result.append(appStart(cmds[1], attribs, conversationId)); // threaded#condition
+
             else if (cmds[0].equals("sestart")) result.append(seStart(cmds[1], attribs, conversationId)); // threaded#condition
 
             else if (cmds[0].equals("seregister")) result.append(seRegister(cmd, conversationId)); // threaded#condition
@@ -1079,12 +1081,12 @@ public class SystemModelAgent extends Agent implements IExecManagement {
     //====================================================================
 
     @Override
-    public String seStart(String seID, Hashtable<String, String> attribs, String conversationId ) {
+    public String appStart(String seID, Hashtable<String, String> attribs, String conversationId ) {
         LOGGER.entry(seID, attribs, conversationId);
 
         if (seID.indexOf(",")>0) {
             String[] tokens = seID.split(",");
-            for (int j=0; j<tokens.length; j++) seStart(tokens[j], attribs, conversationId);
+            for (int j=0; j<tokens.length; j++) appStart(tokens[j], attribs, conversationId);
             return "";
         }
 
@@ -1132,6 +1134,17 @@ public class SystemModelAgent extends Agent implements IExecManagement {
 
         return "";
 
+    }
+
+    public String seStart(String seID, Hashtable<String, String> attribs, String conversationId) {
+
+        String execution_phase = elements.get(seID).get("execution_phase");
+        if (execution_phase.equals("notStarted")) {
+            if (attribs.get("category").equals("MPlan"))
+                elements.get(seID).put("execution_phase", "starting");
+        } else
+            System.out.println("!!! ERROR !!! --> incorrect Execution Phase");
+        return null;
     }
 
     public String seRegister(String cmd, String conversationId) throws Exception {
@@ -1387,7 +1400,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
     }
 
     @Override
-    public String seStop(String... seID) {
+    public String appStop(String... seID) {
         return null;
     }
 

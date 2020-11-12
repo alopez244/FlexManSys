@@ -2,6 +2,7 @@ package es.ehu.domain.manufacturing.utilities;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class MPlanInterpreter {
 
@@ -39,5 +40,9 @@ public class MPlanInterpreter {
             }
         }
         int stop = 2;
+
+        Iterator it = batchList.entrySet().iterator();
+        while (it.hasNext())
+            System.out.println(it.next());
     }
 }

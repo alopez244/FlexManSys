@@ -106,7 +106,7 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
 
             try{
                 // Registro el agente id>appagn101. seTypeAgent ASA, APA
-                String agnID = sendCommand("reg "+seType+"Agent parent="+seID).getContent();
+                String agnID = sendCommand("reg "+seType+"Agent parent="+seID + " execution_phase=notStarted").getContent();
                 // Instancio nuevo agente
                 AgentController ac = ((AgentController) myAgent.getContainerController().createNewAgent(agnID, seClass, new Object[] { "firstState="+seFirstTransition , "redundancy="+redundancy , "parentAgent=" + parentAgentID }));
                 ac.start();
