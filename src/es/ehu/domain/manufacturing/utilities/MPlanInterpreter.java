@@ -17,6 +17,19 @@ public class MPlanInterpreter {
             }
         }
 
+        // Conseguir las maquinas del plan de fabricacion para saber si estan disponibles en el sistema
+        ArrayList<String> allMachines = new ArrayList<>();
+        for (int i = 0; i < roughPlan.size(); i++) {
+            if (roughPlan.get(i).get(0).get(0).contains("operation")) {
+                System.out.println(roughPlan.get(i).get(0).get(0));
+                for (int j=0; j < roughPlan.get(i).get(2).size(); j++) {
+                    if(roughPlan.get(i).get(2).get(j).equals("actualMachineId"))
+                        if (!allMachines.contains(roughPlan.get(i).get(3).get(j)))
+                            allMachines.add(roughPlan.get(i).get(3).get(j));
+                }
+            }
+        }
+
         //Ahora determinamos las entidades a las que está asociada cada receta (cada instancia de producto)
         Integer numberofItems =0;
         String thisBatch = "";
