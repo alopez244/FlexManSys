@@ -33,6 +33,14 @@ public class DomApp_Functionality {
 
         this.myAgent = agent;
         ArrayList<String> replicasID = new ArrayList<>();
+        String myParentID = null;
+        try {
+            ACLMessage reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", conversationId);
+            if (reply != null)
+                myParentID = reply.getContent();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         while ((!myElements.isEmpty()) && (replicasID.size() != Integer.parseInt(redundancy) - 1)) {
             ACLMessage msg = myAgent.receive();
@@ -40,14 +48,10 @@ public class DomApp_Functionality {
                 // TODO COMPROBAR TAMBIEN LOS TRACKING si esta bien programado (sin probar)
                 if ((msg.getPerformative() == ACLMessage.INFORM)) {
                     String senderParentID = null;
-                    String myParentID = null;
                     try {
                         ACLMessage reply = sendCommand(myAgent, "get " + msg.getSender().getLocalName() + " attrib=parent", conversationId);
                         if (reply != null)
                             senderParentID = reply.getContent();
-                        reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", conversationId);
-                        if (reply != null)
-                            myParentID = reply.getContent();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -74,6 +78,9 @@ public class DomApp_Functionality {
         try {
             ACLMessage reply = sendCommand(myAgent, query, conversationId);
             System.out.println(reply.getContent());
+
+            // Ponemos el atributo execution_phase a started
+            sendCommand(myAgent, "set " + myParentID + " execution_phase=started", conversationId);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -308,7 +315,21 @@ public class DomApp_Functionality {
         result.add(elementsList);
         result.add("es.ehu.domain.manufacturing.agents." + categoryClass);
 
-        return result;
+        try {
+            String command = "sestart " + myAgent.getLocalName();
+            //for (String elem : (List<String>) result.get(0))
+            for (int i=0; i < elementsList.size(); i++)
+                    command = command + " element"+i+"="+ elementsList.get(i);
+
+            ACLMessage reply = sendCommand(myAgent, command, conversationId);
+            if (reply.getContent().equals("OK"))
+                return result;
+            else
+                return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     //////////////////////////

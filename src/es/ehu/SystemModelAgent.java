@@ -1119,6 +1119,10 @@ public class SystemModelAgent extends Agent implements IExecManagement {
             seClass = "es.ehu.domain.manufacturing.agents.MPlanAgent";
         }
 
+        // Atributo execution_phase a starting, para que se sepa que se esta creando
+        String command = "set " + seID + " execution_phase=starting";
+        set(command.split(" ")[1], processAttribs(2, command.split(" ")), conversationId);
+
 
         //mando negociar a todos
         for (int i=0; i<Integer.parseInt(redundancy); i++) {
@@ -1138,13 +1142,17 @@ public class SystemModelAgent extends Agent implements IExecManagement {
 
     public String seStart(String seID, Hashtable<String, String> attribs, String conversationId) {
 
-        String execution_phase = elements.get(seID).get("execution_phase");
-        if (execution_phase.equals("notStarted")) {
-            if (attribs.get("category").equals("MPlan"))
-                elements.get(seID).put("execution_phase", "starting");
-        } else
-            System.out.println("!!! ERROR !!! --> incorrect Execution Phase");
-        return null;
+        Set<String> keys = attribs.keySet();
+        for(String key: keys) {
+            String element = attribs.get(key);
+            String execution_phase = elements.get(element).get("execution_phase");
+            if (execution_phase == null) {
+                elements.get(element).put("execution_phase", "starting");
+            } else
+                return "ERROR";
+        }
+
+        return "OK";
     }
 
     public String seRegister(String cmd, String conversationId) throws Exception {

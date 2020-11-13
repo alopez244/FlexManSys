@@ -55,13 +55,6 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     parentAgentID = getArgumentOfAgent(myAgent, "parentAgent");
     mySeType = getMySeType(myAgent, conversationId);
 
-    // TODO PRUEBA --> BORRAR
-    try {
-      sendCommand(myAgent, "sestart " +myAgent.getLocalName()+ " category=" + mySeType, conversationId);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-
     if (firstState.equals("running")) {
 
       // Cambiar a estado bootToRunning para que los tracking le puedan enviar mensajes
@@ -92,12 +85,6 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
       myAgent.initTransition = ControlBehaviour.TRACKING;
     }
 
-    // TODO PRUEBA --> BORRAR
-    try {
-      sendCommand(myAgent, "set " +myAgent.getLocalName()+ " execution_phase=started", conversationId);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
 
     return null;
 
