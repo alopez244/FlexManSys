@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Product xmlns="ManufacturingPlan" id="P_02" description="Product2 (Base+Axis+Cover)" hierarchy_level="process" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="ManufacturingPlan Product.xsd">
-	<simple_operation id="S_03" type="insert_and_place" description="Insert the axis and place the cover"/>
-	<Product id="B" description="Base" hierarchy_level="process">
-		<rawMaterial id="B" description="Base" resourceType="material"/>
-	</Product>
-</Product>
