@@ -39,6 +39,9 @@ public class MPlanInterpreter {
         ArrayList<ArrayList<ArrayList<String>>> structuredPlan = new ArrayList<ArrayList<ArrayList<String>>>();
         ArrayList<String> orderList = new ArrayList<String>();
         ArrayList<String> batchList = new ArrayList<String>();
+        String thisOrder = "";
+        String thisBatch = "";
+        Integer index;
         Integer hl = 1;
         Integer entities = structuredPlan.size();
         Integer numberofItems =0;
@@ -57,53 +60,65 @@ public class MPlanInterpreter {
 
         //Ahora completamos la jerarquía
         for (int j = 0; j < masterRecipes.size(); j++){
-            //Busco el order asociado
-            for (int k = 0; k < masterRecipes.get(j).get(2).size();k++) {
-                //Primero compruebo si la receta tiene order asociado
-                if (masterRecipes.get(j).get(2).get(k).contains("order")) {
-                    //Estoy en order, nivel 2
-                    hl=2;
-                    //Compruebo si es la primera receta asociada a este order
-                    if (!orderList.contains(masterRecipes.get(j).get(3).get(k))){//Si no lo contiene, lo guardo
-                        structuredPlan.add(entities,new ArrayList<ArrayList<String>>());
-                        structuredPlan.get(entities).add(0,new ArrayList<String>());
-                        structuredPlan.get(entities).add(1,new ArrayList<String>());
-                        structuredPlan.get(entities).add(2,new ArrayList<String>());
-                        structuredPlan.get(entities).add(3,new ArrayList<String>());
-                        structuredPlan.get(entities).get(0).add("order");
-                        structuredPlan.get(entities).get(1).add(hl.toString());
-                        structuredPlan.get(entities).get(2).add(masterRecipes.get(j).get(2).get(k));
-                        structuredPlan.get(entities).get(3).add(masterRecipes.get(j).get(3).get(k));
-                        entities=entities+1;//Después de guardar un elemento, sumo 1 al contador
-                        orderList.add(masterRecipes.get(j).get(3).get(k));//Añadimos el order al orderList
-                    } else {//Si ya lo contiene, no hago nada (en nuestro caso)
-                    }
+            //Compruebo si la receta tiene order asociado en sus atributos
+            if(masterRecipes.get(j).get(2).contains("orderName")){
+                //Estoy en order, nivel 2
+                hl=2; //Este valor luego no irá hard coded, sino que se extraerá de un modelo
+
+                //Obtengo la posición en la que está el orderName, y obtengo su valor
+                index=masterRecipes.get(j).get(2).indexOf("orderName");
+                thisOrder=masterRecipes.get(j).get(3).get(index);
+
+                //Compruebo si es la primera receta asociada a este order
+                if (!orderList.contains(thisOrder)) {//Si no lo contiene, lo guardo
+                    structuredPlan.add(entities,new ArrayList<ArrayList<String>>());
+                    structuredPlan.get(entities).add(0,new ArrayList<String>());
+                    structuredPlan.get(entities).add(1,new ArrayList<String>());
+                    structuredPlan.get(entities).add(2,new ArrayList<String>());
+                    structuredPlan.get(entities).add(3,new ArrayList<String>());
+                    //La información que está escrita en string directamente, posteriormente se leerá de un modelo
+                    structuredPlan.get(entities).get(0).add("order");
+                    structuredPlan.get(entities).get(1).add(hl.toString());
+                    structuredPlan.get(entities).get(2).add("orderName");
+                    structuredPlan.get(entities).get(3).add(thisOrder); //El orderName lo tengo buscado de antes
+                    entities=entities+1;//Después de guardar un elemento, sumo 1 al contador
+                    orderList.add(thisOrder);//Añadimos el order al orderList
+                } else {//Si ya lo contiene, no hago nada (en nuestro caso)
                 }
-                //Compruebo si la receta tiene batch asociado
-                if (masterRecipes.get(j).get(2).get(k).contains("batch")) {
-                    //Estoy en batch, nivel 3
-                    hl=3;
-                    //Compruebo si es la primera receta asociada a este batch
-                    if (!batchList.contains(masterRecipes.get(j).get(3).get(k))) {//Si no lo contiene, lo guardo
-                        structuredPlan.add(entities,new ArrayList<ArrayList<String>>());
-                        structuredPlan.get(entities).add(0,new ArrayList<String>());
-                        structuredPlan.get(entities).add(1,new ArrayList<String>());
-                        structuredPlan.get(entities).add(2,new ArrayList<String>());
-                        structuredPlan.get(entities).add(3,new ArrayList<String>());
-                        structuredPlan.get(entities).get(0).add("batch");
-                        structuredPlan.get(entities).get(1).add(hl.toString());
-                        structuredPlan.get(entities).get(2).add(masterRecipes.get(j).get(2).get(k));
-                        structuredPlan.get(entities).get(2).add("numberofItems");
-                        structuredPlan.get(entities).get(2).add("refProdName");
-                        structuredPlan.get(entities).get(3).add(masterRecipes.get(j).get(3).get(k));
-                        structuredPlan.get(entities).get(3).add(String.valueOf(1));
-                        structuredPlan.get(entities).get(3).add(masterRecipes.get(j).get(3).get(5));//Esto es provisional, tengo que parametrizarlo
-                        entities=entities+1;//Después de guardar un elemento, sumo 1 al contador
-                        batchList.add(masterRecipes.get(j).get(3).get(k));//Añadimos el order al orderList
-                    } else {//Si lo contiene, tengo que actualizar el número de items
-                        numberofItems= Integer.parseInt(structuredPlan.get(entities-1).get(3).get(1));
-                        structuredPlan.get(entities-1).get(3).set(1,String.valueOf(numberofItems+1));
-                    }
+            }
+
+            //Compruebo si la receta tiene batch asociado
+            if (masterRecipes.get(j).get(2).contains("batchName")) {
+                //Estoy en batch, nivel 3
+                hl=3; //Este valor luego no irá hard coded, sino que se extraerá de un modelo
+
+                //Obtengo la posición en la que está el orderName, y obtengo su valor
+                index=masterRecipes.get(j).get(2).indexOf("batchName");
+                thisBatch=masterRecipes.get(j).get(3).get(index);
+
+                //Compruebo si es la primera receta asociada a este batch
+                if (!batchList.contains(thisBatch)) {//Si no lo contiene, lo guardo
+                    structuredPlan.add(entities,new ArrayList<ArrayList<String>>());
+                    structuredPlan.get(entities).add(0,new ArrayList<String>());
+                    structuredPlan.get(entities).add(1,new ArrayList<String>());
+                    structuredPlan.get(entities).add(2,new ArrayList<String>());
+                    structuredPlan.get(entities).add(3,new ArrayList<String>());
+                    //La información que está escrita en string directamente, posteriormente se leerá de un modelo
+                    structuredPlan.get(entities).get(0).add("batch");
+                    structuredPlan.get(entities).get(1).add(hl.toString());
+                    structuredPlan.get(entities).get(2).add("batchName");
+                    structuredPlan.get(entities).get(2).add("numberofItems");
+                    structuredPlan.get(entities).get(2).add("prodId");
+                    structuredPlan.get(entities).get(3).add(thisBatch); //El batchName lo tengo buscado de antes
+                    structuredPlan.get(entities).get(3).add(String.valueOf(1)); //Inicializo el número de items a 1
+                    //el refProdName no se en qué posición está, lo busco
+                    index=masterRecipes.get(j).get(2).indexOf("prodId");
+                    structuredPlan.get(entities).get(3).add(masterRecipes.get(j).get(3).get(index));
+                    entities=entities+1;//Después de guardar un elemento, sumo 1 al contador
+                    batchList.add(thisBatch);//Añadimos el order al orderList
+                } else {//Si lo contiene, tengo que actualizar el número de items //AQUÍ LO HE DEJADO
+                    numberofItems= Integer.parseInt(structuredPlan.get(entities-1).get(3).get(1));
+                    structuredPlan.get(entities-1).get(3).set(1,String.valueOf(numberofItems+1));
                 }
             }
         }
