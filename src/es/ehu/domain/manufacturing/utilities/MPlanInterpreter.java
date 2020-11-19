@@ -1,12 +1,23 @@
 package es.ehu.domain.manufacturing.utilities;
 
+import jade.core.AID;
+import jade.core.Agent;
+import jade.domain.DFService;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPAException;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Random;
 
 public class MPlanInterpreter {
 
-    public static void getManEntities (ArrayList<ArrayList<ArrayList<String>>> roughPlan) {//Aquí le pasaremos también el agente para que pueda usar el método sendCommand?
+    public static ArrayList<ArrayList<ArrayList<String>>> getManEntities (Agent myAgent, ArrayList<ArrayList<ArrayList<String>>> roughPlan) {//Aquí le pasaremos también el agente para que pueda usar el método sendCommand?
+
         //Recibimos el plan de fabricación
         //Nos quedamos solo con los elementos masterRecipe
         ArrayList<ArrayList<ArrayList<String>>> masterRecipes = new ArrayList<ArrayList<ArrayList<String>>>();
@@ -22,10 +33,10 @@ public class MPlanInterpreter {
         for (int i = 0; i < roughPlan.size(); i++) {
             if (roughPlan.get(i).get(0).get(0).contains("operation")) {
                 for (int j=0; j < roughPlan.get(i).get(2).size(); j++) {
-                    if(roughPlan.get(i).get(2).get(j).equals("actualMachineId")) {  // Este es el id que debe tener la maquina?
+                    if(roughPlan.get(i).get(2).get(j).equals("actualStationId")) {  // De momento guardamos la id de la estacion
                         if (!allMachines.contains(roughPlan.get(i).get(3).get(j)))
                             allMachines.add(roughPlan.get(i).get(3).get(j));
-                        // Aqui se podria evitar el crear una lista y enviarle un mensaje al SystemModel agent pidiendole la maquina
+
                         // Como pedirselo? Con que id? machine1 != M_01
                         // Si lo tiene perfecto, si no error
                         // En el planner --> ya que es un agente
@@ -33,6 +44,27 @@ public class MPlanInterpreter {
                     }
                 }
             }
+        }
+
+        // Teniendo la lista de todas las maquinas del plan comprobaremos que estan disponibles
+        boolean error = false;
+        for (String machine: allMachines) {
+            String getMachineQuery = "get * category=machine id=" + machine;
+            try {
+                ACLMessage reply = sendMessage(myAgent, getMachineQuery, "MPlanInterpreter"+ new Random().nextInt(100-1) + 1);
+                if (reply != null) {
+                    String content = reply.getContent();
+                    if (content == null)    // De momento lo hacemos asi, mas adelante se puede comprobar si la id de la maquina del SMA concuerda con la del plan
+                        error = true;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (error) {
+            // Si alguna maquina no esta disponible no se puede registrar la maquina
+            return null;    // De momento lo dejamos asi, pero habria que poner un mensaje de error o lanzar una excepcion
         }
 
         //Ahora componenmos el plan de fabricación con su jerarquía a partir de la secuencia de Master Recipes.
@@ -169,5 +201,47 @@ public class MPlanInterpreter {
         it = orderList.listIterator();
         while (it.hasNext())
             System.out.println(it.next());
+
+        return structuredPlan;
+    }
+
+    public static ACLMessage sendMessage(Agent myAgent, String cmd, String conversationId) throws Exception {
+        DFAgentDescription dfd = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+
+        sd.setType("sa");
+        dfd.addServices(sd);
+        String mwm;
+
+        while (true) {
+            DFAgentDescription[] result = DFService.search(myAgent,dfd);
+
+            if ((result != null) && (result.length > 0)) {
+                dfd = result[0];
+                mwm = dfd.getName().getLocalName();
+                break;
+            }
+
+            Thread.sleep(100);
+
+        } //end while (true)
+
+        ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+        msg.addReceiver(new AID(mwm, AID.ISLOCALNAME));
+        msg.setConversationId(conversationId);
+        msg.setOntology("control");
+        msg.setContent(cmd);
+        msg.setReplyWith(cmd);
+
+        myAgent.send(msg);
+
+        /*
+        ACLMessage reply = myAgent.blockingReceive(MessageTemplate.and(
+                MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
+                MessageTemplate.MatchPerformative(ACLMessage.INFORM))
+                , 1000);
+         */
+        ACLMessage reply = myAgent.blockingReceive();
+        return reply;
     }
 }

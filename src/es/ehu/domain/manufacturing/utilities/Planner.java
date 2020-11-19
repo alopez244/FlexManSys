@@ -173,6 +173,9 @@ public class Planner extends Agent {
                 return;
             }
 
+            // We use MPlanInterpreter tu obtain all information
+            xmlelements = MPlanInterpreter.getManEntities(myAgent, xmlelements);
+
             //The plan has been successfully read
             //Next step is to interpret the set of masterRecipes to compose the hierarchy of applications
 

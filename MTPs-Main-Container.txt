@@ -1,1 +1,1 @@
-http://10.253.5.50:7778/acc
+http://Hara-Laptop:7778/acc
