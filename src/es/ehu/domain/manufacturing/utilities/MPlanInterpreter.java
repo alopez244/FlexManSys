@@ -67,6 +67,8 @@ public class MPlanInterpreter {
             return null;    // De momento lo dejamos asi, pero habria que poner un mensaje de error o lanzar una excepcion
         }
 
+        //TODO si las maquinas estan disponibles hay que enviarles las operaciones que van a hacer
+
         //Ahora componenmos el plan de fabricación con su jerarquía a partir de la secuencia de Master Recipes.
         ArrayList<ArrayList<ArrayList<String>>> structuredPlan = new ArrayList<ArrayList<ArrayList<String>>>();
         ArrayList<String> orderList = new ArrayList<String>();
@@ -139,7 +141,7 @@ public class MPlanInterpreter {
                     structuredPlan.get(entities).get(0).add("batch");
                     structuredPlan.get(entities).get(1).add(hl.toString());
                     structuredPlan.get(entities).get(2).add("batchName");
-                    structuredPlan.get(entities).get(2).add("numberofItems");
+                    structuredPlan.get(entities).get(2).add("numberOfItems");
                     structuredPlan.get(entities).get(2).add("prodId");
                     structuredPlan.get(entities).get(3).add(thisBatch); //El batchName lo tengo buscado de antes
                     structuredPlan.get(entities).get(3).add(String.valueOf(1)); //Inicializo el número de items a 1

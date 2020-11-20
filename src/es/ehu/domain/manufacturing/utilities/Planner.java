@@ -197,7 +197,13 @@ public class Planner extends Agent {
                 //First the attributes are collected
                 attributes.clear();
                 for (int j = 0; j < xmlelements.get(i).get(2).size(); j++) {
-                    attributes.put(xmlelements.get(i).get(2).get(j), xmlelements.get(i).get(3).get(j));
+                    String attrName = xmlelements.get(i).get(2).get(j);
+                    if ((attrName.equals("batchName")) || (attrName.equals("orderName")))
+                        attributes.put("reference", xmlelements.get(i).get(3).get(j));
+                    else if (attrName.equals("prodId"))
+                        attributes.put("refProductID", xmlelements.get(i).get(3).get(j));
+                    else
+                        attributes.put(xmlelements.get(i).get(2).get(j), xmlelements.get(i).get(3).get(j));
                 }
 
                 //The parent Id is always the last element Id of the upper level
