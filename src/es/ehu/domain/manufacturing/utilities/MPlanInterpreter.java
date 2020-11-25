@@ -9,10 +9,7 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Random;
+import java.util.*;
 
 public class MPlanInterpreter {
 
@@ -68,6 +65,76 @@ public class MPlanInterpreter {
         }
 
         //TODO si las maquinas estan disponibles hay que enviarles las operaciones que van a hacer
+
+        // Recorremos otra vez el roughPlan y a cada maquina le enviamos la informacion de sus operaciones
+        // Vamos guardamos en un HashMap toda la informacion de todas las operaciones por cada maquina
+        HashMap<String, String> machinesWithAllOpInfo = new HashMap<>();
+
+        // Lista para saber que atributos buscar en cada operacion y en la masterRecipe
+        ArrayList<String> attribsToFind = new ArrayList<>();
+        // Atributos de operaciones
+        attribsToFind.add("id");
+        attribsToFind.add("plannedFinishTime");
+        attribsToFind.add("plannedStartTime");
+        attribsToFind.add("type");
+        // Atributos de master
+        attribsToFind.add("batchName");
+        attribsToFind.add("orderName");
+        attribsToFind.add("itemName");
+        attribsToFind.add("prodId");
+
+        String masterAttributes = "";
+        String machineId = null;
+
+        for (int i = 0; i < roughPlan.size(); i++) {
+            if (roughPlan.get(i).get(0).get(0).equals("masterRecipe")) {
+                masterAttributes = "";
+                for (int m = 0; m < roughPlan.get(i).get(2).size(); m++) {
+                    if (attribsToFind.contains(roughPlan.get(i).get(2).get(m)))
+                        masterAttributes = masterAttributes + roughPlan.get(i).get(2).get(m) + "=" + roughPlan.get(i).get(3).get(m) + " ";
+                }
+            }
+            else if (roughPlan.get(i).get(0).get(0).contains("operation")) {
+
+                // Get machine ID
+                for (int z = 0; z < roughPlan.get(i).get(2).size(); z++) {
+                    if (roughPlan.get(i).get(2).get(z).equals("actualStationId")) {
+                        ACLMessage reply = null;
+                        try {
+                            String getMachineQuery = "get * category=machine id=" + roughPlan.get(i).get(3).get(z);
+                            reply = sendMessage(myAgent, getMachineQuery, "MPlanInterpreter"+ new Random().nextInt(100-1) + 1);
+                            if (reply != null)
+                                machineId = reply.getContent();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                // Añadimos las informacion que se le va a enviar a las maquinas
+                for (int j = 0; j < roughPlan.get(i).get(2).size(); j++) {
+                    if (attribsToFind.contains(roughPlan.get(i).get(2).get(j)))
+                        if (machinesWithAllOpInfo.get(machineId) == null)
+                            machinesWithAllOpInfo.put(machineId, roughPlan.get(i).get(2).get(j) + "=" + roughPlan.get(i).get(3).get(j) + " ");
+                        else
+                            machinesWithAllOpInfo.put(machineId, machinesWithAllOpInfo.get(machineId) + roughPlan.get(i).get(2).get(j) + "=" + roughPlan.get(i).get(3).get(j) + " ");
+                }
+                machinesWithAllOpInfo.put(machineId, machinesWithAllOpInfo.get(machineId) + masterAttributes + "&");
+
+            }
+        }
+
+        Iterator itr = machinesWithAllOpInfo.entrySet().iterator();
+        while (itr.hasNext()) {
+
+            Map.Entry pair = (Map.Entry) itr.next();
+            ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+            msg.addReceiver(new AID((String) pair.getKey(), AID.ISLOCALNAME));
+            msg.setOntology("data");
+            msg.setContent((String) pair.getValue());
+
+            myAgent.send(msg);
+
+        }
 
         //Ahora componenmos el plan de fabricación con su jerarquía a partir de la secuencia de Master Recipes.
         ArrayList<ArrayList<ArrayList<String>>> structuredPlan = new ArrayList<ArrayList<ArrayList<String>>>();

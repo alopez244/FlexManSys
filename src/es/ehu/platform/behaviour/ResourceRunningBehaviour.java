@@ -68,12 +68,12 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
 
         if (msg!=null) {
             //lo que haga en el running
-        }
 
-        // Esto deberia ir dentro del if anterior, pero de momento no se le mandan mensajes de ese tipo (ontology: ONT_RUN)
-        // TODO CUIDADO --> Se ha copiado de RunningBehaviour
-        Object[] receivedMsgs = manageReceivedMsg(msg);
-        Object result = myAgent.functionalityInstance.execute(receivedMsgs);
+            // Esto deberia ir dentro del if anterior, pero de momento no se le mandan mensajes de ese tipo (ontology: ONT_RUN)
+            // TODO CUIDADO --> Se ha copiado de RunningBehaviour
+            Object[] receivedMsgs = manageReceivedMsg(msg);
+            Object result = myAgent.functionalityInstance.execute(receivedMsgs);
+        }
 
 
         long t = manageBlockingTimes();

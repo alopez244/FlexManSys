@@ -21,8 +21,6 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.*;
 
-import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
-import static es.ehu.domain.manufacturing.utilities.FmsNegotiation.ONT_DEBUG;
 
 public class Machine_Functionality implements BasicFunctionality, NegFunctionality {
 
@@ -134,38 +132,11 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
     }
 
-    /** Current state of the machine agent (lastOperation). */
-    private machineState curState;
-
-    /** Last state before update of the machine agent (lastOperation). */
-    private machineState prevState;
-
     /** Identifier of the agent. */
     private MachineAgent myAgent;
 
     /** Class name to switch on the agent */
     private String className;
-
-    /** Position and state (empty or not) of the machine palletin station. */
-    private Pair<Position, Boolean> palletIn;
-
-    /** Position and state (empty or not) of the machine palletout station. */
-    private Pair<Position, Boolean> palletOut;
-
-    /** Identifier representing if the machine is doing a task. */
-    private boolean runningTask;
-
-    /** Identifier representing if current operationTimer. */
-    private long operationTimeout;
-
-    /** TaskID counter. This value is increased, using {@code generateTaskID} */
-    private int countTaskID = 0;
-
-    /** Identifier of new task template. */
-    private MessageTemplate newTaskTemplate;
-
-    /** Identifier of debug pallet arrived template. */
-    private MessageTemplate debugPalletArrivedTemplate;
 
     // Constructor
     public Machine_Functionality(MachineAgent agent) {
@@ -271,28 +242,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
     @Override
     public Object execute(Object[] input) {
-        // TODO mirarlo, de momento peta porque el input es null
-        /*
-        LOGGER.entry(input);
-        ACLMessage msg = null;
 
-        for (int k =0; k<input.length; k=k+1){
-
-            if (input != null) {
-                try {
-                    msg = (ACLMessage) input[k];
-                    LOGGER.debug(msg);
-                } catch (Exception e) {
-                    LOGGER.debug("Execution input was not an ACLMessage");
-                }
-            }
-
-            if (msg == null) {
-                return LOGGER.exit(null);
-            }
-
-        }
-         */
 
         try {
             Thread.sleep(5000);
@@ -302,7 +252,44 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
         System.out.println("El agente recurso " + myAgent.getLocalName() + " ya esta en el metodo execute");
 
-        //if (input != null) {
+        if (input[0] != null) {
+            ACLMessage msg = (ACLMessage) input[0];
+            String[] allOperations = msg.getContent().split("&");
+            for (int i = 0; i < allOperations.length - 1; i++) {
+
+                ArrayList<ArrayList<String>> operationInfo = new ArrayList<>();
+
+                ArrayList<String> names = new ArrayList<>();
+                ArrayList<String> values = new ArrayList<>();
+
+                String[] AllInformation = allOperations[i].split(" ");
+                for (String info: AllInformation) {
+                    String attrName = info.split("=")[0];
+                    String attrValue = info.split("=")[1];
+
+                    names.add(attrName);
+                    values.add(attrValue);
+                }
+
+                ArrayList<String> aux = new ArrayList<>();
+                ArrayList<String> aux2 = new ArrayList<>();
+                aux.add("operation");
+                aux2.add("3");
+                operationInfo.add(0, aux);
+                operationInfo.add(1, aux2);
+                operationInfo.add(2, names);
+                operationInfo.add(3, values);
+
+                myAgent.machinePlan.add(operationInfo);
+            }
+        }
+
+        sendOperationsInfoToBatches();
+
+        return LOGGER.exit(null);
+    }
+
+    private void sendOperationsInfoToBatches() {
         if (!operationsWithBatchAgents.isEmpty()) {
 
             //String operation = (String) input[0];
@@ -336,8 +323,6 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
             operationsWithBatchAgents.remove(operation);
         }
-
-        return LOGGER.exit(null);
     }
 
     private class PLCInformation  {
