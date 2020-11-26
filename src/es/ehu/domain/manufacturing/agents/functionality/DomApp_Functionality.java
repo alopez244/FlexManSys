@@ -2,6 +2,7 @@ package es.ehu.domain.manufacturing.agents.functionality;
 
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.ControlBehaviour;
+import es.ehu.platform.utilities.XMLReader;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.DFService;
@@ -12,6 +13,7 @@ import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.util.*;
 
 public class DomApp_Functionality {
@@ -84,6 +86,10 @@ public class DomApp_Functionality {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        // Como ya se ha creado todo el plan, avisará a las maquinas
+        // Enviar a todas las maquinas que participan en el plan
+        // Le va a pedir a todos sus batches que le den sus maquinas para tener todas y mandarles el mensaje???
 
         System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
         agent.initTransition = ControlBehaviour.RUNNING;

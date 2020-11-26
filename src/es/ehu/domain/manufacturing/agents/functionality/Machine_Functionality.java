@@ -254,33 +254,42 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
         if (input[0] != null) {
             ACLMessage msg = (ACLMessage) input[0];
-            String[] allOperations = msg.getContent().split("&");
-            for (int i = 0; i < allOperations.length - 1; i++) {
+            if (msg.getContent().equals("All manufacturing plan ready to run")) {
 
-                ArrayList<ArrayList<String>> operationInfo = new ArrayList<>();
+                System.out.println("Ya estoy listo para empezar a hacer mis operaciones");
+                // La maquina y los agentes del plan ya estarian listos, pero habria que comprobar la hora de la operacion mas cercana
+                // Asi, si la maquina esta lista pero la operacion empieza en 30 minutos, la maquina tendra que esperar ese tiempo
+                // Si la maquina esta lista y la hora de la primera operacion ya ha pasado, podrá comenzar de seguido
 
-                ArrayList<String> names = new ArrayList<>();
-                ArrayList<String> values = new ArrayList<>();
+            } else {
+                String[] allOperations = msg.getContent().split("&");
+                for (int i = 0; i < allOperations.length - 1; i++) {
 
-                String[] AllInformation = allOperations[i].split(" ");
-                for (String info: AllInformation) {
-                    String attrName = info.split("=")[0];
-                    String attrValue = info.split("=")[1];
+                    ArrayList<ArrayList<String>> operationInfo = new ArrayList<>();
 
-                    names.add(attrName);
-                    values.add(attrValue);
+                    ArrayList<String> names = new ArrayList<>();
+                    ArrayList<String> values = new ArrayList<>();
+
+                    String[] AllInformation = allOperations[i].split(" ");
+                    for (String info : AllInformation) {
+                        String attrName = info.split("=")[0];
+                        String attrValue = info.split("=")[1];
+
+                        names.add(attrName);
+                        values.add(attrValue);
+                    }
+
+                    ArrayList<String> aux = new ArrayList<>();
+                    ArrayList<String> aux2 = new ArrayList<>();
+                    aux.add("operation");
+                    aux2.add("3");
+                    operationInfo.add(0, aux);
+                    operationInfo.add(1, aux2);
+                    operationInfo.add(2, names);
+                    operationInfo.add(3, values);
+
+                    myAgent.machinePlan.add(operationInfo);
                 }
-
-                ArrayList<String> aux = new ArrayList<>();
-                ArrayList<String> aux2 = new ArrayList<>();
-                aux.add("operation");
-                aux2.add("3");
-                operationInfo.add(0, aux);
-                operationInfo.add(1, aux2);
-                operationInfo.add(2, names);
-                operationInfo.add(3, values);
-
-                myAgent.machinePlan.add(operationInfo);
             }
         }
 

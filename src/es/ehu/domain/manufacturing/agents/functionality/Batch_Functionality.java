@@ -51,6 +51,10 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         parentAgentID = getArgumentOfAgent(myAgent, "parentAgent");
         mySeType = getMySeType(myAgent, conversationId);
 
+        // Hay que leer el modelo de trazabilidad que estara en alguna carpeta
+        // Tanto el running como los tracking tendran que leerlo
+        // Cuando tenga la informacion la guardara en productsTraceability
+
         if(firstState.equals("running")) {
 
             // Cambiar a estado bootToRunning para que los tracking le puedan enviar mensajes

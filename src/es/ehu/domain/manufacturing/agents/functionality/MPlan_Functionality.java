@@ -5,10 +5,13 @@ import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.IExecManagement;
+import es.ehu.platform.utilities.XMLReader;
 import jade.core.Agent;
+import jade.lang.acl.ACLMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.util.*;
 
 public class MPlan_Functionality extends DomApp_Functionality implements BasicFunctionality, AvailabilityFunctionality {
@@ -78,6 +81,8 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
       //Aqui cuiado con el myOrders, si utilizamos elementsToCreate en seStart aqui tambien hay que meterlo
       myReplicasID = processACLMessages(myAgent, mySeType, elementsToCreate, conversationId, redundancy, parentAgentID);
 
+      notifyMachinesToStartOperations(myAgent, conversationId);
+
     } else {
       // Si su estado es tracking
       trackingOnBoot(myAgent, mySeType, conversationId);
@@ -113,6 +118,12 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   public Object execute(Object[] input) {
     System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
     return null;
+  }
+
+  private void notifyMachinesToStartOperations(Agent agent, String conversationId) {
+
+    // Avisar a todas las maquinas de mi plan que el plan ya esta listo para que emmpiece a hacer las operaciones
+
   }
 
 
