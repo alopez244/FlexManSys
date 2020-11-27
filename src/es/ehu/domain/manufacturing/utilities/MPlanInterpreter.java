@@ -142,6 +142,7 @@ public class MPlanInterpreter {
         ArrayList<String> batchList = new ArrayList<String>();
         String thisOrder = "";
         String thisBatch = "";
+        String thisItem = "";
         Integer index;
         Integer hl = 1;
         Integer entities = structuredPlan.size();
@@ -197,6 +198,9 @@ public class MPlanInterpreter {
                 index=masterRecipes.get(j).get(2).indexOf("batchName");
                 thisBatch=masterRecipes.get(j).get(3).get(index);
 
+                index=masterRecipes.get(j).get(2).indexOf("itemName");
+                thisItem = masterRecipes.get(j).get(3).get(index);
+
                 //Compruebo si es la primera receta asociada a este batch
                 if (!batchList.contains(thisBatch)) {//Si no lo contiene, lo guardo
                     structuredPlan.add(entities,new ArrayList<ArrayList<String>>());
@@ -211,15 +215,21 @@ public class MPlanInterpreter {
                     structuredPlan.get(entities).get(2).add("numberOfItems");
                     structuredPlan.get(entities).get(2).add("prodId");
                     structuredPlan.get(entities).get(3).add(thisBatch); //El batchName lo tengo buscado de antes
-                    structuredPlan.get(entities).get(3).add(String.valueOf(1)); //Inicializo el número de items a 1
+
+                    // Añado a la lista de items ID
+                    structuredPlan.get(entities).get(3).add(thisItem);
+                    //structuredPlan.get(entities).get(3).add(String.valueOf(1)); //Inicializo el número de items a 1
+
                     //el refProdName no se en qué posición está, lo busco
                     index=masterRecipes.get(j).get(2).indexOf("prodId");
                     structuredPlan.get(entities).get(3).add(masterRecipes.get(j).get(3).get(index));
                     entities=entities+1;//Después de guardar un elemento, sumo 1 al contador
                     batchList.add(thisBatch);//Añadimos el order al orderList
                 } else {//Si lo contiene, tengo que actualizar el número de items //AQUÍ LO HE DEJADO
-                    numberofItems= Integer.parseInt(structuredPlan.get(entities-1).get(3).get(1));
-                    structuredPlan.get(entities-1).get(3).set(1,String.valueOf(numberofItems+1));
+
+                    structuredPlan.get(entities - 1).get(3).set(1, structuredPlan.get(entities-1).get(3).get(1) + "," + thisItem);
+                    //String allItems = structuredPlan.get(entities-1).get(3).get(1);
+                    //structuredPlan.get(entities-1).get(3).set(1,allItems.substring(0, allItems.length()-1));
                 }
             }
         }
