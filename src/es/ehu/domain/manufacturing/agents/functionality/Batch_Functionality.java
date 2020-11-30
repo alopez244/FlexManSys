@@ -258,7 +258,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     String idValue = null;
                     // Buscamos el atributo id para conseguir su valor
                     for (int i = 0; i < xmlelements.get(0).get(2).size(); i++) {
-                        if (xmlelements.get(0).get(2).get(i).equals("id"))
+                        if (xmlelements.get(0).get(2).get(i).equals("productType"))
                             idValue = xmlelements.get(0).get(3).get(i);
                     }
                     // Si el id coincide, es el producto que buscamos

@@ -49,16 +49,10 @@
 			<xs:enumeration value="welding_wire"/>
 		</xs:restriction>
 	</xs:simpleType>
-	<xs:attributeGroup name="TCEquipmentRes">
-		<xs:attribute name="id" type="xs:string" use="required"/>
-		<xs:attribute name="description" type="xs:string" use="required"/>
-		<xs:attribute name="resourceType" type="TResource" use="required" fixed="material"/>
-		<xs:attribute name="assembly_type" type="TAssemblyType" use="optional"/>
-		<xs:attribute name="assembly_relationship" type="TAssemblyRelationShip" use="optional"/>
-	</xs:attributeGroup>
 	<xs:element name="consumable">
 		<xs:complexType>
-			<xs:attributeGroup ref="TCEquipmentRes"/>
+			<xs:attribute name="id" type="xs:string" use="required"/>
+			<xs:attribute name="description" type="xs:string" use="required"/>
 			<xs:attribute name="type" type="TypeOfConsumable" use="required"/>
 		</xs:complexType>
 	</xs:element>
@@ -98,32 +92,6 @@
 		</xs:complexType>
 	</xs:element>
 	<!-- changeoverT: tiempo de cambio de herramienta -->
-	<xs:attributeGroup name="TSEquipmentRes">
-		<!-- Atributos de los recursos de tipo Equipment -->
-		<xs:attribute name="id" type="xs:string" use="required"/>
-		<xs:attribute name="description" type="xs:string" use="required"/>
-		<xs:attribute name="resourceType" type="TResource" use="required" fixed="equipment"/>
-		<xs:attribute name="level" type="TEquipmentLevel" use="required" fixed="work_unit"/>
-	</xs:attributeGroup>
-	<xs:attributeGroup name="TSPhysicalAssetRes">
-		<!-- Atributos de los recursos de tipo Physical Asset -->
-		<xs:attribute name="sn" type="xs:string" use="required"/>
-		<xs:attribute name="description_pa" type="xs:string" use="optional"/>
-		<xs:attribute name="physicalLocation" use="required">
-			<xs:simpleType>
-				<xs:restriction base="xs:string">
-					<xs:enumeration value="researchLab"/>
-					<xs:enumeration value="researchLab,productionLine1"/>
-					<xs:enumeration value="researchLab,productionLine2"/>
-					<xs:enumeration value="researchLab,productionLine3"/>
-				</xs:restriction>
-			</xs:simpleType>
-		</xs:attribute>
-		<xs:attribute name="fixedAssetId" type="xs:string" use="optional"/>
-		<xs:attribute name="vendorId" type="xs:string" use="optional"/>
-		<!-- sn: Serial Number del Physical Asset -->
-		<!-- description_pa: description Physical Asset, en caso de tener que añadir información adicional -->
-	</xs:attributeGroup>
 	<xs:element name="station">
 		<xs:complexType>
 			<xs:sequence>
@@ -136,8 +104,8 @@
 					<xs:element name="complex_operation" type="ComplexOperation"/>
 				</xs:choice>
 			</xs:sequence>
-			<xs:attributeGroup ref="TSEquipmentRes"/>
-			<xs:attributeGroup ref="TSPhysicalAssetRes"/>
+			<xs:attribute name="id" type="xs:string" use="required"/>
+			<xs:attribute name="description" type="xs:string" use="required"/>
 		</xs:complexType>
 		<xs:key name="consumableID">
 			<xs:selector xpath="./buffer/consumable"/>

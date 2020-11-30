@@ -198,9 +198,9 @@ public class Planner extends Agent {
                 attributes.clear();
                 for (int j = 0; j < xmlelements.get(i).get(2).size(); j++) {
                     String attrName = xmlelements.get(i).get(2).get(j);
-                    if ((attrName.equals("batchName")) || (attrName.equals("orderName")))
+                    if ((attrName.equals("batch_ID")) || (attrName.equals("order_ID")))
                         attributes.put("reference", xmlelements.get(i).get(3).get(j));
-                    else if (attrName.equals("prodId"))
+                    else if (attrName.equals("productType"))
                         attributes.put("refProductID", xmlelements.get(i).get(3).get(j));
                     else
                         attributes.put(xmlelements.get(i).get(2).get(j), xmlelements.get(i).get(3).get(j));

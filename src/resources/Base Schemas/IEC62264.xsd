@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<!-- TAsset: Atributo incluido por nosotros en referencia al concepto de Componente I4.0. Indica si es activo físico o lógico-->
+	<xs:simpleType name="TAsset">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="physical"/>
+			<xs:enumeration value="logical"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!-- TResource: Atributo incluido por nosotros para definir el tipo de recurso-->	
 	<xs:simpleType name="TResource">
 		<xs:restriction base="xs:string">
 			<xs:enumeration value="personnel"/>

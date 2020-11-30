@@ -20,17 +20,17 @@ public class MPlanInterpreter {
         ArrayList<ArrayList<ArrayList<String>>> masterRecipes = new ArrayList<ArrayList<ArrayList<String>>>();
         int size = masterRecipes.size();
         for (int i = 0; i < roughPlan.size(); i++) {
-            if (roughPlan.get(i).get(0).get(0).equals("masterRecipe")) {
+            if (roughPlan.get(i).get(0).get(0).equals("PlannedItem")) {
                 masterRecipes.add(size, roughPlan.get(i));
             }
         }
 
-        // Conseguir las maquinas del plan de fabricacion para saber si estan disponibles en el sistema
+        // Conseguir las máquinas del plan de fabricación para saber si están disponibles en el sistema
         ArrayList<String> allMachines = new ArrayList<>();
         for (int i = 0; i < roughPlan.size(); i++) {
-            if (roughPlan.get(i).get(0).get(0).contains("operation")) {
+            if (roughPlan.get(i).get(0).get(0).contains("Operation")) {
                 for (int j=0; j < roughPlan.get(i).get(2).size(); j++) {
-                    if(roughPlan.get(i).get(2).get(j).equals("actualStationId")) {  // De momento guardamos la id de la estacion
+                    if(roughPlan.get(i).get(2).get(j).equals("plannedStationId")) {  // De momento guardamos la id de la estacion
                         if (!allMachines.contains(roughPlan.get(i).get(3).get(j)))
                             allMachines.add(roughPlan.get(i).get(3).get(j));
 
@@ -77,28 +77,28 @@ public class MPlanInterpreter {
         attribsToFind.add("plannedFinishTime");
         attribsToFind.add("plannedStartTime");
         attribsToFind.add("type");
-        // Atributos de master
-        attribsToFind.add("batchName");
-        attribsToFind.add("orderName");
-        attribsToFind.add("itemName");
-        attribsToFind.add("prodId");
+        // Atributos de planned item
+        attribsToFind.add("batch_ID");
+        attribsToFind.add("order_ID");
+        attribsToFind.add("item_ID");
+        attribsToFind.add("productType");
 
         String masterAttributes = "";
         String machineId = null;
 
         for (int i = 0; i < roughPlan.size(); i++) {
-            if (roughPlan.get(i).get(0).get(0).equals("masterRecipe")) {
+            if (roughPlan.get(i).get(0).get(0).equals("PlannedItem")) {
                 masterAttributes = "";
                 for (int m = 0; m < roughPlan.get(i).get(2).size(); m++) {
                     if (attribsToFind.contains(roughPlan.get(i).get(2).get(m)))
                         masterAttributes = masterAttributes + roughPlan.get(i).get(2).get(m) + "=" + roughPlan.get(i).get(3).get(m) + " ";
                 }
             }
-            else if (roughPlan.get(i).get(0).get(0).contains("operation")) {
+            else if (roughPlan.get(i).get(0).get(0).contains("Operation")) {
 
                 // Get machine ID
                 for (int z = 0; z < roughPlan.get(i).get(2).size(); z++) {
-                    if (roughPlan.get(i).get(2).get(z).equals("actualStationId")) {
+                    if (roughPlan.get(i).get(2).get(z).equals("plannedStationId")) {
                         ACLMessage reply = null;
                         try {
                             String getMachineQuery = "get * category=machine id=" + roughPlan.get(i).get(3).get(z);
@@ -163,12 +163,12 @@ public class MPlanInterpreter {
         //Ahora completamos la jerarquía
         for (int j = 0; j < masterRecipes.size(); j++){
             //Compruebo si la receta tiene order asociado en sus atributos
-            if(masterRecipes.get(j).get(2).contains("orderName")){
+            if(masterRecipes.get(j).get(2).contains("order_ID")){
                 //Estoy en order, nivel 2
                 hl=2; //Este valor luego no irá hard coded, sino que se extraerá de un modelo
 
                 //Obtengo la posición en la que está el orderName, y obtengo su valor
-                index=masterRecipes.get(j).get(2).indexOf("orderName");
+                index=masterRecipes.get(j).get(2).indexOf("order_ID");
                 thisOrder=masterRecipes.get(j).get(3).get(index);
 
                 //Compruebo si es la primera receta asociada a este order
@@ -181,8 +181,8 @@ public class MPlanInterpreter {
                     //La información que está escrita en string directamente, posteriormente se leerá de un modelo
                     structuredPlan.get(entities).get(0).add("order");
                     structuredPlan.get(entities).get(1).add(hl.toString());
-                    structuredPlan.get(entities).get(2).add("orderName");
-                    structuredPlan.get(entities).get(3).add(thisOrder); //El orderName lo tengo buscado de antes
+                    structuredPlan.get(entities).get(2).add("order_ID");
+                    structuredPlan.get(entities).get(3).add(thisOrder); //El order_ID lo tengo buscado de antes
                     entities=entities+1;//Después de guardar un elemento, sumo 1 al contador
                     orderList.add(thisOrder);//Añadimos el order al orderList
                 } else {//Si ya lo contiene, no hago nada (en nuestro caso)
@@ -190,15 +190,15 @@ public class MPlanInterpreter {
             }
 
             //Compruebo si la receta tiene batch asociado
-            if (masterRecipes.get(j).get(2).contains("batchName")) {
+            if (masterRecipes.get(j).get(2).contains("batch_ID")) {
                 //Estoy en batch, nivel 3
                 hl=3; //Este valor luego no irá hard coded, sino que se extraerá de un modelo
 
                 //Obtengo la posición en la que está el orderName, y obtengo su valor
-                index=masterRecipes.get(j).get(2).indexOf("batchName");
+                index=masterRecipes.get(j).get(2).indexOf("batch_ID");
                 thisBatch=masterRecipes.get(j).get(3).get(index);
 
-                index=masterRecipes.get(j).get(2).indexOf("itemName");
+                index=masterRecipes.get(j).get(2).indexOf("item_ID");
                 thisItem = masterRecipes.get(j).get(3).get(index);
 
                 //Compruebo si es la primera receta asociada a este batch
@@ -211,17 +211,17 @@ public class MPlanInterpreter {
                     //La información que está escrita en string directamente, posteriormente se leerá de un modelo
                     structuredPlan.get(entities).get(0).add("batch");
                     structuredPlan.get(entities).get(1).add(hl.toString());
-                    structuredPlan.get(entities).get(2).add("batchName");
+                    structuredPlan.get(entities).get(2).add("batch_ID");
                     structuredPlan.get(entities).get(2).add("numberOfItems");
-                    structuredPlan.get(entities).get(2).add("prodId");
-                    structuredPlan.get(entities).get(3).add(thisBatch); //El batchName lo tengo buscado de antes
+                    structuredPlan.get(entities).get(2).add("productType");
+                    structuredPlan.get(entities).get(3).add(thisBatch); //El batch_ID lo tengo buscado de antes
 
                     // Añado a la lista de items ID
                     structuredPlan.get(entities).get(3).add(thisItem);
                     //structuredPlan.get(entities).get(3).add(String.valueOf(1)); //Inicializo el número de items a 1
 
-                    //el refProdName no se en qué posición está, lo busco
-                    index=masterRecipes.get(j).get(2).indexOf("prodId");
+                    //el productType no se en qué posición está, lo busco
+                    index=masterRecipes.get(j).get(2).indexOf("productType");
                     structuredPlan.get(entities).get(3).add(masterRecipes.get(j).get(3).get(index));
                     entities=entities+1;//Después de guardar un elemento, sumo 1 al contador
                     batchList.add(thisBatch);//Añadimos el order al orderList
@@ -233,43 +233,6 @@ public class MPlanInterpreter {
                 }
             }
         }
-
-//        //Ahora determinamos las entidades a las que está asociada cada receta (cada instancia de producto)
-//        Integer numberofItems =0;
-//        String thisBatch = "";
-//
-//        HashMap<String,HashMap<String,String>> batchList = new HashMap<String,HashMap<String,String>>();
-//
-//        String thisOrder = "";
-//        HashMap<String,ArrayList<String>> orderList = new HashMap<>();
-//
-//        for (int j = 0; j < masterRecipes.size(); j++){
-//            //Busco el batch asociado
-//            for (int k = 0; k < masterRecipes.get(j).get(2).size();k++) {
-//                //Primero compruebo si la receta tiene batch asociado
-//                if (masterRecipes.get(j).get(2).get(k).contains("batch")) {
-//                    thisBatch = masterRecipes.get(j).get(3).get(k);
-//                    //Compruebo si ya había otros elementos asociados a este batch
-//                    if (!batchList.containsKey(thisBatch)){ //Si no lo contiene, lo añado a la lista
-//                        batchList.put(thisBatch,new HashMap<String, String>());
-//                        batchList.get(thisBatch).put("numberofItems", String.valueOf(1));
-//                        batchList.get(thisBatch).put("refProdName", masterRecipes.get(j).get(3).get(5));
-//                    } else { //Si lo contiene, sumo 1 al valor de la variable "numberofItems"
-//                        numberofItems= Integer.parseInt(batchList.get(thisBatch).get("numberofItems"));
-//                        batchList.get(thisBatch).replace("numberofItems",String.valueOf(numberofItems+1));
-//                    }
-//                } else if (masterRecipes.get(j).get(2).get(k).contains("order")) {
-//                    thisOrder = masterRecipes.get(j).get(3).get(k);
-//                    //Compruebo si ya había otros elementos asociados a este batch
-//                    if (!orderList.containsKey(thisOrder)) { //Si no lo contiene, lo añado a la lista
-//                        orderList.put(thisOrder, new ArrayList<>());
-//                        orderList.get(thisOrder).add(masterRecipes.get(j).get(3).get(0));
-//                    } else if (!orderList.get(thisOrder).contains(masterRecipes.get(j).get(3).get(0)))
-//                        orderList.get(thisOrder).add(masterRecipes.get(j).get(3).get(0));
-//                }
-//            }
-//        }
-//        int stop = 2;
 
         System.out.println("--- BATCHES ---");
         Iterator it = batchList.listIterator();
