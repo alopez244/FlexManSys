@@ -115,7 +115,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
         // Conseguimos toda la informacion del producto utilizando su ID
         productInfo = getProductInfo(productID);
-        System.out.println("ID del producto asociado al agente " + myAgent.getLocalName() + ": " + productInfo.get(0).get(3).get(2) + " - " + productID);
+        System.out.println("ID del producto asociado al agente " + myAgent.getLocalName() + ": " + productInfo.get(0).get(3).get(1) + " - " + productID);
 
         // Teniendo toda la informacion del producto vamos a conseguir las maquinas que vayan a realizar todas las operaciones
         machinesForOperations = getMachines(myAgent.getLocalName(), productInfo, conversationId);
