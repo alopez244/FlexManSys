@@ -65,7 +65,7 @@ public class MachineAgent extends ResourceAgentTemplate {
             this.initTransition = ControlBehaviour.STOP;
         }
 
-        functionalityInstance = new Machine_Functionality(this);
+        functionalityInstance = new Machine_Functionality();
         return LOGGER.exit(MessageTemplate.or(informNeg, debugSim));
     }
 }
