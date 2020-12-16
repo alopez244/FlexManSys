@@ -9,6 +9,7 @@ import jade.lang.acl.MessageTemplate;
 
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.*;
+import es.ehu.domain.manufacturing.behaviour.*;
 import es.ehu.platform.utilities.*;
 import org.w3c.dom.Document;
 
@@ -50,12 +51,18 @@ public class ResourceAgentTemplate extends MWAgent {
         /** Comportamiento negociación **/
         Behaviour negotiating = new NegotiatingBehaviour(this);
 
+        /** Comportamiento envío **/
+        Behaviour sending = new SendTaskBehaviour(this);
+
+        /** Comportamiento lectura **/
+        Behaviour receiving = new ReceiveTaskBehaviour(this);
+
         /** Comportamiento end **/
         Behaviour end = new EndBehaviour(this);
 
         /** FSM state definition **/
         behaviourFSM.registerFirstState(new StateParallel(this, behaviourFSM, boot), ST_BOOT);
-        behaviourFSM.registerState(new StateParallel(this, behaviourFSM, running, negotiating), ControlBehaviour.ST_RUNNING);
+        behaviourFSM.registerState(new StateParallel(this, behaviourFSM, running, negotiating, sending, receiving), ControlBehaviour.ST_RUNNING);
         behaviourFSM.registerLastState(new StateParallel(this, behaviourFSM, end), ControlBehaviour.ST_STOP);
 
         /** FSM transition **/

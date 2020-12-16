@@ -1,9 +1,11 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
+import com.google.gson.Gson;
 import es.ehu.domain.manufacturing.agents.MachineAgent;
 import es.ehu.domain.manufacturing.utilities.Position;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.NegotiatingBehaviour;
+import es.ehu.platform.template.interfaces.AssetManagement;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.platform.utilities.Cmd;
@@ -22,12 +24,14 @@ import java.time.Month;
 import java.util.*;
 
 
-public class Machine_Functionality implements BasicFunctionality, NegFunctionality {
+public class Machine_Functionality implements BasicFunctionality, NegFunctionality, AssetManagement {
 
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
 
     private HashMap<String, String> operationsWithBatchAgents = new HashMap<>();
+    private HashMap PLCmsgIn= new HashMap();
+    private HashMap PLCmsgOut = new HashMap();
 
     /** Identifier of the agent. */
     private MachineAgent myAgent;
@@ -324,5 +328,33 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         }
 
         return NegotiatingBehaviour.NEG_WON;
+    }
+
+    public void rcvData(ACLMessage msg) {
+
+        this.PLCmsgIn = new Gson().fromJson(msg.getContent(), HashMap.class);
+        if(PLCmsgIn.containsKey("Received")){
+            if(PLCmsgIn.get("Received").equals(true)){
+                System.out.println("<--PLC reception confirmation");
+            }else{
+                System.out.println("<--Problem receiving the message");
+            }
+        }else{
+
+            if(PLCmsgIn.containsKey("Flag_Service_Completed")) {
+                if (PLCmsgIn.get("Flag_Service_Completed").equals(true)) {
+
+                    //Send confirmation message to PLC
+                    ACLMessage confResponse = new ACLMessage(ACLMessage.INFORM);
+                    AID gwAgent = new AID("ControlGatewayCont", false);
+                    confResponse.addReceiver(gwAgent);
+                    confResponse.setOntology("negotiation");
+                    confResponse.setConversationId("PLCdata");
+                    confResponse.setContent("Message Received");
+                    myAgent.send(confResponse);
+
+                }
+            }
+        }
     }
 }

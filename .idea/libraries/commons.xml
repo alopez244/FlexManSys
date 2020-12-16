@@ -2,6 +2,7 @@
   <library name="commons">
     <CLASSES>
       <root url="file://$PROJECT_DIR$/lib/commons" />
+      <root url="jar://$USER_HOME$/Documents/java/libraries/apache/commons-collections4-4.4.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
