@@ -12,6 +12,7 @@ import es.ehu.platform.utilities.Cmd;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.tools.gui.ACLPerformativesRenderer;
 import jade.wrapper.AgentController;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -171,6 +172,38 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                     operationInfo.add(3, values);
 
                     myAgent.machinePlan.add(operationInfo);
+                    ArrayList<String> auxiliar = new ArrayList<>();
+                    Boolean ItemContFlag = true;
+                    int NumOfItems = 1;
+                    String BathcID = "";
+                    for (int j = 0; j < myAgent.machinePlan.size(); j++) {
+                        for (int k = 0; k < myAgent.machinePlan.get(j).size(); k++) {
+                            System.out.println(myAgent.machinePlan.get(j).get(k));
+                            auxiliar = myAgent.machinePlan.get(j).get(k);
+                            if (auxiliar.get(0).equals("station")){
+                                PLCmsgOut.put("Machine_Reference",myAgent.machinePlan.get(j).get(k+3).get(0));
+                            }
+                            if (auxiliar.get(0).equals("operation")){
+                                ArrayList<String> auxiliar2 = myAgent.machinePlan.get(j).get(k+3);
+                                if (ItemContFlag == true) {
+                                    BathcID = auxiliar2.get(4);
+                                    PLCmsgOut.put("Batch_Reference",BathcID);
+                                    ItemContFlag = false;
+                                }
+                                if (ItemContFlag == false && auxiliar2.get(4).equals(BathcID)){
+                                    NumOfItems++;
+                                }
+
+                                PLCmsgOut.put("Flag_New_Service", true);
+                                PLCmsgOut.put("Order_Reference",0);
+
+                                PLCmsgOut.put("Ref_Subproduct_Type",0);
+                                PLCmsgOut.put("Ref_Service_Type",0);
+                                PLCmsgOut.put("No_of_Items",0);
+
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -330,7 +363,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         return NegotiatingBehaviour.NEG_WON;
     }
 
-    public void rcvData(ACLMessage msg) {
+    public void rcvDataFromPLC(ACLMessage msg) {
 
         this.PLCmsgIn = new Gson().fromJson(msg.getContent(), HashMap.class);
         if(PLCmsgIn.containsKey("Received")){
@@ -344,17 +377,40 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
             if(PLCmsgIn.containsKey("Flag_Service_Completed")) {
                 if (PLCmsgIn.get("Flag_Service_Completed").equals(true)) {
 
-                    //Send confirmation message to PLC
-                    ACLMessage confResponse = new ACLMessage(ACLMessage.INFORM);
-                    AID gwAgent = new AID("ControlGatewayCont", false);
-                    confResponse.addReceiver(gwAgent);
-                    confResponse.setOntology("negotiation");
-                    confResponse.setConversationId("PLCdata");
-                    confResponse.setContent("Message Received");
-                    myAgent.send(confResponse);
+                    sendMessage("Message Received", 7); //Send confirmation message to PLC
 
                 }
             }
         }
     }
+
+    public void sendDataToPLC() {
+
+        for (int i = 0; i < myAgent.machinePlan.size() - 1; i++) {
+            System.out.println(myAgent.machinePlan.get(i));
+        }
+
+        PLCmsgOut.put("Flag_New_Service", true);
+        PLCmsgOut.put("Machine_Reference",0);
+        PLCmsgOut.put("Order_Reference",0);
+        PLCmsgOut.put("Batch_Reference",0);
+        PLCmsgOut.put("Ref_Subproduct_Type",0);
+        PLCmsgOut.put("Ref_Service_Type",0);
+        PLCmsgOut.put("No_of_Items",0);
+
+        String MessageContent = new Gson().toJson(PLCmsgOut);
+        sendMessage(MessageContent,16);
+
+    }
+
+    private void sendMessage(String data, int performative) {
+        ACLMessage msgToPLC = new ACLMessage(performative);
+        AID gwAgent = new AID("ControlGatewayCont", false);
+        msgToPLC.addReceiver(gwAgent);
+        msgToPLC.setOntology("negotiation");
+        msgToPLC.setConversationId("PLCdata");
+        msgToPLC.setContent(data);
+        myAgent.send(msgToPLC);
+    }
+
 }

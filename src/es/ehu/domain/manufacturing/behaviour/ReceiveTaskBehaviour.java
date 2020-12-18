@@ -35,7 +35,7 @@ public class ReceiveTaskBehaviour extends SimpleBehaviour {
         if (msg != null) {
             System.out.println("-->Received message: " + msg.getContent());
 
-            this.aAssetManagement.rcvData(msg);
+            this.aAssetManagement.rcvDataFromPLC(msg);
 
         } else {
             block();

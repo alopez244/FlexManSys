@@ -160,7 +160,10 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
     }
 
     @Override
-    public void rcvData(ACLMessage msg) {
+    public void rcvDataFromPLC(ACLMessage msg) {}
 
-    }
+    @Override
+    public void sendDataToPLC() {}
+
+
 }
