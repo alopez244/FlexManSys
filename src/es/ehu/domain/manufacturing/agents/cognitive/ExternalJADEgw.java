@@ -48,7 +48,7 @@ public class ExternalJADEgw {
 
     //Gateway Agent Initialization. Necessary before executing the functions of sending and receiving messages
     public static void agentInit(){
-        redirectOutput();   //Util cuando no se dispone de terminal para mostrar las trazas. Trazas -> archivo txt
+        //redirectOutput();   //Util cuando no se dispone de terminal para mostrar las trazas. Trazas -> archivo txt
         System.out.println("->Java Agent Init");
         String host = "127.0.0.1";              //IP del local host (este equipo)
         String port = "1099";                   //Puerto en el que se esta ejecutando el gestor de agentes
@@ -56,7 +56,7 @@ public class ExternalJADEgw {
         pp.setProperty(Profile.MAIN_HOST, host);
         pp.setProperty(Profile.MAIN_PORT, port);
         pp.setProperty(Profile.CONTAINER_NAME, "GatewayCont");      //-->Nombre ControlGatewayCont
-        JadeGateway.init("GWAgent", pp);            //Inicializa el agente gateway
+        JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent", pp);            //Inicializa el agente gateway
         System.out.println("<-Java Agent Init");
     }
 
@@ -88,9 +88,9 @@ public class ExternalJADEgw {
         }
         if(strMensaje.readNewData()==true){
             recvMsg=strMensaje.readMessage();
-            System.out.println("--Recibido: " + recvMsg);
+            System.out.println("--Received: " + recvMsg);
         }else{
-            System.out.println("--Sin respuesta");
+            System.out.println("--No answer");
             recvMsg="";
         }
         System.out.println("<-Java recv");

@@ -1,6 +1,5 @@
 package es.ehu.domain.manufacturing.agents.cognitive;
 
-import es.ehu.domain.manufacturing.agents.MachineAgent;
 import es.ehu.domain.manufacturing.utilities.StructMessage;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
@@ -24,7 +23,7 @@ public class GWAgent extends GatewayAgent {
             releaseCommand(command);
         }
         StructMessage msgStruct = (StructMessage) command;
-        if(msgStruct.readAction()=="recieve") {
+        if(msgStruct.readAction()=="receive") {
             System.out.println("---GW, recv function");
             msgRecv = (String) msgInFIFO.poll();
             if ( msgRecv != null) {

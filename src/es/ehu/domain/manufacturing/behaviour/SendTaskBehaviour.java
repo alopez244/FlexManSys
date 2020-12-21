@@ -2,6 +2,7 @@ package es.ehu.domain.manufacturing.behaviour;
 
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.template.interfaces.AssetManagement;
+import es.ehu.platform.template.interfaces.NegFunctionality;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.SimpleBehaviour;
 import org.apache.logging.log4j.LogManager;
@@ -18,13 +19,14 @@ public class SendTaskBehaviour extends SimpleBehaviour {
         super(a);
         LOGGER.debug("*** Constructing RunningBehaviour ***");
         this.myAgent = a;
+        this.aAssetManagement = (AssetManagement) a.functionalityInstance;
     }
 
     @Override
     public void action() {
         LOGGER.entry();
 
-        this.aAssetManagement.sendDataToPLC();
+        aAssetManagement.sendDataToPLC();
 
         block();
 

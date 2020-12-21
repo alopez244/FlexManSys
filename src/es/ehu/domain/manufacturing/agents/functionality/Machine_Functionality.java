@@ -1,6 +1,7 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
 import com.google.gson.Gson;
+import es.ehu.SystemModelAgent;
 import es.ehu.domain.manufacturing.agents.MachineAgent;
 import es.ehu.domain.manufacturing.behaviour.SendTaskBehaviour;
 import es.ehu.domain.manufacturing.utilities.Position;
@@ -381,7 +382,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         ArrayList<String> auxiliar = new ArrayList<>();
         Boolean ItemContFlag = true;
         int NumOfItems = 0;
-        if (myAgent.machinePlan != null) {
+        if (myAgent.machinePlan.size() > 2) {
             for (int j = 0; j < myAgent.machinePlan.size(); j++) {
                 for (int k = 0; k < myAgent.machinePlan.get(j).size(); k++) {
                     auxiliar = myAgent.machinePlan.get(j).get(k);
