@@ -2,6 +2,7 @@ package es.ehu.domain.manufacturing.agents.functionality;
 
 import com.google.gson.Gson;
 import es.ehu.domain.manufacturing.agents.MachineAgent;
+import es.ehu.domain.manufacturing.behaviour.SendTaskBehaviour;
 import es.ehu.domain.manufacturing.utilities.Position;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.NegotiatingBehaviour;
@@ -10,6 +11,8 @@ import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.platform.utilities.Cmd;
 import jade.core.AID;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.tools.gui.ACLPerformativesRenderer;
@@ -33,6 +36,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
     private HashMap<String, String> operationsWithBatchAgents = new HashMap<>();
     private HashMap PLCmsgIn= new HashMap();
     private HashMap PLCmsgOut = new HashMap();
+    String BathcID = "";
 
     /** Identifier of the agent. */
     private MachineAgent myAgent;
@@ -172,38 +176,6 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                     operationInfo.add(3, values);
 
                     myAgent.machinePlan.add(operationInfo);
-                    ArrayList<String> auxiliar = new ArrayList<>();
-                    Boolean ItemContFlag = true;
-                    int NumOfItems = 1;
-                    String BathcID = "";
-                    for (int j = 0; j < myAgent.machinePlan.size(); j++) {
-                        for (int k = 0; k < myAgent.machinePlan.get(j).size(); k++) {
-                            System.out.println(myAgent.machinePlan.get(j).get(k));
-                            auxiliar = myAgent.machinePlan.get(j).get(k);
-                            if (auxiliar.get(0).equals("station")){
-                                PLCmsgOut.put("Machine_Reference",myAgent.machinePlan.get(j).get(k+3).get(0));
-                            }
-                            if (auxiliar.get(0).equals("operation")){
-                                ArrayList<String> auxiliar2 = myAgent.machinePlan.get(j).get(k+3);
-                                if (ItemContFlag == true) {
-                                    BathcID = auxiliar2.get(4);
-                                    PLCmsgOut.put("Batch_Reference",BathcID);
-                                    ItemContFlag = false;
-                                }
-                                if (ItemContFlag == false && auxiliar2.get(4).equals(BathcID)){
-                                    NumOfItems++;
-                                }
-
-                                PLCmsgOut.put("Flag_New_Service", true);
-                                PLCmsgOut.put("Order_Reference",0);
-
-                                PLCmsgOut.put("Ref_Subproduct_Type",0);
-                                PLCmsgOut.put("Ref_Service_Type",0);
-                                PLCmsgOut.put("No_of_Items",0);
-
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -379,6 +351,26 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
                     sendMessage("Message Received", 7); //Send confirmation message to PLC
 
+                    BathcID = (String) PLCmsgIn.get("Batch_Reference");
+
+                    for (int i = 0; i <myAgent.machinePlan.size(); i++){
+                        for (int j = 0; j < myAgent.machinePlan.get(i).size(); j++){
+                            if (myAgent.machinePlan.get(i).get(j).get(0).equals("operation")){
+                                if (myAgent.machinePlan.get(i).get(j+3).get(4).equals(BathcID)){
+                                    myAgent.machinePlan.remove(i);
+                                    i--;
+                                }
+                            }
+                        }
+                    }
+                    if (myAgent.machinePlan.size() < 3){
+                        myAgent.machinePlan.remove(1);
+                        myAgent.machinePlan.remove(2);
+                    } else{
+                        SimpleBehaviour sendingBehaviour = new SendTaskBehaviour(myAgent);
+
+                        sendingBehaviour.restart();
+                    }
                 }
             }
         }
@@ -386,20 +378,40 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
     public void sendDataToPLC() {
 
-        for (int i = 0; i < myAgent.machinePlan.size() - 1; i++) {
-            System.out.println(myAgent.machinePlan.get(i));
+        ArrayList<String> auxiliar = new ArrayList<>();
+        Boolean ItemContFlag = true;
+        int NumOfItems = 0;
+        if (myAgent.machinePlan != null) {
+            for (int j = 0; j < myAgent.machinePlan.size(); j++) {
+                for (int k = 0; k < myAgent.machinePlan.get(j).size(); k++) {
+                    auxiliar = myAgent.machinePlan.get(j).get(k);
+                    if (auxiliar.get(0).equals("station")) {
+                        PLCmsgOut.put("Machine_Reference", myAgent.machinePlan.get(j).get(k + 3).get(0));
+                    }
+                    if (auxiliar.get(0).equals("operation")) {
+                        ArrayList<String> auxiliar2 = myAgent.machinePlan.get(j).get(k + 3);
+                        if (ItemContFlag == true) {
+                            BathcID = auxiliar2.get(4);
+                            PLCmsgOut.put("Batch_Reference", BathcID);
+                            PLCmsgOut.put("Order_Reference", auxiliar2.get(6));
+                            PLCmsgOut.put("Ref_Subproduct_Type", auxiliar2.get(7));
+                            PLCmsgOut.put("Ref_Service_Type", auxiliar2.get(3));
+                            PLCmsgOut.put("Flag_New_Service", true);
+                            ItemContFlag = false;
+                        }
+                        if (ItemContFlag == false && auxiliar2.get(4).equals(BathcID)) {
+                            NumOfItems++;
+                        }
+                    }
+                }
+            }
+            PLCmsgOut.put("No_of_Items",NumOfItems);
+            String MessageContent = new Gson().toJson(PLCmsgOut);
+            sendMessage(MessageContent,16);
+        } else {
+            System.out.println("No operations defined");
+            PLCmsgOut.put("Flag_New_Service", false);
         }
-
-        PLCmsgOut.put("Flag_New_Service", true);
-        PLCmsgOut.put("Machine_Reference",0);
-        PLCmsgOut.put("Order_Reference",0);
-        PLCmsgOut.put("Batch_Reference",0);
-        PLCmsgOut.put("Ref_Subproduct_Type",0);
-        PLCmsgOut.put("Ref_Service_Type",0);
-        PLCmsgOut.put("No_of_Items",0);
-
-        String MessageContent = new Gson().toJson(PLCmsgOut);
-        sendMessage(MessageContent,16);
 
     }
 

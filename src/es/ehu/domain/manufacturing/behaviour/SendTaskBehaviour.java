@@ -2,6 +2,7 @@ package es.ehu.domain.manufacturing.behaviour;
 
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.template.interfaces.AssetManagement;
+import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.SimpleBehaviour;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,7 +24,9 @@ public class SendTaskBehaviour extends SimpleBehaviour {
     public void action() {
         LOGGER.entry();
 
- //       this.aAssetManagement.sendDataToPLC();
+        this.aAssetManagement.sendDataToPLC();
+
+        block();
 
         LOGGER.exit();
     }
