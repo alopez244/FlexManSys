@@ -14,7 +14,7 @@ import es.ehu.platform.template.interfaces.*;
 import es.ehu.platform.utilities.Cmd;
 import es.ehu.platform.behaviour.*;
 
-public class ProcNode_Functionality implements BasicFunctionality, NegFunctionality, AssetManagement{
+public class ProcNode_Functionality implements BasicFunctionality, NegFunctionality{
 
     /**
      *
@@ -158,12 +158,5 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
 
         return LOGGER.exit(reply);
     }
-
-    @Override
-    public void rcvDataFromPLC(ACLMessage msg) {}
-
-    @Override
-    public void sendDataToPLC() {}
-
 
 }

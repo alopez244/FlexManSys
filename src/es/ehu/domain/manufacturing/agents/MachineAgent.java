@@ -1,6 +1,7 @@
 package es.ehu.domain.manufacturing.agents;
 
 import es.ehu.domain.manufacturing.agents.functionality.Machine_Functionality;
+import es.ehu.domain.manufacturing.template.DomResAgentTemplate;
 import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.ResourceAgentTemplate;
 import es.ehu.platform.utilities.XMLReader;
@@ -20,7 +21,7 @@ import java.util.ArrayList;
 import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
 import static es.ehu.domain.manufacturing.utilities.FmsNegotiation.ONT_DEBUG;
 
-public class MachineAgent extends ResourceAgentTemplate {
+public class MachineAgent extends DomResAgentTemplate {
 
     private static final long serialVersionUID = -3672658381864883026L;
 
