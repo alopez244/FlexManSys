@@ -16,7 +16,7 @@ public class GWAgent extends GatewayAgent {
     CircularFifoQueue msgInFIFO = new CircularFifoQueue(bufferSize);
 
 
-    protected void proccessCommand(java.lang.Object command) {
+    protected void processCommand(java.lang.Object command) {
         System.out.println("-->Gateway processes execute");
         if(!(command instanceof StructMessage)){
             System.out.println("---Error, unexpected type");
@@ -36,7 +36,7 @@ public class GWAgent extends GatewayAgent {
             }
         }else if(msgStruct.readAction()=="send") {
             System.out.println("---Gateway send command");
-            ACLMessage msgToAgent = new ACLMessage(ACLMessage.REQUEST);
+            ACLMessage msgToAgent = new ACLMessage(msgStruct.readPerformative());
             msgToAgent.addReceiver(machineAgentName);
             msgToAgent.setOntology("negotiation");
             msgToAgent.setConversationId("PLCdata");

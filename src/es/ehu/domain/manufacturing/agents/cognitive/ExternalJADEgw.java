@@ -1,72 +1,65 @@
 package es.ehu.domain.manufacturing.agents.cognitive;
 
+import com.google.gson.Gson;
+import es.ehu.domain.manufacturing.utilities.StructMessage;
 import jade.core.Profile;
 import jade.util.leap.Properties;
 import jade.wrapper.gateway.JadeGateway;
 
-
-import java.io.*;
 import java.util.HashMap;
-import es.ehu.domain.manufacturing.utilities.StructMessage;
-import com.google.gson.Gson;
+import java.util.Scanner;
 
 public class ExternalJADEgw {
-    private static int exID=0;
-    //Main --> Usado solo como ejemplo para probar el funcionamiento sin llegar a implementar el ODK
+
+
     public static void main(String[] args) {
-        String msg;
-        System.out.println("-->Main Init");
+        String msgRecv;
+        Scanner in = new Scanner(System.in);
+        String action;
+        String batchID = "";
+        HashMap msg;
         agentInit();
 
-        while(true) {
-            msg=ejemploStringDatos();   //Genera un String de datos, para ser enviado al Agente como ejemplo
-            send(msg);                  //Se envia el mensaje a través del gatewayAgent
-            System.out.println("*** Enviado: " + msg);
-            try {
-                Thread.sleep(500); // para dar tiempo a que los mensajes de log se impriman después del log del arranque del contenedor
-            } catch(Exception e) {
-                System.out.println(e);
+        while(true){
+            System.out.println("Introduzca accion: ");
+            action = in.nextLine();
+
+            if (action.equals("recibir")){
+                msgRecv = recv();
+            } else if(action.equals("confirmar")){
+                msg = messageReceived();
+                send(msg);
+            } else if(action.equals("servicioOK")){
+                msg = ServiceCompleted(batchID);
+                send(msg);
             }
-            msg=ejemploStringRecivido();    //Genera un String simulando una confirmacion de recepcion
-            send(msg);                      //Se envia la confirmacion de recepcion al agente
-            System.out.println("*** Enviado: " + msg);
-            try {
-                Thread.sleep(500); // para dar tiempo a que los mensajes de log se impriman después del log del arranque del contenedor
-            } catch(Exception e) {
-                System.out.println(e);
-            }
-            String msgRecv=recv();          //Se ejecuta la func. recv, con lo que se tiene un String con el mensaje recibido
-            System.out.println("*** Recibido: " + msgRecv);
-            try {
-                Thread.sleep(500); // para dar tiempo a que los mensajes de log se impriman después del log del arranque del contenedor
-            } catch(Exception e) {
-                System.out.println(e);
-            }
-            System.out.println();   //Espacio en blanco
         }
     }
 
-    //Gateway Agent Initialization. Necessary before executing the functions of sending and receiving messages
     public static void agentInit(){
-        //redirectOutput();   //Util cuando no se dispone de terminal para mostrar las trazas. Trazas -> archivo txt
         System.out.println("->Java Agent Init");
-        String host = "127.0.0.1";              //IP del local host (este equipo)
-        String port = "1099";                   //Puerto en el que se esta ejecutando el gestor de agentes
+        String host = "127.0.0.1";              //Local host IP)
+        String port = "1099";                   //Port on which the agent manager is running
         Properties pp = new Properties();
         pp.setProperty(Profile.MAIN_HOST, host);
         pp.setProperty(Profile.MAIN_PORT, port);
-        pp.setProperty(Profile.CONTAINER_NAME, "GatewayCont");      //-->Nombre ControlGatewayCont
-        JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent", pp);            //Inicializa el agente gateway
+        pp.setProperty(Profile.CONTAINER_NAME, "GatewayCont");      //-->Name ControlGatewayCont
+        JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);            //Gateway Agent Initialization
         System.out.println("<-Java Agent Init");
     }
 
-    //Funcion para el envío de mensajes ACL recibiendo un String que se añade en el mensaje.
-    public static void send(String msgOut) {  //Envía el String de datos que se le ha dado
+    //Function to send ACL messages by receiving a String that is added in the message.
+    public static void send(HashMap msgOut) {  //Sends the data String that has been given
         System.out.println("->Java Send");
         StructMessage strMessage = new StructMessage();
-        strMessage.setAction("enviar");
-        strMessage.setMessage(msgOut); //Problema traido desde ODK, primeros 2 caracteres son tamaño y longitud del array
-        System.out.println("--Se envia: " + strMessage.readMessage());
+        strMessage.setAction("send");
+        strMessage.setMessage(new Gson().toJson(msgOut));
+        if(msgOut.containsKey("Received")){
+            strMessage.setPerformative(7);
+        } else {
+            strMessage.setPerformative(16);
+        }
+        System.out.println("--Sended message: " + strMessage.readMessage());
         try {
             JadeGateway.execute(strMessage);
         } catch(Exception e) {
@@ -75,19 +68,19 @@ public class ExternalJADEgw {
         System.out.println("<-Java Send");
     }
 
-    //Funcion para la lectura de los datos recibidos en mensajes ACL
-    public static String recv() {       //Copia el String del mensaje recibido
+    //Function for reading the data received in ACL messages
+    public static String recv() {
         String recvMsg;
         System.out.println("->Java recv");
-        StructMessage strMensaje = new StructMessage();
-        strMensaje.setAction("recibir");
+        StructMessage strMessage = new StructMessage();
+        strMessage.setAction("receive");
         try {
-            JadeGateway.execute(strMensaje);
+            JadeGateway.execute(strMessage);
         } catch(Exception e) {
             System.out.println(e);
         }
-        if(strMensaje.readNewData()==true){
-            recvMsg=strMensaje.readMessage();
+        if(strMessage.readNewData()==true){
+            recvMsg=strMessage.readMessage();
             System.out.println("--Received: " + recvMsg);
         }else{
             System.out.println("--No answer");
@@ -97,36 +90,17 @@ public class ExternalJADEgw {
         return recvMsg;
     }
 
-    //Modifica la direccon de Sistem.out, teniendo las trazas en un fichero en lugar de por terminal.
-    public static void redirectOutput(){
-        // Create a log directory
-        File directoryLogs = new File("D:\\Documentos personales\\Adrian\\Master\\TFM\\Pruebas\\agenteGateway\\logs");
-        directoryLogs.mkdirs();
-        try {
-            // Create a log file
-            File fileLog = new File(directoryLogs, "log-ExternalJADEgw_v2.txt");
-            fileLog.createNewFile();
-            // Create a stream to to the log file
-            FileOutputStream f = new FileOutputStream(fileLog);
-            System.setOut(new PrintStream(f));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public static HashMap messageReceived(){
+        HashMap map = new HashMap();
+        map.put("Received", true);
+        return map;
     }
 
-    //Genera un String para enviar como ejemplo
-    public static String ejemploStringDatos(){
-        exID++;
+    public static HashMap ServiceCompleted(String batchID){
         HashMap map = new HashMap();
-        map.put("Flag_Item_Completed", true);
-        map.put("Batch_Reference",exID);
-        return new Gson().toJson(map);
+        map.put("Flag_Service_Completed", true);
+        map.put("Batch_Reference", "B1_O1");
+        return map;
     }
 
-    //Genera un String para simular una confirmacion de recepcion
-    public static String ejemploStringRecivido(){
-        HashMap map = new HashMap();
-        map.put("Recibido", true);
-        return new Gson().toJson(map);
-    }
 }

@@ -5,6 +5,7 @@ import es.ehu.platform.template.interfaces.AssetManagement;
 import es.ehu.platform.template.interfaces.NegFunctionality;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.SimpleBehaviour;
+import jade.lang.acl.ACLMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,9 +27,14 @@ public class SendTaskBehaviour extends SimpleBehaviour {
     public void action() {
         LOGGER.entry();
 
-        aAssetManagement.sendDataToPLC();
+//        ACLMessage msg = myAgent.receive();
+//        if (msg != null) {
 
-        block();
+            aAssetManagement.sendDataToPLC();
+
+//        } else {
+            block();
+//        }
 
         LOGGER.exit();
     }
