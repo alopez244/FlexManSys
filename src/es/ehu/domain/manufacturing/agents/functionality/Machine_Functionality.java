@@ -22,6 +22,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import std_msgs.Bool;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -37,7 +38,8 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
     private HashMap<String, String> operationsWithBatchAgents = new HashMap<>();
     private HashMap PLCmsgIn= new HashMap();
     private HashMap PLCmsgOut = new HashMap();
-    String BathcID = "";
+    private String BathcID = "";
+    private Boolean sendingFlag = false;
 
     /** Identifier of the agent. */
     private MachineAgent myAgent;
@@ -177,6 +179,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                     operationInfo.add(3, values);
 
                     myAgent.machinePlan.add(operationInfo);
+                    sendingFlag = true;
                 }
             }
         }
@@ -365,12 +368,12 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                         }
                     }
                     if (myAgent.machinePlan.size() < 3){
-                        myAgent.machinePlan.remove(1);
-                        myAgent.machinePlan.remove(2);
+//                        myAgent.machinePlan.remove(1);
+//                        myAgent.machinePlan.remove(2);
                     } else{
+                        sendingFlag = true;
                         SimpleBehaviour sendingBehaviour = new SendTaskBehaviour(myAgent);
-
-                        sendingBehaviour.restart();
+                        sendingBehaviour.action();
                     }
                 }
             }
@@ -379,41 +382,44 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
     public void sendDataToPLC() {
 
-        ArrayList<String> auxiliar = new ArrayList<>();
-        Boolean ItemContFlag = true;
-        int NumOfItems = 0;
-        if (myAgent.machinePlan.size() > 2) {
-            for (int j = 0; j < myAgent.machinePlan.size(); j++) {
-                for (int k = 0; k < myAgent.machinePlan.get(j).size(); k++) {
-                    auxiliar = myAgent.machinePlan.get(j).get(k);
-                    if (auxiliar.get(0).equals("station")) {
-                        PLCmsgOut.put("Machine_Reference", myAgent.machinePlan.get(j).get(k + 3).get(0));
-                    }
-                    if (auxiliar.get(0).equals("operation")) {
-                        ArrayList<String> auxiliar2 = myAgent.machinePlan.get(j).get(k + 3);
-                        if (ItemContFlag == true) {
-                            BathcID = auxiliar2.get(4);
-                            PLCmsgOut.put("Batch_Reference", BathcID);
-                            PLCmsgOut.put("Order_Reference", auxiliar2.get(6));
-                            PLCmsgOut.put("Ref_Subproduct_Type", auxiliar2.get(7));
-                            PLCmsgOut.put("Ref_Service_Type", auxiliar2.get(3));
-                            PLCmsgOut.put("Flag_New_Service", true);
-                            ItemContFlag = false;
+        if(sendingFlag == true) {
+            ArrayList<String> auxiliar = new ArrayList<>();
+            Boolean ItemContFlag = true;
+            int NumOfItems = 0;
+            if (myAgent.machinePlan.size() > 2) {
+                for (int j = 0; j < myAgent.machinePlan.size(); j++) {
+                    for (int k = 0; k < myAgent.machinePlan.get(j).size(); k++) {
+                        auxiliar = myAgent.machinePlan.get(j).get(k);
+                        if (auxiliar.get(0).equals("station")) {
+                            PLCmsgOut.put("Machine_Reference", myAgent.machinePlan.get(j).get(k + 3).get(0));
                         }
-                        if (ItemContFlag == false && auxiliar2.get(4).equals(BathcID)) {
-                            NumOfItems++;
+                        if (auxiliar.get(0).equals("operation")) {
+                            ArrayList<String> auxiliar2 = myAgent.machinePlan.get(j).get(k + 3);
+                            if (ItemContFlag == true) {
+                                BathcID = auxiliar2.get(4);
+                                PLCmsgOut.put("Batch_Reference", BathcID);
+                                PLCmsgOut.put("Order_Reference", auxiliar2.get(6));
+                                PLCmsgOut.put("Ref_Subproduct_Type", auxiliar2.get(7));
+                                PLCmsgOut.put("Ref_Service_Type", auxiliar2.get(3));
+                                PLCmsgOut.put("Flag_New_Service", true);
+                                ItemContFlag = false;
+                            }
+                            if (ItemContFlag == false && auxiliar2.get(4).equals(BathcID)) {
+                                NumOfItems++;
+                            }
                         }
                     }
                 }
+                PLCmsgOut.put("No_of_Items", NumOfItems);
+                String MessageContent = new Gson().toJson(PLCmsgOut);
+                sendMessage(MessageContent, 16);
+                sendingFlag = false;
+            } else {
+                System.out.println("No operations defined");
+                PLCmsgOut.put("Flag_New_Service", false);
+                sendingFlag = false;
             }
-            PLCmsgOut.put("No_of_Items",NumOfItems);
-            String MessageContent = new Gson().toJson(PLCmsgOut);
-            sendMessage(MessageContent,16);
-        } else {
-            System.out.println("No operations defined");
-            PLCmsgOut.put("Flag_New_Service", false);
         }
-
     }
 
     private void sendMessage(String data, int performative) {

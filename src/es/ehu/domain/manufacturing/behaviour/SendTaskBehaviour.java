@@ -6,6 +6,7 @@ import es.ehu.platform.template.interfaces.NegFunctionality;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,6 +14,7 @@ public class SendTaskBehaviour extends SimpleBehaviour {
 
     static final Logger LOGGER = LogManager.getLogger(SendTaskBehaviour.class.getName());
 
+    private MessageTemplate template;
     private MWAgent myAgent;
     private AssetManagement aAssetManagement;
 
@@ -21,20 +23,16 @@ public class SendTaskBehaviour extends SimpleBehaviour {
         LOGGER.debug("*** Constructing RunningBehaviour ***");
         this.myAgent = a;
         this.aAssetManagement = (AssetManagement) a.functionalityInstance;
+        this.template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+                MessageTemplate.MatchOntology("negotiation")),MessageTemplate.MatchConversationId("PLCdata"));
     }
 
     @Override
     public void action() {
         LOGGER.entry();
 
-//        ACLMessage msg = myAgent.receive();
-//        if (msg != null) {
-
             aAssetManagement.sendDataToPLC();
-
-//        } else {
             block();
-//        }
 
         LOGGER.exit();
     }
