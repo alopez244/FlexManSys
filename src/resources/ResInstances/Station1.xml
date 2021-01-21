@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<station xmlns="station" id="ST_01" description="Station 1 has all the consumable materials" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="station ./Station.xsd">
+<station xmlns="station" id="11" description="Station 1 has all the consumable materials" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="station ./Station.xsd">
 <palletIn id="PI1_ST_01" xPos="80" yPos="80" zPos="50"/>
 		<palletIn id="PI2_ST_01" xPos="520" yPos="80" zPos="50"/>
 		<palletOut id="PO1_ST_01" xPos="620" yPos="380" zPos="50"/>

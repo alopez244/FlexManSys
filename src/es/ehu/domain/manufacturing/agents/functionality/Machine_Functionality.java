@@ -153,7 +153,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
             } else {
                 String[] allOperations = msg.getContent().split("&");
-                for (int i = 0; i < allOperations.length - 1; i++) {
+                for (int i = 0; i < allOperations.length; i++) {
 
                     ArrayList<ArrayList<String>> operationInfo = new ArrayList<>();
 
@@ -400,7 +400,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                                 PLCmsgOut.put("Batch_Reference", BathcID);
                                 PLCmsgOut.put("Order_Reference", auxiliar2.get(6));
                                 PLCmsgOut.put("Ref_Subproduct_Type", auxiliar2.get(7));
-                                PLCmsgOut.put("Ref_Service_Type", auxiliar2.get(3));
+                                PLCmsgOut.put("Ref_Service_Type", auxiliar2.get(0));
                                 PLCmsgOut.put("Flag_New_Service", true);
                                 ItemContFlag = false;
                             }
