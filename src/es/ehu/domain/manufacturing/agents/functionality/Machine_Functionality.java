@@ -342,36 +342,35 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
     public void rcvDataFromPLC(ACLMessage msg) {
 
         this.PLCmsgIn = new Gson().fromJson(msg.getContent(), HashMap.class);
-        if(PLCmsgIn.containsKey("Received")){
+        if(PLCmsgIn.containsKey("Received")){                                               //Check if it is a confirmation message
             if(PLCmsgIn.get("Received").equals(true)){
                 System.out.println("<--PLC reception confirmation");
             }else{
                 System.out.println("<--Problem receiving the message");
             }
         }else{
-
-            if(PLCmsgIn.containsKey("Flag_Service_Completed")) {
-                if (PLCmsgIn.get("Flag_Service_Completed").equals(true)) {
+            if(PLCmsgIn.containsKey("Control_Flag_Service_Completed")) {                    //At least the first field is checked
+                if (PLCmsgIn.get("Control_Flag_Service_Completed").equals(true)) {          //If service has been completed, the operation is deleted from machine plan variable
 
                     sendMessage("Message Received", 7); //Send confirmation message to PLC
 
-                    BathcID = (String) PLCmsgIn.get("Batch_Reference");
+                    BathcID = (String) PLCmsgIn.get("Id_Batch_Reference");
 
-                    for (int i = 0; i <myAgent.machinePlan.size(); i++){
+                    for (int i = 0; i <myAgent.machinePlan.size(); i++){                                //searching the expected batch to be manufactured in machine plan arraylist
                         for (int j = 0; j < myAgent.machinePlan.get(i).size(); j++){
                             if (myAgent.machinePlan.get(i).get(j).get(0).equals("operation")){
-                                if (myAgent.machinePlan.get(i).get(j+3).get(4).equals(BathcID)){
+                                if (myAgent.machinePlan.get(i).get(j+3).get(4).equals(BathcID)){        //The manufactured batch is compared with the expected batch
                                     myAgent.machinePlan.remove(i);
                                     i--;
                                 }
                             }
                         }
                     }
-                    if (myAgent.machinePlan.size() < 3){
+                    if (myAgent.machinePlan.size() < 3){  //checking that there is no more operation to send
 //                        myAgent.machinePlan.remove(1);
 //                        myAgent.machinePlan.remove(2);
                     } else{
-                        sendingFlag = true;
+                        sendingFlag = true; //if there is any operation left, send behavior is called
                         SimpleBehaviour sendingBehaviour = new SendTaskBehaviour(myAgent);
                         sendingBehaviour.action();
                     }
@@ -391,17 +390,17 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                     for (int k = 0; k < myAgent.machinePlan.get(j).size(); k++) {
                         auxiliar = myAgent.machinePlan.get(j).get(k);
                         if (auxiliar.get(0).equals("station")) {
-                            PLCmsgOut.put("Machine_Reference", myAgent.machinePlan.get(j).get(k + 3).get(0));
+                            PLCmsgOut.put("Id_Machine_Reference", Integer.parseInt(myAgent.machinePlan.get(j).get(k + 3).get(0)));
                         }
                         if (auxiliar.get(0).equals("operation")) {
                             ArrayList<String> auxiliar2 = myAgent.machinePlan.get(j).get(k + 3);
                             if (ItemContFlag == true) {
                                 BathcID = auxiliar2.get(4);
-                                PLCmsgOut.put("Batch_Reference", BathcID);
-                                PLCmsgOut.put("Order_Reference", auxiliar2.get(6));
-                                PLCmsgOut.put("Ref_Subproduct_Type", auxiliar2.get(7));
-                                PLCmsgOut.put("Ref_Service_Type", auxiliar2.get(0));
-                                PLCmsgOut.put("Flag_New_Service", true);
+                                PLCmsgOut.put("Control_Flag_New_Service", true);
+                                PLCmsgOut.put("Id_Batch_Reference", Integer.parseInt(BathcID));
+                                PLCmsgOut.put("Id_Order_Reference", Integer.parseInt(auxiliar2.get(6)));
+                                PLCmsgOut.put("Id_Ref_Subproduct_Type", Integer.parseInt(auxiliar2.get(7)));
+                                PLCmsgOut.put("Operation_Ref_Service_Type", Integer.parseInt(auxiliar2.get(0)));
                                 ItemContFlag = false;
                             }
                             if (ItemContFlag == false && auxiliar2.get(4).equals(BathcID)) {
@@ -410,19 +409,19 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                         }
                     }
                 }
-                PLCmsgOut.put("No_of_Items", NumOfItems);
+                PLCmsgOut.put("Operation_No_of_Items", NumOfItems);
                 String MessageContent = new Gson().toJson(PLCmsgOut);
                 sendMessage(MessageContent, 16);
                 sendingFlag = false;
             } else {
                 System.out.println("No operations defined");
-                PLCmsgOut.put("Flag_New_Service", false);
+                PLCmsgOut.put("Control_Flag_New_Service", false);
                 sendingFlag = false;
             }
         }
     }
 
-    private void sendMessage(String data, int performative) {
+    private void sendMessage(String data, int performative) {       //ACLMessage template for message sending to gateway agent
         ACLMessage msgToPLC = new ACLMessage(performative);
         AID gwAgent = new AID("ControlGatewayCont", false);
         msgToPLC.addReceiver(gwAgent);

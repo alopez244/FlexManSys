@@ -6,37 +6,16 @@ import jade.core.Profile;
 import jade.util.leap.Properties;
 import jade.wrapper.gateway.JadeGateway;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.HashMap;
-import java.util.Scanner;
 
 public class ExternalJADEgw {
 
-
-    public static void main(String[] args) {
-        String msgRecv;
-        Scanner in = new Scanner(System.in);
-        String action;
-        String batchID = "";
-        HashMap msg;
-        agentInit();
-
-        while(true){
-            System.out.println("Introduzca accion: ");
-            action = in.nextLine();
-
-            if (action.equals("recibir")){
-                msgRecv = recv();
-            } else if(action.equals("confirmar")){
-                msg = messageReceived();
-                send(msg);
-            } else if(action.equals("servicioOK")){
-                msg = ServiceCompleted(batchID);
-                send(msg);
-            }
-        }
-    }
-
     public static void agentInit(){
+        redirectOutput();
         System.out.println("->Java Agent Init");
         String host = "127.0.0.1";              //Local host IP)
         String port = "1099";                   //Port on which the agent manager is running
@@ -49,12 +28,12 @@ public class ExternalJADEgw {
     }
 
     //Function to send ACL messages by receiving a String that is added in the message.
-    public static void send(HashMap msgOut) {  //Sends the data String that has been given
+    public static void send(String msgOut) {  //Sends the data String that has been given
         System.out.println("->Java Send");
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("send");
         strMessage.setMessage(new Gson().toJson(msgOut));
-        if(msgOut.containsKey("Received")){
+        if(msgOut.contains("Received")){
             strMessage.setPerformative(7);
         } else {
             strMessage.setPerformative(16);
@@ -90,17 +69,21 @@ public class ExternalJADEgw {
         return recvMsg;
     }
 
-    public static HashMap messageReceived(){
-        HashMap map = new HashMap();
-        map.put("Received", true);
-        return map;
-    }
-
-    public static HashMap ServiceCompleted(String batchID){
-        HashMap map = new HashMap();
-        map.put("Flag_Service_Completed", true);
-        map.put("Batch_Reference", "B1_O1");
-        return map;
+    //Modifica la direccon de Sistem.out, teniendo las trazas en un fichero en lugar de por terminal.
+    public static void redirectOutput(){
+        // Create a log directory
+        File directoryLogs = new File("C:\\Users\\aabadia004\\Desktop\\logs");
+        directoryLogs.mkdirs();
+        try {
+            // Create a log file
+            File fileLog = new File(directoryLogs, "log-ExternalJADEgw.txt");
+            fileLog.createNewFile();
+            // Create a stream to to the log file
+            FileOutputStream f = new FileOutputStream(fileLog);
+            System.setOut(new PrintStream(f));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }
