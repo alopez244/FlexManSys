@@ -32,13 +32,16 @@ public class ExternalJADEgw {
         System.out.println("->Java Send");
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("send");
-        strMessage.setMessage(new Gson().toJson(msgOut));
+        strMessage.setMessage(msgOut);
         if(msgOut.contains("Received")){
+            System.out.println("4");
             strMessage.setPerformative(7);
         } else {
+            System.out.println("5");
             strMessage.setPerformative(16);
         }
         System.out.println("--Sended message: " + strMessage.readMessage());
+        System.out.println("5");
         try {
             JadeGateway.execute(strMessage);
         } catch(Exception e) {

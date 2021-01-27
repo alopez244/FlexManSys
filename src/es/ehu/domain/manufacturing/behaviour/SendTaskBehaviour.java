@@ -23,8 +23,7 @@ public class SendTaskBehaviour extends SimpleBehaviour {
         LOGGER.debug("*** Constructing RunningBehaviour ***");
         this.myAgent = a;
         this.aAssetManagement = (AssetManagement) a.functionalityInstance;
-        this.template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
-                MessageTemplate.MatchOntology("negotiation")),MessageTemplate.MatchConversationId("PLCdata"));
+
     }
 
     @Override

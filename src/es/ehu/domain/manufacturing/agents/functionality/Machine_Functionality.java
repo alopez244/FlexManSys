@@ -36,10 +36,11 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
 
     private HashMap<String, String> operationsWithBatchAgents = new HashMap<>();
-    private HashMap PLCmsgIn= new HashMap();
+    private HashMap PLCmsgIn = new HashMap();
     private HashMap PLCmsgOut = new HashMap();
     private String BathcID = "";
     private Boolean sendingFlag = false;
+    private Boolean orderQueueFlag = false;
 
     /** Identifier of the agent. */
     private MachineAgent myAgent;
@@ -179,7 +180,10 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                     operationInfo.add(3, values);
 
                     myAgent.machinePlan.add(operationInfo);
-                    sendingFlag = true;
+                    if(orderQueueFlag == false) {
+                        sendingFlag = true;
+                        orderQueueFlag = true;
+                    }
                 }
             }
         }
@@ -352,9 +356,12 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
             if(PLCmsgIn.containsKey("Control_Flag_Service_Completed")) {                    //At least the first field is checked
                 if (PLCmsgIn.get("Control_Flag_Service_Completed").equals(true)) {          //If service has been completed, the operation is deleted from machine plan variable
 
-                    sendMessage("Message Received", 7); //Send confirmation message to PLC
+                    HashMap confirmation = new HashMap();
+                    confirmation.put("Received", true);
+                    sendMessage(new Gson().toJson(confirmation), 7); //Send confirmation message to PLC
 
-                    BathcID = (String) PLCmsgIn.get("Id_Batch_Reference");
+                    BathcID = String.valueOf(PLCmsgIn.get("Id_Batch_Reference"));
+                    BathcID = BathcID.split("\\.")[0];
 
                     for (int i = 0; i <myAgent.machinePlan.size(); i++){                                //searching the expected batch to be manufactured in machine plan arraylist
                         for (int j = 0; j < myAgent.machinePlan.get(i).size(); j++){
@@ -367,6 +374,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                         }
                     }
                     if (myAgent.machinePlan.size() < 3){  //checking that there is no more operation to send
+                        orderQueueFlag = false;
 //                        myAgent.machinePlan.remove(1);
 //                        myAgent.machinePlan.remove(2);
                     } else{
@@ -381,7 +389,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
     public void sendDataToPLC() {
 
-        if(sendingFlag == true) {
+        if(sendingFlag == true) {     //It is checked if the method is correctly activated and that orders do not overlap
             ArrayList<String> auxiliar = new ArrayList<>();
             Boolean ItemContFlag = true;
             int NumOfItems = 0;
