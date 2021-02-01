@@ -16,31 +16,31 @@ public class GWAgent extends GatewayAgent {
     CircularFifoQueue msgInFIFO = new CircularFifoQueue(bufferSize);
 
 
-    protected void processCommand(java.lang.Object command) {
+    protected void processCommand(java.lang.Object command) {   //this method will be executed when the externalJAde class executes the command JadeGateway.execute
         System.out.println("-->Gateway processes execute");
         if(!(command instanceof StructMessage)){
             System.out.println("---Error, unexpected type");
             releaseCommand(command);
         }
         StructMessage msgStruct = (StructMessage) command;
-        if(msgStruct.readAction()=="receive") {
+        if(msgStruct.readAction()=="receive") {     // JadeGateway.execute command was called for new message reading (Agent -> PLC)
             System.out.println("---GW, recv function");
-            msgRecv = (String) msgInFIFO.poll();
+            msgRecv = (String) msgInFIFO.poll();    //reads the oldest message from FIFO
             if ( msgRecv != null) {
                 System.out.println("---GW, new message to read");
-                ((StructMessage) command).setMessage(msgRecv);
+                ((StructMessage) command).setMessage(msgRecv);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
                 ((StructMessage) command).setNewData(true);
             } else {
                 ((StructMessage) command).setNewData(false);
                 System.out.println("---GW, message queue is empty");
             }
-        }else if(msgStruct.readAction()=="send") {
+        }else if(msgStruct.readAction()=="send") {      // JadeGateway.execute command was called for new message sending (PLC -> Agent)
             System.out.println("---Gateway send command");
-            ACLMessage msgToAgent = new ACLMessage(msgStruct.readPerformative());
-            msgToAgent.addReceiver(machineAgentName);
+            ACLMessage msgToAgent = new ACLMessage(msgStruct.readPerformative()); //reads the performative saved in StructMessage data structure
+            msgToAgent.addReceiver(machineAgentName);   //for a correct data exchanging, agent must send a message to the PLC first
             msgToAgent.setOntology("negotiation");
             msgToAgent.setConversationId("PLCdata");
-            msgToAgent.setContent(msgStruct.readMessage());
+            msgToAgent.setContent(msgStruct.readMessage()); //reads the message saved in StructMessage data structure
             send(msgToAgent);
         }
         System.out.println("<--Gateway processes execute");
@@ -58,11 +58,11 @@ public class GWAgent extends GatewayAgent {
                 ACLMessage msgToFIFO = receive(template);
                 if (msgToFIFO != null) {
                     System.out.println("GWagent, message received from Machine Agent");
-                    machineAgentName = msgToFIFO.getSender();
+                    machineAgentName = msgToFIFO.getSender();   //saves the sender ID for a later reply
                     if(msgInFIFO.isAtFullCapacity()) {
                         System.out.println("buffer full, old message lost");
                     }
-                    msgInFIFO.add((String) msgToFIFO.getContent());
+                    msgInFIFO.add((String) msgToFIFO.getContent()); //adds the message to be send in the buffer (max capacity = 6)
                 } else {
                     block();
                 }

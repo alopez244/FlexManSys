@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.HashMap;
 
 public class ExternalJADEgw {
 
@@ -23,7 +22,7 @@ public class ExternalJADEgw {
         pp.setProperty(Profile.MAIN_HOST, host);
         pp.setProperty(Profile.MAIN_PORT, port);
         pp.setProperty(Profile.CONTAINER_NAME, "GatewayCont");      //-->Name ControlGatewayCont
-        JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);            //Gateway Agent Initialization
+        JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);    //Gateway Agent Initialization, must define package directory
         System.out.println("<-Java Agent Init");
     }
 
@@ -33,17 +32,14 @@ public class ExternalJADEgw {
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("send");
         strMessage.setMessage(msgOut);
-        if(msgOut.contains("Received")){
-            System.out.println("4");
-            strMessage.setPerformative(7);
+        if(msgOut.contains("Received")){    // Depending of the message type (confirmation or data exchanging) the performative will be different
+            strMessage.setPerformative(7);  // Performative = INFORM
         } else {
-            System.out.println("5");
-            strMessage.setPerformative(16);
+            strMessage.setPerformative(16); // Performative = REQUEST
         }
         System.out.println("--Sended message: " + strMessage.readMessage());
-        System.out.println("5");
         try {
-            JadeGateway.execute(strMessage);
+            JadeGateway.execute(strMessage);    // calls processCommand method of Gateway Agent
         } catch(Exception e) {
             e.printStackTrace();
         }

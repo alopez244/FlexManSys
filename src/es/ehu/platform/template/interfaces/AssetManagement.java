@@ -6,6 +6,7 @@ import java.io.Serializable;
 public interface AssetManagement extends Serializable {
 
     public void rcvDataFromPLC(ACLMessage msg);
+    public void recvBatchInfo(ACLMessage msg);
 
     public void sendDataToPLC();
 

@@ -12,8 +12,12 @@ import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.platform.utilities.Cmd;
 import jade.core.AID;
+import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.SimpleBehaviour;
+import jade.domain.DFService;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.tools.gui.ACLPerformativesRenderer;
@@ -39,6 +43,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
     private HashMap PLCmsgIn = new HashMap();
     private HashMap PLCmsgOut = new HashMap();
     private String BathcID = "";
+    int NumOfItems = 0;
     private Boolean sendingFlag = false;
     private Boolean orderQueueFlag = false;
 
@@ -180,10 +185,12 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                     operationInfo.add(3, values);
 
                     myAgent.machinePlan.add(operationInfo);
-                    if(orderQueueFlag == false) {
-                        sendingFlag = true;
-                        orderQueueFlag = true;
-                    }
+
+                }
+
+                if(orderQueueFlag == false) {   //flags update to avoid order overlaps
+                    sendingFlag = true;
+                    orderQueueFlag = true;
                 }
             }
         }
@@ -345,30 +352,33 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
     public void rcvDataFromPLC(ACLMessage msg) {
 
-        this.PLCmsgIn = new Gson().fromJson(msg.getContent(), HashMap.class);
-        if(PLCmsgIn.containsKey("Received")){                                               //Check if it is a confirmation message
+        this.PLCmsgIn = new Gson().fromJson(msg.getContent(), HashMap.class);   //Data type conversion Json->Hashmap class
+        if(PLCmsgIn.containsKey("Received")){   //Checks if it is a confirmation message
             if(PLCmsgIn.get("Received").equals(true)){
                 System.out.println("<--PLC reception confirmation");
             }else{
                 System.out.println("<--Problem receiving the message");
             }
         }else{
-            if(PLCmsgIn.containsKey("Control_Flag_Service_Completed")) {                    //At least the first field is checked
-                if (PLCmsgIn.get("Control_Flag_Service_Completed").equals(true)) {          //If service has been completed, the operation is deleted from machine plan variable
+            if(PLCmsgIn.containsKey("Control_Flag_Service_Completed")) {    //At least the first field is checked
+                if (PLCmsgIn.get("Control_Flag_Service_Completed").equals(true)) {  //If service has been completed, the operation is deleted from machine plan variable
 
                     HashMap confirmation = new HashMap();
                     confirmation.put("Received", true);
-                    sendMessage(new Gson().toJson(confirmation), 7); //Send confirmation message to PLC
+                    sendMessage(new Gson().toJson(confirmation), 7, "ControlGatewayCont"); //Send confirmation message to PLC
 
                     BathcID = String.valueOf(PLCmsgIn.get("Id_Batch_Reference"));
                     BathcID = BathcID.split("\\.")[0];
 
-                    for (int i = 0; i <myAgent.machinePlan.size(); i++){                                //searching the expected batch to be manufactured in machine plan arraylist
+                    for (int i = 0; i <myAgent.machinePlan.size(); i++){    //searching the expected batch to be manufactured in machine plan arraylist
                         for (int j = 0; j < myAgent.machinePlan.get(i).size(); j++){
                             if (myAgent.machinePlan.get(i).get(j).get(0).equals("operation")){
-                                if (myAgent.machinePlan.get(i).get(j+3).get(4).equals(BathcID)){        //The manufactured batch is compared with the expected batch
-                                    myAgent.machinePlan.remove(i);
-                                    i--;
+                                if (NumOfItems != 0) {
+                                    if (myAgent.machinePlan.get(i).get(j + 3).get(4).equals(BathcID)) { //The manufactured batch is compared with the expected batch
+                                        myAgent.machinePlan.remove(i);
+                                        i--;
+                                        NumOfItems--;   //only the references to the items that were expected to be manufactured are deleted, that's why it is counted how many remains to be deleted
+                                    }
                                 }
                             }
                         }
@@ -387,14 +397,88 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         }
     }
 
+    @Override
+    public void recvBatchInfo(ACLMessage msg) {
+
+        ACLMessage reply = null;
+        ArrayList<String> auxiliar = new ArrayList<>();
+        ArrayList<String> actionList = new ArrayList<String>();
+        String  batchAgentName = "";
+        HashMap msgToBatch = new HashMap();
+
+        msgToBatch = new Gson().fromJson(msg.getContent(), HashMap.class);           //Data type conversion Json->Hashmap class
+
+        if(msgToBatch.containsKey("Control_Flag_Item_Completed")) {
+            if (msgToBatch.get("Control_Flag_Item_Completed").equals(true)) {             //checks if the item has been manufactured
+                if (msgToBatch.get("Control_Flag_Service_Completed").equals(false)) {     //If the batch has not yet been completed, this method is in charge of sending the confirmation message
+
+                    msgToBatch.remove("Control_Flag_Service_Completed");  //remove unnecessary data from message
+                    HashMap confirmation = new HashMap();
+                    confirmation.put("Received", true);
+                    sendMessage(new Gson().toJson(confirmation), 7, "ControlGatewayCont"); //Sends confirmation message to PLC
+                }
+
+                msgToBatch.remove("Control_Flag_Item_Completed"); //remove unnecessary data from message
+                msgToBatch.remove("Control_Flag_Service_Completed");
+                String ServiceType = String.valueOf(msgToBatch.get("Id_Ref_Service_Type"));
+                ServiceType = ServiceType.split("\\.")[0];
+
+                for (int j = 0; j < myAgent.resourceModel.size(); j++) {  //
+                    for (int k = 0; k < myAgent.resourceModel.get(j).size(); k++) {
+                        auxiliar = myAgent.resourceModel.get(j).get(k);
+                        if (auxiliar.get(0).equals("simple_operation")) {
+                            if (myAgent.resourceModel.get(j).get(k+3).get(1).equals(ServiceType)) {
+                                for (int l = j + 1; l < myAgent.resourceModel.size(); l++)  {
+                                    if (myAgent.resourceModel.get(l).get(0).get(0).equals("action")){
+                                        actionList.add(myAgent.resourceModel.get(l).get(3).get(2));
+                                    } else {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                msgToBatch.remove("Id_Ref_Service_Type");
+                msgToBatch.put("Id_Action_Type", actionList);
+                String MessageContent = new Gson().toJson(msgToBatch);    //creates the message to be send
+                System.out.println(MessageContent);
+
+                try {
+                    BathcID = String.valueOf(PLCmsgIn.get("Id_Batch_Reference"));   //gets the batch reference from the received message
+                    BathcID = BathcID.split("\\.")[0];
+                    reply = sendCommand(myAgent, "get * reference=" + BathcID, "BatchAgentID");
+                    //returns the id of the element that matches with the reference of the required batch
+                    if (reply != null)   // If the id does not exist, it returns error
+                        batchAgentName = reply.getContent();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    reply = sendCommand(myAgent, "get * parent=" + batchAgentName, "BatchAgentID");
+                    //returns the names of all the agents that are sons
+                    if (reply != null)   // Si no existe el id en el registro devuelve error
+                        batchAgentName = reply.getContent(); //gets the name of the batch agent to which the message should be sent
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                sendMessage(MessageContent, 16, batchAgentName); //Sends item information to the batch agent
+
+            }
+        }
+    }
+
     public void sendDataToPLC() {
 
         if(sendingFlag == true) {     //It is checked if the method is correctly activated and that orders do not overlap
             ArrayList<String> auxiliar = new ArrayList<>();
+            List<String> itemNumbers = new ArrayList<String>(); //to track each of the items that are added to the operation
             Boolean ItemContFlag = true;
-            int NumOfItems = 0;
-            if (myAgent.machinePlan.size() > 2) {
-                for (int j = 0; j < myAgent.machinePlan.size(); j++) {
+            Boolean newItem = false;
+            if (myAgent.machinePlan.size() > 2) {   //checks that there are operations in the machine plan
+                for (int j = 0; j < myAgent.machinePlan.size(); j++) {  //Looks for the operation to be manufactured in the machine plan
                     for (int k = 0; k < myAgent.machinePlan.get(j).size(); k++) {
                         auxiliar = myAgent.machinePlan.get(j).get(k);
                         if (auxiliar.get(0).equals("station")) {
@@ -402,8 +486,9 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                         }
                         if (auxiliar.get(0).equals("operation")) {
                             ArrayList<String> auxiliar2 = myAgent.machinePlan.get(j).get(k + 3);
-                            if (ItemContFlag == true) {
-                                BathcID = auxiliar2.get(4);
+
+                            if (ItemContFlag == true) {         //saves the information of the operation only when founds the first item, then just increments the item counter
+                                BathcID = auxiliar2.get(4);     //saves the information of the operation in PLCmsgOut
                                 PLCmsgOut.put("Control_Flag_New_Service", true);
                                 PLCmsgOut.put("Id_Batch_Reference", Integer.parseInt(BathcID));
                                 PLCmsgOut.put("Id_Order_Reference", Integer.parseInt(auxiliar2.get(6)));
@@ -411,15 +496,23 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                                 PLCmsgOut.put("Operation_Ref_Service_Type", Integer.parseInt(auxiliar2.get(0)));
                                 ItemContFlag = false;
                             }
-                            if (ItemContFlag == false && auxiliar2.get(4).equals(BathcID)) {
-                                NumOfItems++;
+
+                            if (!itemNumbers.contains(auxiliar2.get(5)) && auxiliar2.get(4).equals(BathcID)){   //if item number already exists, it is not added
+                                itemNumbers.add(auxiliar2.get(5));  //adds new item numbers to array
+                                newItem = true;     //the item is counted
                             }
+
+                            if (ItemContFlag == false && auxiliar2.get(4).equals(BathcID) && newItem == true) { //counts all the items with the same batch number
+                                NumOfItems++;
+                                newItem = false;
+                            }
+
                         }
                     }
                 }
-                PLCmsgOut.put("Operation_No_of_Items", NumOfItems);
+                PLCmsgOut.put("Operation_No_of_Items", NumOfItems); //when all the items of the same batch have been counted, the request to the PLC is send
                 String MessageContent = new Gson().toJson(PLCmsgOut);
-                sendMessage(MessageContent, 16);
+                sendMessage(MessageContent, 16, "ControlGatewayCont");
                 sendingFlag = false;
             } else {
                 System.out.println("No operations defined");
@@ -429,14 +522,54 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         }
     }
 
-    private void sendMessage(String data, int performative) {       //ACLMessage template for message sending to gateway agent
+    private void sendMessage(String data, int performative, String agentName) {       //ACLMessage template for message sending to gateway agent
         ACLMessage msgToPLC = new ACLMessage(performative);
-        AID gwAgent = new AID("ControlGatewayCont", false);
+        AID gwAgent = new AID(agentName, false);
         msgToPLC.addReceiver(gwAgent);
         msgToPLC.setOntology("negotiation");
         msgToPLC.setConversationId("PLCdata");
         msgToPLC.setContent(data);
         myAgent.send(msgToPLC);
+    }
+
+    public ACLMessage sendCommand(Agent agent, String cmd, String conversationId) throws Exception {
+
+
+        DFAgentDescription dfd = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+
+        sd.setType("sa");
+        dfd.addServices(sd);
+        String mwm;
+
+        while (true) {
+            DFAgentDescription[] result = DFService.search(myAgent,dfd);
+
+            if ((result != null) && (result.length > 0)) {
+                dfd = result[0];
+                mwm = dfd.getName().getLocalName();
+                break;
+            }
+            LOGGER.info(".");
+            Thread.sleep(100);
+
+        } //end while (true)
+
+        LOGGER.entry(mwm, cmd);
+        ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+        msg.addReceiver(new AID(mwm, AID.ISLOCALNAME));
+        msg.setConversationId(conversationId);
+        msg.setOntology("control");
+        msg.setContent(cmd);
+        msg.setReplyWith(cmd);
+        myAgent.send(msg);
+        ACLMessage reply = myAgent.blockingReceive(
+                MessageTemplate.and(
+                        MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
+                        MessageTemplate.MatchPerformative(ACLMessage.INFORM))
+                , 1000);
+
+        return LOGGER.exit(reply);
     }
 
 }

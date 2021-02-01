@@ -31,11 +31,12 @@ public class ReceiveTaskBehaviour extends SimpleBehaviour {
     @Override
     public void action() {
         LOGGER.entry();
-        ACLMessage msg = myAgent.receive(template);
+        ACLMessage msg = myAgent.receive(template); // If ACL Message template matches, rcvDataFromPLC and recvBatchInfo methods are called
         if (msg != null) {
             System.out.println("-->Received message: " + msg.getContent());
 
-            this.aAssetManagement.rcvDataFromPLC(msg);
+            this.aAssetManagement.rcvDataFromPLC(msg);  // processes the information of the received message and updates the machine plan
+            this.aAssetManagement.recvBatchInfo(msg);   // sends item information to batch agent
 
         } else {
             block();

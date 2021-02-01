@@ -69,7 +69,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
             // TODO esta comentado ya que peta al estar en el init --> La ejecucion sigue adelante antes de recoger todos los mensajes y despues da problemas
             // sendPlan method of interface ITraceability
-            sendPlan(myAgent, conversationId);
+            createPlan(myAgent, conversationId);
 
 
         } else {
@@ -107,7 +107,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     //ITRACEABILITY INTERFACE
     //====================================================================
 
-    private void sendPlan(MWAgent myAgent, String conversationId) {
+    private void createPlan(MWAgent myAgent, String conversationId) {
 
         // Conseguir la referencia del producto
         String productID = getProductID(myAgent.getLocalName(), conversationId);
@@ -352,10 +352,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 aux.get(i).get(2).add("finishTime");
 
                 aux.get(i).get(3).add("");
-                for (int j=0; j < aux.get(i).get(2).size(); j++) {
-                    if (aux.get(i).get(2).get(j).equals("id"))
-                        aux.get(i).get(3).add(operationsWithMachines.get(aux.get(i).get(3).get(j)));
-                }
+                aux.get(i).get(3).add("");
                 aux.get(i).get(3).add("");
                 aux.get(i).get(3).add("");
             }
