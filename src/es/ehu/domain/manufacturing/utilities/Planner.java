@@ -11,6 +11,7 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 
+import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -330,7 +331,11 @@ public class Planner extends Agent {
 
         this.send(msg);
 
-        ACLMessage reply = this.blockingReceive();
+        ACLMessage reply = this.blockingReceive(
+                MessageTemplate.and(
+                        MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
+                        MessageTemplate.MatchPerformative(ACLMessage.INFORM))
+                , 1000);
 
         LOGGER.info((cmd.startsWith("validate"))?"xsd: "+reply.getContent(): cmd+" > "+reply.getContent());
 

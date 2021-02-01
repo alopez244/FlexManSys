@@ -20,7 +20,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private ArrayList<ArrayList<ArrayList<String>>> productInfo;
     private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> productsTraceability = new ArrayList<>();
     private HashMap<String, String> machinesForOperations = new HashMap<>();
-    private String numOfItems;
+    private Integer numOfItems;
 
     private int chatID = 0; // Numero incremental para crear conversationID
     private String firstState;
@@ -117,35 +117,11 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         productInfo = getProductInfo(productID);
         System.out.println("ID del producto asociado al agente " + myAgent.getLocalName() + ": " + productInfo.get(0).get(3).get(1) + " - " + productID);
 
-        // Teniendo toda la informacion del producto vamos a conseguir las maquinas que vayan a realizar todas las operaciones
-        machinesForOperations = getMachines(myAgent.getLocalName(), productInfo, conversationId);
-
         // Conseguir la cantidad de productos
         numOfItems = getNumOfItems(myAgent.getLocalName(), conversationId);
 
-        // Por cada operacion vamos a negociar con todos sus maquinas para asignar a la mejor
-        for (Map.Entry<String, String> entry : machinesForOperations.entrySet()) {
-            String operationID = entry.getKey();
-            String machinesID = entry.getValue();
-            System.out.println(operationID + " - " + machinesID);
-
-            //negotiate(myAgent, machinesID, "lead time", "execute", myAgent.getLocalName() + "," + numOfItems + "," + operationID, conversationId);
-            String negotiationQuery = "localneg " +machinesID+ " criterion=lead time action=execute externaldata="+ myAgent.getLocalName() + "," + numOfItems + "," + operationID;
-            try {
-                ACLMessage reply = sendCommand(myAgent, negotiationQuery, conversationId);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-        }
-
-        // Comprobamos que todas las operaciones se han asociado a una maquina, y conseguimos dicha maquina para cada operacion
-        HashMap<String,String> operationsWithMachines = getNegotiationWinners();
-        for (Map.Entry<String, String> entry : operationsWithMachines.entrySet()) {
-            String operationID = entry.getKey();
-            String machineID = entry.getValue();
-            System.out.println(operationID + " - " + machineID);
-        }
+        // Ahora podremos proceder a conseguir la trazabilidad de los productos
+        getProductsTraceability();
 
     }
 
@@ -181,8 +157,8 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         return productID;
     }
 
-    private String getNumOfItems(String seID, String conversationId) {
-        String numOfItems = null;
+    private Integer getNumOfItems(String seID, String conversationId) {
+        Integer numOfItems = null;
         String query = "get " + seID + " attrib=parent";
         ACLMessage reply = null;
 
@@ -196,7 +172,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 query = "get " + batchID + " attrib=numberOfItems";
                 reply = sendCommand(myAgent, query, conversationId);
                 if (reply != null)
-                    numOfItems = reply.getContent();
+                    numOfItems = reply.getContent().split(",").length;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -233,7 +209,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         }
 
         // Ahora podremos proceder a conseguir la trazabilidad de los productos
-        getProductsTraceability(operationsWithMachines);
+        getProductsTraceability();
 
         return operationsWithMachines;
 
@@ -243,11 +219,11 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
         ArrayList<ArrayList<ArrayList<String>>> allProductInfo = null;
 
-        String productsURL = "/resources/ProductInstances";
-        String path = getClass().getResource(productsURL).getPath();
+        String productsURL = "classes/resources/ProductInstances";
+        //String path = getClass().getResource(productsURL).getPath();
         XMLReader fileReader = new XMLReader();
         ArrayList<ArrayList<ArrayList<String>>> xmlelements = null;
-        File directory = new File(path);
+        File directory = new File(productsURL);
 
         if (directory.isDirectory()) {
             // Recorremos toda la carpeta
@@ -273,6 +249,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
     private HashMap<String, String> getMachines(String localName, ArrayList<ArrayList<ArrayList<String>>> productInfo, String conversationId) {
 
+        // Teniendo toda la informacion del producto vamos a conseguir las maquinas que vayan a realizar todas las operaciones
         // Por cada operacion que exista en el producto, vamos a buscar las maquinas que puedan realizar esa operacion
         // y guardaremos esa informacion en el hashmap --> <"S_01", "machine1, machine3">
         HashMap<String, String> machinesForOperations = new HashMap<>();
@@ -339,7 +316,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
     }
 
-    private void getProductsTraceability(HashMap<String,String> operationsWithMachines) {
+    private void getProductsTraceability() {
 
         // Cogeremos como base la informacion del producto que ya hemos conseguido y añadiremos las nuevas variables
         ArrayList<ArrayList<ArrayList<String>>> aux = productInfo;
@@ -359,11 +336,11 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         }
 
         // Ya que de momento no tenemos mas informacion, añadiremos todos los productos del lote a lista (de momento todos son iguales)
-        for (int i = 0; i < Integer.parseInt(numOfItems); i++) {
+        for (int i = 0; i < numOfItems; i++) {
             productsTraceability.add(aux);
         }
         System.out.println("PRODUCT TRACEABILITY OF " + myAgent.getLocalName() + ":\n" + productsTraceability);
-
+        System.out.println("\n");
     }
 
 }
