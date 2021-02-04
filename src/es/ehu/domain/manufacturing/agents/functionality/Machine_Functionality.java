@@ -405,32 +405,41 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         ArrayList<String> actionList = new ArrayList<String>();
         String  batchAgentName = "";
         HashMap msgToBatch = new HashMap();
+        ArrayList<String> replace = new ArrayList<String>( Arrays.asList("Id_Machine_Reference", "Id_Order_Reference", "Id_Batch_Reference", "Id_Ref_Subproduct_Type", "Id_Item_Number") );
 
-        msgToBatch = new Gson().fromJson(msg.getContent(), HashMap.class);           //Data type conversion Json->Hashmap class
+        msgToBatch = new Gson().fromJson(msg.getContent(), HashMap.class);  //Data type conversion Json->Hashmap class
 
         if(msgToBatch.containsKey("Control_Flag_Item_Completed")) {
-            if (msgToBatch.get("Control_Flag_Item_Completed").equals(true)) {             //checks if the item has been manufactured
-                if (msgToBatch.get("Control_Flag_Service_Completed").equals(false)) {     //If the batch has not yet been completed, this method is in charge of sending the confirmation message
+            if (msgToBatch.get("Control_Flag_Item_Completed").equals(true)) {   //checks if the item has been manufactured
 
-                    msgToBatch.remove("Control_Flag_Service_Completed");  //remove unnecessary data from message
-                    HashMap confirmation = new HashMap();
-                    confirmation.put("Received", true);
-                    sendMessage(new Gson().toJson(confirmation), 7, "ControlGatewayCont"); //Sends confirmation message to PLC
+                for (int i = 0; i < replace.size(); i++) {  //for loop to remove the .0 of the data that contains the keys defined in replace variable
+                    String newValue = String.valueOf(msgToBatch.get(replace.get(i)));
+                    newValue = newValue.split("\\.")[0];
+                    msgToBatch.remove(replace.get(i));
+                    msgToBatch.put(replace.get(i), newValue);
                 }
 
-                msgToBatch.remove("Control_Flag_Item_Completed"); //remove unnecessary data from message
+                if (msgToBatch.get("Control_Flag_Service_Completed").equals(false)) {   //If the batch has not yet been completed, this method is in charge of sending the confirmation message
+
+                    msgToBatch.remove("Control_Flag_Service_Completed");    //remove unnecessary data from message
+                    HashMap confirmation = new HashMap();
+                    confirmation.put("Received", true);
+                    sendMessage(new Gson().toJson(confirmation), 7, "ControlGatewayCont");  //Sends confirmation message to PLC
+                }
+
+                msgToBatch.remove("Control_Flag_Item_Completed");   //remove unnecessary data from message
                 msgToBatch.remove("Control_Flag_Service_Completed");
                 String ServiceType = String.valueOf(msgToBatch.get("Id_Ref_Service_Type"));
                 ServiceType = ServiceType.split("\\.")[0];
 
-                for (int j = 0; j < myAgent.resourceModel.size(); j++) {  //
+                for (int j = 0; j < myAgent.resourceModel.size(); j++) {  // Knowing Ref_Service_Type, identification of the actions of each item
                     for (int k = 0; k < myAgent.resourceModel.get(j).size(); k++) {
                         auxiliar = myAgent.resourceModel.get(j).get(k);
                         if (auxiliar.get(0).equals("simple_operation")) {
                             if (myAgent.resourceModel.get(j).get(k+3).get(1).equals(ServiceType)) {
                                 for (int l = j + 1; l < myAgent.resourceModel.size(); l++)  {
                                     if (myAgent.resourceModel.get(l).get(0).get(0).equals("action")){
-                                        actionList.add(myAgent.resourceModel.get(l).get(3).get(2));
+                                        actionList.add(myAgent.resourceModel.get(l).get(3).get(2)); // When actions are identified, they are added to a new variable
                                     } else {
                                         break;
                                     }
@@ -439,9 +448,9 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                         }
                     }
                 }
-                msgToBatch.remove("Id_Ref_Service_Type");
-                msgToBatch.put("Id_Action_Type", actionList);
-                String MessageContent = new Gson().toJson(msgToBatch);    //creates the message to be send
+                msgToBatch.remove("Id_Ref_Service_Type");   // when all actions are identified, the Ref_Service_Type data is unnecessary
+                msgToBatch.put("Id_Action_Type", actionList);   // Actions are added to the message
+                String MessageContent = new Gson().toJson(msgToBatch);  //creates the message to be send
                 System.out.println(MessageContent);
 
                 try {
