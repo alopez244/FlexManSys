@@ -6,6 +6,7 @@ import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.utilities.XMLReader;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
 import org.apache.commons.io.FilenameUtils;
@@ -31,7 +32,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private String redundancy;
     private String parentAgentID;
     private String mySeType;
-    private ArrayList<String> myReplicasID = new ArrayList<>();
+    private Object myReplicasID  = new HashMap<>();
 
     @Override
     public Object getState() {
@@ -128,11 +129,35 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                         }
                     }
                 }
+
+                if (infoForTraceability.containsKey("Data_Service_Time_Stamp")) { //El lote ha terminado de fabricarse y se envian los datos al order agent
+                    String aux = "";
+                    String msgToOrder = "";
+
+                    msgToOrder = msgToOrder.concat(batchNumber); //se añade el identificador del lote
+                    msgToOrder = msgToOrder.concat(","); //se añade un separador para determinar hasta donde llega el dato batchNumber
+                    msgToOrder = msgToOrder.concat(String.valueOf(infoForTraceability.get("Data_Service_Time_Stamp")));//se añade el dato Data_Service_Time_Stamp
+                    msgToOrder = msgToOrder.concat(".");//se añade un separador para determinar hasta donde llega el dato Data_Service_Time_Stamp
+
+                    for (ArrayList<ArrayList<ArrayList<String>>> a : productsTraceability) { //serializacion de los datos a enviar
+                        aux = a.toString();
+                        msgToOrder = msgToOrder.concat(aux);
+                    }
+
+                    ACLMessage msgToPLC = new ACLMessage(ACLMessage.INFORM); //envio del mensaje
+                    AID Agent = new AID(parentAgentID, false);
+                    msgToPLC.addReceiver(Agent);
+                    msgToPLC.setOntology("Information");
+                    msgToPLC.setConversationId("ItemsInfo");
+                    msgToPLC.setContent(msgToOrder);
+                    myAgent.send(msgToPLC);
+
+                    return true;
+                }
             }
         }
 
-
-        return null;
+        return false;
     }
 
     //====================================================================

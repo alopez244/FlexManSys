@@ -8,6 +8,7 @@ import es.ehu.platform.template.interfaces.IExecManagement;
 import es.ehu.platform.utilities.XMLReader;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -32,7 +33,9 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   private String redundancy;
   private String parentAgentID;
   private String mySeType;
-  private ArrayList<String> myReplicasID = new ArrayList<>();
+  private Object myReplicasID = new HashMap<>();
+  private MessageTemplate template;
+  private ArrayList<ArrayList<ArrayList<ArrayList<ArrayList<ArrayList<String>>>>>> ordersTraceability = new ArrayList<>();
 
   @Override
   public Object getState() {
@@ -47,6 +50,8 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   @Override
   public Void init(MWAgent myAgent) {
 
+    this.template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+            MessageTemplate.MatchOntology("Information")),MessageTemplate.MatchConversationId("BatchInfo"));
     this.myAgent = myAgent;
 
     // Crear un nuevo conversationID
@@ -117,7 +122,13 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   @Override
   public Object execute(Object[] input) {
     System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
-    return null;
+
+    ACLMessage msg = myAgent.receive(template);
+    if (msg != null) {
+
+      ordersTraceability.add(deserializeMsg(msg.getContent()));
+    }
+    return false;
   }
 
   private void notifyMachinesToStartOperations(Agent agent, String conversationId) {
@@ -126,5 +137,77 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 
   }
 
+  public ArrayList<ArrayList<ArrayList<ArrayList<ArrayList<String>>>>> deserializeMsg(String msgContent) { //metodo que deserializa el mensage recibido desde el order agent
 
+    ArrayList<ArrayList<ArrayList<ArrayList<ArrayList<String>>>>> batchTraceability = new ArrayList<>();
+    String letter = "";
+    String data = "";
+    int index1 = 0;
+    int index2 = 0;
+    int index3 = 0;
+    int index4 = 0;
+
+    for (int m = 0; m < msgContent.length(); m++) {
+      letter = Character.toString(msgContent.charAt(m));
+      if (letter.equals("[")) {
+        batchTraceability.add(new ArrayList<>());
+        for (int i = m + 1; i < msgContent.length(); i++) {
+          letter = Character.toString(msgContent.charAt(i));
+          if (letter.equals("[")) {
+            batchTraceability.get(index1).add(new ArrayList<>());
+            for (int j = i + 1; j < msgContent.length(); j++) {
+              letter = Character.toString(msgContent.charAt(j));
+              if (letter.equals("[")) {
+                batchTraceability.get(index1).get(index2).add(new ArrayList<>());
+                for (int k = j + 1; k < msgContent.length(); k++) {
+                  letter = Character.toString(msgContent.charAt(k));
+                  if (letter.equals("[")) {
+                    batchTraceability.get(index1).get(index2).get(index3).add(new ArrayList<>());
+                    for (int l = k + 1; l < msgContent.length(); l++) {
+                      letter = Character.toString(msgContent.charAt(l));
+                      if (letter.equals("]")) {
+                        batchTraceability.get(index1).get(index2).get(index3).get(index4).add(data);
+                        data = "";
+                        index4++;
+                        k = l;
+                        break;
+                      } else if (letter.equals(",")) {
+                        batchTraceability.get(index1).get(index2).get(index3).get(index4).add(data);
+                        data = "";
+                        l++;
+                      } else {
+                        data = data.concat(letter);
+                      }
+                    }
+                  } else if (letter.equals(",")) { //cuando la variable letter es igual a una coma, el siguiente caracter siempre sera un espacio, por lo que se salta
+                    k++;
+                  } else if (letter.equals("]")) {
+                    index3++;
+                    index4 = 0;
+                    j = k;
+                    break;
+                  }
+                }
+              } else if (letter.equals(",")) {
+                j++;
+              } else if (letter.equals("]")) {
+                index2++;
+                index3 = 0;
+                i = j;
+                break;
+              }
+            }
+          } else if (letter.equals(",")) {
+            i++;
+          } else if (letter.equals("]")) {
+            index1++;
+            index2 = 0;
+            m = i;
+            break;
+          }
+        }
+      }
+    }
+    return batchTraceability;
+  }
 }

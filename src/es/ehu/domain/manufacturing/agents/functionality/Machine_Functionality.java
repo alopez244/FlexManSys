@@ -421,14 +421,14 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
                 if (msgToBatch.get("Control_Flag_Service_Completed").equals(false)) {   //If the batch has not yet been completed, this method is in charge of sending the confirmation message
 
-                    msgToBatch.remove("Control_Flag_Service_Completed");    //remove unnecessary data from message
+                    msgToBatch.remove("Data_Service_Time_Stamp");    //remove unnecessary data from message
                     HashMap confirmation = new HashMap();
                     confirmation.put("Received", true);
                     sendMessage(new Gson().toJson(confirmation), 7, "ControlGatewayCont");  //Sends confirmation message to PLC
                 }
 
+                msgToBatch.remove("Control_Flag_Service_Completed");    //remove unnecessary data from message
                 msgToBatch.remove("Control_Flag_Item_Completed");   //remove unnecessary data from message
-                msgToBatch.remove("Control_Flag_Service_Completed");
                 String ServiceType = String.valueOf(msgToBatch.get("Id_Ref_Service_Type"));
                 ServiceType = ServiceType.split("\\.")[0];
 

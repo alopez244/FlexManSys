@@ -42,6 +42,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 	private MWAgent myAgent;
 	private int PrevPeriod;
 	private long NextActivation;
+	private Boolean endFlag;
 
 	// Constructor. Create a default template for the entry messages
 	public RunningBehaviour(MWAgent a) {
@@ -79,6 +80,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 		receivedMsgs = manageReceivedMsg(msg);
 
 		Object result = myAgent.functionalityInstance.execute(receivedMsgs);
+		endFlag = Boolean.valueOf(result.toString());
 
 		manageExecutionResult(result);
 
@@ -112,7 +114,11 @@ public class RunningBehaviour extends SimpleBehaviour {
 
 	@Override
 	public boolean done() {
-		return false;
+		if (endFlag) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	/**

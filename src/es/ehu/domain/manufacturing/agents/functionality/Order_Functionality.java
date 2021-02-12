@@ -5,7 +5,10 @@ import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.IExecManagement;
+import jade.core.AID;
 import jade.core.Agent;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,8 +28,14 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
     private String firstState;
     private String redundancy;
     private String parentAgentID;
-    private String mySeType;
+    private ArrayList<AID> sonAgentID = new ArrayList<>();
     private ArrayList<String> myReplicasID = new ArrayList<>();
+    private String batchNumber;
+    private String serviceTimeStamp;
+    private ArrayList<ArrayList<ArrayList<ArrayList<ArrayList<String>>>>> batchTraceability = new ArrayList<>();
+    private String mySeType;
+    private Bundle result;
+    private MessageTemplate template;
 
     @Override
     public Object getState() {
@@ -41,6 +50,8 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
     @Override
     public Void init(MWAgent myAgent) {
 
+        this.template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                MessageTemplate.MatchOntology("Information")),MessageTemplate.MatchConversationId("ItemsInfo"));
         this.myAgent = myAgent;
 
         // Crear un nuevo conversationID
@@ -70,7 +81,9 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             // Es decir, antes de avisar a su padre que esta creado, comprueba las replicas y despues los batches
             // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los batch cuando se arranquen correctamente
 
-            myReplicasID = processACLMessages(myAgent, mySeType, elementsToCreate, conversationId, redundancy, parentAgentID);
+            result = processACLMessages(myAgent, mySeType, elementsToCreate, conversationId, redundancy, parentAgentID);
+            sonAgentID = result.senderAgentsID;
+            myReplicasID = result.replicasID;
 
         } else {
             // Si su estado es tracking
@@ -101,7 +114,118 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
     @Override
     public Object execute(Object[] input) {
+
         System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
-        return null;
+
+        ACLMessage msg = myAgent.receive(template);
+        if (msg != null) {
+
+            AID msgSender = msg.getSender();
+            batchTraceability.add(deserializeMsg(msg.getContent()));
+
+            for (int i = 0; i < sonAgentID.size(); i++) {
+                if (sonAgentID.get(i).getName() == msgSender.getName()) {
+                    sonAgentID.remove(i);
+                }
+            }
+            if (sonAgentID.size() == 0) { // todos los batch agent de los que es padre ya le han enviado la informacion
+                String aux = "";
+                String msgToMPLan = "";
+
+                for (ArrayList<ArrayList<ArrayList<ArrayList<String>>>>a : batchTraceability) { //serializacion de los datos a enviar
+                    aux = a.toString();
+                    msgToMPLan = msgToMPLan.concat(aux);
+                }
+
+                ACLMessage msgToPLC = new ACLMessage(ACLMessage.INFORM); //envio del mensaje
+                AID Agent = new AID(parentAgentID, false);
+                msgToPLC.addReceiver(Agent);
+                msgToPLC.setOntology("Information");
+                msgToPLC.setConversationId("BatchInfo");
+                msgToPLC.setContent(msgToMPLan);
+                myAgent.send(msgToPLC);
+                System.out.println(msgToMPLan);
+                return true;
+            }
+        }
+        return false;
     }
+
+    public ArrayList<ArrayList<ArrayList<ArrayList<String>>>> deserializeMsg(String msgContent) { //metodo que deserializa el mensage recibido desde el batch agent
+
+        ArrayList<ArrayList<ArrayList<ArrayList<String>>>> productsTraceability = new ArrayList<>();
+        String letter = "";
+        String data = "";
+        int index1 = 1;
+        int index2 = 0;
+        int index3 = 0;
+
+        for (int i = 0; i < msgContent.length(); i++) {
+            letter = Character.toString(msgContent.charAt(i));
+            if (letter.equals("[")) {
+                productsTraceability.add(new ArrayList<>());
+                for (int j = i + 1; j < msgContent.length(); j++) {
+                    letter = Character.toString(msgContent.charAt(j));
+                    if (letter.equals("[")) {
+                        productsTraceability.get(index1).add(new ArrayList<>());
+                        for (int k = j + 1; k < msgContent.length(); k++) {
+                            letter = Character.toString(msgContent.charAt(k));
+                            if (letter.equals("[")) {
+                                productsTraceability.get(index1).get(index2).add(new ArrayList<>());
+                                for (int l = k + 1; l < msgContent.length(); l++) {
+                                    letter = Character.toString(msgContent.charAt(l));
+                                    if (letter.equals("]")) {
+                                        productsTraceability.get(index1).get(index2).get(index3).add(data);
+                                        data = "";
+                                        index3++;
+                                        k = l;
+                                        break;
+                                    } else if (letter.equals(",")) {
+                                        productsTraceability.get(index1).get(index2).get(index3).add(data);
+                                        data = "";
+                                        l++;
+                                    } else {
+                                        data = data.concat(letter);
+                                    }
+                                }
+                            } else if (letter.equals(",")) { //cuando la variable letter es igual a una coma, el siguiente caracter siempre sera un espacio, por lo que se salta
+                                k++;
+                            } else if (letter.equals("]")) {
+                                index2++;
+                                index3 = 0;
+                                j = k;
+                                break;
+                            }
+                        }
+                    } else if (letter.equals(",")) {
+                        j++;
+                    } else if (letter.equals("]")) {
+                        index1++;
+                        index2 = 0;
+                        i = j;
+                        break;
+                    }
+                }
+            } else if (letter.equals(",")) {
+                productsTraceability.add(new ArrayList<>());
+                productsTraceability.get(0).add(new ArrayList<>());
+                productsTraceability.get(0).get(0).add(new ArrayList<>());
+                productsTraceability.get(0).get(0).get(0).add("Batch ID");
+                productsTraceability.get(0).get(0).get(0).add("Data_Service_Time_Stamp");
+                batchNumber = data;
+                productsTraceability.get(0).get(0).add(new ArrayList<>());
+                productsTraceability.get(0).get(0).get(1).add(data);
+                data = "";
+            } else if (letter.equals(".")) {
+                serviceTimeStamp = data;
+                productsTraceability.get(0).get(0).get(1).add(data);
+                data = "";
+            } else {
+                data = data.concat(letter);
+            }
+        }
+
+        return productsTraceability;
+    }
+
 }

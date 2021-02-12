@@ -31,11 +31,12 @@ public class DomApp_Functionality {
     //  BOOT STATE METHODS
     //////////////////////////
 
-    public ArrayList<String> processACLMessages(MWAgent agent, String seType, List<String> myElements, String conversationId, String redundancy, String parentAgentID) {
+    public Bundle processACLMessages(MWAgent agent, String seType, List<String> myElements, String conversationId, String redundancy, String parentAgentID) {
 
         this.myAgent = agent;
         ArrayList<String> replicasID = new ArrayList<>();
         String myParentID = null;
+        ArrayList<AID> senderAgentsID = new ArrayList<>();
         try {
             ACLMessage reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", conversationId);
             if (reply != null)
@@ -44,7 +45,7 @@ public class DomApp_Functionality {
             e.printStackTrace();
         }
 
-        while ((!myElements.isEmpty()) && (replicasID.size() != Integer.parseInt(redundancy) - 1)) {
+        while ((!myElements.isEmpty()) || (replicasID.size() != Integer.parseInt(redundancy) - 1)) {
             ACLMessage msg = myAgent.receive();
             if (msg != null) {
                 // TODO COMPROBAR TAMBIEN LOS TRACKING si esta bien programado (sin probar)
@@ -66,6 +67,7 @@ public class DomApp_Functionality {
                         // Si los padres son diferentes, se trata de un hijo
                         if (myElements.contains(senderParentID))
                             myElements.remove(senderParentID);
+                            senderAgentsID.add(msg.getSender()); //.getName().split("@")[0])
                     }
                 }
             }
@@ -94,7 +96,16 @@ public class DomApp_Functionality {
         System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
         agent.initTransition = ControlBehaviour.RUNNING;
 
-        return replicasID;
+        Bundle result = new Bundle();
+        result.replicasID = replicasID;
+        result.senderAgentsID = senderAgentsID;
+
+        return result ;
+    }
+
+    class Bundle {
+        public ArrayList<String> replicasID;
+        public ArrayList<AID> senderAgentsID;
     }
 
     public void trackingOnBoot(MWAgent agent, String seType, String conversationId) {
