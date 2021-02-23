@@ -22,10 +22,13 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private static final long serialVersionUID = 1L;
     private Agent myAgent;
 
+    private String productID;
+    private ArrayList<String> actionList = new ArrayList<>();
     private ArrayList<ArrayList<ArrayList<String>>> productInfo;
     private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> productsTraceability = new ArrayList<>();
     private HashMap<String, String> machinesForOperations = new HashMap<>();
     private String itemsID;
+    private Boolean firstTime = true;
 
     private int chatID = 0; // Numero incremental para crear conversationID
     private String firstState;
@@ -113,50 +116,60 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 String idItem = batchNumber + itemNumber; //Se compone el ID del item. Ejemplo -> batchNumber = 121 + itemNumber = 2 -> itemID = 1212
                 String ActionTypes = String.valueOf(infoForTraceability.get("Id_Action_Type"));
 
-
                 for (int i=0; i < productsTraceability.size(); i++) {
                     // Se identifica la estructura de datos correspondiente al item que se ha fabricado
-                    if (productsTraceability.get(i).get(0).get(3).get(3).equals(idItem)) {
-                        for (int j=0; j < productsTraceability.get(i).size(); j++) {
-                            if (productsTraceability.get(i).get(j).get(0).get(0).equals("action")) {    // Dentro del action, se registran los datos de fabricacion
-                                if (ActionTypes.contains(productsTraceability.get(i).get(j).get(3).get(1))) {
-                                    productsTraceability.get(i).get(j).get(3).set(3, String.valueOf(infoForTraceability.get("Id_Machine_Reference")));
-                                    productsTraceability.get(i).get(j).get(3).set(4, String.valueOf(infoForTraceability.get("Id_Machine_Reference")));
-                                    productsTraceability.get(i).get(j).get(3).set(5, String.valueOf(infoForTraceability.get("Data_Initial_Time_Stamp")));
-                                    productsTraceability.get(i).get(j).get(3).set(6, String.valueOf(infoForTraceability.get("Data_Final_Time_Stamp")));
+                    if (productsTraceability.get(i).get(0).get(3).size() > 2) { //se comprueba que contenga mas de dos elementos, ya que en la siguiente linea se accede al tercero
+                        if (productsTraceability.get(i).get(0).get(3).get(3).equals(idItem)) {
+                            for (int j = 0; j < productsTraceability.get(i).size(); j++) {
+                                if (productsTraceability.get(i).get(j).get(0).get(0).equals("action")) {    // Dentro del action, se registran los datos de fabricacion
+                                    if (ActionTypes.contains(productsTraceability.get(i).get(j).get(3).get(1))) {   //solo se escribe en los actions que esten definidos en el ActionTypes
+                                        productsTraceability.get(i).get(j).get(3).set(3, String.valueOf(infoForTraceability.get("Id_Machine_Reference")));
+                                        productsTraceability.get(i).get(j).get(3).set(4, String.valueOf(infoForTraceability.get("Id_Machine_Reference")));
+                                        productsTraceability.get(i).get(j).get(3).set(5, String.valueOf(infoForTraceability.get("Data_Initial_Time_Stamp")));
+                                        productsTraceability.get(i).get(j).get(3).set(6, String.valueOf(infoForTraceability.get("Data_Final_Time_Stamp")));
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                // Inicialización de las variables donde se guardaran los datos serializados
+                String aux = "";
+                String msgToOrder = "";
 
                 if (infoForTraceability.containsKey("Data_Service_Time_Stamp")) { //El lote ha terminado de fabricarse y se envian los datos al order agent
-                    String aux = "";
-                    String msgToOrder = "";
+                    for (int k = 0; k < actionList.size(); k++) { // Se eliminan las acciones que ya se han realizado
+                        if (ActionTypes.contains(actionList.get(k))) {
+                            actionList.remove(k);
+                            k--;
+                        }
+                    }
+                    if (firstTime) { //solo se añade la informacion la primera vez
+                        ArrayList<ArrayList<ArrayList<ArrayList<String>>>> traceability = new ArrayList<>();
+                        productsTraceability = addNewLevel(traceability, productsTraceability, true); //añade el espacio para la informacion del lote en primera posicion, sumando un nivel mas a los datos anteriores
 
-                    msgToOrder = msgToOrder.concat(batchNumber); //se añade el identificador del lote
-                    msgToOrder = msgToOrder.concat(","); //se añade un separador para determinar hasta donde llega el dato batchNumber
-                    msgToOrder = msgToOrder.concat(String.valueOf(infoForTraceability.get("Data_Service_Time_Stamp")));//se añade el dato Data_Service_Time_Stamp
-                    msgToOrder = msgToOrder.concat(".");//se añade un separador para determinar hasta donde llega el dato Data_Service_Time_Stamp
+                        productsTraceability.get(0).get(0).get(0).add("BatchLevel"); // en ese espacio creado, se añade la informacion
+                        productsTraceability.get(0).get(0).get(2).add("batchReference");
+                        productsTraceability.get(0).get(0).get(2).add("Data_Service_Time_Stamp");
+                        productsTraceability.get(0).get(0).get(3).add(batchNumber);
+                        productsTraceability.get(0).get(0).get(3).add(String.valueOf(infoForTraceability.get("Data_Service_Time_Stamp")));
+                        firstTime = false;
+                    }
 
                     for (ArrayList<ArrayList<ArrayList<String>>> a : productsTraceability) { //serializacion de los datos a enviar
                         aux = a.toString();
                         msgToOrder = msgToOrder.concat(aux);
                     }
+                    System.out.println(msgToOrder);
+                    sendACLMessage(7, parentAgentID,"Information", "ItemsInfo", msgToOrder );
+                }
 
-                    ACLMessage msgToPLC = new ACLMessage(ACLMessage.INFORM); //envio del mensaje
-                    AID Agent = new AID(parentAgentID, false);
-                    msgToPLC.addReceiver(Agent);
-                    msgToPLC.setOntology("Information");
-                    msgToPLC.setConversationId("ItemsInfo");
-                    msgToPLC.setContent(msgToOrder);
-                    myAgent.send(msgToPLC);
-
-                    return true;
+                if (actionList.size() == 0){ // cuando todas las acciones se han completado, se elimina el batch agent
+                    sendACLMessage(7, parentAgentID,"Information", "Shutdown", "Batch completed" );
+                    return true; //Batch agent a terminado su funcion y pasa a STOP
                 }
             }
         }
-
         return false;
     }
 
@@ -167,18 +180,23 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private void createPlan(MWAgent myAgent, String conversationId) {
 
         // Conseguir la referencia del producto
-        String productID = getProductID(myAgent.getLocalName(), conversationId);
+        productID = getProductID(myAgent.getLocalName(), conversationId);
         System.out.println("La referencia de producto del batch del agente " + myAgent.getLocalName() + " es: " + productID);
 
         // Conseguimos toda la informacion del producto utilizando su ID
         productInfo = getProductInfo(productID);
         System.out.println("ID del producto asociado al agente " + myAgent.getLocalName() + ": " + productInfo.get(0).get(3).get(1) + " - " + productID);
 
+        // Conseguimos la lista de acciones que componen la fabricacion de las piezas del lote
+        actionList = getProductActions(productInfo);
+
         // Conseguir la cantidad de productos
         itemsID = getItemsID(myAgent.getLocalName(), conversationId);
 
         // Ahora podremos proceder a conseguir la trazabilidad de los productos
         getProductsTraceability();
+
+
 
     }
 
@@ -187,8 +205,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     }
 
     //====================================================================
-
-
 
 
     private String getProductID(String seID, String conversationId) {
@@ -235,6 +251,19 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             e.printStackTrace();
         }
         return itemsID;
+    }
+
+    // Metodo para extraer las acciones que componen la fabricacion de cada pieza
+    private ArrayList<String> getProductActions (ArrayList<ArrayList<ArrayList<String>>> productInfo) {
+
+        ArrayList<String> actionList = new ArrayList<>();
+
+        for (int i = 0; i < productInfo.size(); i++) {
+            if (productInfo.get(i).get(0).get(0).equals("action")) {
+                actionList.add(productInfo.get(i).get(3).get(1));
+            }
+        }
+        return actionList;
     }
 
     private HashMap<String,String> getNegotiationWinners() {
@@ -394,10 +423,10 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 aux.get(i).get(2).add("startTime");
                 aux.get(i).get(2).add("finishTime");
 
-                aux.get(i).get(3).add("");  // Hasta que la pieza sea fabricada se desconocen los datos
-                aux.get(i).get(3).add("");
-                aux.get(i).get(3).add("");
-                aux.get(i).get(3).add("");
+                aux.get(i).get(3).add(" ");  // Hasta que la pieza sea fabricada se desconocen los datos
+                aux.get(i).get(3).add(" ");
+                aux.get(i).get(3).add(" ");
+                aux.get(i).get(3).add(" ");
             }
         }
 
@@ -421,4 +450,15 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         System.out.println("PRODUCT TRACEABILITY OF " + myAgent.getLocalName() + ":\n" + productsTraceability);
         System.out.println("\n");
     }
+
+    private void sendACLMessage(int performative, String reciever, String ontology, String conversationId, String content) {
+        ACLMessage msg = new ACLMessage(performative); //envio del mensaje
+        AID Agent = new AID(reciever, false);
+        msg.addReceiver(Agent);
+        msg.setOntology(ontology);
+        msg.setConversationId(conversationId);
+        msg.setContent(content);
+        myAgent.send(msg);
+    }
+
 }

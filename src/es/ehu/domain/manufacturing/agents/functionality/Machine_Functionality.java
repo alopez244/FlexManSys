@@ -11,6 +11,7 @@ import es.ehu.platform.template.interfaces.AssetManagement;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.platform.utilities.Cmd;
+import es.ehu.platform.utilities.XMLReader;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -22,12 +23,14 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.tools.gui.ACLPerformativesRenderer;
 import jade.wrapper.AgentController;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import std_msgs.Bool;
 
+import java.io.File;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -39,6 +42,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
 
+    private ArrayList<ArrayList<ArrayList<String>>> productInfo;
     private HashMap<String, String> operationsWithBatchAgents = new HashMap<>();
     private HashMap PLCmsgIn = new HashMap();
     private HashMap PLCmsgOut = new HashMap();
@@ -194,6 +198,10 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                 }
             }
         }
+
+        // Conseguimos toda la informacion del producto utilizando su ID
+        //productInfo = getProductInfo(productID);
+        //System.out.println("ID del producto asociado al agente " + myAgent.getLocalName() + ": " + productInfo.get(0).get(3).get(1) + " - " + productID);
 
         sendOperationsInfoToBatches();
 
@@ -580,5 +588,4 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
         return LOGGER.exit(reply);
     }
-
 }

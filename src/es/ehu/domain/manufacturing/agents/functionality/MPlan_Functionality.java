@@ -6,6 +6,8 @@ import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.IExecManagement;
 import es.ehu.platform.utilities.XMLReader;
+import es.ehu.platform.utilities.XMLWriter;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -32,10 +34,14 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   private String firstState;
   private String redundancy;
   private String parentAgentID;
+  private Boolean newOrder = true, firstTime = true;
+  private ArrayList<AID> sonAgentID = new ArrayList<>();
+  private ArrayList<String> myReplicasID = new ArrayList<>();
   private String mySeType;
-  private Object myReplicasID = new HashMap<>();
   private MessageTemplate template;
-  private ArrayList<ArrayList<ArrayList<ArrayList<ArrayList<ArrayList<String>>>>>> ordersTraceability = new ArrayList<>();
+  private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> ordersTraceability = new ArrayList<>();
+  private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> deserializedMessage = new ArrayList<>();
+  private Integer orderIndex = 1;
 
   @Override
   public Object getState() {
@@ -84,7 +90,9 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
       // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los orders cuando se arranquen correctamente
 
       //Aqui cuiado con el myOrders, si utilizamos elementsToCreate en seStart aqui tambien hay que meterlo
-      myReplicasID = processACLMessages(myAgent, mySeType, elementsToCreate, conversationId, redundancy, parentAgentID);
+      Object[] result = processACLMessages(myAgent, mySeType, elementsToCreate, conversationId, redundancy, parentAgentID);
+      sonAgentID = (ArrayList<AID>) result[1];
+      myReplicasID = (ArrayList<String>) result[0];
 
       notifyMachinesToStartOperations(myAgent, conversationId);
 
@@ -125,8 +133,53 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 
     ACLMessage msg = myAgent.receive(template);
     if (msg != null) {
+      if (firstTime) {
+        deserializedMessage = deserializeMsg(msg.getContent());
+        ordersTraceability = addNewLevel(ordersTraceability, deserializedMessage, true); //añade el espacio para la informacion de la orden en primera posicion, sumando un nivel mas a los datos anteriores
+        ordersTraceability.get(0).get(0).get(0).add("PlanLevel"); // en ese espacio creado, se añade la informacion
+        ordersTraceability.get(0).get(0).get(2).add("planReference");
+        String orderNumber = ordersTraceability.get(1).get(0).get(3).get(0);
+        ordersTraceability.get(0).get(0).get(3).add(orderNumber.substring(0,1));
+        firstTime = false;
+      } else {
+        if (newOrder == false) {
+          ordersTraceability.remove(ordersTraceability.size() - 1);
+        }
+        deserializedMessage = deserializeMsg(msg.getContent());
+        ordersTraceability = addNewLevel(ordersTraceability, deserializedMessage, false); //añade el espacio para la informacion del plan en primera posicion, sumando un nivel mas a los datos anteriores
+      }
+      newOrder = false;
+    }
 
-      ordersTraceability.add(deserializeMsg(msg.getContent()));
+    ACLMessage msgEnd = myAgent.receive();
+    if (msgEnd != null) {
+      if (msgEnd.getContent().equals("Order completed")){
+        AID msgSender = msgEnd.getSender();
+        for (int i = 0; i < sonAgentID.size(); i++) {
+          if (sonAgentID.get(i).getName() == msgSender.getName()) {
+            sonAgentID.remove(i);
+          }
+        }
+        if (sonAgentID.size() == 0) { // todos los batch agent de los que es padre ya le han enviado la informacion
+
+          ArrayList<ArrayList<ArrayList<String>>> toXML = new ArrayList<>();
+          for (int j = 0; j < ordersTraceability.size(); j++) {
+            for (int k = 0; k < ordersTraceability.get(j).size(); k++) {
+              toXML.add(ordersTraceability.get(j).get(k));
+            }
+          }
+          XMLWriter.writeFile(toXML);
+
+          ACLMessage planFinished = new ACLMessage(ACLMessage.INFORM); //envio del mensaje
+          AID Agent = new AID(parentAgentID, false);
+          planFinished.addReceiver(Agent);
+          planFinished.setContent("Manufacturing Plan has been completed");
+          myAgent.send(planFinished);
+          return true;
+        }
+        orderIndex = ordersTraceability.size() - 1; //se actualiza el valor para borrar en el nuevo rango
+        newOrder = true; // aun quedan orders por añadir
+      }
     }
     return false;
   }
@@ -135,79 +188,5 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 
     // Avisar a todas las maquinas de mi plan que el plan ya esta listo para que emmpiece a hacer las operaciones
 
-  }
-
-  public ArrayList<ArrayList<ArrayList<ArrayList<ArrayList<String>>>>> deserializeMsg(String msgContent) { //metodo que deserializa el mensage recibido desde el order agent
-
-    ArrayList<ArrayList<ArrayList<ArrayList<ArrayList<String>>>>> batchTraceability = new ArrayList<>();
-    String letter = "";
-    String data = "";
-    int index1 = 0;
-    int index2 = 0;
-    int index3 = 0;
-    int index4 = 0;
-
-    for (int m = 0; m < msgContent.length(); m++) {
-      letter = Character.toString(msgContent.charAt(m));
-      if (letter.equals("[")) {
-        batchTraceability.add(new ArrayList<>());
-        for (int i = m + 1; i < msgContent.length(); i++) {
-          letter = Character.toString(msgContent.charAt(i));
-          if (letter.equals("[")) {
-            batchTraceability.get(index1).add(new ArrayList<>());
-            for (int j = i + 1; j < msgContent.length(); j++) {
-              letter = Character.toString(msgContent.charAt(j));
-              if (letter.equals("[")) {
-                batchTraceability.get(index1).get(index2).add(new ArrayList<>());
-                for (int k = j + 1; k < msgContent.length(); k++) {
-                  letter = Character.toString(msgContent.charAt(k));
-                  if (letter.equals("[")) {
-                    batchTraceability.get(index1).get(index2).get(index3).add(new ArrayList<>());
-                    for (int l = k + 1; l < msgContent.length(); l++) {
-                      letter = Character.toString(msgContent.charAt(l));
-                      if (letter.equals("]")) {
-                        batchTraceability.get(index1).get(index2).get(index3).get(index4).add(data);
-                        data = "";
-                        index4++;
-                        k = l;
-                        break;
-                      } else if (letter.equals(",")) {
-                        batchTraceability.get(index1).get(index2).get(index3).get(index4).add(data);
-                        data = "";
-                        l++;
-                      } else {
-                        data = data.concat(letter);
-                      }
-                    }
-                  } else if (letter.equals(",")) { //cuando la variable letter es igual a una coma, el siguiente caracter siempre sera un espacio, por lo que se salta
-                    k++;
-                  } else if (letter.equals("]")) {
-                    index3++;
-                    index4 = 0;
-                    j = k;
-                    break;
-                  }
-                }
-              } else if (letter.equals(",")) {
-                j++;
-              } else if (letter.equals("]")) {
-                index2++;
-                index3 = 0;
-                i = j;
-                break;
-              }
-            }
-          } else if (letter.equals(",")) {
-            i++;
-          } else if (letter.equals("]")) {
-            index1++;
-            index2 = 0;
-            m = i;
-            break;
-          }
-        }
-      }
-    }
-    return batchTraceability;
   }
 }

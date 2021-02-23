@@ -31,7 +31,7 @@ public class DomApp_Functionality {
     //  BOOT STATE METHODS
     //////////////////////////
 
-    public Bundle processACLMessages(MWAgent agent, String seType, List<String> myElements, String conversationId, String redundancy, String parentAgentID) {
+    public Object[] processACLMessages(MWAgent agent, String seType, List<String> myElements, String conversationId, String redundancy, String parentAgentID) {
 
         this.myAgent = agent;
         ArrayList<String> replicasID = new ArrayList<>();
@@ -96,16 +96,10 @@ public class DomApp_Functionality {
         System.out.println("\tEl agente " + myAgent.getLocalName() + " ha finalizado su estado BOOT y pasará al estado RUNNING");
         agent.initTransition = ControlBehaviour.RUNNING;
 
-        Bundle result = new Bundle();
-        result.replicasID = replicasID;
-        result.senderAgentsID = senderAgentsID;
-
+        Object[] result = new Object[2];
+        result[0] = replicasID;
+        result[1] = senderAgentsID;
         return result ;
-    }
-
-    class Bundle {
-        public ArrayList<String> replicasID;
-        public ArrayList<AID> senderAgentsID;
     }
 
     public void trackingOnBoot(MWAgent agent, String seType, String conversationId) {
@@ -415,6 +409,84 @@ public class DomApp_Functionality {
         return "Negotiation message sent";
     }
 
+    //Metodo para añadir un nuevo nivel al registro de fabricacion de las piezas y ponerlo en primer lugar
+    public ArrayList<ArrayList<ArrayList<ArrayList<String>>>> addNewLevel ( ArrayList<ArrayList<ArrayList<ArrayList<String>>>> traceability,ArrayList<ArrayList<ArrayList<ArrayList<String>>>> deserializedMessage, Boolean addNewSpace) {
 
+        ArrayList<ArrayList<ArrayList<String>>> newLevel = new ArrayList<>();
+        int size = deserializedMessage.size();
+        if (addNewSpace) { //solo se añadira el espacio para la nueva informacion si se activa el flag, si no unicamente se incrementaran los niveles
+            //se añade el espacio del nuevo nivel para despues ser rellenado
+            newLevel.add(new ArrayList<>());
+            newLevel.get(0).add(0, new ArrayList<>());
+            newLevel.get(0).add(1, new ArrayList<>());
+            newLevel.get(0).add(2, new ArrayList<>());
+            newLevel.get(0).add(3, new ArrayList<>());
+            newLevel.get(0).get(1).add("1");
+            traceability.add(newLevel);
+        }
+        //busca todos los datos que rerpresentan el nivel en el xml y los incrementa
+        for (int i = 0; i < size; i++) {
+            for(int j = 0; j < deserializedMessage.get(i).size(); j++) {
+                int index = Integer.parseInt(deserializedMessage.get(i).get(j).get(1).get(0));//convierte el valor a entero para poder ser incrementado
+                index++;
+                deserializedMessage.get(i).get(j).get(1).set(0,String.valueOf(index));//añade el valor modificado donde le corresponde
+            }
+            traceability.add(deserializedMessage.get(i));
+        }
+
+        return traceability;
+    }
+
+    public ArrayList<ArrayList<ArrayList<ArrayList<String>>>> deserializeMsg(String msgContent) { //metodo que deserializa el mensage recibido desde el batch agent
+
+        ArrayList<ArrayList<ArrayList<ArrayList<String>>>> traceability = new ArrayList<>();
+
+        String letter = "", data = "";
+        int index1 = 0, index2 = 0, index3 = 0, counter = 1;
+        Boolean controlFlag = false;
+
+        for (int i = 0; i < msgContent.length(); i++) {
+            letter = Character.toString(msgContent.charAt(i));
+            if (letter.equals("[")) {
+                switch (counter) {
+                    case 1:
+                        traceability.add(new ArrayList<>());
+                        counter++; break;
+                    case 2:
+                        traceability.get(index1).add(new ArrayList<>());
+                        counter++; break;
+                    case 3:
+                        traceability.get(index1).get(index2).add(new ArrayList<>());
+                        controlFlag = true; break;
+                }
+            } else if (letter.equals("]")) {
+                switch (counter) {
+                    case 2:
+                        counter--; index2 = 0; index1++;
+                        break;
+                    case 3:
+                        if (controlFlag) {
+                            traceability.get(index1).get(index2).get(index3).add(data);
+                            data = ""; // una vez añadido el dato, se vacia la variable
+                            index3++;
+                            controlFlag = false;
+                        } else {
+                            counter--; index3 = 0; index2++;
+                        }
+                        break;
+                }
+            } else if (letter.equals(",")) {
+                if (data.equals("")) {
+                    i++;
+                } else {
+                    traceability.get(index1).get(index2).get(index3).add(data);
+                    data = ""; i++;
+                }
+            } else {
+                data = data.concat(letter);
+            }
+        }
+        return traceability;
+    }
 
 }
