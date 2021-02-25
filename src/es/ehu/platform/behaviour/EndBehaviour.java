@@ -1,5 +1,12 @@
 package es.ehu.platform.behaviour;
 
+import jade.core.AID;
+import jade.core.Agent;
+import jade.domain.DFService;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,18 +27,20 @@ public class EndBehaviour extends OneShotBehaviour {
 
     @Override
     public void action() {
+
         try {
             ((MWAgent)myAgent).deregisterAgent(myAgent.getLocalName());
-            myAgent.doDelete();
         } catch (Exception e) {
             e.printStackTrace();
         }
+        myAgent.functionalityInstance.terminate(myAgent);
+        ((MWAgent)myAgent).doDelete();
+
     } // end action
 
     public int onEnd() {
         return 1;
     }
-
 
 
 }

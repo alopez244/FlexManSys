@@ -208,6 +208,9 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         return LOGGER.exit(null);
     }
 
+    @Override
+    public Void terminate(MWAgent myAgent) { return null;}
+
     private void sendOperationsInfoToBatches() {
         if (!operationsWithBatchAgents.isEmpty()) {
 

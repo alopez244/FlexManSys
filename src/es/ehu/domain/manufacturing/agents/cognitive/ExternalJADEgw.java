@@ -21,7 +21,7 @@ public class ExternalJADEgw {
         Properties pp = new Properties();
         pp.setProperty(Profile.MAIN_HOST, host);
         pp.setProperty(Profile.MAIN_PORT, port);
-        pp.setProperty(Profile.CONTAINER_NAME, "GatewayCont");      //-->Name ControlGatewayCont
+        pp.setProperty(Profile.CONTAINER_NAME, "GatewayCont1");      //-->Name ControlGatewayCont
         JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);    //Gateway Agent Initialization, must define package directory
         System.out.println("<-Java Agent Init");
     }

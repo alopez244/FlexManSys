@@ -22,7 +22,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private static final long serialVersionUID = 1L;
     private Agent myAgent;
 
-    private String productID;
+    private String productID, batchNumber;
     private ArrayList<String> actionList = new ArrayList<>();
     private ArrayList<ArrayList<ArrayList<String>>> productInfo;
     private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> productsTraceability = new ArrayList<>();
@@ -112,7 +112,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 infoForTraceability = new Gson().fromJson(msg.getContent(), HashMap.class);  //Data type conversion Json->Hashmap class
                 // Se extraen los datos necesarios del mensaje recibido
                 String itemNumber = String.valueOf(infoForTraceability.get("Id_Item_Number"));
-                String batchNumber = String.valueOf(infoForTraceability.get("Id_Batch_Reference"));
+                batchNumber = String.valueOf(infoForTraceability.get("Id_Batch_Reference"));
                 String idItem = batchNumber + itemNumber; //Se compone el ID del item. Ejemplo -> batchNumber = 121 + itemNumber = 2 -> itemID = 1212
                 String ActionTypes = String.valueOf(infoForTraceability.get("Id_Action_Type"));
 
@@ -176,6 +176,27 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     //====================================================================
     //ITRACEABILITY INTERFACE
     //====================================================================
+
+    @Override
+    public Void terminate(MWAgent myAgent) {
+        this.myAgent = myAgent;
+        String parentName = "";
+        try {
+            ACLMessage reply = sendCommand(myAgent, "get * reference=" + batchNumber, "parentAgentID");
+            //returns the names of all the agents that are sons
+            if (reply != null)   // Si no existe el id en el registro devuelve error
+                parentName = reply.getContent(); //gets the name of the agent´s parent
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            myAgent.deregisterAgent(parentName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 
     private void createPlan(MWAgent myAgent, String conversationId) {
 

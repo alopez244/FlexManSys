@@ -121,6 +121,9 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
         return null;
     }
 
+    @Override
+    public Void terminate(MWAgent myAgent) { return null; }
+
     public ACLMessage sendCommand(String cmd) throws Exception {
 
         DFAgentDescription dfd = new DFAgentDescription();

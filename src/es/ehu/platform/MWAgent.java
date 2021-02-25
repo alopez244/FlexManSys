@@ -130,7 +130,7 @@ public class MWAgent extends Agent {
     public void deregisterAgent(String localName) throws Exception {
         LOGGER.entry(localName);
 
-        String cmd = CMD_DELETE + "  " + this.getLocalName();
+        String cmd = CMD_DELETE + "  " + localName;
         String response = sendCommand(cmd).getContent();
         LOGGER.info(cmd + " > " + response);
 

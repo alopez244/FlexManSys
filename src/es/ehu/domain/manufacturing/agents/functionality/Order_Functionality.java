@@ -25,7 +25,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
     private String firstState;
     private String redundancy;
-    private String parentAgentID;
+    private String parentAgentID, orderNumber;
     private ArrayList<String> myReplicasID = new ArrayList<>();
     private ArrayList<AID> sonAgentID = new ArrayList<>();
     private Integer batchIndex = 1;
@@ -124,8 +124,9 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 batchTraceability = addNewLevel(batchTraceability, deserializedMessage, true); //añade el espacio para la informacion de la orden en primera posicion, sumando un nivel mas a los datos anteriores
                 batchTraceability.get(0).get(0).get(0).add("OrderLevel"); // en ese espacio creado, se añade la informacion
                 batchTraceability.get(0).get(0).get(2).add("orderReference");
-                String orderNumber = batchTraceability.get(2).get(0).get(3).get(3);
-                batchTraceability.get(0).get(0).get(3).add(orderNumber.substring(0,2));
+                String batchNumber = batchTraceability.get(1).get(0).get(3).get(0);
+                orderNumber = batchNumber.substring(0,2);
+                batchTraceability.get(0).get(0).get(3).add(orderNumber);
                 firstTime = false;
             } else {
                 if (newBatch == false) {
@@ -173,6 +174,27 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             }
         }
         return false;
+    }
+
+    @Override
+    public Void terminate(MWAgent myAgent) {
+        this.myAgent = myAgent;
+        String parentName = "";
+        try {
+            ACLMessage reply = sendCommand(myAgent, "get * reference=" + orderNumber, "parentAgentID");
+            //returns the names of all the agents that are sons
+            if (reply != null)   // Si no existe el id en el registro devuelve error
+                parentName = reply.getContent(); //gets the name of the agent´s parent
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            myAgent.deregisterAgent(parentName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
 }

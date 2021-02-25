@@ -4,8 +4,6 @@ import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
-import es.ehu.platform.template.interfaces.IExecManagement;
-import es.ehu.platform.utilities.XMLReader;
 import es.ehu.platform.utilities.XMLWriter;
 import jade.core.AID;
 import jade.core.Agent;
@@ -14,7 +12,6 @@ import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
 import java.util.*;
 
 public class MPlan_Functionality extends DomApp_Functionality implements BasicFunctionality, AvailabilityFunctionality {
@@ -31,9 +28,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   private HashMap<String, String> elementsClasses;
   private int chatID = 0; // Numero incremental para crear conversationID
 
-  private String firstState;
-  private String redundancy;
-  private String parentAgentID;
+  private String firstState, redundancy, parentAgentID, planNumber;
   private Boolean newOrder = true, firstTime = true;
   private ArrayList<AID> sonAgentID = new ArrayList<>();
   private ArrayList<String> myReplicasID = new ArrayList<>();
@@ -133,17 +128,20 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 
     ACLMessage msg = myAgent.receive(template);
     if (msg != null) {
-      if (firstTime) {
+      if (firstTime) { //solo se quiere añadir el nuevo nivel la primera vez
         deserializedMessage = deserializeMsg(msg.getContent());
         ordersTraceability = addNewLevel(ordersTraceability, deserializedMessage, true); //añade el espacio para la informacion de la orden en primera posicion, sumando un nivel mas a los datos anteriores
         ordersTraceability.get(0).get(0).get(0).add("PlanLevel"); // en ese espacio creado, se añade la informacion
         ordersTraceability.get(0).get(0).get(2).add("planReference");
-        String orderNumber = ordersTraceability.get(1).get(0).get(3).get(0);
-        ordersTraceability.get(0).get(0).get(3).add(orderNumber.substring(0,1));
+        String orderNumber = ordersTraceability.get(1).get(0).get(3).get(0);  //se obtiene la referencia de la orden
+        planNumber = orderNumber.substring(0,1);  // se obtiene la referencia del plan
+        ordersTraceability.get(0).get(0).get(3).add(planNumber);
         firstTime = false;
       } else {
         if (newOrder == false) {
-          ordersTraceability.remove(ordersTraceability.size() - 1);
+            for (int i = ordersTraceability.size() - 1; i >= orderIndex; i--) {
+              ordersTraceability.remove(i); //se elimina el ultimo order añadido para poder sobreescribirlo
+            }
         }
         deserializedMessage = deserializeMsg(msg.getContent());
         ordersTraceability = addNewLevel(ordersTraceability, deserializedMessage, false); //añade el espacio para la informacion del plan en primera posicion, sumando un nivel mas a los datos anteriores
@@ -161,14 +159,14 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
           }
         }
         if (sonAgentID.size() == 0) { // todos los batch agent de los que es padre ya le han enviado la informacion
-
+          //se adecuan los datos antes de llamar al metodo XMLwrite
           ArrayList<ArrayList<ArrayList<String>>> toXML = new ArrayList<>();
           for (int j = 0; j < ordersTraceability.size(); j++) {
             for (int k = 0; k < ordersTraceability.get(j).size(); k++) {
               toXML.add(ordersTraceability.get(j).get(k));
             }
           }
-          XMLWriter.writeFile(toXML);
+          XMLWriter.writeFile(toXML, planNumber);//se introducen como entrada los datos a convertir y el identificador del MPlan
 
           ACLMessage planFinished = new ACLMessage(ACLMessage.INFORM); //envio del mensaje
           AID Agent = new AID(parentAgentID, false);
@@ -182,6 +180,28 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
       }
     }
     return false;
+  }
+
+  @Override
+  public Void terminate(MWAgent myAgent) {
+    this.myAgent = myAgent;
+    String parentName = "";
+    try {
+      String planName = "MP" + planNumber;
+      ACLMessage reply = sendCommand(myAgent, "get * name=" + planName, "parentAgentID");
+      //returns the names of all the agents that are sons
+      if (reply != null)   // Si no existe el id en el registro devuelve error
+        parentName = reply.getContent(); //gets the name of the agent´s parent
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    try {
+      myAgent.deregisterAgent(parentName);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    return null;
   }
 
   private void notifyMachinesToStartOperations(Agent agent, String conversationId) {

@@ -48,6 +48,9 @@ public class ManResource_Functionality implements BasicFunctionality, NegFunctio
     }
 
     @Override
+    public Void terminate(MWAgent myAgent) { return null;}
+
+    @Override
     public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData) {
         return 0;
     }
