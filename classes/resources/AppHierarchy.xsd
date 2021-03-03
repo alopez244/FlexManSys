@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
+<xs:schema xmlns="ManufacturingPlan" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="ManufacturingPlan" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:redefine schemaLocation="AppProperties.xsd">
+		<!-- ============= BATCH =========== -->
+		<xs:complexType name="Batch">
+			<xs:complexContent>
+				<xs:extension base="Batch">
+					<xs:attribute name="ID" type="xs:string" use="required"/>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+		<!-- ============= ORDER =========== -->
+		<xs:complexType name="Order">
+			<xs:complexContent>
+				<xs:extension base="Order">
+					<xs:sequence>
+						<xs:element name="batch" type="Batch" minOccurs="1" maxOccurs="unbounded"/>
+					</xs:sequence>
+					<xs:attribute name="ID" type="xs:string" use="required"/>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+		<!-- ============= MANUFACTURING=========== -->
+		<xs:complexType name="MPlan">
+			<xs:complexContent>
+				<xs:extension base="MPlan">
+					<xs:sequence>
+						<xs:element name="order" type="Order" minOccurs="1" maxOccurs="unbounded"/>
+					</xs:sequence>
+					<xs:attribute name="ID" type="xs:string" use="required"/>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:redefine>
+	<!--system elements that can be validated-->
+	<xs:element name="mPlan" type="MPlan"/>
+</xs:schema>
