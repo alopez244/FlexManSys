@@ -187,7 +187,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     this.myAgent = myAgent;
     String parentName = "";
     try {
-      String planName = "MP" + planNumber;
+      String planName = "MPlan" + planNumber;
       ACLMessage reply = sendCommand(myAgent, "get * name=" + planName, "parentAgentID");
       //returns the names of all the agents that are sons
       if (reply != null)   // Si no existe el id en el registro devuelve error

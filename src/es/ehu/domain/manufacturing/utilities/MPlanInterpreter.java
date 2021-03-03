@@ -13,7 +13,7 @@ import java.util.*;
 
 public class MPlanInterpreter {
 
-    public static ArrayList<ArrayList<ArrayList<String>>> getManEntities (Agent myAgent, ArrayList<ArrayList<ArrayList<String>>> roughPlan) {//Aquí le pasaremos también el agente para que pueda usar el método sendCommand?
+    public static ArrayList<ArrayList<ArrayList<String>>> getManEntities (Agent myAgent, ArrayList<ArrayList<ArrayList<String>>> roughPlan, String planName) {//Aquí le pasaremos también el agente para que pueda usar el método sendCommand?
 
         //Recibimos el plan de fabricación
         //Nos quedamos solo con los elementos masterRecipe
@@ -157,7 +157,7 @@ public class MPlanInterpreter {
         structuredPlan.get(entities).get(0).add("mPlan");
         structuredPlan.get(entities).get(1).add(hl.toString());
         structuredPlan.get(entities).get(2).add("name");
-        structuredPlan.get(entities).get(3).add("MP1"); //Este nombre podría salir del nombre del fichero XML
+        structuredPlan.get(entities).get(3).add(planName); //Este nombre podría salir del nombre del fichero XML
         entities=entities+1;//Después de guardar un elemento, sumo 1 al contador
 
         //Ahora completamos la jerarquía

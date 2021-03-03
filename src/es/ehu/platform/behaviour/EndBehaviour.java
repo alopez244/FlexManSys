@@ -33,6 +33,11 @@ public class EndBehaviour extends OneShotBehaviour {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         myAgent.functionalityInstance.terminate(myAgent);
         ((MWAgent)myAgent).doDelete();
 

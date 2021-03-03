@@ -13,7 +13,7 @@ import java.io.PrintStream;
 
 public class ExternalJADEgw {
 
-    public static void agentInit(){
+    public static void agentInit(String machineID){
         redirectOutput();
         System.out.println("->Java Agent Init");
         String host = "127.0.0.1";              //Local host IP)
@@ -21,7 +21,8 @@ public class ExternalJADEgw {
         Properties pp = new Properties();
         pp.setProperty(Profile.MAIN_HOST, host);
         pp.setProperty(Profile.MAIN_PORT, port);
-        pp.setProperty(Profile.CONTAINER_NAME, "GatewayCont1");      //-->Name ControlGatewayCont
+        String containerName = "GatewayCont" + machineID;   // se define el nombre del contenedor donde se inicializara el agente
+        pp.setProperty(Profile.CONTAINER_NAME, containerName);      //-->Name ControlGatewayContX
         JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);    //Gateway Agent Initialization, must define package directory
         System.out.println("<-Java Agent Init");
     }

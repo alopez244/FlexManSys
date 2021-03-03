@@ -50,6 +50,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
     int NumOfItems = 0;
     private Boolean sendingFlag = false;
     private Boolean orderQueueFlag = false;
+    private String gatewayAgentName;
 
     /** Identifier of the agent. */
     private MachineAgent myAgent;
@@ -67,10 +68,12 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
         //First of all, the connection with the asset must be checked
 
-
         //Later, if the previous condition is accomplished, the agent is registered
         this.myAgent = (MachineAgent) mwAgent;
         LOGGER.entry();
+
+        String machineName = myAgent.resourceName;
+        gatewayAgentName = "ControlGatewayCont" + machineName.substring(3,4); //Se genera el nombre del Gateway Agent con el que se tendra que comunicar
 
         //First, the Machine Model is read
 
@@ -376,7 +379,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
                     HashMap confirmation = new HashMap();
                     confirmation.put("Received", true);
-                    sendMessage(new Gson().toJson(confirmation), 7, "ControlGatewayCont"); //Send confirmation message to PLC
+                    sendMessage(new Gson().toJson(confirmation), 7, gatewayAgentName); //Send confirmation message to PLC
 
                     BathcID = String.valueOf(PLCmsgIn.get("Id_Batch_Reference"));
                     BathcID = BathcID.split("\\.")[0];
@@ -435,7 +438,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                     msgToBatch.remove("Data_Service_Time_Stamp");    //remove unnecessary data from message
                     HashMap confirmation = new HashMap();
                     confirmation.put("Received", true);
-                    sendMessage(new Gson().toJson(confirmation), 7, "ControlGatewayCont");  //Sends confirmation message to PLC
+                    sendMessage(new Gson().toJson(confirmation), 7, gatewayAgentName);  //Sends confirmation message to PLC
                 }
 
                 msgToBatch.remove("Control_Flag_Service_Completed");    //remove unnecessary data from message
@@ -532,7 +535,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                 }
                 PLCmsgOut.put("Operation_No_of_Items", NumOfItems); //when all the items of the same batch have been counted, the request to the PLC is send
                 String MessageContent = new Gson().toJson(PLCmsgOut);
-                sendMessage(MessageContent, 16, "ControlGatewayCont");
+                sendMessage(MessageContent, 16, gatewayAgentName);
                 sendingFlag = false;
             } else {
                 System.out.println("No operations defined");

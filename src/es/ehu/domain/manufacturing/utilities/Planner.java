@@ -175,7 +175,8 @@ public class Planner extends Agent {
             }
 
             // We use MPlanInterpreter tu obtain all information
-            xmlelements = MPlanInterpreter.getManEntities(myAgent, xmlelements);
+            String planName = file.substring(0, file.length()-4); //saves the plan´s ID to be assigned later in the name attribute
+            xmlelements = MPlanInterpreter.getManEntities(myAgent, xmlelements, planName);
 
             //The plan has been successfully read
             //Next step is to interpret the set of masterRecipes to compose the hierarchy of applications

@@ -20,6 +20,6 @@ public class main3 {
         XMLReader fileReader = new XMLReader();
         ArrayList<ArrayList<ArrayList<String>>> xmlelements = fileReader.readFile(uri);
         System.out.println();
-        MPlanInterpreter.getManEntities(null, xmlelements);
+        //MPlanInterpreter.getManEntities(null, xmlelements);
     }
 }
