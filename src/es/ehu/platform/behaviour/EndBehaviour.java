@@ -29,7 +29,7 @@ public class EndBehaviour extends OneShotBehaviour {
     public void action() {
 
         try {
-            ((MWAgent)myAgent).deregisterAgent(myAgent.getLocalName());
+            myAgent.deregisterAgent(myAgent.getLocalName());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -39,7 +39,7 @@ public class EndBehaviour extends OneShotBehaviour {
             e.printStackTrace();
         }
         myAgent.functionalityInstance.terminate(myAgent);
-        ((MWAgent)myAgent).doDelete();
+        myAgent.doDelete();
 
     } // end action
 

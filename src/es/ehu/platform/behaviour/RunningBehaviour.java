@@ -114,11 +114,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 
 	@Override
 	public boolean done() {
-		if (endFlag) {
-			return true;
-		} else {
-			return false;
-		}
+		return endFlag;
 	}
 
 	/**
