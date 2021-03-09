@@ -211,10 +211,10 @@ public class MWAgent extends Agent {
 
         MessageTemplate mt = MessageTemplate.MatchInReplyTo(aMsg.getReplyWith());
 
-        ACLMessage reply = blockingReceive(mt, 100);
+        ACLMessage reply = blockingReceive(mt, 1000);
 
         int i=0;
-        while ((reply == null) && (i<100)){
+        while ((reply == null) && (i<1000)){
 
             try { Thread.sleep(10); } catch (InterruptedException e) { e.printStackTrace(); }
             reply = receive(mt);
