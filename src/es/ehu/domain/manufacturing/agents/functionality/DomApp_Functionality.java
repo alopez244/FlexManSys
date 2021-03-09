@@ -489,4 +489,13 @@ public class DomApp_Functionality {
         return traceability;
     }
 
+    public void sendACLMessage(int performative, AID reciever, String ontology, String conversationId, String content) {
+        ACLMessage msg = new ACLMessage(performative); //envio del mensaje
+        msg.addReceiver(reciever);
+        msg.setOntology(ontology);
+        msg.setConversationId(conversationId);
+        msg.setContent(content);
+        myAgent.send(msg);
+    }
+
 }

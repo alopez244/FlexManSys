@@ -154,19 +154,12 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                     aux = a.toString();
                     msgToMPLan = msgToMPLan.concat(aux);
                 }
-                ACLMessage orderInfo = new ACLMessage(ACLMessage.INFORM); //envio del mensaje
                 AID Agent = new AID(parentAgentID, false);
-                orderInfo.addReceiver(Agent);
-                orderInfo.setOntology("Information");
-                orderInfo.setConversationId("BatchInfo");
-                orderInfo.setContent(msgToMPLan);
-                myAgent.send(orderInfo);
+                sendACLMessage(7, Agent, "Information", "OrderInfo", msgToMPLan);
 
                 if (sonAgentID.size() == 0) { // todos los batch agent de los que es padre ya le han enviado la informacion
-                    ACLMessage orderFinished = new ACLMessage(ACLMessage.INFORM); //envio del mensaje
-                    orderFinished.addReceiver(Agent);
-                    orderFinished.setContent("Order completed");
-                    myAgent.send(orderFinished);
+                    sendACLMessage(7, Agent, "Information", "Shutdown", "Order completed"); // Informa al Mplan Agent que ya ha finalizado su tarea
+                    sendACLMessage(7, myAgent.getAID(), "Information", "Shutdown", "Shutdown"); // autoenvio de mensaje para asegurar que el agente de desregistre y se apague
                     return true;
                 }
                 batchIndex = batchTraceability.size() - 1;

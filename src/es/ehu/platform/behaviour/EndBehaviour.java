@@ -28,16 +28,6 @@ public class EndBehaviour extends OneShotBehaviour {
     @Override
     public void action() {
 
-        try {
-            myAgent.deregisterAgent(myAgent.getLocalName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         myAgent.functionalityInstance.terminate(myAgent);
         myAgent.doDelete();
 

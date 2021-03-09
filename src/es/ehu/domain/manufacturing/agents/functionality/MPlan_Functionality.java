@@ -52,7 +52,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   public Void init(MWAgent myAgent) {
 
     this.template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-            MessageTemplate.MatchOntology("Information")),MessageTemplate.MatchConversationId("BatchInfo"));
+            MessageTemplate.MatchOntology("Information")),MessageTemplate.MatchConversationId("OrderInfo"));
     this.myAgent = myAgent;
 
     // Crear un nuevo conversationID
@@ -168,11 +168,9 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
           }
           XMLWriter.writeFile(toXML, planNumber);//se introducen como entrada los datos a convertir y el identificador del MPlan
 
-          ACLMessage planFinished = new ACLMessage(ACLMessage.INFORM); //envio del mensaje
           AID Agent = new AID(parentAgentID, false);
-          planFinished.addReceiver(Agent);
-          planFinished.setContent("Manufacturing Plan has been completed");
-          myAgent.send(planFinished);
+          sendACLMessage(7, Agent, "Information", "Shutdown", "Manufacturing Plan has been completed");
+          sendACLMessage(7, myAgent.getAID(), "Information", "Shutdown", "Shutdown"); // autoenvio de mensaje para asegurar que el agente de desregistre y se apague
           return true;
         }
         orderIndex = ordersTraceability.size() - 1; //se actualiza el valor para borrar en el nuevo rango

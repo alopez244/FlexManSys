@@ -161,11 +161,13 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                         msgToOrder = msgToOrder.concat(aux);
                     }
                     System.out.println(msgToOrder);
-                    sendACLMessage(7, parentAgentID,"Information", "ItemsInfo", msgToOrder );
+                    AID Agent = new AID(parentAgentID, false);
+                    sendACLMessage(7, Agent,"Information", "ItemsInfo", msgToOrder );
                 }
 
                 if (actionList.size() == 0){ // cuando todas las acciones se han completado, se elimina el batch agent
-                    sendACLMessage(7, parentAgentID,"Information", "Shutdown", "Batch completed" );
+                    AID Agent = new AID(parentAgentID, false);
+                    sendACLMessage(7, Agent,"Information", "Shutdown", "Batch completed" );
                     return true; //Batch agent a terminado su funcion y pasa a STOP
                 }
             }
@@ -470,16 +472,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         }
         System.out.println("PRODUCT TRACEABILITY OF " + myAgent.getLocalName() + ":\n" + productsTraceability);
         System.out.println("\n");
-    }
-
-    private void sendACLMessage(int performative, String reciever, String ontology, String conversationId, String content) {
-        ACLMessage msg = new ACLMessage(performative); //envio del mensaje
-        AID Agent = new AID(reciever, false);
-        msg.addReceiver(Agent);
-        msg.setOntology(ontology);
-        msg.setConversationId(conversationId);
-        msg.setContent(content);
-        myAgent.send(msg);
     }
 
 }
