@@ -19,34 +19,4 @@
 			<rawMaterial id="BB" description="Base (big product)"/>
 		</product>	
 	</PlannedItem>
-	<PlannedItem productType="1" order_ID="11" batch_ID="111" item_ID="1114" description="Big product 1" refRecipe="recipe02" state="Planned">
-		<simpleOperation id="4" type="insert_and_place" description="Insert the axis and place the cover (big product)" plannedMachineId="1" plannedStationId="11" plannedStartTime="08:03:00" plannedFinishTime="08:04:00"/>
-		<product productType="BB" description="Base (big product)" state="Planned">
-			<rawMaterial id="BB" description="Base (big product)"/>
-		</product>	
-	</PlannedItem>
-	<PlannedItem productType="1" order_ID="11" batch_ID="111" item_ID="1115" description="Big product 1" refRecipe="recipe02" state="Planned">
-		<simpleOperation id="4" type="insert_and_place" description="Insert the axis and place the cover (big product)" plannedMachineId="1" plannedStationId="11" plannedStartTime="08:04:00" plannedFinishTime="08:05:00"/>
-		<product productType="BB" description="Base (big product)" state="Planned">
-			<rawMaterial id="BB" description="Base (big product)"/>
-		</product>	
-	</PlannedItem>
-	<PlannedItem productType="1" order_ID="12" batch_ID="121" item_ID="1211" description="Big product 1" refRecipe="recipe02" state="Planned">
-		<simpleOperation id="4" type="insert_and_place" description="Insert the axis and place the cover (big product)" plannedMachineId="1" plannedStationId="11" plannedStartTime="08:05:00" plannedFinishTime="08:06:00"/>
-		<product productType="BB" description="Base (big product)" state="Planned">
-			<rawMaterial id="BB" description="Base (big product)"/>
-		</product>	
-	</PlannedItem>
-	<PlannedItem productType="1" order_ID="12" batch_ID="121" item_ID="1212" description="Big product 1" refRecipe="recipe02" state="Planned">
-		<simpleOperation id="4" type="insert_and_place" description="Insert the axis and place the cover (big product)" plannedMachineId="1" plannedStationId="11" plannedStartTime="08:06:00" plannedFinishTime="08:07:00"/>
-		<product productType="BB" description="Base (big product)" state="Planned">
-			<rawMaterial id="BB" description="Base (big product)"/>
-		</product>	
-	</PlannedItem>
-	<PlannedItem productType="1" order_ID="12" batch_ID="121" item_ID="1213" description="Big product 1" refRecipe="recipe02" state="Planned">
-		<simpleOperation id="4" type="insert_and_place" description="Insert the axis and place the cover (big product)" plannedMachineId="1" plannedStationId="11" plannedStartTime="08:07:00" plannedFinishTime="08:08:00"/>
-		<product productType="BB" description="Base (big product)" state="Planned">
-			<rawMaterial id="BB" description="Base (big product)"/>
-		</product>	
-	</PlannedItem>
 </mPlan>
