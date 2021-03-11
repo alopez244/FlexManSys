@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <updatedPlan xmlns="updatedPlan" id="UP_01" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="updatedPlan ./UpdatedPlan.xsd">
 		<station ref_id="11">
-			<simple_operation id="4" type="insert_and_place" order_ID="11" batch_ID="111" productType="1" item_ID="1111" plannedStartTime="08:00:00"
+			<operation id="4" type="insert_and_place" order_ID="11" batch_ID="111" productType="1" item_ID="1111" plannedStartTime="08:00:00"
 							  plannedFinishTime="08:01:00">
-			</simple_operation>
-			<simple_operation id="4" type="insert_and_place" order_ID="11" batch_ID="111" productType="1" item_ID="1112" plannedStartTime="08:01:00"
+			</operation>
+			<operation id="4" type="insert_and_place" order_ID="11" batch_ID="111" productType="1" item_ID="1112" plannedStartTime="08:01:00"
 							  plannedFinishTime="08:02:00">
-			</simple_operation>
-			<simple_operation id="4" type="insert_and_place" order_ID="11" batch_ID="111" productType="1" item_ID="1113" plannedStartTime="08:02:00"
+			</operation>
+			<operation id="4" type="insert_and_place" order_ID="11" batch_ID="111" productType="1" item_ID="1113" plannedStartTime="08:02:00"
 							  plannedFinishTime="08:03:00">
-			</simple_operation>
+			</operation>
 		</station>
 </updatedPlan>

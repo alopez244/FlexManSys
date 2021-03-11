@@ -121,6 +121,8 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         }
         String seId = reply.getContent();
 
+        //String seId = "machine1";
+
         LOGGER.info(myAgent.getLocalName()+" ("+cmd+")"+" > mwm < "+seId);
 
         //Finally, the MachineAgent is started.
@@ -495,7 +497,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
     public void sendDataToPLC() {
 
-        //if(sendingFlag == true) {     //It is checked if the method is correctly activated and that orders do not overlap
+        if(sendingFlag == true) {     //It is checked if the method is correctly activated and that orders do not overlap
             ArrayList<String> auxiliar = new ArrayList<>();
             List<String> itemNumbers = new ArrayList<String>(); //to track each of the items that are added to the operation
             Boolean ItemContFlag = true;
@@ -507,27 +509,25 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                         if (auxiliar.get(0).equals("station")) {
                             PLCmsgOut.put("Id_Machine_Reference", Integer.parseInt(myAgent.machinePlan.get(j).get(k + 3).get(0)));
                         }
-                        if (auxiliar.get(0).equals("simple_operation")) {   //if (auxiliar.get(0).equals("operation")) {
+                        if (auxiliar.get(0).equals("operation")) {
                             ArrayList<String> auxiliar2 = myAgent.machinePlan.get(j).get(k + 3);
 
                             if (ItemContFlag == true) {         //saves the information of the operation only when founds the first item, then just increments the item counter
-                                BathcID = auxiliar2.get(0);     //BathcID = auxiliar2.get(4);//saves the information of the operation in PLCmsgOut
+                                BathcID = auxiliar2.get(4);//0  //saves the information of the operation in PLCmsgOut
                                 PLCmsgOut.put("Control_Flag_New_Service", true);
                                 PLCmsgOut.put("Id_Batch_Reference", Integer.parseInt(BathcID));
-                                PLCmsgOut.put("Id_Order_Reference", Integer.parseInt(auxiliar2.get(3)));    //Integer.parseInt(auxiliar2.get(6)));
-                                PLCmsgOut.put("Id_Ref_Subproduct_Type", Integer.parseInt(auxiliar2.get(6)));    //Integer.parseInt(auxiliar2.get(7)));
-                                PLCmsgOut.put("Operation_Ref_Service_Type", Integer.parseInt(auxiliar2.get(1)));    //Integer.parseInt(auxiliar2.get(0)));
+                                PLCmsgOut.put("Id_Order_Reference", Integer.parseInt(auxiliar2.get(6)));//3
+                                PLCmsgOut.put("Id_Ref_Subproduct_Type", Integer.parseInt(auxiliar2.get(7)));//6
+                                PLCmsgOut.put("Operation_Ref_Service_Type", Integer.parseInt(auxiliar2.get(0)));//1
                                 ItemContFlag = false;
                             }
 
-                            //if (!itemNumbers.contains(auxiliar2.get(5)) && auxiliar2.get(4).equals(BathcID)){0
-                            if (!itemNumbers.contains(auxiliar2.get(2)) && auxiliar2.get(0).equals(BathcID)){   //if item number already exists, it is not added
-                                itemNumbers.add(auxiliar2.get(2));  //itemNumbers.add(auxiliar2.get(5));//adds new item numbers to array
+                            if (!itemNumbers.contains(auxiliar2.get(5)) && auxiliar2.get(4).equals(BathcID)){ //2 and 0  //if item number already exists, it is not added
+                                itemNumbers.add(auxiliar2.get(5));//2
                                 newItem = true;     //the item is counted
                             }
 
-                            //if (ItemContFlag == false && auxiliar2.get(4).equals(BathcID) && newItem == true) {
-                            if (ItemContFlag == false && auxiliar2.get(0).equals(BathcID) && newItem == true) { //counts all the items with the same batch number
+                            if (ItemContFlag == false && auxiliar2.get(4).equals(BathcID) && newItem == true) { //0  //counts all the items with the same batch number
                                 NumOfItems++;
                                 newItem = false;
                             }
@@ -544,7 +544,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                 PLCmsgOut.put("Control_Flag_New_Service", false);
                 sendingFlag = false;
             }
-        //}
+        }
     }
 
     private void sendMessage(String data, int performative, String agentName) {       //ACLMessage template for message sending to gateway agent

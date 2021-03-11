@@ -72,16 +72,15 @@ public class MPlanInterpreter {
 
         // Lista para saber que atributos buscar en cada operacion y en la masterRecipe
         ArrayList<String> attribsToFind = new ArrayList<>();
-        // Atributos de operaciones
+
+        attribsToFind.add("batch_ID");
         attribsToFind.add("id");
+        attribsToFind.add("item_ID");
+        attribsToFind.add("order_ID");
         attribsToFind.add("plannedFinishTime");
         attribsToFind.add("plannedStartTime");
-        attribsToFind.add("type");
-        // Atributos de planned item
-        attribsToFind.add("batch_ID");
-        attribsToFind.add("order_ID");
-        attribsToFind.add("item_ID");
         attribsToFind.add("productType");
+        attribsToFind.add("type");
 
         String masterAttributes = "";
         String machineId = null;

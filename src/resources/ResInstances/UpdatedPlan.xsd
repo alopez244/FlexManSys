@@ -39,7 +39,7 @@
 	<xs:element name="station">
 		<xs:complexType>
 			<xs:choice minOccurs="0" maxOccurs="unbounded">
-				<xs:element name="simple_operation" type="SimpleOperation"/>
+				<xs:element name="operation" type="SimpleOperation"/>
 				<xs:element name="complex_operation" type="ComplexOperation"/>
 			</xs:choice>
 			<xs:attribute name="ref_id" type="xs:NMTOKEN" use="required"/>
