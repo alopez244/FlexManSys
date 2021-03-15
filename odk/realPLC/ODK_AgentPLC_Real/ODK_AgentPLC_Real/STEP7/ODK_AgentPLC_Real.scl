@@ -1,0 +1,463 @@
+FUNCTION_BLOCK "ODK_AgentPLC_Real_Load"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+//This block is AUTO GENERATED - DO NOT MODIFY this block!
+//Created by ODK_CodeGenerator version 2.5.1
+//at Mon March 15 10:24:55 2021
+//********************************************************
+  VAR_INPUT 
+    REQ : Bool;
+  END_VAR
+  VAR_OUTPUT 
+    DONE : Bool;
+    BUSY : Bool;
+    ERROR : Bool;
+    STATUS : Int;
+  END_VAR
+  VAR 
+    ODK_Load_Instance {OriginalPartName := 
+        'ODK_Load_SFB_2011'; LibVersion := '1.0'} : ODK_Load;
+    _odk_internal_LIBRARY_NAME : String := '<nrt>ODK_AgentPLC_Real.dll';
+  END_VAR
+  VAR CONSTANT 
+    _odk_internal_INSTANCE_ID : UDInt := 1237418461;
+  END_VAR
+BEGIN
+  //
+  // DO NOT CHANGE BELOW OF THIS LINE !!
+  // This is an automatic generated block by the
+  // SIMATIC ODK 1500S V2.5.1
+  // DO NOT CHANGE !!
+  //
+  #ODK_Load_Instance (REQ:=#REQ,
+                      LIBRARY_NAME:=#_odk_internal_LIBRARY_NAME,
+                      INSTANCE_ID:=#_odk_internal_INSTANCE_ID,
+                      DONE=>#DONE,
+                      BUSY=>#BUSY,
+                      ERROR=>#ERROR,
+                      STATUS=>#STATUS);
+  //
+  // DO NOT CHANGE !!
+  // This is an automatic generated block by the
+  // SIMATIC ODK 1500S V2.5.1
+  // DO NOT CHANGE ABOVE OF THIS LINE !!
+  //
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK "ODK_AgentPLC_Real_Unload"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+//This block is AUTO GENERATED - DO NOT MODIFY this block!
+//Created by ODK_CodeGenerator version 205.100.101.18
+//at Mon March 15 10:24:55 2021
+//********************************************************
+  VAR_INPUT 
+    REQ : Bool;
+  END_VAR
+  VAR_OUTPUT 
+    DONE : Bool;
+    BUSY : Bool;
+    ERROR : Bool;
+    STATUS : Int;
+  END_VAR
+  VAR
+    ODK_Unld_Instance {OriginalPartName := 
+         'ODK_Unld_SFB_2012'; LibVersion := '1.0'} : ODK_Unld;
+  END_VAR
+  VAR CONSTANT 
+    _odk_internal_INSTANCE_ID : UDInt := 1237418461;
+  END_VAR
+BEGIN
+  //
+  // DO NOT CHANGE BELOW OF THIS LINE !!
+  // This is an automatic generated block by the
+  // SIMATIC ODK 1500S V2.5.1
+  // DO NOT CHANGE !!
+  //
+  #ODK_Unld_Instance (REQ:=#REQ,
+                      INSTANCE_ID:=#_odk_internal_INSTANCE_ID,
+                      DONE=>#DONE,
+                      BUSY=>#BUSY,
+                      ERROR=>#ERROR,
+                      STATUS=>#STATUS);    
+  //
+  // DO NOT CHANGE !!
+  // This is an automatic generated block by the
+  // SIMATIC ODK 1500S V2.5.1
+  // DO NOT CHANGE ABOVE OF THIS LINE !!
+  //
+END_FUNCTION_BLOCK
+
+TYPE "ODK_AgentPLC_Realcontrol_flags"
+VERSION : 0.1
+//This block is AUTO GENERATED - DO NOT MODIFY this block!
+//Created by ODK_CodeGenerator version 205.100.101.18
+//at Mon March 15 10:24:55 2021
+//********************************************************
+  STRUCT
+    "Control_Flag_New_Service" : BOOL;
+    "Control_Flag_Item_Completed" : BOOL;
+    "Control_Flag_Service_Completed" : BOOL;
+  END_STRUCT;
+END_TYPE
+
+TYPE "ODK_AgentPLC_Realagent2plc"
+VERSION : 0.1
+//This block is AUTO GENERATED - DO NOT MODIFY this block!
+//Created by ODK_CodeGenerator version 205.100.101.18
+//at Mon March 15 10:24:55 2021
+//********************************************************
+  STRUCT
+    "Id_Machine_Reference" : UDINT;
+    "Id_Order_Reference" : UDINT;
+    "Id_Batch_Reference" : UDINT;
+    "Id_Ref_Subproduct_Type" : UDINT;
+    "Operation_Ref_Service_Type" : UDINT;
+    "Operation_No_of_Items" : USINT;
+  END_STRUCT;
+END_TYPE
+
+TYPE "ODK_AgentPLC_Realplc2agent"
+VERSION : 0.1
+//This block is AUTO GENERATED - DO NOT MODIFY this block!
+//Created by ODK_CodeGenerator version 205.100.101.18
+//at Mon March 15 10:24:55 2021
+//********************************************************
+  STRUCT
+    "Id_Machine_Reference" : UDINT;
+    "Id_Order_Reference" : UDINT;
+    "Id_Batch_Reference" : UDINT;
+    "Id_Ref_Subproduct_Type" : UDINT;
+    "Id_Ref_Service_Type" : UDINT;
+    "Id_Item_Number" : USINT;
+    "Data_Initial_Time_Stamp" : LDT;
+    "Data_Final_Time_Stamp" : LDT;
+    "Data_Service_Time_Stamp" : LDT;
+  END_STRUCT;
+END_TYPE
+
+FUNCTION_BLOCK "ODK_AgentPLC_RealinitAgent"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+//This block is AUTO GENERATED - DO NOT MODIFY this block!
+//Created by  ODK_CodeGenerator version 205.100.101.18
+//at Mon March 15 10:24:55 2021
+//********************************************************
+  VAR_INPUT
+    REQ : Bool;
+
+  END_VAR
+  VAR_OUTPUT
+    ERROR : Bool := false;
+    DONE : Bool := false;
+    BUSY : Bool := false;
+    STATUS : INT := 0;
+
+  END_VAR
+  VAR
+    _odk_internal_Last_REQ : Bool := false;
+    _odk_internal_Last_BUSY : Bool := false;
+    ODK_ExcA_Instance {OriginalPartName :=
+            'ODK_ExcA_SFB_2013'; LibVersion := '1.0'} : ODK_ExcA;
+  END_VAR
+  VAR_TEMP 
+    _odk_internal_pos : DInt;
+    _odk_internal_err : Int;
+    _odk_internal_i : Int;
+  END_VAR
+  VAR CONSTANT 
+    _odk_internal_INSTANCE_ID : UDINT := 1237418461;
+    _odk_internal_COMMAND : UDINT := 4017992964;
+  END_VAR
+BEGIN
+  //
+  // DO NOT CHANGE BELOW OF THIS LINE !!
+  // This is an automatic generated block by the
+  // SIMATIC ODK 1500S V2.5.1
+  // DO NOT CHANGE !!
+  //
+  #_odk_internal_Last_REQ := #REQ;	
+  #ODK_ExcA_Instance(REQ:=#REQ,
+                     INSTANCE_ID:=#_odk_internal_INSTANCE_ID,
+                     COMMAND:=#_odk_internal_COMMAND,
+                     IN_DATA:=null,
+                     INOUT_DATA:=null,
+                     OUT_DATA:=null,
+                     DONE=>#DONE,
+                     BUSY=>#BUSY,
+                     ERROR=>#ERROR,
+                     STATUS=>#STATUS);
+  #_odk_internal_Last_BUSY := #BUSY;
+  //
+  // DO NOT CHANGE !!
+  // This is an automatic generated block by the
+  // SIMATIC ODK 1500S V2.5.1
+  // DO NOT CHANGE ABOVE OF THIS LINE !!
+  //
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK "ODK_AgentPLC_RealSampleWrite"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+//This block is AUTO GENERATED - DO NOT MODIFY this block!
+//Created by  ODK_CodeGenerator version 205.100.101.18
+//at Mon March 15 10:24:55 2021
+//********************************************************
+//Agent Init
+  VAR_INPUT
+    REQ : Bool;
+    "flags" : "ODK_AgentPLC_Realcontrol_flags";
+    "str_out" : "ODK_AgentPLC_Realplc2agent"; //Sends the Agent message   
+  END_VAR
+  VAR_OUTPUT
+    ERROR : Bool := false;
+    DONE : Bool := false;
+    BUSY : Bool := false;
+    STATUS : INT := 0;
+
+  END_VAR
+  VAR
+    _odk_internal_Last_REQ : Bool := false;
+    _odk_internal_Last_BUSY : Bool := false;
+    ODK_ExcA_Instance {OriginalPartName :=
+            'ODK_ExcA_SFB_2013'; LibVersion := '1.0'} : ODK_ExcA;
+    _odk_internal_IN_BUFFER : Array [0..47] of Byte;
+  END_VAR
+  VAR_TEMP 
+    _odk_internal_pos : DInt;
+    _odk_internal_err : Int;
+    _odk_internal_i : Int;
+  END_VAR
+  VAR CONSTANT 
+    _odk_internal_INSTANCE_ID : UDINT := 1237418461;
+    _odk_internal_COMMAND : UDINT := 3163984009;
+  END_VAR
+BEGIN
+  //
+  // DO NOT CHANGE BELOW OF THIS LINE !!
+  // This is an automatic generated block by the
+  // SIMATIC ODK 1500S V2.5.1
+  // DO NOT CHANGE !!
+  //
+  //Agent Init
+  IF NOT #_odk_internal_Last_REQ & #REQ & NOT #_odk_internal_Last_BUSY THEN
+    #_odk_internal_pos := 0;
+    IF (True = #flags.#Control_Flag_New_Service) THEN
+      #_odk_internal_IN_BUFFER[#_odk_internal_pos] := BYTE#1;
+    ELSE
+      #_odk_internal_IN_BUFFER[#_odk_internal_pos] := BYTE#0;
+    END_IF;
+    #_odk_internal_pos  := #_odk_internal_pos + 1;
+    IF (True = #flags.#Control_Flag_Item_Completed) THEN
+      #_odk_internal_IN_BUFFER[#_odk_internal_pos] := BYTE#1;
+    ELSE
+      #_odk_internal_IN_BUFFER[#_odk_internal_pos] := BYTE#0;
+    END_IF;
+    #_odk_internal_pos  := #_odk_internal_pos + 1;
+    IF (True = #flags.#Control_Flag_Service_Completed) THEN
+      #_odk_internal_IN_BUFFER[#_odk_internal_pos] := BYTE#1;
+    ELSE
+      #_odk_internal_IN_BUFFER[#_odk_internal_pos] := BYTE#0;
+    END_IF;
+    #_odk_internal_pos  := #_odk_internal_pos + 1;
+    #_odk_internal_err := WRITE_LITTLE ( src_variable := #str_out.#Id_Machine_Reference, dest_array := #_odk_internal_IN_BUFFER,  pos := #_odk_internal_pos);
+    #_odk_internal_err := WRITE_LITTLE ( src_variable := #str_out.#Id_Order_Reference, dest_array := #_odk_internal_IN_BUFFER,  pos := #_odk_internal_pos);
+    #_odk_internal_err := WRITE_LITTLE ( src_variable := #str_out.#Id_Batch_Reference, dest_array := #_odk_internal_IN_BUFFER,  pos := #_odk_internal_pos);
+    #_odk_internal_err := WRITE_LITTLE ( src_variable := #str_out.#Id_Ref_Subproduct_Type, dest_array := #_odk_internal_IN_BUFFER,  pos := #_odk_internal_pos);
+    #_odk_internal_err := WRITE_LITTLE ( src_variable := #str_out.#Id_Ref_Service_Type, dest_array := #_odk_internal_IN_BUFFER,  pos := #_odk_internal_pos);
+    _odk_internal_IN_BUFFER[#_odk_internal_pos] := USINT_TO_BYTE(#str_out.#Id_Item_Number);
+    #_odk_internal_pos  := #_odk_internal_pos +1;
+    #_odk_internal_err := WRITE_LITTLE ( src_variable := #str_out.#Data_Initial_Time_Stamp, dest_array := #_odk_internal_IN_BUFFER,  pos := #_odk_internal_pos);
+    #_odk_internal_err := WRITE_LITTLE ( src_variable := #str_out.#Data_Final_Time_Stamp, dest_array := #_odk_internal_IN_BUFFER,  pos := #_odk_internal_pos);
+    #_odk_internal_err := WRITE_LITTLE ( src_variable := #str_out.#Data_Service_Time_Stamp, dest_array := #_odk_internal_IN_BUFFER,  pos := #_odk_internal_pos);
+    
+  END_IF;
+  #_odk_internal_Last_REQ := #REQ;	
+  #ODK_ExcA_Instance(REQ:=#REQ,
+                     INSTANCE_ID:=#_odk_internal_INSTANCE_ID,
+                     COMMAND:=#_odk_internal_COMMAND,
+                     IN_DATA:=#_odk_internal_IN_BUFFER,
+                     INOUT_DATA:=null,
+                     OUT_DATA:=null,
+                     DONE=>#DONE,
+                     BUSY=>#BUSY,
+                     ERROR=>#ERROR,
+                     STATUS=>#STATUS);
+  #_odk_internal_Last_BUSY := #BUSY;
+  //
+  // DO NOT CHANGE !!
+  // This is an automatic generated block by the
+  // SIMATIC ODK 1500S V2.5.1
+  // DO NOT CHANGE ABOVE OF THIS LINE !!
+  //
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK "ODK_AgentPLC_RealSampleRead"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+//This block is AUTO GENERATED - DO NOT MODIFY this block!
+//Created by  ODK_CodeGenerator version 205.100.101.18
+//at Mon March 15 10:24:55 2021
+//********************************************************
+  VAR_INPUT
+    REQ : Bool;
+
+  END_VAR
+  VAR_OUTPUT
+    ERROR : Bool := false;
+    DONE : Bool := false;
+    BUSY : Bool := false;
+    STATUS : INT := 0;
+    "str_in" : "ODK_AgentPLC_Realagent2plc";
+    "tRecv" : BOOL;
+    "tData" : BOOL;
+  END_VAR
+  VAR_IN_OUT
+    "flags" : "ODK_AgentPLC_Realcontrol_flags"; //Receive the Agent message and parses the JSON to structure
+  END_VAR
+  VAR
+    _odk_internal_Last_REQ : Bool := false;
+    _odk_internal_Last_BUSY : Bool := false;
+    ODK_ExcA_Instance {OriginalPartName :=
+            'ODK_ExcA_SFB_2013'; LibVersion := '1.0'} : ODK_ExcA;
+    _odk_internal_INOUT_BUFFER : Array [0..2] of Byte;
+    _odk_internal_OUT_BUFFER : Array [0..22] of Byte;
+  END_VAR
+  VAR_TEMP 
+    _odk_internal_pos : DInt;
+    _odk_internal_err : Int;
+    _odk_internal_i : Int;
+  END_VAR
+  VAR CONSTANT 
+    _odk_internal_INSTANCE_ID : UDINT := 1237418461;
+    _odk_internal_COMMAND : UDINT := 185329515;
+  END_VAR
+BEGIN
+  //
+  // DO NOT CHANGE BELOW OF THIS LINE !!
+  // This is an automatic generated block by the
+  // SIMATIC ODK 1500S V2.5.1
+  // DO NOT CHANGE !!
+  //
+  IF NOT #_odk_internal_Last_REQ & #REQ & NOT #_odk_internal_Last_BUSY THEN
+
+    #_odk_internal_pos := 0;
+    IF (True = #flags.#Control_Flag_New_Service) THEN
+      #_odk_internal_INOUT_BUFFER[#_odk_internal_pos] := BYTE#1;
+    ELSE
+      #_odk_internal_INOUT_BUFFER[#_odk_internal_pos] := BYTE#0;
+    END_IF;
+    #_odk_internal_pos  := #_odk_internal_pos + 1;
+    IF (True = #flags.#Control_Flag_Item_Completed) THEN
+      #_odk_internal_INOUT_BUFFER[#_odk_internal_pos] := BYTE#1;
+    ELSE
+      #_odk_internal_INOUT_BUFFER[#_odk_internal_pos] := BYTE#0;
+    END_IF;
+    #_odk_internal_pos  := #_odk_internal_pos + 1;
+    IF (True = #flags.#Control_Flag_Service_Completed) THEN
+      #_odk_internal_INOUT_BUFFER[#_odk_internal_pos] := BYTE#1;
+    ELSE
+      #_odk_internal_INOUT_BUFFER[#_odk_internal_pos] := BYTE#0;
+    END_IF;
+    #_odk_internal_pos  := #_odk_internal_pos + 1;    
+  END_IF;
+  #_odk_internal_Last_REQ := #REQ;	
+  #ODK_ExcA_Instance(REQ:=#REQ,
+                     INSTANCE_ID:=#_odk_internal_INSTANCE_ID,
+                     COMMAND:=#_odk_internal_COMMAND,
+                     IN_DATA:=null,
+                     INOUT_DATA:=#_odk_internal_INOUT_BUFFER,
+                     OUT_DATA:=#_odk_internal_OUT_BUFFER,
+                     DONE=>#DONE,
+                     BUSY=>#BUSY,
+                     ERROR=>#ERROR,
+                     STATUS=>#STATUS);
+  IF NOT #BUSY & #_odk_internal_Last_BUSY & NOT #ERROR THEN
+    #_odk_internal_pos := 0;
+    #flags.#Control_Flag_New_Service := BYTE_TO_BOOL(#_odk_internal_INOUT_BUFFER[#_odk_internal_pos]);
+    #_odk_internal_pos  := #_odk_internal_pos + 1;
+    #flags.#Control_Flag_Item_Completed := BYTE_TO_BOOL(#_odk_internal_INOUT_BUFFER[#_odk_internal_pos]);
+    #_odk_internal_pos  := #_odk_internal_pos + 1;
+    #flags.#Control_Flag_Service_Completed := BYTE_TO_BOOL(#_odk_internal_INOUT_BUFFER[#_odk_internal_pos]);
+    #_odk_internal_pos  := #_odk_internal_pos + 1;
+    #_odk_internal_pos := 0;
+    #_odk_internal_err := READ_LITTLE (dest_variable  := #str_in.#Id_Machine_Reference, src_array := #_odk_internal_OUT_BUFFER,  pos := #_odk_internal_pos);
+    #_odk_internal_err := READ_LITTLE (dest_variable  := #str_in.#Id_Order_Reference, src_array := #_odk_internal_OUT_BUFFER,  pos := #_odk_internal_pos);
+    #_odk_internal_err := READ_LITTLE (dest_variable  := #str_in.#Id_Batch_Reference, src_array := #_odk_internal_OUT_BUFFER,  pos := #_odk_internal_pos);
+    #_odk_internal_err := READ_LITTLE (dest_variable  := #str_in.#Id_Ref_Subproduct_Type, src_array := #_odk_internal_OUT_BUFFER,  pos := #_odk_internal_pos);
+    #_odk_internal_err := READ_LITTLE (dest_variable  := #str_in.#Operation_Ref_Service_Type, src_array := #_odk_internal_OUT_BUFFER,  pos := #_odk_internal_pos);
+    #str_in.#Operation_No_of_Items := BYTE_TO_USINT(_odk_internal_OUT_BUFFER[#_odk_internal_pos]);
+    #_odk_internal_pos  := #_odk_internal_pos +1;
+    #tRecv := BYTE_TO_BOOL(#_odk_internal_OUT_BUFFER[#_odk_internal_pos]);
+    #_odk_internal_pos  := #_odk_internal_pos + 1;
+    #tData := BYTE_TO_BOOL(#_odk_internal_OUT_BUFFER[#_odk_internal_pos]);
+    #_odk_internal_pos  := #_odk_internal_pos + 1;
+  END_IF;
+  #_odk_internal_Last_BUSY := #BUSY;
+  //
+  // DO NOT CHANGE !!
+  // This is an automatic generated block by the
+  // SIMATIC ODK 1500S V2.5.1
+  // DO NOT CHANGE ABOVE OF THIS LINE !!
+  //
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK "ODK_AgentPLC_RealsendConf"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+//This block is AUTO GENERATED - DO NOT MODIFY this block!
+//Created by  ODK_CodeGenerator version 205.100.101.18
+//at Mon March 15 10:24:55 2021
+//********************************************************
+  VAR_INPUT
+    REQ : Bool;
+
+  END_VAR
+  VAR_OUTPUT
+    ERROR : Bool := false;
+    DONE : Bool := false;
+    BUSY : Bool := false;
+    STATUS : INT := 0;
+
+  END_VAR
+  VAR
+    _odk_internal_Last_REQ : Bool := false;
+    _odk_internal_Last_BUSY : Bool := false;
+    ODK_ExcA_Instance {OriginalPartName :=
+            'ODK_ExcA_SFB_2013'; LibVersion := '1.0'} : ODK_ExcA;
+  END_VAR
+  VAR_TEMP 
+    _odk_internal_pos : DInt;
+    _odk_internal_err : Int;
+    _odk_internal_i : Int;
+  END_VAR
+  VAR CONSTANT 
+    _odk_internal_INSTANCE_ID : UDINT := 1237418461;
+    _odk_internal_COMMAND : UDINT := 704312951;
+  END_VAR
+BEGIN
+  //
+  // DO NOT CHANGE BELOW OF THIS LINE !!
+  // This is an automatic generated block by the
+  // SIMATIC ODK 1500S V2.5.1
+  // DO NOT CHANGE !!
+  //
+  #_odk_internal_Last_REQ := #REQ;	
+  #ODK_ExcA_Instance(REQ:=#REQ,
+                     INSTANCE_ID:=#_odk_internal_INSTANCE_ID,
+                     COMMAND:=#_odk_internal_COMMAND,
+                     IN_DATA:=null,
+                     INOUT_DATA:=null,
+                     OUT_DATA:=null,
+                     DONE=>#DONE,
+                     BUSY=>#BUSY,
+                     ERROR=>#ERROR,
+                     STATUS=>#STATUS);
+  #_odk_internal_Last_BUSY := #BUSY;
+  //
+  // DO NOT CHANGE !!
+  // This is an automatic generated block by the
+  // SIMATIC ODK 1500S V2.5.1
+  // DO NOT CHANGE ABOVE OF THIS LINE !!
+  //
+END_FUNCTION_BLOCK

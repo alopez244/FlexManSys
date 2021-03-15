@@ -1,0 +1,17 @@
+﻿  ---- ODK Code Generator started ----
+  Parsing file ODK_AgentPLC_Comm.odk
+  Generating file ODK_Execution.cpp
+  Generating file ODK_Types.h
+  Generating file ODK_Functions.h
+  Generating file ODK_AgentPLC_Comm.scl
+  ---- ODK Code Generator finished ----
+  stdafx.cpp
+  dllmain.cpp
+  ODK_AgentPLC_Comm.cpp
+  ODK_CpuReadData.cpp
+  ODK_CpuReadWriteData.cpp
+  ODK_StringHelper.cpp
+  Generando código...
+  ODK_Execution.cpp
+     Creando biblioteca C:\compartida_U107490\ODK_AgentPLC_Comm_M3\Debug\ODK_AgentPLC_Comm.lib y objeto C:\compartida_U107490\ODK_AgentPLC_Comm_M3\Debug\ODK_AgentPLC_Comm.exp
+  ODK_AgentPLC_Comm.vcxproj -> C:\compartida_U107490\ODK_AgentPLC_Comm_M3\Debug\ODK_AgentPLC_Comm.dll

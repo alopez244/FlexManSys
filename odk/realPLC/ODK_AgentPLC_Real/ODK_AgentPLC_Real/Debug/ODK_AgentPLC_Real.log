@@ -1,0 +1,20 @@
+﻿  ---- ODK Code Generator started ----
+  Parsing file ODK_AgentPLC_Real.odk
+  Generating file ODK_Execution.cpp
+  Generating file ODK_Types.h
+  Generating file ODK_Functions.h
+  Generating file ODK_AgentPLC_Real.scl
+  Checking file ODK_AgentPLC_Real.rc
+  ---- ODK Code Generator finished ----
+  stdafx.cpp
+  dllmain.cpp
+  ODK_AgentPLC_Real.cpp
+C:\compartida_U107490\ODK_AgentPLC_Real\ODK_AgentPLC_Real\ODK_AgentPLC_Real.cpp(376,45): warning C4805: '==': combinación no segura del tipo 'const ODK_BOOL' y el tipo 'bool' en la operación
+C:\compartida_U107490\ODK_AgentPLC_Real\ODK_AgentPLC_Real\ODK_AgentPLC_Real.cpp(402,2): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  ODK_CpuReadData.cpp
+  ODK_CpuReadWriteData.cpp
+  ODK_StringHelper.cpp
+  Generando código...
+  ODK_Execution.cpp
+     Creando biblioteca C:\compartida_U107490\ODK_AgentPLC_Real\Debug\ODK_AgentPLC_Real.lib y objeto C:\compartida_U107490\ODK_AgentPLC_Real\Debug\ODK_AgentPLC_Real.exp
+  ODK_AgentPLC_Real.vcxproj -> C:\compartida_U107490\ODK_AgentPLC_Real\Debug\ODK_AgentPLC_Real.dll
