@@ -17,8 +17,8 @@ public class ExternalJADEgw {
         redirectOutput();
         System.out.println("->Java Agent Init");
 //        String host = "127.0.0.1";              //Local host IP)
-        String host = "192.168.2.17";              // host of Alejandro PC
-        String localHost = "192.168.2.3";              //Local host of PLC
+        String host = "192.168.2.250";              // host of Alejandro PC
+        String localHost = "192.168.2.2";              //Local host of PLC
         String port = "1099";                   //Port on which the agent manager is running
 
         Properties pp = new Properties();
@@ -58,9 +58,12 @@ public class ExternalJADEgw {
         String recvMsg;
         System.out.println("->Java recv");
         StructMessage strMessage = new StructMessage();
+        System.out.println("strMessage is declared");
         strMessage.setAction("receive");
+        System.out.println("action is set to reveice");
         try {
             JadeGateway.execute(strMessage);
+            System.out.println("receive operation has been executed");
         } catch(Exception e) {
             System.out.println(e);
         }
@@ -78,11 +81,11 @@ public class ExternalJADEgw {
     //Modifica la direccon de Sistem.out, teniendo las trazas en un fichero en lugar de por terminal.
     public static void redirectOutput(){
         // Create a log directory
-        File directoryLogs = new File("C:\\Users\\aabadia004\\Desktop\\logs");
+        File directoryLogs = new File("C:\\Users\\Operator\\Documents");
         directoryLogs.mkdirs();
         try {
             // Create a log file
-            File fileLog = new File(directoryLogs, "log-ExternalJADEgw.txt");
+            File fileLog = new File(directoryLogs, "log-java.txt");
             fileLog.createNewFile();
             // Create a stream to to the log file
             FileOutputStream f = new FileOutputStream(fileLog);

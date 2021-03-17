@@ -8,6 +8,11 @@ import jade.lang.acl.MessageTemplate;
 import jade.wrapper.gateway.GatewayAgent;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+
 public class GWAgent extends GatewayAgent {
 
     public String msgRecv;
@@ -48,6 +53,7 @@ public class GWAgent extends GatewayAgent {
     }
 
     public void setup() {
+        redirectOutput();
         MessageTemplate template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.or(
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
                 MessageTemplate.MatchOntology("negotiation")),MessageTemplate.MatchConversationId("PLCdata"));
@@ -55,6 +61,7 @@ public class GWAgent extends GatewayAgent {
         addBehaviour(new CyclicBehaviour() {
 
             public void action() {
+                System.out.println("Entering CyclicBehaviour");
                 ACLMessage msgToFIFO = receive(template);
                 if (msgToFIFO != null) {
                     System.out.println("GWagent, message received from Machine Agent");
@@ -64,11 +71,27 @@ public class GWAgent extends GatewayAgent {
                     }
                     msgInFIFO.add((String) msgToFIFO.getContent()); //adds the message to be send in the buffer (max capacity = 6)
                 } else {
+                    System.out.println("Block the agent");
                     block();
                 }
             }
         });
         super.setup();
+    }
+    public static void redirectOutput(){
+        // Create a log directory
+        File directoryLogs = new File("C:\\Users\\Operator\\Documents");
+        directoryLogs.mkdirs();
+        try {
+            // Create a log file
+            File fileLog = new File(directoryLogs, "log-gateway.txt");
+            fileLog.createNewFile();
+            // Create a stream to to the log file
+            FileOutputStream f = new FileOutputStream(fileLog);
+            System.setOut(new PrintStream(f));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }
