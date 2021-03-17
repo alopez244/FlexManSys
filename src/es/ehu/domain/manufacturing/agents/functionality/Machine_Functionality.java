@@ -73,7 +73,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         LOGGER.entry();
 
         String machineName = myAgent.resourceName;
-        gatewayAgentName = "ControlGatewayCont" + machineName.substring(3,4); //Se genera el nombre del Gateway Agent con el que se tendra que comunicar
+        gatewayAgentName = "ControlGatewayCont1";// + machineName.substring(3,4); //Se genera el nombre del Gateway Agent con el que se tendra que comunicar
 
         //First, the Machine Model is read
 
@@ -121,7 +121,6 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         }
         String seId = reply.getContent();
 
-        //String seId = "machine1";
 
         LOGGER.info(myAgent.getLocalName()+" ("+cmd+")"+" > mwm < "+seId);
 
