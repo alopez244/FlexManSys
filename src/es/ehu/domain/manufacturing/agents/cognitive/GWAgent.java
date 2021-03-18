@@ -47,6 +47,9 @@ public class GWAgent extends GatewayAgent {
             msgToAgent.setConversationId("PLCdata");
             msgToAgent.setContent(msgStruct.readMessage()); //reads the message saved in StructMessage data structure
             send(msgToAgent);
+        }else if(msgStruct.readAction()=="init") {      // JadeGateway.execute command was called for new message sending (PLC -> Agent)
+            System.out.println("---Gateway init command");
+            System.out.println("---Hello, I am a Gateway Agent");
         }
         System.out.println("<--Gateway processes execute");
         releaseCommand(command);

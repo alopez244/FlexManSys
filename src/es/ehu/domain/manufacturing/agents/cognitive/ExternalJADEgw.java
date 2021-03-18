@@ -13,8 +13,14 @@ import java.io.PrintStream;
 
 public class ExternalJADEgw {
 
+//    public static void main(String[] args) {
+//        redirectOutput();
+//        while(true) {
+//        }
+//    }
+
     public static void agentInit(String machineID){
-        redirectOutput();
+
         System.out.println("->Java Agent Init");
 //        String host = "127.0.0.1";              //Local host IP)
         String host = "192.168.2.250";              // host of Alejandro PC
@@ -30,12 +36,34 @@ public class ExternalJADEgw {
         String containerName = "GatewayCont" + machineID;   // se define el nombre del contenedor donde se inicializara el agente
         pp.setProperty(Profile.CONTAINER_NAME, containerName);      //-->Name ControlGatewayContX
         JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);    //Gateway Agent Initialization, must define package directory
+
+        StructMessage strMessage = new StructMessage();
+        strMessage.setAction("init");
+        try {
+            JadeGateway.execute(strMessage);    // calls processCommand method of Gateway Agent
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
         System.out.println("<-Java Agent Init");
     }
 
     //Function to send ACL messages by receiving a String that is added in the message.
-    public static void send(String msgOut) {  //Sends the data String that has been given
+    public static void send(String machineID, String msgOut) {  //Sends the data String that has been given
         System.out.println("->Java Send");
+        String host = "192.168.2.250";              // host of Alejandro PC
+        String localHost = "192.168.2.2";              //Local host of PLC
+        String port = "1099";                   //Port on which the agent manager is running
+
+        Properties pp = new Properties();
+        pp.setProperty(Profile.MAIN_HOST, host);
+        pp.setProperty(Profile.LOCAL_HOST, localHost);
+        pp.setProperty(Profile.MAIN_PORT, port);
+        pp.setProperty(Profile.LOCAL_PORT, port);
+
+        String containerName = "GatewayCont" + machineID;   // se define el nombre del contenedor donde se inicializara el agente
+        pp.setProperty(Profile.CONTAINER_NAME, containerName);      //-->Name ControlGatewayContX
+        JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);    //Gateway Agent Initialization, must define package directory
+
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("send");
         strMessage.setMessage(msgOut);
@@ -54,9 +82,23 @@ public class ExternalJADEgw {
     }
 
     //Function for reading the data received in ACL messages
-    public static String recv() {
-        String recvMsg;
+    public static String recv(String machineID) {
         System.out.println("->Java recv");
+        String host = "192.168.2.250";              // host of Alejandro PC
+        String localHost = "192.168.2.2";              //Local host of PLC
+        String port = "1099";                   //Port on which the agent manager is running
+
+        Properties pp = new Properties();
+        pp.setProperty(Profile.MAIN_HOST, host);
+        pp.setProperty(Profile.LOCAL_HOST, localHost);
+        pp.setProperty(Profile.MAIN_PORT, port);
+        pp.setProperty(Profile.LOCAL_PORT, port);
+
+        String containerName = "GatewayCont" + machineID;   // se define el nombre del contenedor donde se inicializara el agente
+        pp.setProperty(Profile.CONTAINER_NAME, containerName);      //-->Name ControlGatewayContX
+        JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);    //Gateway Agent Initialization, must define package directory
+
+        String recvMsg;
         StructMessage strMessage = new StructMessage();
         System.out.println("strMessage is declared");
         strMessage.setAction("receive");
