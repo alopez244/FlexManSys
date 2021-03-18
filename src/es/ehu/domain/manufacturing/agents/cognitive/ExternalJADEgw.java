@@ -13,14 +13,8 @@ import java.io.PrintStream;
 
 public class ExternalJADEgw {
 
-//    public static void main(String[] args) {
-//        redirectOutput();
-//        while(true) {
-//        }
-//    }
-
-    public static void agentInit(String machineID){
-
+    public static void agentInit(){
+        redirectOutput();
         System.out.println("->Java Agent Init");
 //        String host = "127.0.0.1";              //Local host IP)
         String host = "192.168.2.250";              // host of Alejandro PC
@@ -33,7 +27,7 @@ public class ExternalJADEgw {
         pp.setProperty(Profile.MAIN_PORT, port);
         pp.setProperty(Profile.LOCAL_PORT, port);
 
-        String containerName = "GatewayCont" + machineID;   // se define el nombre del contenedor donde se inicializara el agente
+        String containerName = "GatewayCont1";   // se define el nombre del contenedor donde se inicializara el agente
         pp.setProperty(Profile.CONTAINER_NAME, containerName);      //-->Name ControlGatewayContX
         JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);    //Gateway Agent Initialization, must define package directory
 
@@ -48,7 +42,7 @@ public class ExternalJADEgw {
     }
 
     //Function to send ACL messages by receiving a String that is added in the message.
-    public static void send(String machineID, String msgOut) {  //Sends the data String that has been given
+    public static void send(String msgOut) {  //Sends the data String that has been given
         System.out.println("->Java Send");
         String host = "192.168.2.250";              // host of Alejandro PC
         String localHost = "192.168.2.2";              //Local host of PLC
@@ -60,15 +54,18 @@ public class ExternalJADEgw {
         pp.setProperty(Profile.MAIN_PORT, port);
         pp.setProperty(Profile.LOCAL_PORT, port);
 
-        String containerName = "GatewayCont" + machineID;   // se define el nombre del contenedor donde se inicializara el agente
+        String containerName = "GatewayCont1";   // se define el nombre del contenedor donde se inicializara el agente
         pp.setProperty(Profile.CONTAINER_NAME, containerName);      //-->Name ControlGatewayContX
+        System.out.println("Before JadeGateway.init");
         JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);    //Gateway Agent Initialization, must define package directory
-
+        System.out.println("After JadeGateway.init");
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("send");
         strMessage.setMessage(msgOut);
+        System.out.println("strMessage is configured");
         if(msgOut.contains("Received")){    // Depending of the message type (confirmation or data exchanging) the performative will be different
             strMessage.setPerformative(7);  // Performative = INFORM
+            System.out.println("Performative is set to INFORM");
         } else {
             strMessage.setPerformative(16); // Performative = REQUEST
         }
@@ -82,7 +79,7 @@ public class ExternalJADEgw {
     }
 
     //Function for reading the data received in ACL messages
-    public static String recv(String machineID) {
+    public static String recv() {
         System.out.println("->Java recv");
         String host = "192.168.2.250";              // host of Alejandro PC
         String localHost = "192.168.2.2";              //Local host of PLC
@@ -94,7 +91,7 @@ public class ExternalJADEgw {
         pp.setProperty(Profile.MAIN_PORT, port);
         pp.setProperty(Profile.LOCAL_PORT, port);
 
-        String containerName = "GatewayCont" + machineID;   // se define el nombre del contenedor donde se inicializara el agente
+        String containerName = "GatewayCont1";   // se define el nombre del contenedor donde se inicializara el agente
         pp.setProperty(Profile.CONTAINER_NAME, containerName);      //-->Name ControlGatewayContX
         JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);    //Gateway Agent Initialization, must define package directory
 

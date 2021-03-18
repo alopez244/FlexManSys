@@ -56,7 +56,6 @@ public class GWAgent extends GatewayAgent {
     }
 
     public void setup() {
-        redirectOutput();
         MessageTemplate template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.or(
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
                 MessageTemplate.MatchOntology("negotiation")),MessageTemplate.MatchConversationId("PLCdata"));
@@ -80,21 +79,6 @@ public class GWAgent extends GatewayAgent {
             }
         });
         super.setup();
-    }
-    public static void redirectOutput(){
-        // Create a log directory
-        File directoryLogs = new File("C:\\Users\\Operator\\Documents");
-        directoryLogs.mkdirs();
-        try {
-            // Create a log file
-            File fileLog = new File(directoryLogs, "log-gateway.txt");
-            fileLog.createNewFile();
-            // Create a stream to to the log file
-            FileOutputStream f = new FileOutputStream(fileLog);
-            System.setOut(new PrintStream(f));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
 }
