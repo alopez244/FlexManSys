@@ -13,7 +13,7 @@ import java.io.PrintStream;
 
 public class ExternalJADEgw {
 
-    public static void agentInit(){
+    public static void agentInit(String machineID){
         redirectOutput();
         System.out.println("->Java Agent Init");
 //        String host = "127.0.0.1";              //Local host IP)
@@ -27,17 +27,9 @@ public class ExternalJADEgw {
         pp.setProperty(Profile.MAIN_PORT, port);
         pp.setProperty(Profile.LOCAL_PORT, port);
 
-        String containerName = "GatewayCont1";   // se define el nombre del contenedor donde se inicializara el agente
+        String containerName = "GatewayCont" + machineID;   // se define el nombre del contenedor donde se inicializara el agente
         pp.setProperty(Profile.CONTAINER_NAME, containerName);      //-->Name ControlGatewayContX
         JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);    //Gateway Agent Initialization, must define package directory
-
-        StructMessage strMessage = new StructMessage();
-        strMessage.setAction("init");
-        try {
-            JadeGateway.execute(strMessage);    // calls processCommand method of Gateway Agent
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
         System.out.println("<-Java Agent Init");
     }
 
@@ -80,21 +72,7 @@ public class ExternalJADEgw {
 
     //Function for reading the data received in ACL messages
     public static String recv() {
-        System.out.println("->Java recv");
-        String host = "192.168.2.250";              // host of Alejandro PC
-        String localHost = "192.168.2.2";              //Local host of PLC
-        String port = "1099";                   //Port on which the agent manager is running
-
-        Properties pp = new Properties();
-        pp.setProperty(Profile.MAIN_HOST, host);
-        pp.setProperty(Profile.LOCAL_HOST, localHost);
-        pp.setProperty(Profile.MAIN_PORT, port);
-        pp.setProperty(Profile.LOCAL_PORT, port);
-
-        String containerName = "GatewayCont1";   // se define el nombre del contenedor donde se inicializara el agente
-        pp.setProperty(Profile.CONTAINER_NAME, containerName);      //-->Name ControlGatewayContX
-        JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);    //Gateway Agent Initialization, must define package directory
-
+//        String recvMsg = "{\"Operation_No_of_Items\":3,\"Id_Batch_Reference\":111,\"Id_Machine_Reference\":11,\"Operation_Ref_Service_Type\":4,\"Control_Flag_New_Service\":true,\"Id_Order_Reference\":11,\"Id_Ref_Subproduct_Type\":1}";
         String recvMsg;
         StructMessage strMessage = new StructMessage();
         System.out.println("strMessage is declared");
@@ -106,7 +84,7 @@ public class ExternalJADEgw {
         } catch(Exception e) {
             System.out.println(e);
         }
-        if(strMessage.readNewData()==true){
+        if(strMessage.readNewData()){
             recvMsg=strMessage.readMessage();
             System.out.println("--Received: " + recvMsg);
         }else{

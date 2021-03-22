@@ -28,10 +28,11 @@ public class GWAgent extends GatewayAgent {
             releaseCommand(command);
         }
         StructMessage msgStruct = (StructMessage) command;
-        if(msgStruct.readAction()=="receive") {     // JadeGateway.execute command was called for new message reading (Agent -> PLC)
+        String action = msgStruct.readAction();
+        if(action.equals("receive")) {     // JadeGateway.execute command was called for new message reading (Agent -> PLC)
             System.out.println("---GW, recv function");
             msgRecv = (String) msgInFIFO.poll();    //reads the oldest message from FIFO
-            if ( msgRecv != null) {
+            if ( msgRecv != null ) {
                 System.out.println("---GW, new message to read");
                 ((StructMessage) command).setMessage(msgRecv);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
                 ((StructMessage) command).setNewData(true);
@@ -39,7 +40,7 @@ public class GWAgent extends GatewayAgent {
                 ((StructMessage) command).setNewData(false);
                 System.out.println("---GW, message queue is empty");
             }
-        }else if(msgStruct.readAction()=="send") {      // JadeGateway.execute command was called for new message sending (PLC -> Agent)
+        } else if(action.equals("send")) {      // JadeGateway.execute command was called for new message sending (PLC -> Agent)
             System.out.println("---Gateway send command");
             ACLMessage msgToAgent = new ACLMessage(msgStruct.readPerformative()); //reads the performative saved in StructMessage data structure
             msgToAgent.addReceiver(machineAgentName);   //for a correct data exchanging, agent must send a message to the PLC first
@@ -47,10 +48,22 @@ public class GWAgent extends GatewayAgent {
             msgToAgent.setConversationId("PLCdata");
             msgToAgent.setContent(msgStruct.readMessage()); //reads the message saved in StructMessage data structure
             send(msgToAgent);
-        }else if(msgStruct.readAction()=="init") {      // JadeGateway.execute command was called for new message sending (PLC -> Agent)
+        } else if(action.equals("init")) {      // JadeGateway.execute command was called for new message sending (PLC -> Agent)
             System.out.println("---Gateway init command");
             System.out.println("---Hello, I am a Gateway Agent");
+        } else {
+            System.out.println("---GW, recv function");
+            msgRecv = (String) msgInFIFO.poll();    //reads the oldest message from FIFO
+            if ( msgRecv != null ) {
+                System.out.println("---GW, new message to read");
+                ((StructMessage) command).setMessage(msgRecv);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
+                ((StructMessage) command).setNewData(true);
+            } else {
+                ((StructMessage) command).setNewData(false);
+                System.out.println("---GW, message queue is empty");
+            }
         }
+
         System.out.println("<--Gateway processes execute");
         releaseCommand(command);
     }
