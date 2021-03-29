@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
+<xs:schema xmlns="ManufacturingPlan" xmlns:up="updatedPlan" xmlns:st="station" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" targetNamespace="ManufacturingPlan" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:include schemaLocation="../Base Schemas/IEC62264.xsd"/>
+	<xs:import namespace="updatedPlan" schemaLocation="UpdatedPlan.xsd"/>
+	<xs:import namespace="station" schemaLocation="Station.xsd"/>
+	<xs:element name="machine">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="st:station" minOccurs="1" maxOccurs="unbounded"/>
+				<xs:element ref="up:updatedPlan" minOccurs="1" maxOccurs="1"/>
+			</xs:sequence>
+			<xs:attribute name="id" type="xs:string" use="required"/>
+			<xs:attribute name="description" type="xs:string" use="required"/>
+		</xs:complexType>
+		<xs:key name="stationID">
+			<xs:selector xpath="./st:station"/>
+			<xs:field xpath="@id"/>
+		</xs:key>
+		<xs:keyref name="refStationID" refer="stationID">
+			<xs:selector xpath="./up:updatedPlan/up:station"/>
+			<xs:field xpath="@ref_id"/>
+		</xs:keyref>
+	</xs:element>
+</xs:schema>
