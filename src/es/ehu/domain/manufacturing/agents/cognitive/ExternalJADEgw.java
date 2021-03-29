@@ -21,6 +21,7 @@ public class ExternalJADEgw {
         String localHost = "192.168.2.2";              //Local host of PLC
         String port = "1099";                   //Port on which the agent manager is running
 
+
         Properties pp = new Properties();
         pp.setProperty(Profile.MAIN_HOST, host);
         pp.setProperty(Profile.LOCAL_HOST, localHost);
