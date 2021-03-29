@@ -2,14 +2,12 @@
  * This file is AUTO GENERATED - DO NOT MODIFY this file. 
  * This file contains the data types of ODK 1500S.
  *
- * File created by ODK_CodeGenerator version 205.100.101.18 
- * at Mon March 15 10:24:55 2021 
+ * File created by ODK_CodeGenerator version 200.0.3002.1 
+ * at lun marzo 29 11:33:17 2021 
  */
 
 #if !defined ODK_Types_H
 #define ODK_Types_H
-
-#include <stdint.h>
 
 #define  ODK_SUCCESS         0x0000
 #define  ODK_USER_ERROR_BASE 0xF000
@@ -19,29 +17,29 @@
 
 typedef  double              ODK_DOUBLE;
 typedef  float               ODK_FLOAT;
-typedef  int64_t             ODK_INT64;
-typedef  int32_t             ODK_INT32;
-typedef  int16_t             ODK_INT16;
-typedef  int8_t              ODK_INT8;
-typedef  uint64_t            ODK_UINT64;
-typedef  uint32_t            ODK_UINT32;
-typedef  uint16_t            ODK_UINT16;
-typedef  uint8_t             ODK_UINT8;
-typedef  uint64_t            ODK_LWORD;
-typedef  uint32_t            ODK_DWORD;
-typedef  uint16_t            ODK_WORD;
-typedef  uint8_t             ODK_BYTE;
-typedef  uint8_t             ODK_BOOL;
-typedef  int64_t             ODK_LTIME;
-typedef  int32_t             ODK_TIME;
-typedef  uint64_t            ODK_LDT;
-typedef  uint64_t            ODK_LTOD;
-typedef  uint32_t            ODK_TOD;
-typedef  uint8_t             ODK_S7STRING;
-typedef  uint16_t            ODK_S7WSTRING;
+typedef  long long           ODK_INT64;
+typedef  long                ODK_INT32;
+typedef  short               ODK_INT16;
+typedef  char                ODK_INT8;
+typedef  unsigned long long  ODK_UINT64;
+typedef  unsigned long       ODK_UINT32;
+typedef  unsigned short      ODK_UINT16;
+typedef  unsigned char       ODK_UINT8;
+typedef  unsigned long long  ODK_LWORD;
+typedef  unsigned long       ODK_DWORD;
+typedef  unsigned short      ODK_WORD;
+typedef  unsigned char       ODK_BYTE;
+typedef  unsigned char       ODK_BOOL;
+typedef  unsigned long long  ODK_LTIME;
+typedef  unsigned long       ODK_TIME;
+typedef  unsigned long long  ODK_LDT;
+typedef  unsigned long long  ODK_LTOD;
+typedef  unsigned long       ODK_TOD;
+typedef  unsigned char       ODK_S7STRING;
+typedef  unsigned short      ODK_S7WSTRING;
 typedef  wchar_t             ODK_WCHAR;
 typedef  char                ODK_CHAR;
-typedef  uint16_t            ODK_RESULT;
+typedef  unsigned short      ODK_RESULT;
 
 #pragma pack(push,1)
 typedef struct ODK_DTL_s
@@ -55,15 +53,14 @@ typedef struct ODK_DTL_s
   ODK_UINT8       Second;
   ODK_UINT32      Nanosecond;
 } ODK_DTL;
-#pragma pack(pop)
 
-// VARIANT
-typedef struct ODK_VARIANT_s
+// CLASSIC_DB
+typedef struct ODK_CLASSIC_DB_s
 {
   ODK_UINT32    Len;
-  ODK_UINT8*    pData;
-} ODK_VARIANT;
-
+  ODK_UINT8     Data[1];
+} ODK_CLASSIC_DB;
+#pragma pack(pop)
 
 #pragma pack(push,1)
 typedef struct

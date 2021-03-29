@@ -18,36 +18,26 @@ MQTTClient client;
 
 
 /*
- * OnLoad() is invoked after the application binary was loaded.
- * @return ODK_SUCCESS       notify, that no error occurs
- *                            - OnRun() will be invoked automatically
- *         any other value   notify, that an error occurs (user defined)
- *                            - OnUnload() will be invoked automatically
- *                            - ODK application will be unloaded automatically
- */
+* OnLoad() is invoked after the application binary was loaded.
+* @return ODK_SUCCESS       notify, that no error occurs
+*                            - OnRun() will be invoked automatically
+*         any other value   notify, that an error occurs (user defined)
+*                            - OnUnload() will be invoked automatically
+*                            - ODK application will be unloaded automatically
+*/
 EXPORT_API ODK_RESULT OnLoad(void)
 {
-	/*Aquí creo un fichero para debuguear*/
-	std::ofstream debugFile;
-
-	/*Aquí indico la ruta del fichero de debuguear*/
-	debugFile.open("C:\\Users\\aabadia004\\Documents\\debugFile.txt", std::ios_base::app);
-
-	/*Aquí escribo que la carga se ha completado*/
-	debugFile << "Loading process completed.";
-	/*Aquí cierro el fichero de debugueo*/
-	debugFile.close();
-
+	// place your code here
 	return ODK_SUCCESS;
 }
 
 /*
- * OnUnload() is invoked before the application binary is unloaded or when
- *            ODK-Host terminates.
- * @return ODK_SUCCESS       notify, that no error occurs
- *         any other value   notify, that an error occurs (user defined)
- *                            - ODK application will be unloaded anyway
- */
+* OnUnload() is invoked before the application binary is unloaded or when
+*            ODK-Host terminates.
+* @return ODK_SUCCESS       notify, that no error occurs
+*         any other value   notify, that an error occurs (user defined)
+*                            - ODK application will be unloaded anyway
+*/
 EXPORT_API ODK_RESULT OnUnload(void)
 {
 	// place your code here
@@ -55,10 +45,10 @@ EXPORT_API ODK_RESULT OnUnload(void)
 }
 
 /*
- * OnRun() is invoked when the CPU transitions to the RUN state and
- *         after OnLoad().
- * @return Does not affect the load operation or state transition.
- */
+* OnRun() is invoked when the CPU transitions to the RUN state and
+*         after OnLoad().
+* @return Does not affect the load operation or state transition.
+*/
 EXPORT_API ODK_RESULT OnRun(void)
 {
 	// place your code here
@@ -66,10 +56,10 @@ EXPORT_API ODK_RESULT OnRun(void)
 }
 
 /*
- * OnStop() is invoked when the CPU transitions to the STOP/SHUTDOWN state
- *          or before unloading the ODK application.
- * @return Does not affect the load operation or state transition.
- */
+* OnStop() is invoked when the CPU transitions to the STOP/SHUTDOWN state
+*          or before unloading the ODK application.
+* @return Does not affect the load operation or state transition.
+*/
 EXPORT_API ODK_RESULT OnStop(void)
 {
 	// place your code here
@@ -113,7 +103,6 @@ std::string transformTimeStamp(unsigned long long TimeStamp)
 	{
 		days_remainder = 1 + ((days - ((days / 365) / 4)) % 365);
 	}
-
 
 	/*Sexto, comprobamos si el año es bisiesto, y en funcion de eso se fijan el día y el mes*/
 	int months = 0;
@@ -251,11 +240,10 @@ std::string transformTimeStamp(unsigned long long TimeStamp)
 	value = std::to_string(years); value += "/"; value += std::to_string(months); value += "/"; value += std::to_string(days_remainder); value += " "; value += std::to_string(hours_remainder); value += ":"; value += std::to_string(minutes_remainder); value += ":"; value += std::to_string(seconds_remainder);
 	return value;
 }
-
 void connectWithBroker() {
 
-	/*Aquí creamos la conexión con el broker MQTT*/
-	char SERVER_ADDRESS[256] = "192.168.2.240:30036";
+	//Aquí creamos la conexión con el broker MQTT//
+	char SERVER_ADDRESS[256] = "192.168.2.240:1883";
 	char CLIENT_ID[256] = "odk_1";
 	char TOPIC[256] = "1";
 
@@ -271,7 +259,7 @@ void connectWithBroker() {
 	}
 	//debugFile << "\n Connection successful!";
 
-	/*Aquí cierro el fichero de debugueo*/
+	//Aquí cierro el fichero de debugueo//
 	//debugFile.close();
 }
 
@@ -292,124 +280,91 @@ void publishData(char* TOPIC, char* payload) {
 ODK_RESULT initAgent() {
 	static bool uniqueStart = false;	//Variable to avoid multiple initializations
 	if (!uniqueStart) {				//It only happens on the first run
-		/*Aquí creo un fichero para debuguear*/
-		std::ofstream debugFile;
-
-		/*Aquí indico la ruta del fichero de debuguear*/
-		debugFile.open("C:\\Users\\aabadia004\\Documents\\debugFile.txt", std::ios_base::app);
-		/*Aquí escribo que la carga se ha completado*/
-		debugFile << "Initializing Gateway Agent";
 		uniqueStart = true;			//Update the flag to prevent it from being run again
 		if (!JNIinit())	return ODK_USER_ERROR_BASE;
 		jstring machineID = env->NewStringUTF("1");	//Se inicializa como agente gateway para la maquina 1
 		env->CallStaticIntMethod(cls, JNI_init, machineID);	//Executes the init method using JNI
-		env->CallStaticObjectMethod(cls, JNI_recv);		//Executes de recv method to initialize the gateway agent in JADE´s GUI
-		debugFile.close();
 	}
 	return ODK_SUCCESS;
 }
 
 //Parses a String in JSON format and leave its data in a structure
-ODK_RESULT SampleRead(/*OUT*/agent2plc& str_out, /*OUT*/ODK_BOOL& tRecv, /*OUT*/ODK_BOOL& tData, /*INOUT*/control_flags& flags) {
-	
-	/*Aquí modifico un fichero para debuguear*/
-	std::ofstream debugFile;
-
-	/*Aquí indico la ruta del fichero de debuguear*/
-	debugFile.open("C:\\Users\\aabadia004\\Documents\\debugFile.txt", std::ios_base::app);
-
-	/*Aquí escribo que la carga se ha completado*/
-	debugFile << "\n ->ODK recvAgent";
-
-	if (!flags.Control_Flag_New_Service) {
-
+ODK_RESULT recvAgent(/*OUT*/agent2plc& str2,	/*OUT*/ODK_BOOL& tRecv, /*OUT*/ODK_BOOL& tData, /*INOUT*/control_flags& str1) {
 	char msgInCa[254] = { 0 };		//An array is created to reserve that memory
 	const char* msgInC = msgInCa;	//Pointer to array of characters is created
-	//Executes the recv method through JNI and receives a jstring with the message to read
-	debugFile << "\n Looking for new message.";
+									//Executes the recv method through JNI and receives a jstring with the message to read
 	jstring s = (jstring)env->CallStaticObjectMethod(cls, JNI_recv);
 	msgInC = env->GetStringUTFChars(s, 0);					//Type conversion jstring->char*
-	debugFile << "\n Received message:";
-	debugFile << msgInC;
 
 	uint16_t ret;							//Variable to store the result of the function
 	tRecv = false;
 	tData = false;
-	debugFile << "\n Parsing JSON to structure";
 	json j = json::parse(msgInC);			//The String is parsed and converted to a JSON object
-	debugFile << "\n Estructure obtained";
 	if (j.contains("Received")) {			//It is checked if it is a receipt confirmation
-		debugFile << "\n Received confirmation message.";
 		if (j["Received"] == true) {
 			tRecv = true;
 			ret = ODK_SUCCESS;
 		}
 	}
 	else if (j.contains("Control_Flag_New_Service")) {	//At least the first field is checked
-		debugFile << "\n Receiving new operation.";
 		tData = true;
 		//The received parameters are copied to the output structure		
-		flags.Control_Flag_New_Service = j["Control_Flag_New_Service"].get<bool>();
-		str_out.Id_Machine_Reference = j["Id_Machine_Reference"].get<int>();
-		str_out.Id_Order_Reference = j["Id_Order_Reference"].get<int>();
-		str_out.Id_Batch_Reference = j["Id_Batch_Reference"].get<int>();
-		str_out.Id_Ref_Subproduct_Type = j["Id_Ref_Subproduct_Type"].get<int>();
-		str_out.Operation_Ref_Service_Type = j["Operation_Ref_Service_Type"].get<int>();
-		str_out.Operation_No_of_Items = j["Operation_No_of_Items"].get<int>();
+		str1.Control_Flag_New_Service = j["Control_Flag_New_Service"].get<bool>();
+		str2.Id_Machine_Reference = j["Id_Machine_Reference"].get<int>();
+		str2.Id_Order_Reference = j["Id_Order_Reference"].get<int>();
+		str2.Id_Batch_Reference = j["Id_Batch_Reference"].get<int>();
+		str2.Id_Ref_Subproduct_Type = j["Id_Ref_Subproduct_Type"].get<int>();
+		str2.Operation_Ref_Service_Type = j["Operation_Ref_Service_Type"].get<int>();
+		str2.Operation_No_of_Items = j["Operation_No_of_Items"].get<int>();
 
 		ret = ODK_SUCCESS;
 	}
-	else {
-		debugFile << "\n No message has been received.";
-		ret = ODK_SUCCESS;
-	}
-	debugFile.close();
+
 	return ret;
-
-	}
 }
 
 //From a data structure a String is generated in JSON format
-ODK_RESULT SampleWrite(/*IN*/const control_flags& flags, /*IN*/const plc2agent& str_in) {
+ODK_RESULT sendAgent(/*IN*/const control_flags& str1, /*IN*/const plc2agent& str2) {
 	json j;	//JSON Object
-	//Each element of the structure is copied into a Json object
-	j["Control_Flag_Item_Completed"] = (bool)flags.Control_Flag_Item_Completed;
-	j["Control_Flag_Service_Completed"] = (bool)flags.Control_Flag_Service_Completed;
-	j["Id_Machine_Reference"] = (uint32_t)str_in.Id_Machine_Reference;
-	j["Id_Order_Reference"] = (uint32_t)str_in.Id_Order_Reference;
-	j["Id_Batch_Reference"] = (uint32_t)str_in.Id_Batch_Reference;
-	j["Id_Ref_Subproduct_Type"] = (uint32_t)str_in.Id_Ref_Subproduct_Type;
-	j["Id_Ref_Service_Type"] = (uint32_t)str_in.Id_Ref_Service_Type;
-	j["Id_Item_Number"] = (uint8_t)str_in.Id_Item_Number;
+			//Each element of the structure is copied into a Json object
+	j["Control_Flag_Item_Completed"] = (bool)str1.Control_Flag_Item_Completed;
+	j["Control_Flag_Service_Completed"] = (bool)str1.Control_Flag_Service_Completed;
+	j["Id_Machine_Reference"] = (uint32_t)str2.Id_Machine_Reference;
+	j["Id_Order_Reference"] = (uint32_t)str2.Id_Order_Reference;
+	j["Id_Batch_Reference"] = (uint32_t)str2.Id_Batch_Reference;
+	j["Id_Ref_Subproduct_Type"] = (uint32_t)str2.Id_Ref_Subproduct_Type;
+	j["Id_Ref_Service_Type"] = (uint32_t)str2.Id_Ref_Service_Type;
+	j["Id_Item_Number"] = (uint8_t)str2.Id_Item_Number;
 
-	unsigned long long Data_Initial_Time_Stamp_T = str_in.Data_Initial_Time_Stamp;
-	unsigned long long Data_Final_Time_Stamp_T = str_in.Data_Final_Time_Stamp;
-	unsigned long long Data_Service_Time_Stamp_T = str_in.Data_Service_Time_Stamp;
+	unsigned long long Data_Initial_Time_Stamp_T = str2.Data_Initial_Time_Stamp;
+	unsigned long long Data_Final_Time_Stamp_T = str2.Data_Final_Time_Stamp;
+	unsigned long long Data_Service_Time_Stamp_T = str2.Data_Service_Time_Stamp;
 
 	j["Data_Initial_Time_Stamp"] = transformTimeStamp(Data_Initial_Time_Stamp_T);
 	j["Data_Final_Time_Stamp"] = transformTimeStamp(Data_Final_Time_Stamp_T);
 	j["Data_Service_Time_Stamp"] = transformTimeStamp(Data_Service_Time_Stamp_T);
 
+	// Nos conectamos al broker
+	connectWithBroker();
+
 	//Preparar formato para broker MQTT
 	std::string machineId;
 	std::string totalPayload;
 
-	machineId = std::to_string(str_in.Id_Machine_Reference);
-	totalPayload = "Id_Machine_Reference=" + std::to_string(str_in.Id_Machine_Reference);
-	totalPayload = totalPayload + "&Id_Order_Reference=" + std::to_string(str_in.Id_Order_Reference);
-	totalPayload = totalPayload + "&Id_Batch_Reference=" + std::to_string(str_in.Id_Batch_Reference);
-	totalPayload = totalPayload + "&Id_Ref_Subproduct_Type=" + std::to_string(str_in.Id_Ref_Subproduct_Type);
-	totalPayload = totalPayload + "&Id_Ref_Service_Type=" + std::to_string(str_in.Id_Ref_Service_Type);
-	totalPayload = totalPayload + "&Id_Item_Number=" + std::to_string(str_in.Id_Item_Number);
+
+	machineId = std::to_string(str2.Id_Machine_Reference);
+	totalPayload = "Id_Machine_Reference=" + std::to_string(str2.Id_Machine_Reference);
+	totalPayload = totalPayload + "&Id_Order_Reference=" + std::to_string(str2.Id_Order_Reference);
+	totalPayload = totalPayload + "&Id_Batch_Reference=" + std::to_string(str2.Id_Batch_Reference);
+	totalPayload = totalPayload + "&Id_Ref_Subproduct_Type=" + std::to_string(str2.Id_Ref_Subproduct_Type);
+	totalPayload = totalPayload + "&Id_Ref_Service_Type=" + std::to_string(str2.Id_Ref_Service_Type);
+	totalPayload = totalPayload + "&Id_Item_Number=" + std::to_string(str2.Id_Item_Number);
 	totalPayload = totalPayload + "&Data_Initial_Time_Stamp=" + transformTimeStamp(Data_Initial_Time_Stamp_T);
 	totalPayload = totalPayload + "&Data_Final_Time_Stamp=" + transformTimeStamp(Data_Final_Time_Stamp_T);
 
-	if (flags.Control_Flag_Service_Completed == true) {
+	if (str1.Control_Flag_Service_Completed == true) {
 		totalPayload = totalPayload + "&Data_Service_Time_Stamp=" + transformTimeStamp(Data_Service_Time_Stamp_T);
 	}
-
-	// Nos conectamos al broker
-	connectWithBroker();
 
 	// Una vez añadidos todos los datos, los subiremos al broker via MQTT
 	char* charPayload = (char*)totalPayload.c_str();
@@ -443,34 +398,43 @@ bool JNIinit(void) {
 
 	JavaVMOption options[1];
 	JavaVMInitArgs vm_args;
-	options[0].optionString = "-Djava.class.path=C:\\Users\\Operator\\Documents\\FlexManSys\\classes;C:\\Users\\Operator\\Documents\\java\\libraries\\jade\\lib\\jade.jar;C:\\Users\\Operator\\Documents\\Java\\libraries\\gson\\gson-2.8.6.jar;C:\\Users\\Operator\\Documents\\Java\\libraries\\commons collections\\commons-collections4-4.4.jar";
+	options[0].optionString = "-Djava.class.path=C:\\Users\\Operator2\\Documents\\FlexManSys\\classes;C:\\Users\\Operator2\\Documents\\java\\libraries\\jade\\lib\\jade.jar;C:\\Users\\Operator2\\Documents\\java\\libraries\\gson\\gson-2.8.6.jar;C:\\Users\\Operator2\\Documents\\java\\libraries\\commons collections\\commons-collections4-4.4.jar";
 	memset(&vm_args, 0, sizeof(vm_args));
 	vm_args.version = JNI_VERSION_1_6;
 	vm_args.nOptions = 1;
 	vm_args.options = options;
+	std::ofstream debugFile;
+	debugFile.open("C:\\Users\\Operator2\\Documents\\debugFile.txt", std::ios_base::app);
 	long status = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
 	if (status == JNI_ERR) {
+		debugFile << "\r\n JNIinit status error.";
 		return false;
 	}
 	//The class that contains the necessary functions is searched for
 	cls = env->FindClass("es/ehu/domain/manufacturing/agents/cognitive/ExternalJADEgw");
 	if (cls == NULL) {
+		debugFile << "\r\n JNIinit findClass error.";
 		return false;
 	}
 	//The static agentInit method is searched inside the class
 	JNI_init = env->GetStaticMethodID(cls, "agentInit", "(Ljava/lang/String;)V");		//javap -s -p <clase>
 	if (JNI_init == 0) {
+		debugFile << "\r\n JNIinit agentInit error.";
 		return false;
 	}
 	//The static send method is searched inside the class
 	JNI_send = env->GetStaticMethodID(cls, "send", "(Ljava/lang/String;)V");		//javap -s -p <clase>
 	if (JNI_send == 0) {
+		//debugFile << "\r\n JNIinit send error.";
 		return false;
 	}
 	//The recv send method is searched inside the class
 	JNI_recv = env->GetStaticMethodID(cls, "recv", "()Ljava/lang/String;");		//javap -s -p <clase>
 	if (JNI_recv == 0) {
+		//debugFile << "\r\n JNIinit recv error.";
 		return false;
 	}
+	debugFile.close();
 	return true;
 }
+

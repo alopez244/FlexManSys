@@ -14,7 +14,7 @@ import java.io.PrintStream;
 public class ExternalJADEgw {
 
     public static void agentInit(String machineID){
-        redirectOutput();
+        //redirectOutput();
         System.out.println("->Java Agent Init");
 //        String host = "127.0.0.1";              //Local host IP)
         String host = "192.168.2.17";              // host of Alejandro PC
@@ -30,6 +30,13 @@ public class ExternalJADEgw {
         String containerName = "GatewayCont" + machineID;   // se define el nombre del contenedor donde se inicializara el agente
         pp.setProperty(Profile.CONTAINER_NAME, containerName);      //-->Name ControlGatewayContX
         JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);    //Gateway Agent Initialization, must define package directory
+        StructMessage strMessage = new StructMessage();
+        strMessage.setAction("init");
+        try {
+            JadeGateway.execute(strMessage);    // calls processCommand method of Gateway Agent
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
         System.out.println("<-Java Agent Init");
     }
 
@@ -48,16 +55,14 @@ public class ExternalJADEgw {
 
         String containerName = "GatewayCont1";   // se define el nombre del contenedor donde se inicializara el agente
         pp.setProperty(Profile.CONTAINER_NAME, containerName);      //-->Name ControlGatewayContX
-        System.out.println("Before JadeGateway.init");
         JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);    //Gateway Agent Initialization, must define package directory
-        System.out.println("After JadeGateway.init");
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("send");
         strMessage.setMessage(msgOut);
-        System.out.println("strMessage is configured");
+        //Test
+
         if(msgOut.contains("Received")){    // Depending of the message type (confirmation or data exchanging) the performative will be different
             strMessage.setPerformative(7);  // Performative = INFORM
-            System.out.println("Performative is set to INFORM");
         } else {
             strMessage.setPerformative(16); // Performative = REQUEST
         }
@@ -75,12 +80,10 @@ public class ExternalJADEgw {
 //        String recvMsg = "{\"Operation_No_of_Items\":3,\"Id_Batch_Reference\":111,\"Id_Machine_Reference\":11,\"Operation_Ref_Service_Type\":4,\"Control_Flag_New_Service\":true,\"Id_Order_Reference\":11,\"Id_Ref_Subproduct_Type\":1}";
         String recvMsg;
         StructMessage strMessage = new StructMessage();
-        System.out.println("strMessage is declared");
         strMessage.setAction("receive");
-        System.out.println("action is set to reveice");
+        System.out.println("Calling Execute");
         try {
             JadeGateway.execute(strMessage);
-            System.out.println("receive operation has been executed");
         } catch(Exception e) {
             System.out.println(e);
         }
@@ -102,7 +105,7 @@ public class ExternalJADEgw {
         directoryLogs.mkdirs();
         try {
             // Create a log file
-            File fileLog = new File(directoryLogs, "log-java.txt");
+            File fileLog = new File(directoryLogs, "debugFile.txt");
             fileLog.createNewFile();
             // Create a stream to to the log file
             FileOutputStream f = new FileOutputStream(fileLog);

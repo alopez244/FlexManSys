@@ -2,8 +2,8 @@
  * This file is AUTO GENERATED - DO NOT MODIFY this file. 
  * This file contains the execute function and trace helpers for ODK 1500S.
  *
- * File created by ODK_CodeGenerator version 205.100.101.18
- * at Mon March 15 10:24:55 2021
+ * File created by ODK_CodeGenerator version 200.0.3002.1
+ * at lun marzo 29 11:33:16 2021
 */
 
 #include "ODK_Functions.h"
@@ -11,8 +11,7 @@
 #include "ODK_CpuReadWriteData.h"
 
 #define ODK_COMMAND_NOT_IMPLEMENTED    0x8098 
-EXPORT_API ODK_UINT32 g_ODK1500sBuildVersion = (2 << 24) + (5 << 16) + (1 << 8) + 0;
- // first if
+ODK_UINT32 g_ODK1500sBuildVersion = (2 << 24) + (0 << 16) + (0 << 8) + 0;
 
 // declaration of the callbacks for testing them in Execute()
 EXPORT_API ODK_RESULT OnLoad (void);
@@ -24,16 +23,17 @@ EXPORT_API ODK_RESULT OnStop (void);
 typedef enum CommandHash_e
 {
   FCT_HASH_initAgent = 0xEF7DB504,
-  FCT_HASH_SampleWrite = 0xBC969089,
-  FCT_HASH_SampleRead = 0x0B0BE76B,
+  FCT_HASH_sendAgent = 0x08ED6C9A,
+  FCT_HASH_recvAgent = 0xCF0D4348,
   FCT_HASH_sendConf = 0x29FAF677
 }CommandHash_t;
 
 #pragma optimize( "", off )
-EXPORT_API ODK_RESULT ExecuteV25 ( const ODK_UINT32 cmd
-                                 , const ODK_UINT32 inLen   , const char* const in
-                                 , const ODK_UINT32 inoutLen, const char*       inout
-                                 , const ODK_UINT32 outLen  , const char*       out)
+//Execute()
+EXPORT_API ODK_RESULT Execute (ODK_UINT32        cmd
+                              ,const char* const in
+                              ,const char*       inout
+                              ,const char*       out)
 {
   switch (cmd)
   {
@@ -41,13 +41,13 @@ EXPORT_API ODK_RESULT ExecuteV25 ( const ODK_UINT32 cmd
     {
       return initAgent ();
     }
-    case FCT_HASH_SampleWrite:
+    case FCT_HASH_sendAgent:
     {
-      return SampleWrite (*((control_flags*) &(in[0])), *((plc2agent*) &(in[3])));
+      return sendAgent (*((control_flags*) &(in[0])), *((plc2agent*) &(in[3])));
     }
-    case FCT_HASH_SampleRead:
+    case FCT_HASH_recvAgent:
     {
-      return SampleRead (*((agent2plc*) &(out[0])), *((ODK_BOOL*) &(out[21])), *((ODK_BOOL*) &(out[22])), *((control_flags*) &(inout[0])));
+      return recvAgent (*((agent2plc*) &(out[0])), *((ODK_BOOL*) &(out[21])), *((ODK_BOOL*) &(out[22])), *((control_flags*) &(inout[0])));
     }
     case FCT_HASH_sendConf:
     {
