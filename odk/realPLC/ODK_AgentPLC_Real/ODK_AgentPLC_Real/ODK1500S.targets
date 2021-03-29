@@ -1,0 +1,5 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <Target Name="ODKGeneratorClean" AfterTargets="Clean">
+		<Delete Files=".\cg.tmp" />
+    </Target>
+</Project>

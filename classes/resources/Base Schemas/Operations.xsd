@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- edited with XMLSpy v2020 (http://www.altova.com) by  (University of the Basque Country) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:include schemaLocation="./IEC62264.xsd"/>
+	<xs:complexType name="TAction">
+		<xs:attribute name="id" type="xs:string" use="required"/>
+		<xs:attribute name="type" type="TSimple" use="required"/>
+		<xs:attribute name="actionPos" type="xs:int" use="optional"/>
+		<xs:attribute name="description" type="xs:string" use="optional"/>
+	</xs:complexType>
+	<xs:simpleType name="TSimple">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="screwing"/>
+			<xs:enumeration value="set_up"/>
+			<xs:enumeration value="inspection"/>
+			<xs:enumeration value="flame_treatment"/>
+			<xs:enumeration value="gluing"/>
+			<xs:enumeration value="drying"/>
+			<xs:enumeration value="photometry"/>
+			<xs:enumeration value="tightness_testing"/>
+			<xs:enumeration value="storing"/>
+			<xs:enumeration value="place_cover"/>
+			<xs:enumeration value="pick_and_place"/>
+			<xs:enumeration value="insert"/>
+			<xs:enumeration value="insert_and_place"/>
+			<xs:enumeration value="insert_axis"/>
+			<xs:enumeration value="welding"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="SimpleOperation">
+		<xs:sequence minOccurs="0">
+			<xs:element name="action" type="TAction" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="id" type="xs:string" use="required"/>
+		<xs:attribute name="type" type="TSimple" use="required"/>
+		<xs:attribute name="description" type="xs:string" use="optional"/>
+	</xs:complexType>
+	<!-- Complex Operations -->
+	<xs:simpleType name="TComplex">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="assembly"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="ComplexOperation">
+		<xs:sequence minOccurs="0">
+			<xs:element name="action" type="TAction" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="id" type="xs:string" use="required"/>
+		<xs:attribute name="type" type="TComplex" use="required"/>
+		<xs:attribute name="description" type="xs:string"/>
+	</xs:complexType>
+</xs:schema>
