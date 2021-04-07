@@ -42,7 +42,8 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
 
-    private ArrayList<ArrayList<ArrayList<String>>> productInfo;
+    private ArrayList<ArrayList<String>> productInfo;
+    private ArrayList<ArrayList<ArrayList<String>>> availableMaterial;
     private HashMap<String, String> operationsWithBatchAgents = new HashMap<>();
     private HashMap PLCmsgIn = new HashMap();
     private HashMap PLCmsgOut = new HashMap();
@@ -73,8 +74,8 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
         LOGGER.entry();
 
         String machineName = myAgent.resourceName;
-        gatewayAgentName = "ControlGatewayCont1";// + machineName.substring(3,4); //Se genera el nombre del Gateway Agent con el que se tendra que comunicar
-
+        Integer machineNumber = Integer.parseInt(machineName.split("_")[1]);
+        gatewayAgentName = "ControlGatewayCont" + machineNumber.toString(); //Se genera el nombre del Gateway Agent con el que se tendra que comunicar
         //First, the Machine Model is read
 
         String [] args = (String[]) myAgent.getArguments();
@@ -123,6 +124,13 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
 
         LOGGER.info(myAgent.getLocalName()+" ("+cmd+")"+" > mwm < "+seId);
+
+        //Fourthly, the material available in the station is counted
+        for (int i = 0; i < myAgent.resourceModel.size(); i++) {
+            if (myAgent.resourceModel.get(i).get(0).get(0).equals("buffer")){
+                //(myAgent.resourceModel.get(i+1).get(3).get(0));
+            }
+        }
 
         //Finally, the MachineAgent is started.
 

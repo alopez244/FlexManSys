@@ -55,7 +55,7 @@ public class ExternalJADEgw {
 
         String containerName = "GatewayCont1";   // se define el nombre del contenedor donde se inicializara el agente
         pp.setProperty(Profile.CONTAINER_NAME, containerName);      //-->Name ControlGatewayContX
-        JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);    //Gateway Agent Initialization, must define package directory
+        //JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);    //Gateway Agent Initialization, must define package directory
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("send");
         strMessage.setMessage(msgOut);
@@ -77,11 +77,9 @@ public class ExternalJADEgw {
 
     //Function for reading the data received in ACL messages
     public static String recv() {
-//        String recvMsg = "{\"Operation_No_of_Items\":3,\"Id_Batch_Reference\":111,\"Id_Machine_Reference\":11,\"Operation_Ref_Service_Type\":4,\"Control_Flag_New_Service\":true,\"Id_Order_Reference\":11,\"Id_Ref_Subproduct_Type\":1}";
         String recvMsg;
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("receive");
-        System.out.println("Calling Execute");
         try {
             JadeGateway.execute(strMessage);
         } catch(Exception e) {
