@@ -3,17 +3,11 @@
 <!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
 <xs:schema xmlns="station" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" targetNamespace="station" elementFormDefault="qualified" attributeFormDefault="unqualified">
 	<xs:include schemaLocation="../Base Schemas/IEC62264.xsd"/>
-	<xs:redefine schemaLocation="../Base Schemas/Operations.xsd">
-		<xs:complexType name="SimpleOperation">
+	<xs:include schemaLocation="../Base Schemas/Operations.xsd"/>
+	<xs:redefine schemaLocation="../ListOfOperations.xsd">
+		<xs:complexType name="Operation">
 			<xs:complexContent>
-				<xs:extension base="SimpleOperation">
-					<xs:attribute name="executionTime" type="xs:time" use="required"/>
-				</xs:extension>
-			</xs:complexContent>
-		</xs:complexType>
-		<xs:complexType name="ComplexOperation">
-			<xs:complexContent>
-				<xs:extension base="ComplexOperation">
+				<xs:extension base="Operation">
 					<xs:attribute name="executionTime" type="xs:time" use="required"/>
 				</xs:extension>
 			</xs:complexContent>
@@ -34,26 +28,6 @@
 			<xs:attribute name="xPos" type="xs:double" use="required"/>
 			<xs:attribute name="yPos" type="xs:double" use="required"/>
 			<xs:attribute name="zPos" type="xs:double" use="required"/>
-		</xs:complexType>
-	</xs:element>
-	<!-- TConsumable: material consumible de la estación -->
-	<xs:simpleType name="TypeOfConsumable">
-		<xs:restriction base="xs:string">
-			<xs:enumeration value="axle"/>
-			<xs:enumeration value="bearing"/>
-			<xs:enumeration value="bolt"/>
-			<xs:enumeration value="cover"/>
-			<xs:enumeration value="filter"/>
-			<xs:enumeration value="nut"/>
-			<xs:enumeration value="sleeve"/>
-			<xs:enumeration value="welding_wire"/>
-		</xs:restriction>
-	</xs:simpleType>
-	<xs:element name="consumable">
-		<xs:complexType>
-			<xs:attribute name="id" type="xs:string" use="required"/>
-			<xs:attribute name="description" type="xs:string" use="required"/>
-			<xs:attribute name="type" type="TypeOfConsumable" use="required"/>
 		</xs:complexType>
 	</xs:element>
 	<!-- Buffer: almacenes intermedios de estaciones -->
@@ -100,8 +74,7 @@
 				<xs:element ref="buffer" minOccurs="0" maxOccurs="unbounded"/>
 				<xs:element ref="tool" minOccurs="1" maxOccurs="unbounded"/>
 				<xs:choice minOccurs="1" maxOccurs="unbounded">
-					<xs:element name="simple_operation" type="SimpleOperation"/>
-					<xs:element name="complex_operation" type="ComplexOperation"/>
+					<xs:element name="simple_operation" type="Operation"/>
 				</xs:choice>
 			</xs:sequence>
 			<xs:attribute name="id" type="xs:string" use="required"/>

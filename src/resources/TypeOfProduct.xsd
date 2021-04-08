@@ -11,18 +11,11 @@
 			<xs:enumeration value="Completed"/>
 		</xs:restriction>
 	</xs:simpleType>
-	<!-- Raw Material -->
-	<xs:element name="rawMaterial">
-		<xs:complexType>
-			<xs:attribute name="id" type="xs:string" use="required"/>
-			<xs:attribute name="description" type="xs:string" use="required"/>
-		</xs:complexType>
-	</xs:element>
 	<xs:complexType name="TTypeOfProduct">
 		<xs:choice>
 			<xs:element ref="rawMaterial" maxOccurs="1"/>
 			<xs:sequence>
-				<xs:element name="action" type="TAction" minOccurs="1" maxOccurs="unbounded"/>
+				<xs:element ref="action" minOccurs="1" maxOccurs="unbounded"/>
 				<xs:element name="TypeOfProduct" type="TTypeOfProduct"/>
 			</xs:sequence>
 		</xs:choice>

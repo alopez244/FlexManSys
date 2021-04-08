@@ -13,7 +13,7 @@
 	<!-- ======= Batch======= -->
 	<xs:complexType name="Batch">
 		<xs:attribute name="reference" type="xs:string" use="required"/>
-		<xs:attribute name="numberOfItems" type="xs:string" use="required"/>
+		<xs:attribute name="numberOfItems" type="xs:integer" use="required"/>
 		<xs:attribute name="refProductID" type="xs:string" use="required"/>
 	</xs:complexType>
 </xs:schema>

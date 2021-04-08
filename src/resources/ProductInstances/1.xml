@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- editado con XMLSpy v2020 sp1 (x64) (http://www.altova.com) por  (University of the Basque Country) -->
 <!-- edited with XMLSpy v2020 (http://www.altova.com) by  (University of the Basque Country) -->
-<TypeOfProduct xmlns="ManufacturingPlan" productType="1" refRecipe="recipe02" description="Big product" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="ManufacturingPlan ../TypeOfProduct.xsd">
+<TypeOfProduct xmlns="ManufacturingPlan" productType="1" refRecipe="recipe02" description="Big product 1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="ManufacturingPlan ../TypeOfProduct.xsd">
 	<action id="4" type="pick_and_place" description="place cover"/>
 	<TypeOfProduct productType="BB_B2" description="BB_A + upper bearing">
 		<action id="3" type="insert" description="insert upper bearing"/>
