@@ -17,6 +17,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
 import static es.ehu.domain.manufacturing.utilities.FmsNegotiation.ONT_DEBUG;
@@ -32,6 +33,10 @@ public class MachineAgent extends DomResAgentTemplate {
 
     /** Machine Plan . */
     public ArrayList<ArrayList<ArrayList<String>>> machinePlan;
+
+    /** Machine Consumables . */
+    public static ArrayList<HashMap<String, String>> availableMaterial = new ArrayList<>();
+
 
     @Override
     protected MessageTemplate variableInitialization(Object[] arguments, Behaviour behaviour) {
