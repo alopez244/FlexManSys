@@ -15,13 +15,10 @@
 // to the data area.
 //
 
-const ODK_UINT8 cS7StringMaxLen = 254;
-const ODK_UINT16 cS7WStringMaxLen = 16382;
-
 //
 // CODK_CpuReadWriteData : Class constructor, initializes the output data area to 0
 //
-CODK_CpuReadWriteData::CODK_CpuReadWriteData() noexcept
+CODK_CpuReadWriteData::CODK_CpuReadWriteData()
     : CODK_CpuReadData(),
       m_LowIndex(0),
       m_HighIndex(0)
@@ -29,23 +26,18 @@ CODK_CpuReadWriteData::CODK_CpuReadWriteData() noexcept
 }
 
 //
-// CODK_CpuReadWriteData : Class constructor, initializes the output data area
+// CODK_CpuReadWriteData : Class constructor. Initializes the output data area
 //
-CODK_CpuReadWriteData::CODK_CpuReadWriteData(const ODK_VARIANT& classicData)  // Pointer to a classic data structure
-    : m_LowIndex(0),
-      m_HighIndex(0)
-
+CODK_CpuReadWriteData::CODK_CpuReadWriteData(const ODK_CLASSIC_DB *db) // Pointer to a classic db structure
 {
-    SetBuffer(classicData.Len, classicData.pData);
+    SetBuffer(db->Len, (ODK_BYTE *)db->Data);
 }
 
 //
 // CODK_CpuReadWriteData : Class constructor. Initializes the output data area
 //
 CODK_CpuReadWriteData::CODK_CpuReadWriteData(long     nBytes, // Number of bytes in the data buffer
-                                             ODK_BYTE data[]) // Array pointer to the data buffer										 
-    : m_LowIndex(0),
-      m_HighIndex(0)
+                                             ODK_BYTE data[]) // Array pointer to the data buffer
 {
     SetBuffer(nBytes, data);
 }
@@ -252,266 +244,88 @@ bool CODK_CpuReadWriteData::WriteS7BOOL(const long         byteOffset, // Index 
 }
 
 //
-// WriteS7S5TIME : Writes a 2 byte time value to the data area
-//
-bool CODK_CpuReadWriteData::WriteS7S5TIME(const long       byteOffset, // Offset to begin writing
-                                          const ODK_UINT16 value)     // 16-bit unsigned value to write
-{
-    if (!CheckS7S5Time(value))
-    {
-        return false;
-    }
-
-    return WriteUINT16(byteOffset, value);
-}
-
-//
-// WriteS7TIME_OF_DAY : Writes the time of day (4 bytes) to the data area
-//
-bool CODK_CpuReadWriteData::WriteS7TIME_OF_DAY(const long       byteOffset, // Offset to begin writing
-                                               const ODK_UINT32 value)      // 32-bit unsigned value to write
-{
-    if (sm_maxTOD < value)
-    {
-        return false;
-    }
-
-    return WriteUINT32(byteOffset, value);
-}
-
-//
-// WriteS7LTIME_OF_DAY : Writes the time of day (8 bytes) as nanoseconds since midnight to the data area
-//
-bool CODK_CpuReadWriteData::WriteS7LTIME_OF_DAY(const long       byteOffset, // Offset to begin writing
-                                                const ODK_UINT64 value)      // 64-bit long time of day value to write
-{
-	if (sm_maxLTOD < value)
-    {
-        return false;
-    }
-
-    return WriteUINT64(byteOffset, value);
-}
-
-//
-// WriteS7DATE_AND_TIME : Writes Date and Time in BCD format to the data area
-//
-bool CODK_CpuReadWriteData::WriteS7DATE_AND_TIME(long             byteOffset, // Index into the data buffer
-                                                 const ODK_UINT64 &value)     // Date and time in BCD format to write
-{
-    if (!CheckS7DateAndTime(value))
-	{
-        return false;
-    }
-
-	return WriteUINT64(byteOffset, value);
-}
-
-//
-// WriteS7DTL : Writes a Date and Time as DTL to the data area
-//
-bool CODK_CpuReadWriteData::WriteS7DTL(long          byteOffset, // Offset to begin reading
-                                       const ODK_DTL &dtl)       // DTL structure to write
-{
-	// Verify offset is within data area
-    if ((byteOffset < 0) || ((byteOffset + static_cast<long>(sizeof(dtl))) > m_nBytes))
-    {
-        return false;
-    }
-
-	// Check content of DTL
-	if (!CheckS7DTL(dtl))
-	{
-        return false;
-	}
-
-    // year
-    WriteUINT16(byteOffset, dtl.Year);
-    byteOffset += ODK_SIZEBIT16;
-    // month
-    WriteUINT8(byteOffset, dtl.Month);
-    byteOffset += ODK_SIZEBIT8;
-    // day
-    WriteUINT8(byteOffset, dtl.Day);
-    byteOffset += ODK_SIZEBIT8;
-    // weekday
-    WriteUINT8(byteOffset, dtl.Weekday);
-    byteOffset += ODK_SIZEBIT8;
-    // hour
-    WriteUINT8(byteOffset, dtl.Hour);
-    byteOffset += ODK_SIZEBIT8;
-    // minute
-    WriteUINT8(byteOffset, dtl.Minute);
-    byteOffset += ODK_SIZEBIT8;
-    // second
-    WriteUINT8(byteOffset, dtl.Second);
-    byteOffset += ODK_SIZEBIT8;
-    // nanosecond
-    WriteUINT32(byteOffset, dtl.Nanosecond);
-
-	return true;
-}
-
-//
 // WriteS7STRING : Writes a string to the data area
-//                 Truncate destination string, when source string is too long.
 //
 bool CODK_CpuReadWriteData::WriteS7STRING(const long      byteOffset, // Index into the data buffer
-                                          const ODK_CHAR* string)     // Pointer to a string buffer containing the string to write
+                                          const ODK_CHAR *string)     // Pointer to a string buffer containing the string to write
 {
     ODK_UINT8 maxLen = 0;
     ODK_UINT8 curLen = 0;
+    short count = 0;
+    short strDataIndex = 0;
 
-    // check parameters and read maxLen
-    if (0 == string
-     || ! ReadUINT8(byteOffset, maxLen))
+    // verify valid pointer 
+    if (0 == string)
     {
         return false;
     }
+
+    // get the maximum length of the string
+    ReadUINT8(byteOffset, maxLen);
 
     // get the current size of the string
     curLen = static_cast<ODK_UINT8>(strlen(string));
 
-    // special handling for [OUT] variants: maxLen could be zero -> set maxLen as curLen
-	if (0 == maxLen)
-	{
-		maxLen = curLen;
-		if (maxLen > cS7StringMaxLen)
-		{
-			maxLen = cS7StringMaxLen;
-		}
-		WriteUINT8(byteOffset, maxLen);
-	}
-
-    // limit curLen to maxLen
-    if (curLen > maxLen)
-    {
-        curLen = maxLen;
-    }
-
-    // verify offset not out of bounds
-    if (static_cast<long>(byteOffset + curLen + (2 * sizeof(ODK_CHAR))) > m_nBytes)
+    // return error if string is too large for the buffer (STEP 7 string or output data buffer)
+    if ((curLen > maxLen) || ((byteOffset + static_cast<long>(curLen) + ODK_SIZEBIT16) > m_nBytes))
     {
         return false;
     }
 
-    // set the curLen
-    WriteUINT8(byteOffset + 1, curLen);
-
-    // copy the string
-    memcpy(&(m_data[byteOffset + 2]), string, curLen);
+    // set the current length
+    WriteUINT8(byteOffset + ODK_SIZEBIT8, curLen);
+    // Copy the string
+    strDataIndex = static_cast<short>(byteOffset + ODK_SIZEBIT16);
+    count = 0;
+    while (string[count] != '\0')
+    {
+        WriteUINT8(strDataIndex + count, string[count]);
+        count++;
+    }
 
     return true;
 }
 
 //
-// WriteS7STRING_MAX_LEN : Writes the max. string length to S7 String in data area
-//                         This is possible for [OUT] variants, only, where maxLen is not set, yet.
+// WriteS7DATE_AND_TIME : Writes Date and Time data to  Date and Time area
 //
-bool CODK_CpuReadWriteData::WriteS7STRING_MAX_LEN(const long       byteOffset, // Offset to begin writing
-                                                  const ODK_UINT8  maxLen)     // Maximum Length of S7String to write
+bool CODK_CpuReadWriteData::WriteS7DATE_AND_TIME(long           byteOffset, // Index into the data buffer
+                                                 const ODK_DTL &timeData)   // Date and time structure to write
 {
-	// parameter check (there must be enough space for whole string)
-	if (byteOffset < 0
-     || static_cast<ODK_INT32>(byteOffset + (sizeof(ODK_CHAR) * (2 + maxLen))) > m_nBytes
-     || maxLen > cS7StringMaxLen)
-	{
-		return false;
-	}
-
-	// check, whether maxLen is already set
-	if (0 != m_data[byteOffset])
-	{
-		return false;
-	}
-
-	m_data[byteOffset] = maxLen;
-	return true;
-}
-
-//
-// WriteS7WSTRING : Writes a wide string to the data area
-//                  Truncate destination string, when source string is too long.
-//
-bool CODK_CpuReadWriteData::WriteS7WSTRING(const long       byteOffset, // Index into the data buffer
-                                           const ODK_WCHAR* string)     // Pointer to a string buffer containing the wide string to write
-{
-    ODK_UINT16 maxLen = 0;
-    ODK_UINT16 curLen = 0;
-
-    // check parameters and read maxLen
-    if (0 == string
-     || ! ReadUINT16(byteOffset, maxLen))
+    // Verify offset is within data area
+    if ((byteOffset < 0) || ((byteOffset + ODK_SIZEBIT64) > m_nBytes))
     {
         return false;
     }
 
-    // get the current size of the string
-    curLen = static_cast<ODK_UINT16>(wcslen(string));
-
-    // special handling for [OUT] variants: maxLen could be zero -> set maxLen as curLen
-	if (0 == maxLen)
-	{
-		maxLen = curLen;
-		if (maxLen > cS7WStringMaxLen)
-		{
-			maxLen = cS7WStringMaxLen;
-		}
-		WriteUINT16(byteOffset, maxLen);
-	}
-
-    // limit curLen to maxLen
-    if (curLen > maxLen)
+    // Update highest index accessed
+    if ((byteOffset + ODK_SIZEBIT64 - 1) > m_HighIndex)
     {
-        curLen = maxLen;
+        m_HighIndex = byteOffset + ODK_SIZEBIT64 - 1;
     }
 
-    // verify offset not out of bounds
-    if (static_cast<long>(byteOffset + (sizeof(ODK_WCHAR) * (2 + curLen))) > m_nBytes)
+    // Update lowest index accessed
+    if (byteOffset < m_LowIndex)
     {
-        return false;
+        m_LowIndex = byteOffset;
     }
 
-    // set the curLen
-    WriteUINT16(byteOffset + sizeof(ODK_WCHAR), curLen);
-
-	// copy the string
-	long offset = byteOffset + (sizeof(ODK_WCHAR) * 2);
-	ODK_UINT16 word;
-	for (ODK_UINT16 i = 0; i < curLen; i++, offset++)
-	{
-		word = static_cast<ODK_UINT16>(string[i]);
-		m_data[offset] = word >> 8;
-		offset++;
-		m_data[offset] = word & 0x00FFU;
-	}
+    // Convert and write the data
+    WriteUINT16(byteOffset, timeData.Year);
+    byteOffset += ODK_SIZEBIT16;
+    WriteUINT8(byteOffset, timeData.Month);
+    byteOffset += ODK_SIZEBIT8;
+    WriteUINT8(byteOffset, timeData.Day);
+    byteOffset += ODK_SIZEBIT8;
+    WriteUINT8(byteOffset, timeData.Weekday);
+    byteOffset += ODK_SIZEBIT8;
+    WriteUINT8(byteOffset, timeData.Hour);
+    byteOffset += ODK_SIZEBIT8;
+    WriteUINT8(byteOffset, timeData.Minute);
+    byteOffset += ODK_SIZEBIT8;
+    WriteUINT8(byteOffset, timeData.Second);
+    byteOffset += ODK_SIZEBIT8;
+    WriteUINT32(byteOffset, timeData.Nanosecond);
 
     return true;
-}
-
-//
-// WriteS7WSTRING_MAX_LEN : Writes the max. string length to S7 WString in data area
-//                          This is possible for [OUT] variants, only, where maxLen is not set, yet.
-//
-bool CODK_CpuReadWriteData::WriteS7WSTRING_MAX_LEN(const long       byteOffset, // Offset to begin writing
-                                                   const ODK_UINT16 maxLen)     // Maximum Length of S7WString to write
-{
-	ODK_UINT16 origMaxLen;
-
-	// parameter check (there must be enough space for whole string)
-	if (! ReadUINT16(byteOffset, origMaxLen)
-     || static_cast<ODK_INT32>(byteOffset + (sizeof(ODK_WCHAR) * (2 + maxLen))) > m_nBytes
-     || maxLen > cS7WStringMaxLen)
-	{
-		return false;
-	}
-
-	// check, whether maxLen is already set
-	if (0 != origMaxLen)
-	{
-		return false;
-	}
-
-	WriteUINT16(byteOffset, maxLen);
-	return true;
 }

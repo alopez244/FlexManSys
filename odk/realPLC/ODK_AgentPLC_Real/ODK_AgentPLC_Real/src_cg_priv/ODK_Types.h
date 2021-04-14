@@ -3,7 +3,7 @@
  * This file contains the data types of ODK 1500S.
  *
  * File created by ODK_CodeGenerator version 200.0.3002.1 
- * at lun marzo 29 11:33:17 2021 
+ * at mié abril 14 10:10:23 2021 
  */
 
 #if !defined ODK_Types_H

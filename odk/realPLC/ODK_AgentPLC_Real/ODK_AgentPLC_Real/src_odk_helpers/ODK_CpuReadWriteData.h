@@ -1,6 +1,7 @@
 #ifndef ODK_CPUREADWRITEDATA_H
 #define ODK_CPUREADWRITEDATA_H
 
+#include "ODK_Types.h"
 #include "ODK_CpuReadData.h"
 
 #if _MSC_VER > 1000
@@ -28,12 +29,12 @@ public:
     //
     // CODK_CpuReadWriteData : Class constructor, initializes the output data area to 0
     //
-    CODK_CpuReadWriteData() noexcept;
+    CODK_CpuReadWriteData();
 
-	//
+    //
     // CODK_CpuReadWriteData : Class constructor, initializes the output data area
     //
-    explicit CODK_CpuReadWriteData(const ODK_VARIANT& classicData);  // Pointer to a classic data structure
+    CODK_CpuReadWriteData(const ODK_CLASSIC_DB *db);  // Pointer to a classic db structure
 
     //
     // CODK_CpuReadWriteData : Class constructor, initializes the output data area
@@ -75,13 +76,6 @@ public:
         }
         return m_LowIndex;
     }
-
-    //
-    // WriteS7BOOL : Writes a boolean value (1 bit) to the data area
-    //
-    bool WriteS7BOOL(const long         byteOffset, // Offset to begin writing
-                     const unsigned int bitNo,      // Bit index to change (bit 0 is the least significant bit)
-                     const bool         value);     // Value to set the bit to
 
     //
     // WriteS7BYTE : Writes a byte value to the data area
@@ -174,6 +168,51 @@ public:
     }
 
     //
+    // WriteS7S5TIME : Writes a 2 byte time value to the data area
+    //
+    bool WriteS7S5TIME(const long       byteOffset, // Offset to begin writing
+                       const ODK_UINT16 value)      // 16-bit unsigned value to write
+    {
+        return WriteUINT16(byteOffset, value);
+    }
+
+    //
+    // WriteS7TIME : Writes a 4 byte time value to the data area
+    //
+    bool WriteS7TIME(const long      byteOffset, // Offset to begin writing
+                     const ODK_INT32 value)      // 32-bit signed value to write
+    {
+        return WriteUINT32(byteOffset, static_cast<ODK_UINT32>(value));
+    }
+
+    //
+    // WriteS7DATE : Writes a date value (2 bytes) to the data area
+    //
+    bool WriteS7DATE(const long       byteOffset, // Offset to begin writing
+                     const ODK_UINT16 value)      // 16-bit unsigned value to write
+    {
+        return WriteUINT16(byteOffset, value);
+    }
+
+    //
+    // WriteS7TIME_OF_DAY : Writes the time of day (4 bytes) to the data area
+    //
+    bool WriteS7TIME_OF_DAY(const long       byteOffset, // Offset to begin writing
+                            const ODK_UINT32 value)      // 32-bit unsigned value to write
+    {
+        return WriteUINT32(byteOffset, value);
+    }
+
+    //
+    // WriteS7CHAR : Writes a character (1 byte) to the data area
+    //
+    bool WriteS7CHAR(const long     byteOffset, // Offset to begin writing
+                     const ODK_CHAR value)      // Character to write
+    {
+        return WriteUINT8(byteOffset, static_cast<ODK_UINT8>(value));
+    }
+
+    //
     // WriteS7REAL : Writes a real number (4 bytes) to the data area
     //
     bool WriteS7REAL(const long      byteOffset, // Offset to begin writing
@@ -190,7 +229,6 @@ public:
     {
     	return WriteUINT64(byteOffset,reinterpret_cast<const ODK_UINT64&>(value));
     }
-
     //
     // WriteS7LINT : Writes a integer number (8 bytes) to the data area
     //
@@ -199,7 +237,6 @@ public:
     {
     	return WriteUINT64(byteOffset,static_cast<ODK_UINT64>(value));
     }
-
     //
     // WriteS7ULINT : Writes a unsigned integer number (8 bytes) to the data area
     //
@@ -208,119 +245,24 @@ public:
     {
         return WriteUINT64(byteOffset, value);
     }
-
     //
-    // WriteS7S5TIME : Writes a 2 byte time value to the data area
+    // WriteS7BOOL : Writes a boolean value (1 bit) to the data area
     //
-    bool WriteS7S5TIME(const long       byteOffset, // Offset to begin writing
-                       const ODK_UINT16 value);     // 16-bit unsigned value to write
-
-    //
-    // WriteS7TIME : Writes a time value (4 bytes) as milliseconds to the data area
-    //
-    bool WriteS7TIME(const long     byteOffset, // Offset to begin writing
-                     const ODK_TIME value)      // 32-bit signed time value to write
-    {
-        return WriteUINT32(byteOffset, static_cast<ODK_UINT32>(value));
-    }
-
-    //
-    // WriteS7LTIME : Writes a time duration (8 bytes) as nanoseconds to the data area
-    //
-    bool WriteS7LTIME(const long byteOffset, // Offset to begin reading
-                      ODK_LTIME  value)      // 64-bit signed time value to write
-    {
-        return WriteUINT64(byteOffset, static_cast<ODK_UINT64>(value));
-    }
-
-
-    //
-    // WriteS7DATE : Writes a date value (2 bytes) to the data area
-    //
-    bool WriteS7DATE(const long       byteOffset, // Offset to begin writing
-                     const ODK_UINT16 value)      // 16-bit unsigned value to write
-    {
-        return WriteUINT16(byteOffset, value);
-    }
-
-    //
-    // WriteS7TIME_OF_DAY : Writes the time of day (4 bytes) to the data area
-    //
-    bool WriteS7TIME_OF_DAY(const long       byteOffset, // Offset to begin writing
-                            const ODK_UINT32 value);      // 32-bit unsigned value to write
-
-    //
-    // WriteS7LTIME_OF_DAY : Writes the time of day (8 bytes) as nanoseconds since midnight to the data area
-    //
-    bool WriteS7LTIME_OF_DAY(const long       byteOffset, // Offset to begin writing
-                             const ODK_UINT64 value);     // 64-bit long time of day value to write
-
-    //
-    // WriteS7DATE_AND_TIME : Writes Date and Time in BCD format to the data area
-    //
-    bool WriteS7DATE_AND_TIME(long             byteOffset, // Offset to begin writing
-                              const ODK_UINT64 &value);    // Date and time in BCD format to write
-
-    //
-    // WriteS7DATE_AND_LTIME : Writes Date and Time as nanoseconds to the data area
-    //
-    bool WriteS7DATE_AND_LTIME(long             byteOffset, // Offset to begin writing
-                               const ODK_UINT64 &value)     // Date and time in nanoseconds to write
-    {
-        return WriteUINT64(byteOffset, value);
-	}
-
-    //
-    // WriteS7DTL : Writes a Date and Time as DTL to the data area
-    //
-    bool WriteS7DTL(long          byteOffset, // Offset to begin reading
-                    const ODK_DTL &dtl);      // DTL structure to write
-
-    //
-    // WriteS7CHAR : Writes a character (1 byte) to the data area
-    //
-    bool WriteS7CHAR(const long     byteOffset, // Offset to begin writing
-                     const ODK_CHAR value)      // Character to write
-    {
-        return WriteUINT8(byteOffset, static_cast<ODK_UINT8>(value));
-    }
+    bool WriteS7BOOL(const long         byteOffset, // Offset to begin writing
+                     const unsigned int bitNo,      // Bit index to change (bit 0 is the least significant bit)
+                     const bool         value);     // Value to set the bit to
 
     //
     // WriteS7STRING : Writes a string to the data area
-    //                 Truncate destination string, when source string is too long.
     //
     bool WriteS7STRING(const long      byteOffset, // Offset to begin writing
-                       const ODK_CHAR* string);    // String to write
+                       const ODK_CHAR *string);    // String to write
 
     //
-    // WriteS7STRING_MAX_LEN : Writes the max. string length to S7 String in data area
-    //                         This is possible for [OUT] variants, only, where maxLen is not set, yet.
+    // WriteS7DATE_AND_TIME : Writes Date and Time data to Date and Time area
     //
-    bool WriteS7STRING_MAX_LEN(const long       byteOffset, // Offset to begin writing
-                               const ODK_UINT8  maxLen);    // Maximum Length of S7String to write
-
-    //
-    // WriteS7WCHAR : Writes a wide character (2 byte) to the data area
-    //
-    bool WriteS7WCHAR(const long      byteOffset, // Offset to begin writing
-                      const ODK_WCHAR value)      // Character to write
-    {
-        return WriteUINT16(byteOffset, static_cast<ODK_UINT16>(value));
-    }
-
-    //
-    // WriteS7WSTRING : Writes a wide string to the data area
-    //                  Truncate destination string, when source string is too long.
-    //
-    bool WriteS7WSTRING(const long       byteOffset, // Offset to begin writing
-                        const ODK_WCHAR* string);    // Wide string to write
-
-    //
-    // WriteS7WSTRING_MAX_LEN : Writes the max. string length to S7 WString in data area
-    //                          This is possible for [OUT] variants, only, where maxLen is not set, yet.
-    //
-    bool WriteS7WSTRING_MAX_LEN(const long       byteOffset, // Offset to begin writing
-                                const ODK_UINT16 maxLen);    // Maximum Length of S7WString to write
+    bool WriteS7DATE_AND_TIME(long           byteOffset, // Offset to begin writing
+                              const ODK_DTL &timeData);  // Date and time structure to write
 
 protected:
 

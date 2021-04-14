@@ -48,7 +48,7 @@ BEGIN
             VALUE "FileDescription", "TODO: <File description>"
             VALUE "FileVersion", "1.0.0.1"
             VALUE "InternalName", "ODK_AgentPLC_Real.dll"
-            VALUE "LegalCopyright", "Copyright (C) 2017"
+            VALUE "LegalCopyright", "Copyright (C) 2021"
             VALUE "OriginalFilename", "ODK_AgentPLC_Real.dll"
             VALUE "ProductName", "TODO: <Product name>"
             VALUE "ProductVersion", "1.0.0.1"

@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by ODK_Template_VC.rc
+// Used by ODK_AgentPLC_Real.rc
 //
 
 // Next default values for new objects

@@ -36,8 +36,7 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.*;
 
-
-public class Machine_Functionality implements BasicFunctionality, NegFunctionality, AssetManagement {
+public class Machine_Functionality extends DomApp_Functionality implements BasicFunctionality, NegFunctionality, AssetManagement {
 
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
@@ -47,8 +46,10 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
     private HashMap PLCmsgIn = new HashMap();
     private HashMap PLCmsgOut = new HashMap();
     private String BathcID = "";
-    int NumOfItems = 0;
+    private Integer NumOfItems = 0;
+    private Integer machinePlanIndex = 0;
     private Boolean sendingFlag = false;
+    private Boolean matReqDone = false;
     private Boolean orderQueueFlag = false;
     private String gatewayAgentName;
 
@@ -413,8 +414,6 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                     }
                     if (myAgent.machinePlan.size() < 3){  //checking that there is no more operation to send
                         orderQueueFlag = false;
-//                        myAgent.machinePlan.remove(1);
-//                        myAgent.machinePlan.remove(2);
                     } else{
                         sendingFlag = true; //if there is any operation left, send behavior is called
                         SimpleBehaviour sendingBehaviour = new SendTaskBehaviour(myAgent);
@@ -474,10 +473,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                         }
                     }
                 }
-
             }
-                System.out.println(actionList);
-                System.out.println(consumableList);
                 // Se restan los consumibles utilizados y se comparan con el valor de warning para pedir más material
                 for (int i = 0; i < consumableList.size(); i++){
                     for (int j = 0; j < myAgent.availableMaterial.size(); j++){
@@ -486,15 +482,14 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
                             currentConsumables--;
                             myAgent.availableMaterial.get(j).put("current", Integer.toString(currentConsumables));
                             int warningConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("warning"));
-                            if (currentConsumables <= warningConsumable){
+                            if (currentConsumables <= warningConsumable && !matReqDone){
                                 //TODO Enviar mensaje al transporte
-                                myAgent.availableMaterial.get(j).put("current", myAgent.availableMaterial.get(j).get("max"));
+                                //myAgent.availableMaterial.get(j).put("current", myAgent.availableMaterial.get(j).get("max"));
+                                matReqDone = true;
                             }
                         }
                     }
                 }
-                System.out.println(myAgent.availableMaterial);
-
                 msgToBatch.remove("Id_Ref_Service_Type");   // when all actions are identified, the Ref_Service_Type data is unnecessary
                 msgToBatch.put("Id_Action_Type", actionList);   // Actions are added to the message
                 String MessageContent = new Gson().toJson(msgToBatch);  //creates the message to be send
@@ -522,84 +517,58 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
 
                 sendMessage(MessageContent, 16, batchAgentName); //Sends item information to the batch agent
 
-                //Finally, the used material is discounted
-
             }
         }
 
     public void sendDataToPLC() {
 
         if(sendingFlag == true) {     //It is checked if the method is correctly activated and that orders do not overlap
-            ArrayList<String> auxiliar = new ArrayList<>();
             ArrayList<String> consumableList = new ArrayList<String>();
-            List<String> itemNumbers = new ArrayList<String>(); //to track each of the items that are added to the operation
-            Boolean ItemContFlag = true;
-            Boolean newItem = false;
             Boolean consumableShortage = false;
+            String serviceType;
+
             if (myAgent.machinePlan.size() > 2) {   //checks that there are operations in the machine plan
-                for (int j = 0; j < myAgent.machinePlan.size(); j++) {  //Looks for the operation to be manufactured in the machine plan
-                    for (int k = 0; k < myAgent.machinePlan.get(j).size(); k++) {
-                        auxiliar = myAgent.machinePlan.get(j).get(k);
-                        if (auxiliar.get(0).equals("station")) {
-                            PLCmsgOut.put("Id_Machine_Reference", Integer.parseInt(myAgent.machinePlan.get(j).get(k + 3).get(0)));
-                        }
-                        if (auxiliar.get(0).equals("operation")) {
-                            ArrayList<String> auxiliar2 = myAgent.machinePlan.get(j).get(k + 3);
-
-                            if (ItemContFlag == true) { //saves the information of the operation only when founds the first item, then just increments the item counter
-                                BathcID = auxiliar2.get(4);  //saves the information of the operation in PLCmsgOut
-                                PLCmsgOut.put("Control_Flag_New_Service", true);
-                                PLCmsgOut.put("Id_Batch_Reference", Integer.parseInt(BathcID));
-                                PLCmsgOut.put("Id_Order_Reference", Integer.parseInt(auxiliar2.get(6)));
-                                PLCmsgOut.put("Id_Ref_Subproduct_Type", Integer.parseInt(auxiliar2.get(7)));
-                                PLCmsgOut.put("Operation_Ref_Service_Type", Integer.parseInt(auxiliar2.get(0)));
-
-                                for (int l = 0; l < myAgent.resourceModel.size(); l++) {  // Knowing Ref_Service_Type, identification of the actions of each item
-                                    if (myAgent.resourceModel.get(l).get(0).get(0).equals("simple_operation")) {
-                                        if (myAgent.resourceModel.get(l).get(3).get(1).equals(auxiliar2.get(0))) {
-                                            for (int m = l + 1; m < myAgent.resourceModel.size(); m++)  {
-                                                if (myAgent.resourceModel.get(m).get(0).get(0).equals("action")){
-                                                    consumableList.add(myAgent.resourceModel.get(m+1).get(3).get(1)); //The used consumable is saved to later discount it
-                                                } else if (myAgent.resourceModel.get(m).get(0).get(0).equals("simple_operation")) {
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                ItemContFlag = false;
-                            }
-
-                            if (!itemNumbers.contains(auxiliar2.get(5)) && auxiliar2.get(4).equals(BathcID)){ //if item number already exists, it is not added
-                                itemNumbers.add(auxiliar2.get(5));
-                                newItem = true;     //the item is counted
-                            }
-
-                            if (ItemContFlag == false && auxiliar2.get(4).equals(BathcID) && newItem == true) { //counts all the items with the same batch number
-                                NumOfItems++;
-                                newItem = false;
-                            }
-
-                        }
+                PLCmsgOut = createOperationHashmap(myAgent.machinePlan, machinePlanIndex); //Looks for the operation to be manufactured in the machine plan
+                NumOfItems = (Integer) PLCmsgOut.get("Operation_No_of_Items");
+                BathcID = Integer.toString((Integer) PLCmsgOut.get("Id_Batch_Reference"));
+                for (int j = 0; j < myAgent.machinePlan.size(); j++) {  // saves the machine´s reference
+                    if (myAgent.machinePlan.get(j).get(0).get(0).equals("station")) {
+                        PLCmsgOut.put("Id_Machine_Reference", Integer.parseInt(myAgent.machinePlan.get(j).get(3).get(0)));
+                        break;
                     }
                 }
+                // Knowing Ref_Service_Type, identification of the consumables that will be needed for manufacturing
+                serviceType = Integer.toString((Integer) PLCmsgOut.get("Operation_Ref_Service_Type"));
+                consumableList = defineConsumableList(serviceType, myAgent.resourceModel);
 
+                // Se comprueba que se disponga de material suficiente para poder fabricar el lote
                 for (int i = 0; i < myAgent.availableMaterial.size(); i++) {
-                    if (consumableList.contains(myAgent.availableMaterial.get(i).get("consumable_id"))){
-                        if(Integer.parseInt(myAgent.availableMaterial.get(i).get("current")) < NumOfItems) {
+                    if (consumableList.contains(myAgent.availableMaterial.get(i).get("consumable_id"))) {
+                        if (Integer.parseInt(myAgent.availableMaterial.get(i).get("current")) < NumOfItems) {
                             consumableShortage = true;
                         }
                     }
                 }
-
+                // Solo se envia la operación si hay material suficiente
                 if (!consumableShortage) {
-                    PLCmsgOut.put("Operation_No_of_Items", NumOfItems); //when all the items of the same batch have been counted, the request to the PLC is send
+                    PLCmsgOut.remove("Index");
                     String MessageContent = new Gson().toJson(PLCmsgOut);
                     sendMessage(MessageContent, 16, gatewayAgentName);
                     sendingFlag = false;
+                    machinePlanIndex = 0;
+                } else { // en caso contrario, se analizan las operaciones en cola para poder ser enviados
+                    System.out.println("El lote no se puede fabricar por falta de material");
+                    machinePlanIndex = (Integer) PLCmsgOut.get("Index");
+                    if (machinePlanIndex <= myAgent.machinePlan.size() - 1) {
+                        sendDataToPLC();
+                    } else {
+                        System.out.println("No es posible fabricar ninguna orden en cola por falta de material");
+                        if (!matReqDone) {
+                            //TODO Enviar mensaje al transporte
+                            matReqDone = true;
+                        }
+                    }
                 }
-
             } else {
                 System.out.println("No operations defined");
                 PLCmsgOut.put("Control_Flag_New_Service", false);
@@ -607,6 +576,7 @@ public class Machine_Functionality implements BasicFunctionality, NegFunctionali
             }
         }
     }
+
 
     private void sendMessage(String data, int performative, String agentName) {       //ACLMessage template for message sending to gateway agent
         ACLMessage msgToPLC = new ACLMessage(performative);

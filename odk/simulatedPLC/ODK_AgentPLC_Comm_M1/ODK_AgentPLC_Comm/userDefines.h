@@ -13,5 +13,4 @@ JavaVM *jvm;
 jclass cls;
 jmethodID JNI_init, JNI_send, JNI_recv;
 char traza[300];				//Array para formar el mensaje de la traza
-
 #endif

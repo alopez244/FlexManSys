@@ -9,10 +9,9 @@
   stdafx.cpp
   dllmain.cpp
   ODK_AgentPLC_Real.cpp
-ODK_AgentPLC_Real.cpp(330): warning C4800: 'const ODK_BOOL': forcing value to bool 'true' or 'false' (performance warning)
-ODK_AgentPLC_Real.cpp(331): warning C4800: 'const ODK_BOOL': forcing value to bool 'true' or 'false' (performance warning)
-ODK_AgentPLC_Real.cpp(365): warning C4805: '==': unsafe mix of type 'const ODK_BOOL' and type 'bool' in operation
-ODK_AgentPLC_Real.cpp(388): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+ODK_AgentPLC_Real.cpp(353): warning C4800: 'ODK_BOOL': forcing value to bool 'true' or 'false' (performance warning)
+ODK_AgentPLC_Real.cpp(354): warning C4800: 'ODK_BOOL': forcing value to bool 'true' or 'false' (performance warning)
+ODK_AgentPLC_Real.cpp(418): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stdio.h(1769): note: see declaration of 'sprintf'
   ODK_CpuReadData.cpp
   ODK_CpuReadWriteData.cpp

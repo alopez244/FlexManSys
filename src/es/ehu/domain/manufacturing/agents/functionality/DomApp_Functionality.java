@@ -3,6 +3,7 @@ package es.ehu.domain.manufacturing.agents.functionality;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.utilities.XMLReader;
+import jade.Boot;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.DFService;
@@ -23,7 +24,7 @@ public class DomApp_Functionality {
      * Methods to Mplan, Order, Batch_Functionality
      */
 
-    static final Logger LOGGER = LogManager.getLogger(DomApp_Functionality.class.getName()) ;
+    static final Logger LOGGER = LogManager.getLogger(DomApp_Functionality.class.getName());
 
     private Agent myAgent;
 
@@ -67,7 +68,7 @@ public class DomApp_Functionality {
                         // Si los padres son diferentes, se trata de un hijo
                         if (myElements.contains(senderParentID))
                             myElements.remove(senderParentID);
-                            senderAgentsID.add(msg.getSender()); //.getName().split("@")[0])
+                        senderAgentsID.add(msg.getSender()); //.getName().split("@")[0])
                     }
                 }
             }
@@ -99,7 +100,7 @@ public class DomApp_Functionality {
         Object[] result = new Object[2];
         result[0] = replicasID;
         result[1] = senderAgentsID;
-        return result ;
+        return result;
     }
 
     public void trackingOnBoot(MWAgent agent, String seType, String conversationId) {
@@ -118,7 +119,7 @@ public class DomApp_Functionality {
                 seCategory = reply.getContent();
 
             reply = sendCommand(myAgent, "get * parent=" + parentID + " category=" + seCategory + " state=bootToRunning", conversationId);
-            if (reply !=null) {
+            if (reply != null) {
                 runningAgentID = reply.getContent();
                 sendElementCreatedMessage(myAgent, runningAgentID, seType, true);
             }
@@ -163,12 +164,13 @@ public class DomApp_Functionality {
 
     /**
      * Metodo para conseguir todos mis elementos (p.e. si es un MPlan todos los orders y batch asociados a ese MPlan)
+     *
      * @param agent
      * @param seID
      * @param conversationId
      * @return
      */
-    public List<String> getAllElements(Agent agent, String seID, String conversationId){
+    public List<String> getAllElements(Agent agent, String seID, String conversationId) {
 
         this.myAgent = agent;
         List<String> items = new ArrayList<>();
@@ -186,7 +188,7 @@ public class DomApp_Functionality {
             e.printStackTrace();
         }
 
-        while(!elementsToAnalyze.isEmpty()) {
+        while (!elementsToAnalyze.isEmpty()) {
             try {
                 // Consigo el padre del agente
                 String element = elementsToAnalyze.pop();
@@ -225,7 +227,7 @@ public class DomApp_Functionality {
         this.myAgent = seAgent;
 
         ACLMessage reply = null;
-        for (String elementID: allElementsID) {
+        for (String elementID : allElementsID) {
             // Creamos los agentes para cada elemento
             try {
                 reply = sendCommand(myAgent, "get (get * parent=(get * parent=" + elementID + " category=restrictionList)) attrib=attribValue", conversationId);
@@ -233,7 +235,7 @@ public class DomApp_Functionality {
                 if (reply != null)
                     refServID = reply.getContent();
 
-                reply = sendCommand(myAgent, "get * category=pNodeAgent" + ((refServID.length()>0)?" refServID=" + refServID:""), conversationId);
+                reply = sendCommand(myAgent, "get * category=pNodeAgent" + ((refServID.length() > 0) ? " refServID=" + refServID : ""), conversationId);
                 String targets = null;
                 if (reply != null) {
                     targets = reply.getContent();
@@ -246,12 +248,12 @@ public class DomApp_Functionality {
                 String seClass = attribs.get("seClass");
 
                 // Orden de negociacion a todos los nodos
-                for (int i=0; i<Integer.parseInt(redundancy); i++) {
+                for (int i = 0; i < Integer.parseInt(redundancy); i++) {
 
                     conversationId = myAgent.getLocalName() + "_" + chatID++;
 
                     //negotiate(myAgent, targets, "max mem", "start", elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy+","+myAgent.getLocalName(), conversationId);
-                    String negotiationQuery = "localneg " +targets+ " criterion=max mem action=start externaldata="+ elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy+","+myAgent.getLocalName();
+                    String negotiationQuery = "localneg " + targets + " criterion=max mem action=start externaldata=" + elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking") + "," + redundancy + "," + myAgent.getLocalName();
                     reply = sendCommand(myAgent, negotiationQuery, conversationId);
                 }
             } catch (Exception e) {
@@ -275,7 +277,7 @@ public class DomApp_Functionality {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return String.valueOf(seCategory.charAt(0)).toUpperCase() + seCategory.substring(1).replace("Agent","");
+        return String.valueOf(seCategory.charAt(0)).toUpperCase() + seCategory.substring(1).replace("Agent", "");
     }
 
     public List seStart(Agent agent, String seID, Hashtable<String, String> attribs, String conversationId, ArrayList<String> creationCategories, int chatID, String redundancy) {
@@ -309,7 +311,7 @@ public class DomApp_Functionality {
 
         List<String> allElements = getAllElements(myAgent, seID, conversationId);
 
-        for (String elem: allElements) {
+        for (String elem : allElements) {
             try {
                 ACLMessage reply = sendCommand(myAgent, "get " + elem + " attrib=category", conversationId);
                 if (reply != null)
@@ -329,8 +331,8 @@ public class DomApp_Functionality {
         try {
             String command = "sestart " + myAgent.getLocalName();
             //for (String elem : (List<String>) result.get(0))
-            for (int i=0; i < elementsList.size(); i++)
-                    command = command + " element"+i+"="+ elementsList.get(i);
+            for (int i = 0; i < elementsList.size(); i++)
+                command = command + " element" + i + "=" + elementsList.get(i);
 
             ACLMessage reply = sendCommand(myAgent, command, conversationId);
             if (reply.getContent().equals("OK"))
@@ -364,7 +366,7 @@ public class DomApp_Functionality {
         String mwm;
 
         while (true) {
-            DFAgentDescription[] result = DFService.search(myAgent,dfd);
+            DFAgentDescription[] result = DFService.search(myAgent, dfd);
 
             if ((result != null) && (result.length > 0)) {
                 dfd = result[0];
@@ -398,19 +400,19 @@ public class DomApp_Functionality {
         //Request de nueva negociación
         ACLMessage msg = new ACLMessage(ACLMessage.CFP);
 
-        for (String target: targets.split(","))
+        for (String target : targets.split(","))
             msg.addReceiver(new AID(target, AID.ISLOCALNAME));
         msg.setConversationId(conversationId);
-        msg.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE );
+        msg.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE);
 
-        msg.setContent("negotiate " +targets+ " criterion=" +negotiationCriteria+ " action=" +action+ " externaldata=" +externalData);
+        msg.setContent("negotiate " + targets + " criterion=" + negotiationCriteria + " action=" + action + " externaldata=" + externalData);
         agent.send(msg);
 
         return "Negotiation message sent";
     }
 
     //Metodo para añadir un nuevo nivel al registro de fabricacion de las piezas y ponerlo en primer lugar
-    public ArrayList<ArrayList<ArrayList<ArrayList<String>>>> addNewLevel ( ArrayList<ArrayList<ArrayList<ArrayList<String>>>> traceability,ArrayList<ArrayList<ArrayList<ArrayList<String>>>> deserializedMessage, Boolean addNewSpace) {
+    public ArrayList<ArrayList<ArrayList<ArrayList<String>>>> addNewLevel(ArrayList<ArrayList<ArrayList<ArrayList<String>>>> traceability, ArrayList<ArrayList<ArrayList<ArrayList<String>>>> deserializedMessage, Boolean addNewSpace) {
 
         ArrayList<ArrayList<ArrayList<String>>> newLevel = new ArrayList<>();
         int size = deserializedMessage.size();
@@ -426,10 +428,10 @@ public class DomApp_Functionality {
         }
         //busca todos los datos que rerpresentan el nivel en el xml y los incrementa
         for (int i = 0; i < size; i++) {
-            for(int j = 0; j < deserializedMessage.get(i).size(); j++) {
+            for (int j = 0; j < deserializedMessage.get(i).size(); j++) {
                 int index = Integer.parseInt(deserializedMessage.get(i).get(j).get(1).get(0));//convierte el valor a entero para poder ser incrementado
                 index++;
-                deserializedMessage.get(i).get(j).get(1).set(0,String.valueOf(index));//añade el valor modificado donde le corresponde
+                deserializedMessage.get(i).get(j).get(1).set(0, String.valueOf(index));//añade el valor modificado donde le corresponde
             }
             traceability.add(deserializedMessage.get(i));
         }
@@ -451,18 +453,23 @@ public class DomApp_Functionality {
                 switch (counter) {
                     case 1:
                         traceability.add(new ArrayList<>());
-                        counter++; break;
+                        counter++;
+                        break;
                     case 2:
                         traceability.get(index1).add(new ArrayList<>());
-                        counter++; break;
+                        counter++;
+                        break;
                     case 3:
                         traceability.get(index1).get(index2).add(new ArrayList<>());
-                        controlFlag = true; break;
+                        controlFlag = true;
+                        break;
                 }
             } else if (letter.equals("]")) {
                 switch (counter) {
                     case 2:
-                        counter--; index2 = 0; index1++;
+                        counter--;
+                        index2 = 0;
+                        index1++;
                         break;
                     case 3:
                         if (controlFlag) {
@@ -471,7 +478,9 @@ public class DomApp_Functionality {
                             index3++;
                             controlFlag = false;
                         } else {
-                            counter--; index3 = 0; index2++;
+                            counter--;
+                            index3 = 0;
+                            index2++;
                         }
                         break;
                 }
@@ -480,7 +489,8 @@ public class DomApp_Functionality {
                     i++;
                 } else {
                     traceability.get(index1).get(index2).get(index3).add(data);
-                    data = ""; i++;
+                    data = "";
+                    i++;
                 }
             } else {
                 data = data.concat(letter);
@@ -496,6 +506,81 @@ public class DomApp_Functionality {
         msg.setConversationId(conversationId);
         msg.setContent(content);
         myAgent.send(msg);
+    }
+
+    public HashMap createOperationHashmap(ArrayList<ArrayList<ArrayList<String>>> machinePlan, int index) {
+
+        ArrayList<String> auxiliar = new ArrayList<>();
+        List<String> itemNumbers = new ArrayList<String>(); //to track each of the items that are added to the operation
+        Boolean ItemContFlag = true;
+        Boolean newItem = false;
+        Boolean breakFlag = false;
+        HashMap PLCmsgOut = new HashMap();
+        String BathcID = "";
+        Integer NumOfItems = 0;
+
+        for (int j = index; j < machinePlan.size(); j++) {  //Looks for the operation to be manufactured in the machine plan
+            for (int k = 0; k < machinePlan.get(j).size(); k++) {
+                auxiliar = machinePlan.get(j).get(k);
+                if (auxiliar.get(0).equals("operation")) {
+                    ArrayList<String> auxiliar2 = machinePlan.get(j).get(k + 3);
+
+                    if (ItemContFlag == true) { //saves the information of the operation only when founds the first item, then just increments the item counter
+                        BathcID = auxiliar2.get(4);  //saves the information of the operation in PLCmsgOut
+                        PLCmsgOut.put("Control_Flag_New_Service", true);
+                        PLCmsgOut.put("Id_Batch_Reference", Integer.parseInt(BathcID));
+                        PLCmsgOut.put("Id_Order_Reference", Integer.parseInt(auxiliar2.get(6)));
+                        PLCmsgOut.put("Id_Ref_Subproduct_Type", Integer.parseInt(auxiliar2.get(7)));
+                        PLCmsgOut.put("Operation_Ref_Service_Type", Integer.parseInt(auxiliar2.get(0)));
+
+                        ItemContFlag = false;
+                    }
+
+                    if (!itemNumbers.contains(auxiliar2.get(5)) && auxiliar2.get(4).equals(BathcID)) { //if item number already exists, it is not added
+                        itemNumbers.add(auxiliar2.get(5));
+                        newItem = true;     //the item is counted
+                    }
+
+                    if (ItemContFlag == false && auxiliar2.get(4).equals(BathcID) && newItem == true) { //counts all the items with the same batch number
+                        NumOfItems++;
+                        newItem = false;
+                    }
+
+                    if (!itemNumbers.contains(auxiliar2.get(5)) && !auxiliar2.get(4).equals(BathcID)) {
+                        index = j;
+                        breakFlag = true;
+                        break;
+                    }
+                }
+            }
+            if (breakFlag) {
+                break;
+            }
+        }
+        if (!breakFlag) {
+            index = machinePlan.size();
+        }
+        PLCmsgOut.put("Operation_No_of_Items", NumOfItems);
+        PLCmsgOut.put("Index", index);
+        return PLCmsgOut;
+    }
+
+    public ArrayList<String> defineConsumableList(String serviceType, ArrayList<ArrayList<ArrayList<String>>> resourceModel) {
+        ArrayList<String> consumableList = new ArrayList<String>();
+        for (int l = 0; l < resourceModel.size(); l++) {
+            if (resourceModel.get(l).get(0).get(0).equals("simple_operation")) {
+                if (resourceModel.get(l).get(3).get(1).equals(serviceType)) {
+                    for (int m = l + 1; m < resourceModel.size(); m++)  {
+                        if (resourceModel.get(m).get(0).get(0).equals("consumable")){
+                            consumableList.add(resourceModel.get(m).get(3).get(1)); //The used consumable is saved
+                        } else if (resourceModel.get(m).get(0).get(0).equals("simple_operation")) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return consumableList;
     }
 
 }

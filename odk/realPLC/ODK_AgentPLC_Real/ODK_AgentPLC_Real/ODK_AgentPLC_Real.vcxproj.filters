@@ -2,31 +2,31 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{b4944a9d-66a5-4765-81be-2f7e100fcf9f}</UniqueIdentifier>
+      <UniqueIdentifier>{c566c6fb-480a-47c1-a7d2-bd28c4edd717}</UniqueIdentifier>
       <Extensions>.cpp;.cxx;.c</Extensions>
     </Filter>
     <Filter Include="Header Files">
-      <UniqueIdentifier>{b44a6a6a-6a83-4dbf-bbf0-d7d723bbcb00}</UniqueIdentifier>
+      <UniqueIdentifier>{ec00f1ca-d97b-4b2c-89c3-31803036e41f}</UniqueIdentifier>
       <Extensions>.h;.hpp</Extensions>
     </Filter>
     <Filter Include="Resource Files">
-      <UniqueIdentifier>{b70ac318-470c-42fe-bcbd-3887815cabde}</UniqueIdentifier>
+      <UniqueIdentifier>{5a485ae6-86c1-43c2-ab71-3dee20065905}</UniqueIdentifier>
       <Extensions>.rc;.rc2;.ico;.gif;.bmp;.xml</Extensions>
     </Filter>
     <Filter Include="Definition File">
-      <UniqueIdentifier>{7229c382-e85f-4793-a1df-2080fccf7421}</UniqueIdentifier>
+      <UniqueIdentifier>{6ace4dbe-4d60-4fc7-a686-54017a300e3d}</UniqueIdentifier>
       <Extensions>.odk</Extensions>
     </Filter>
     <Filter Include="Generated Files">
-      <UniqueIdentifier>{b3298548-0533-4786-bc84-ebafe6bfac19}</UniqueIdentifier>
+      <UniqueIdentifier>{d00267e2-0dbd-427d-b307-7f9ceaf92ed1}</UniqueIdentifier>
       <Extensions>.cpp;.c;.h</Extensions>
     </Filter>
     <Filter Include="STEP7">
-      <UniqueIdentifier>{1918cbe7-4027-460b-83b9-bf0d4282b67b}</UniqueIdentifier>
+      <UniqueIdentifier>{99b7496f-3de7-445c-8206-56a162ea92ba}</UniqueIdentifier>
       <Extensions>.scl</Extensions>
     </Filter>
     <Filter Include="ODK Helpers">
-      <UniqueIdentifier>{6491e36c-ce0f-480f-9466-4e135ca28553}</UniqueIdentifier>
+      <UniqueIdentifier>{0d15d60e-4bfe-4069-a859-6cbafc0288d9}</UniqueIdentifier>
       <Extensions>.cpp;.c;.h</Extensions>
     </Filter>
   </ItemGroup>

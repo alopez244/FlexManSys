@@ -73,6 +73,6 @@ ODK_STRUCT plc2agent
 };
 
 ODK_RESULT initAgent ();	//Agent Init
-ODK_RESULT SampleWrite ([IN] control_flags str1, [IN] plc2agent str2);		//Sends the Agent message   
-ODK_RESULT SampleRead ( [OUT] control_flags str1,	[OUT] agent2plc str2,	[OUT] ODK_BOOL tRecv,	[OUT] ODK_BOOL tData);	//Receive the Agent message and parses the JSON to structure
+ODK_RESULT SampleWrite ([IN] plc2agent str_out, [INOUT] control_flags flags);		//Sends the Agent message   
+ODK_RESULT SampleRead ([OUT] agent2plc str_in,	[OUT] ODK_BOOL tRecv,	[OUT] ODK_BOOL tData,  [INOUT] control_flags flags);	//Receive the Agent message and parses the JSON to structure
 ODK_RESULT sendConf ();	//sends a confirmation message to agent

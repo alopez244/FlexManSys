@@ -65,7 +65,6 @@ std::string transformTimeStamp(unsigned long long TimeStamp)
 
 	/*Primero pasamos de nanosegundos a segundos*/
 	unsigned long long seconds = TimeStamp / 1000000000;
-	ODK_TRACE("Tiempo en nanosegundos:%llu",TimeStamp);
 
 	/*Segundo, pasamos a minutos y guardamos el resto*/
 	unsigned long long minutes = seconds / 60;
@@ -97,9 +96,6 @@ std::string transformTimeStamp(unsigned long long TimeStamp)
 	{
 		days_remainder = 1 + ((days - ((days / 365) / 4)) % 365);
 	}
-	ODK_TRACE("Tiempo en nanosegundos:%d", days_remainder);
-
-
 
 	/*Sexto, comprobamos si el año es bisiesto, y en funcion de eso se fijan el día y el mes*/
 	int months = 0;
@@ -241,108 +237,103 @@ std::string transformTimeStamp(unsigned long long TimeStamp)
 ODK_RESULT initAgent() {
 	static bool uniqueStart = false;	//Variable to avoid multiple initializations
 	if (!uniqueStart) {				//It only happens on the first run
-		ODK_TRACE("->ODK initAgent");
 		uniqueStart = true;			//Update the flag to prevent it from being run again
 		if (!JNIinit())	return ODK_USER_ERROR_BASE;
-		ODK_TRACE("calling func. Init");
 		jstring machineID = env->NewStringUTF("3");	//Se inicializa como agente gateway para la maquina 1
-		env->CallStaticIntMethod(cls, JNI_init, machineID);	//Executes the init method using JNI
-		env->CallStaticObjectMethod(cls, JNI_recv);		//Executes de recv method to initialize the gateway agent in JADE´s GUI
-		ODK_TRACE("<-ODK initAgent");
-	}	
+		env->CallStaticVoidMethod(cls, JNI_init, machineID);	//Executes the init method using JNI
+		if (env->ExceptionOccurred())
+		{
+			env->ExceptionDescribe();
+		}
+	}
 	return ODK_SUCCESS;
 }
 
 //Parses a String in JSON format and leave its data in a structure
-ODK_RESULT recvAgent(/*OUT*/control_flags& str1, /*OUT*/agent2plc& str2,	/*OUT*/ODK_BOOL& tRecv, /*OUT*/ODK_BOOL& tData) {
-	ODK_TRACE("->ODK recvAgent");
+ODK_RESULT SampleRead(/*OUT*/agent2plc& str_in,	/*OUT*/ODK_BOOL& tRecv, /*OUT*/ODK_BOOL& tData, /*INOUT*/control_flags& flags) {
+
 	char msgInCa[254] = { 0 };		//An array is created to reserve that memory
 	const char* msgInC = msgInCa;	//Pointer to array of characters is created
-	//Executes the recv method through JNI and receives a jstring with the message to read
+									//Executes the recv method through JNI and receives a jstring with the message to read
 	jstring s = (jstring)env->CallStaticObjectMethod(cls, JNI_recv);
+	if (env->ExceptionOccurred())
+	{
+		env->ExceptionDescribe();
+	}
 	msgInC = env->GetStringUTFChars(s, 0);					//Type conversion jstring->char*
-	//env->ReleaseStringUTFChars(s, msgInC);		//The conversion space is freed	
-
-	sprintf(traza, "msg(C): %s", msgInC);	//Se forma el mensaje de la traza
-	ODK_TRACE(traza);
 
 	uint16_t ret;							//Variable to store the result of the function
 	tRecv = false;
 	tData = false;
-	ODK_TRACE("->Parsing JSON to structure");
 	json j = json::parse(msgInC);			//The String is parsed and converted to a JSON object
-	ODK_TRACE("->Estructure obtained");
 	if (j.contains("Received")) {			//It is checked if it is a receipt confirmation
-		ODK_TRACE("--Received type Message");
 		if (j["Received"] == true) {
 			tRecv = true;
-			ODK_TRACE("--Message received at Agent OK");
 			ret = ODK_SUCCESS;
 		}
 	}
 	else if (j.contains("Control_Flag_New_Service")) {	//At least the first field is checked
-		ODK_TRACE("Receiving new operation");
 		tData = true;
 		//The received parameters are copied to the output structure		
-		str1.Control_Flag_New_Service = j["Control_Flag_New_Service"].get<bool>();
-		str2.Id_Machine_Reference = j["Id_Machine_Reference"].get<int>();
-		str2.Id_Order_Reference = j["Id_Order_Reference"].get<int>();
-		str2.Id_Batch_Reference = j["Id_Batch_Reference"].get<int>();
-		str2.Id_Ref_Subproduct_Type = j["Id_Ref_Subproduct_Type"].get<int>();
-		str2.Operation_Ref_Service_Type = j["Operation_Ref_Service_Type"].get<int>();
-		str2.Operation_No_of_Items = j["Operation_No_of_Items"].get<int>();
+		flags.Control_Flag_New_Service = j["Control_Flag_New_Service"].get<bool>();
+		str_in.Id_Machine_Reference = j["Id_Machine_Reference"].get<int>();
+		str_in.Id_Order_Reference = j["Id_Order_Reference"].get<int>();
+		str_in.Id_Batch_Reference = j["Id_Batch_Reference"].get<int>();
+		str_in.Id_Ref_Subproduct_Type = j["Id_Ref_Subproduct_Type"].get<int>();
+		str_in.Operation_Ref_Service_Type = j["Operation_Ref_Service_Type"].get<int>();
+
+		str_in.Operation_No_of_Items = j["Operation_No_of_Items"].get<int>();
 
 		ret = ODK_SUCCESS;
 	}
-	else {
-		ODK_TRACE("->Waiting for a new message");
-		ret = ODK_SUCCESS;
-	}
-	ODK_TRACE("<-ODK recvAgent");
 	return ret;
 }
 
 //From a data structure a String is generated in JSON format
-ODK_RESULT sendAgent(/*IN*/const control_flags& str1, /*IN*/const plc2agent& str2) {
-	ODK_TRACE("->ODK sendAgent");
+ODK_RESULT SampleWrite(/*IN*/const plc2agent& str_out, /*INOUT*/ control_flags& flags) {
 	json j;	//JSON Object
-	//Each element of the structure is copied into a Json object
-	j["Control_Flag_Item_Completed"] =		(bool)str1.Control_Flag_Item_Completed;
-	j["Control_Flag_Service_Completed"] =	(bool)str1.Control_Flag_Service_Completed;
-	j["Id_Machine_Reference"] =				(uint32_t)str2.Id_Machine_Reference;
-	j["Id_Order_Reference"] =				(uint32_t)str2.Id_Order_Reference;
-	j["Id_Batch_Reference"] =				(uint32_t)str2.Id_Batch_Reference;
-	j["Id_Ref_Subproduct_Type"] =			(uint32_t)str2.Id_Ref_Subproduct_Type;
-	j["Id_Ref_Service_Type"] =				(uint32_t)str2.Id_Ref_Service_Type;
-	j["Id_Item_Number"] =					(uint8_t)str2.Id_Item_Number;
+			//Each element of the structure is copied into a Json object
+	j["Control_Flag_Item_Completed"] = (bool)flags.Control_Flag_Item_Completed;
+	j["Control_Flag_Service_Completed"] = (bool)flags.Control_Flag_Service_Completed;
+	j["Id_Machine_Reference"] = (uint32_t)str_out.Id_Machine_Reference;
+	j["Id_Order_Reference"] = (uint32_t)str_out.Id_Order_Reference;
+	j["Id_Batch_Reference"] = (uint32_t)str_out.Id_Batch_Reference;
+	j["Id_Ref_Subproduct_Type"] = (uint32_t)str_out.Id_Ref_Subproduct_Type;
+	j["Id_Ref_Service_Type"] = (uint32_t)str_out.Id_Ref_Service_Type;
+	j["Id_Item_Number"] = (uint8_t)str_out.Id_Item_Number;
 
-	unsigned long long Data_Initial_Time_Stamp_T = str2.Data_Initial_Time_Stamp;
-	unsigned long long Data_Final_Time_Stamp_T = str2.Data_Final_Time_Stamp;
-	unsigned long long Data_Service_Time_Stamp_T = str2.Data_Service_Time_Stamp;
-	
-	j["Data_Initial_Time_Stamp"] =			transformTimeStamp(Data_Initial_Time_Stamp_T);
-	j["Data_Final_Time_Stamp"] =			transformTimeStamp(Data_Final_Time_Stamp_T);
-	j["Data_Service_Time_Stamp"] =			transformTimeStamp(Data_Service_Time_Stamp_T);
+	unsigned long long Data_Initial_Time_Stamp_T = str_out.Data_Initial_Time_Stamp;
+	unsigned long long Data_Final_Time_Stamp_T = str_out.Data_Final_Time_Stamp;
+	unsigned long long Data_Service_Time_Stamp_T = str_out.Data_Service_Time_Stamp;
+
+	j["Data_Initial_Time_Stamp"] = transformTimeStamp(Data_Initial_Time_Stamp_T);
+	j["Data_Final_Time_Stamp"] = transformTimeStamp(Data_Final_Time_Stamp_T);
+	j["Data_Service_Time_Stamp"] = transformTimeStamp(Data_Service_Time_Stamp_T);
 
 	std::string msgJson = j.dump(); //json serialized in c++ string data type
 	jstring msg = env->NewStringUTF(msgJson.c_str());	//Type conversion using UTF-8 string -> jstring
-	env->CallStaticIntMethod(cls, JNI_send, msg);	//The send function is executed through JNI
-	ODK_TRACE("<-sending finished");
+	env->CallStaticVoidMethod(cls, JNI_send, msg);	//The send function is executed through JNI
+	if (env->ExceptionOccurred())
+	{
+		env->ExceptionDescribe();
+	}
 
 	return ODK_SUCCESS;
 }
 
 //Generates a String in JSON format with the message receipt confirmation
 ODK_RESULT sendConf() {
-	ODK_TRACE("->ODK Sending confirmation");
 	json j;							//JSON Object
 	j["Received"] = true;			//The "Received" key is added to the object
 	char JsonCa[256 + 1] = { 0 };		//An array is generated to reserve that memory
 	char* JsonC = JsonCa;			//A pointer is created that points to the created array
 	sprintf(JsonC, "%s", (j.dump()).c_str());	//Serialized->String->const char*
 	jstring msg = env->NewStringUTF(JsonC);	//Type conversion char* -> jstring
-	env->CallStaticIntMethod(cls, JNI_send, msg);	//The send function is executed through JNI
-	ODK_TRACE("<-ODK Confirmation sended");
+	env->CallStaticVoidMethod(cls, JNI_send, msg);	//The send function is executed through JNI
+	if (env->ExceptionOccurred())
+	{
+		env->ExceptionDescribe();
+	}
 	return ODK_SUCCESS;
 }
 
@@ -352,7 +343,7 @@ bool JNIinit(void) {
 	//The javaVM parameters are assigned and initialized
 
 	JavaVMOption options[1];
-	JavaVMInitArgs vm_args;	
+	JavaVMInitArgs vm_args;
 	options[0].optionString = "-Djava.class.path=C:\\Users\\aabadia004\\IdeaProjects\\FlexManSys\\classes;C:\\Users\\aabadia004\\Documents\\java\\libraries\\jade\\lib\\jade.jar;C:\\Users\\aabadia004\\Documents\\Java\\libraries\\gson\\gson-2.8.6.jar;C:\\Users\\aabadia004\\Documents\\Java\\libraries\\commons collections\\commons-collections4-4.4.jar";
 	memset(&vm_args, 0, sizeof(vm_args));
 	vm_args.version = JNI_VERSION_1_6;

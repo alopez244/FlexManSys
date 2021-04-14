@@ -3,7 +3,7 @@
  * This file contains the execute function and trace helpers for ODK 1500S.
  *
  * File created by ODK_CodeGenerator version 200.0.3002.1
- * at lun marzo 29 11:33:16 2021
+ * at mié abril 14 10:10:23 2021
 */
 
 #include "ODK_Functions.h"
@@ -23,8 +23,8 @@ EXPORT_API ODK_RESULT OnStop (void);
 typedef enum CommandHash_e
 {
   FCT_HASH_initAgent = 0xEF7DB504,
-  FCT_HASH_sendAgent = 0x08ED6C9A,
-  FCT_HASH_recvAgent = 0xCF0D4348,
+  FCT_HASH_SampleWrite = 0xFB6AE7D1,
+  FCT_HASH_SampleRead = 0x0B0BE76B,
   FCT_HASH_sendConf = 0x29FAF677
 }CommandHash_t;
 
@@ -41,13 +41,13 @@ EXPORT_API ODK_RESULT Execute (ODK_UINT32        cmd
     {
       return initAgent ();
     }
-    case FCT_HASH_sendAgent:
+    case FCT_HASH_SampleWrite:
     {
-      return sendAgent (*((control_flags*) &(in[0])), *((plc2agent*) &(in[3])));
+      return SampleWrite (*((plc2agent*) &(in[0])), *((control_flags*) &(inout[0])));
     }
-    case FCT_HASH_recvAgent:
+    case FCT_HASH_SampleRead:
     {
-      return recvAgent (*((agent2plc*) &(out[0])), *((ODK_BOOL*) &(out[21])), *((ODK_BOOL*) &(out[22])), *((control_flags*) &(inout[0])));
+      return SampleRead (*((agent2plc*) &(out[0])), *((ODK_BOOL*) &(out[21])), *((ODK_BOOL*) &(out[22])), *((control_flags*) &(inout[0])));
     }
     case FCT_HASH_sendConf:
     {

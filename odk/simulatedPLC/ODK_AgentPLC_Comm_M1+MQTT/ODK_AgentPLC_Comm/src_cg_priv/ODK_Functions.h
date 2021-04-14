@@ -3,7 +3,7 @@
  * This file contains the function prototypes of ODK 1500S.
  *
  * File created by ODK_CodeGenerator version 205.100.101.18
- * at Mon March 15 10:25:10 2021 
+ * at Wed April 14 12:26:57 2021 
 */
 
 #if !defined ODK_Functions_H
@@ -23,16 +23,16 @@ ODK_RESULT initAgent (
 
 //Agent Init
 ODK_RESULT SampleWrite (
-  /*IN*/const control_flags& str1,
-  /*IN*/const plc2agent& str2); //Sends the Agent message   
-#define _ODK_FUNCTION_SAMPLEWRITE  ODK_RESULT SampleWrite (/*IN*/const control_flags& str1, /*IN*/const plc2agent& str2)
+  /*IN*/const plc2agent& str_out,
+  /*INOUT*/control_flags& flags); //Sends the Agent message   
+#define _ODK_FUNCTION_SAMPLEWRITE  ODK_RESULT SampleWrite (/*IN*/const plc2agent& str_out, /*INOUT*/control_flags& flags)
 
 ODK_RESULT SampleRead (
-  /*OUT*/control_flags& str1,
-  /*OUT*/agent2plc& str2,
+  /*OUT*/agent2plc& str_in,
   /*OUT*/ODK_BOOL& tRecv,
-  /*OUT*/ODK_BOOL& tData); //Receive the Agent message and parses the JSON to structure
-#define _ODK_FUNCTION_SAMPLEREAD  ODK_RESULT SampleRead (/*OUT*/control_flags& str1, /*OUT*/agent2plc& str2, /*OUT*/ODK_BOOL& tRecv, /*OUT*/ODK_BOOL& tData)
+  /*OUT*/ODK_BOOL& tData,
+  /*INOUT*/control_flags& flags); //Receive the Agent message and parses the JSON to structure
+#define _ODK_FUNCTION_SAMPLEREAD  ODK_RESULT SampleRead (/*OUT*/agent2plc& str_in, /*OUT*/ODK_BOOL& tRecv, /*OUT*/ODK_BOOL& tData, /*INOUT*/control_flags& flags)
 
 ODK_RESULT sendConf (
 );

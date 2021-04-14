@@ -1,4 +1,4 @@
-// INTERFACE ODK 1500S V2.5.1
+// INTERFACE ODK 1500S V2.0
 Context=user
 STEP7Prefix=ODK_AgentPLC_Real
 
@@ -25,9 +25,11 @@ STEP7Prefix=ODK_AgentPLC_Real
  *   ODK_LTOD        LTOD            64 bit time of day in nanoseconds since midnight
  *   ODK_TOD         TOD             32 bit time of day in milliseconds since midnight
  *   ODK_CHAR        CHAR            8 bit character
+ *   ODK_WCHAR       WCHAR           16 bit character
  * Complex Datatypes:
  *   ODK_DTL         DTL             structure for date and time
  *   ODK_S7STRING    STRING          character string with 8 bit characters
+ *   ODK_S7WSTRING   WSTRING         character string with 16 bit characters
  *   ODK_CLASSIC_DB  VARIANT         classic DB (global or based on UDT - "optimized block access" must be unchecked)
  *   []              ARRAY           field of this datatype
  * User Defined Datatype:
@@ -36,6 +38,7 @@ STEP7Prefix=ODK_AgentPLC_Real
  *   ODK_RESULT      0x0000...0x6FFF function succeeded (ODK_SUCCESS         = 0x0000)
  *                   0xF000...0xFFFF function failed    (ODK_USER_ERROR_BASE = 0xF000)
  */
+
 
 ODK_STRUCT control_flags
 {
@@ -69,6 +72,6 @@ ODK_STRUCT plc2agent
 };
 
 ODK_RESULT initAgent ();	//Agent Init
-ODK_RESULT SampleWrite ([IN] control_flags flags, [IN] plc2agent str_out);		//Sends the Agent message   
-ODK_RESULT SampleRead ( [OUT] agent2plc str_in,	[OUT] ODK_BOOL tRecv,	[OUT] ODK_BOOL tData, [INOUT] control_flags flags);	//Receive the Agent message and parses the JSON to structure
+ODK_RESULT SampleWrite ([IN] plc2agent str_out, [INOUT] control_flags flags);		//Sends the Agent message   
+ODK_RESULT SampleRead ([OUT] agent2plc str_in,	[OUT] ODK_BOOL tRecv,	[OUT] ODK_BOOL tData,  [INOUT] control_flags flags);	//Receive the Agent message and parses the JSON to structure
 ODK_RESULT sendConf ();	//sends a confirmation message to agent
