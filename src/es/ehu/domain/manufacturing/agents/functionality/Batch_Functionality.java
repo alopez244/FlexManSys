@@ -166,8 +166,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 }
 
                 if (actionList.size() == 0){ // cuando todas las acciones se han completado, se elimina el batch agent
-                    AID Agent = new AID(parentAgentID, false);
-                    sendACLMessage(7, Agent,"Information", "Shutdown", "Batch completed" );
                     return true; //Batch agent a terminado su funcion y pasa a STOP
                 }
             }
@@ -191,6 +189,9 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         } catch (Exception e) {
             e.printStackTrace();
         }
+        AID Agent = new AID(parentAgentID, false);
+        sendACLMessage(7, Agent,myAgent.getLocalName(), "Shutdown", "Batch completed" );
+
         try {
             myAgent.deregisterAgent(parentName);
         } catch (Exception e) {

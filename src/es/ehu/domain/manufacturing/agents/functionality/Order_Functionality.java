@@ -50,8 +50,8 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
         this.template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                 MessageTemplate.MatchOntology("Information")),MessageTemplate.MatchConversationId("ItemsInfo"));
-        this.template2 = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                MessageTemplate.MatchOntology("Information")),MessageTemplate.MatchConversationId("Shutdown"));
+        this.template2 = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                MessageTemplate.MatchConversationId("Shutdown"));
         this.myAgent = myAgent;
 
         // Crear un nuevo conversationID
@@ -141,10 +141,11 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         }
         ACLMessage msg2 = myAgent.receive(template2);
         if (msg2 != null) {
+            AID sender = msg2.getSender();
             if (msg2.getContent().equals("Batch completed")){
-                AID msgSender = msg.getSender();
+                String msgSender = msg2.getOntology();
                 for (int i = 0; i < sonAgentID.size(); i++) {
-                    if (sonAgentID.get(i).getName() == msgSender.getName()) {
+                    if (sonAgentID.get(i).getName().split("@")[0].equals(msgSender)) {
                         sonAgentID.remove(i);
                     }
                 }
@@ -158,7 +159,6 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 sendACLMessage(7, Agent, "Information", "OrderInfo", msgToMPLan);
 
                 if (sonAgentID.size() == 0) { // todos los batch agent de los que es padre ya le han enviado la informacion
-                    sendACLMessage(7, Agent, "Information", "Shutdown", "Order completed"); // Informa al Mplan Agent que ya ha finalizado su tarea
                     sendACLMessage(7, myAgent.getAID(), "Information", "Shutdown", "Shutdown"); // autoenvio de mensaje para asegurar que el agente de desregistre y se apague
                     return true;
                 }
@@ -173,6 +173,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
     public Void terminate(MWAgent myAgent) {
         this.myAgent = myAgent;
         String parentName = "";
+
         try {
             ACLMessage reply = sendCommand(myAgent, "get * reference=" + orderNumber, "parentAgentID");
             //returns the names of all the agents that are sons
@@ -182,6 +183,8 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             e.printStackTrace();
         }
         try {
+            AID Agent = new AID(parentAgentID, false);
+            sendACLMessage(7, Agent, myAgent.getLocalName(), "Shutdown", "Order completed"); // Informa al Mplan Agent que ya ha finalizado su tarea
             myAgent.deregisterAgent(parentName);
         } catch (Exception e) {
             e.printStackTrace();

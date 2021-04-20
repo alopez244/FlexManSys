@@ -557,12 +557,13 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                     sendingFlag = false;
                     machinePlanIndex = 0;
                 } else { // en caso contrario, se analizan las operaciones en cola para poder ser enviados
-                    System.out.println("El lote no se puede fabricar por falta de material");
+                    System.out.println("El lote " + BathcID + " no se puede fabricar por falta de material");
                     machinePlanIndex = (Integer) PLCmsgOut.get("Index");
                     if (machinePlanIndex <= myAgent.machinePlan.size() - 1) {
                         sendDataToPLC();
                     } else {
                         System.out.println("No es posible fabricar ninguna orden en cola por falta de material");
+                        machinePlanIndex = 0;
                         if (!matReqDone) {
                             //TODO Enviar mensaje al transporte
                             matReqDone = true;
@@ -577,7 +578,6 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
         }
     }
 
-
     private void sendMessage(String data, int performative, String agentName) {       //ACLMessage template for message sending to gateway agent
         ACLMessage msgToPLC = new ACLMessage(performative);
         AID gwAgent = new AID(agentName, false);
@@ -588,43 +588,4 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
         myAgent.send(msgToPLC);
     }
 
-    public ACLMessage sendCommand(Agent agent, String cmd, String conversationId) throws Exception {
-
-
-        DFAgentDescription dfd = new DFAgentDescription();
-        ServiceDescription sd = new ServiceDescription();
-
-        sd.setType("sa");
-        dfd.addServices(sd);
-        String mwm;
-
-        while (true) {
-            DFAgentDescription[] result = DFService.search(myAgent,dfd);
-
-            if ((result != null) && (result.length > 0)) {
-                dfd = result[0];
-                mwm = dfd.getName().getLocalName();
-                break;
-            }
-            LOGGER.info(".");
-            Thread.sleep(100);
-
-        } //end while (true)
-
-        LOGGER.entry(mwm, cmd);
-        ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-        msg.addReceiver(new AID(mwm, AID.ISLOCALNAME));
-        msg.setConversationId(conversationId);
-        msg.setOntology("control");
-        msg.setContent(cmd);
-        msg.setReplyWith(cmd);
-        myAgent.send(msg);
-        ACLMessage reply = myAgent.blockingReceive(
-                MessageTemplate.and(
-                        MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
-                        MessageTemplate.MatchPerformative(ACLMessage.INFORM))
-                , 1000);
-
-        return LOGGER.exit(reply);
-    }
 }

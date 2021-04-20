@@ -152,9 +152,9 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     ACLMessage msgEnd = myAgent.receive();
     if (msgEnd != null) {
       if (msgEnd.getContent().equals("Order completed")){
-        AID msgSender = msgEnd.getSender();
+        String msgSender = msgEnd.getOntology();
         for (int i = 0; i < sonAgentID.size(); i++) {
-          if (sonAgentID.get(i).getName() == msgSender.getName()) {
+          if (sonAgentID.get(i).getName().split("@")[0].equals(msgSender)) {
             sonAgentID.remove(i);
           }
         }
@@ -169,7 +169,6 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
           XMLWriter.writeFile(toXML, planNumber);//se introducen como entrada los datos a convertir y el identificador del MPlan
 
           AID Agent = new AID(parentAgentID, false);
-          sendACLMessage(7, Agent, "Information", "Shutdown", "Manufacturing Plan has been completed");
           sendACLMessage(7, myAgent.getAID(), "Information", "Shutdown", "Shutdown"); // autoenvio de mensaje para asegurar que el agente de desregistre y se apague
           return true;
         }
@@ -184,6 +183,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   public Void terminate(MWAgent myAgent) {
     this.myAgent = myAgent;
     String parentName = "";
+
     try {
       String planName = "MPlan" + planNumber;
       ACLMessage reply = sendCommand(myAgent, "get * name=" + planName, "parentAgentID");
@@ -194,6 +194,8 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
       e.printStackTrace();
     }
     try {
+      AID Agent = new AID(parentAgentID, false);
+      sendACLMessage(7, Agent, "Information", "Shutdown", "Manufacturing Plan has been completed");
       myAgent.deregisterAgent(parentName);
     } catch (Exception e) {
       e.printStackTrace();

@@ -18,14 +18,14 @@ public class ExternalJADEgw {
         System.out.println("->Java Agent Init");
 //        String host = "127.0.0.1";              //Local host IP)
         String host = "192.168.2.17";              // host of Alejandro PC
-        //String localHost = "192.168.2.3";              //Local host of PLC
+//        String localHost = "192.168.2.3";              //Local host of PLC
         String port = "1099";                   //Port on which the agent manager is running
 
         Properties pp = new Properties();
         pp.setProperty(Profile.MAIN_HOST, host);
-        //pp.setProperty(Profile.LOCAL_HOST, localHost);
+//        pp.setProperty(Profile.LOCAL_HOST, localHost);
         pp.setProperty(Profile.MAIN_PORT, port);
-        //pp.setProperty(Profile.LOCAL_PORT, port);
+        pp.setProperty(Profile.LOCAL_PORT, port);
 
         String containerName = "GatewayCont" + machineID;   // se define el nombre del contenedor donde se inicializara el agente
         pp.setProperty(Profile.CONTAINER_NAME, containerName);      //-->Name ControlGatewayContX
