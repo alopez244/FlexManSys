@@ -96,6 +96,8 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
         HashMap infoForTraceability = new HashMap();
 
+        System.out.println(input);
+
         System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
 
         System.out.println("Ahora el agente " + myAgent.getLocalName() + " se va a quedar a la espera de la informacion de las operaciones");
@@ -162,7 +164,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     }
                     System.out.println(msgToOrder);
                     AID Agent = new AID(parentAgentID, false);
-                    sendACLMessage(7, Agent,"Information", "ItemsInfo", msgToOrder );
+                    sendACLMessage(7, Agent,"Information", "ItemsInfo", msgToOrder, myAgent );
                 }
 
                 if (actionList.size() == 0){ // cuando todas las acciones se han completado, se elimina el batch agent
@@ -190,7 +192,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             e.printStackTrace();
         }
         AID Agent = new AID(parentAgentID, false);
-        sendACLMessage(7, Agent,myAgent.getLocalName(), "Shutdown", "Batch completed" );
+        sendACLMessage(7, Agent,myAgent.getLocalName(), "Shutdown", "Batch completed", myAgent );
 
         try {
             myAgent.deregisterAgent(parentName);

@@ -169,7 +169,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
           XMLWriter.writeFile(toXML, planNumber);//se introducen como entrada los datos a convertir y el identificador del MPlan
 
           AID Agent = new AID(parentAgentID, false);
-          sendACLMessage(7, myAgent.getAID(), "Information", "Shutdown", "Shutdown"); // autoenvio de mensaje para asegurar que el agente de desregistre y se apague
+          sendACLMessage(7, myAgent.getAID(), "Information", "Shutdown", "Shutdown", myAgent); // autoenvio de mensaje para asegurar que el agente de desregistre y se apague
           return true;
         }
         orderIndex = ordersTraceability.size() - 1; //se actualiza el valor para borrar en el nuevo rango
@@ -195,7 +195,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     }
     try {
       AID Agent = new AID(parentAgentID, false);
-      sendACLMessage(7, Agent, "Information", "Shutdown", "Manufacturing Plan has been completed");
+      sendACLMessage(7, Agent, "Information", "Shutdown", "Manufacturing Plan has been completed", myAgent);
       myAgent.deregisterAgent(parentName);
     } catch (Exception e) {
       e.printStackTrace();

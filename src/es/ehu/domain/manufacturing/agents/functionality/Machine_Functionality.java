@@ -50,8 +50,10 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
     private Integer machinePlanIndex = 0;
     private Boolean sendingFlag = false;
     private Boolean matReqDone = false;
+    private Boolean requestMaterial = false;
     private Boolean orderQueueFlag = false;
     private String gatewayAgentName;
+    private MessageTemplate template;
 
     /** Identifier of the agent. */
     private MachineAgent myAgent;
@@ -66,6 +68,9 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
      */
     @Override
     public Void init(MWAgent mwAgent) {
+
+        this.template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                MessageTemplate.MatchOntology("data")),MessageTemplate.MatchConversationId("ProvidedConsumables"));
 
         //First of all, the connection with the asset must be checked
 
@@ -221,7 +226,7 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
         //productInfo = getProductInfo(productID);
         //System.out.println("ID del producto asociado al agente " + myAgent.getLocalName() + ": " + productInfo.get(0).get(3).get(1) + " - " + productID);
 
-        sendOperationsInfoToBatches();
+//        sendOperationsInfoToBatches();
 
         return LOGGER.exit(null);
     }
@@ -431,6 +436,8 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
         ArrayList<String> actionList = new ArrayList<String>();
         ArrayList<String> consumableList = new ArrayList<String>();
         String  batchAgentName = "";
+        String neededMaterial = "";
+        Integer neededConsumable = 0;
         HashMap msgToBatch = new HashMap();
         ArrayList<String> replace = new ArrayList<String>( Arrays.asList("Id_Machine_Reference", "Id_Order_Reference", "Id_Batch_Reference", "Id_Ref_Subproduct_Type", "Id_Item_Number") );
 
@@ -483,13 +490,23 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                             myAgent.availableMaterial.get(j).put("current", Integer.toString(currentConsumables));
                             int warningConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("warning"));
                             if (currentConsumables <= warningConsumable && !matReqDone){
-                                //TODO Enviar mensaje al transporte
-                                //myAgent.availableMaterial.get(j).put("current", myAgent.availableMaterial.get(j).get("max"));
-                                matReqDone = true;
+                                neededConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("max")) - currentConsumables;
+                                neededMaterial = neededMaterial.concat(myAgent.availableMaterial.get(j).get("consumable_id") + ":" + Integer.toString(neededConsumable) + ";");
+                                requestMaterial = true;
+                            }
+                            if (i == consumableList.size()-1 && requestMaterial) {
+                                //Se envia la peticion de material al agente transporte
+                                AID transportAgent = new AID("transport1", false);
+                                sendACLMessage(16, transportAgent, "data", "material request", neededMaterial, myAgent);
+                                neededMaterial = "";
+                                matReqDone = true; // Flag que señala si la peticion de material se ha realizado
+                                requestMaterial = false;
                             }
                         }
                     }
                 }
+                System.out.println(myAgent.availableMaterial);
+
                 msgToBatch.remove("Id_Ref_Service_Type");   // when all actions are identified, the Ref_Service_Type data is unnecessary
                 msgToBatch.put("Id_Action_Type", actionList);   // Actions are added to the message
                 String MessageContent = new Gson().toJson(msgToBatch);  //creates the message to be send
@@ -521,6 +538,30 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
         }
 
     public void sendDataToPLC() {
+
+        ACLMessage msg = myAgent.receive(template);
+        if (msg != null) {
+            ArrayList<ArrayList<String>> newConsumables = new ArrayList<>();
+            newConsumables.add(new ArrayList<>()); newConsumables.add(new ArrayList<>());
+            String content = msg.getContent();
+            String [] contentSplited = content.split(";");
+            for (int i = 0; i < contentSplited.length ; i++) {
+                newConsumables.get(0).add(contentSplited[i].split(":")[0]);
+                newConsumables.get(1).add(contentSplited[i].split(":")[1]);
+            }
+            for (int i = 0; i < newConsumables.get(0).size(); i++){
+                for (int j = 0; j < myAgent.availableMaterial.size(); j++){
+                    if (newConsumables.get(0).get(i).equals(myAgent.availableMaterial.get(j).get("consumable_id"))) {
+                        Integer currentConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("current"));
+                        Integer addedconsumable = Integer.parseInt(newConsumables.get(1).get(i));
+                        myAgent.availableMaterial.get(j).put("current", Integer.toString(currentConsumable + addedconsumable));
+                    }
+                }
+            }
+            matReqDone = false;
+        }
+
+        System.out.println(myAgent.availableMaterial);
 
         if(sendingFlag == true) {     //It is checked if the method is correctly activated and that orders do not overlap
             ArrayList<String> consumableList = new ArrayList<String>();
@@ -565,7 +606,15 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                         System.out.println("No es posible fabricar ninguna orden en cola por falta de material");
                         machinePlanIndex = 0;
                         if (!matReqDone) {
-                            //TODO Enviar mensaje al transporte
+                            String neededMaterial = "";
+                            Integer neededConsumable = 0;
+                            for (int j = 0; j < myAgent.availableMaterial.size(); j++){
+                                int currentConsumables = Integer.parseInt(myAgent.availableMaterial.get(j).get("current"));
+                                neededConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("max")) - currentConsumables;
+                                neededMaterial = neededMaterial.concat(myAgent.availableMaterial.get(j).get("consumable_id") + ":" + Integer.toString(neededConsumable) + ";");
+                            }
+                            AID transportAgent = new AID("transport1", false);
+                            sendACLMessage(16, transportAgent, "data", "material request", neededMaterial, myAgent);
                             matReqDone = true;
                         }
                     }
