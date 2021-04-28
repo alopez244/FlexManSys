@@ -2,6 +2,7 @@ package es.ehu.domain.manufacturing.behaviour;
 
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.template.interfaces.AssetManagement;
+import es.ehu.platform.template.interfaces.Traceability;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -18,6 +19,7 @@ public class ReceiveTaskBehaviour extends SimpleBehaviour {
     private MessageTemplate template;
     private MWAgent myAgent;
     private AssetManagement aAssetManagement;
+    private Traceability traceability;
 
     public ReceiveTaskBehaviour(MWAgent a) {
         super(a);
@@ -31,12 +33,13 @@ public class ReceiveTaskBehaviour extends SimpleBehaviour {
     @Override
     public void action() {
         LOGGER.entry();
+
+        aAssetManagement.sendDataToDevice();
+
         ACLMessage msg = myAgent.receive(template); // If ACL Message template matches, rcvDataFromPLC and recvBatchInfo methods are called
         if (msg != null) {
-            System.out.println("-->Received message: " + msg.getContent());
 
-            this.aAssetManagement.rcvDataFromPLC(msg);  // processes the information of the received message and updates the machine plan
-            this.aAssetManagement.recvBatchInfo(msg);   // sends item information to batch agent
+            this.aAssetManagement.rcvDataFromDevice(msg);  // processes the information of the received message and updates the machine plan
 
         } else {
             block();

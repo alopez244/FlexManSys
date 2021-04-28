@@ -15,6 +15,6 @@ public interface NegFunctionality extends Serializable{
 	// tieBreaker - criterio de desempate
 	// checkReplies - true si han competido todos
 	
-	public int checkNegotiation(String negId, String winnerAction, double negReceivedValue, long negScalarValue, boolean tieBreaker, boolean checkReplies, Object... negExternalData);
+	public int checkNegotiation(String conversationId, String sAction, double negReceivedValue, long negScalarValue, boolean tieBreak, boolean checkReplies, Object... negExternalData);
 
 }

@@ -10,6 +10,7 @@ import es.ehu.platform.behaviour.NegotiatingBehaviour;
 import es.ehu.platform.template.interfaces.AssetManagement;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.NegFunctionality;
+import es.ehu.platform.template.interfaces.Traceability;
 import es.ehu.platform.utilities.Cmd;
 import es.ehu.platform.utilities.XMLReader;
 import jade.core.AID;
@@ -36,7 +37,7 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.*;
 
-public class Machine_Functionality extends DomApp_Functionality implements BasicFunctionality, NegFunctionality, AssetManagement {
+public class Machine_Functionality extends DomApp_Functionality implements BasicFunctionality, NegFunctionality, AssetManagement, Traceability {
 
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
@@ -384,7 +385,7 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
         return NegotiatingBehaviour.NEG_WON;
     }
 
-    public void rcvDataFromPLC(ACLMessage msg) {
+    public void rcvDataFromDevice(ACLMessage msg) {
 
         this.PLCmsgIn = new Gson().fromJson(msg.getContent(), HashMap.class);   //Data type conversion Json->Hashmap class
         if(PLCmsgIn.containsKey("Received")){   //Checks if it is a confirmation message
@@ -394,6 +395,7 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                 System.out.println("<--Problem receiving the message");
             }
         }else{
+            recvBatchInfo(msg);   // sends item information to batch agent
             if(PLCmsgIn.containsKey("Control_Flag_Service_Completed")) {    //At least the first field is checked
                 if (PLCmsgIn.get("Control_Flag_Service_Completed").equals(true)) {  //If service has been completed, the operation is deleted from machine plan variable
 
@@ -433,6 +435,7 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
     public void recvBatchInfo(ACLMessage msg) {
 
         ACLMessage reply = null;
+        String targets = "";
         ArrayList<String> actionList = new ArrayList<String>();
         ArrayList<String> consumableList = new ArrayList<String>();
         String  batchAgentName = "";
@@ -495,9 +498,20 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                                 requestMaterial = true;
                             }
                             if (i == consumableList.size()-1 && requestMaterial) {
-                                //Se envia la peticion de material al agente transporte
-                                AID transportAgent = new AID("transport1", false);
-                                sendACLMessage(16, transportAgent, "data", "material request", neededMaterial, myAgent);
+
+                                try {
+                                    ACLMessage reply2 = sendCommand(myAgent, "get * category=transport", "TransportAgentID");
+                                    if (reply2 != null) {   // If the id does not exist, it returns error
+                                        targets = reply2.getContent();
+                                    }
+                                    String negotiationQuery = "localneg " + targets + " criterion=position action=" +
+                                            "supplyConsumables externaldata=" + neededMaterial + "," + myAgent.getLocalName();
+                                    ACLMessage result = sendCommand(myAgent, negotiationQuery, "TransportAgentNeg");
+
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+
                                 neededMaterial = "";
                                 matReqDone = true; // Flag que señala si la peticion de material se ha realizado
                                 requestMaterial = false;
@@ -537,7 +551,9 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
             }
         }
 
-    public void sendDataToPLC() {
+    public void sendDataToDevice() {
+
+        String targets = "";
 
         ACLMessage msg = myAgent.receive(template);
         if (msg != null) {
@@ -601,7 +617,7 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                     System.out.println("El lote " + BathcID + " no se puede fabricar por falta de material");
                     machinePlanIndex = (Integer) PLCmsgOut.get("Index");
                     if (machinePlanIndex <= myAgent.machinePlan.size() - 1) {
-                        sendDataToPLC();
+                        sendDataToDevice();
                     } else {
                         System.out.println("No es posible fabricar ninguna orden en cola por falta de material");
                         machinePlanIndex = 0;
@@ -613,8 +629,21 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                                 neededConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("max")) - currentConsumables;
                                 neededMaterial = neededMaterial.concat(myAgent.availableMaterial.get(j).get("consumable_id") + ":" + Integer.toString(neededConsumable) + ";");
                             }
-                            AID transportAgent = new AID("transport1", false);
-                            sendACLMessage(16, transportAgent, "data", "material request", neededMaterial, myAgent);
+
+                            //Peticion negociacion entre los agentes transporte disponibles
+                            try {
+                                ACLMessage reply2 = sendCommand(myAgent, "get * category=transport", "TransportAgentID");
+                                if (reply2 != null) {   // If the id does not exist, it returns error
+                                    targets = reply2.getContent();
+                                }
+                                String negotiationQuery = "localneg " + targets + " criterion=position action=" +
+                                        "supplyConsumables externaldata=" + neededMaterial + "," + myAgent.getLocalName();
+                                ACLMessage result = sendCommand(myAgent, negotiationQuery, "TransportAgentNeg");
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
                             matReqDone = true;
                         }
                     }

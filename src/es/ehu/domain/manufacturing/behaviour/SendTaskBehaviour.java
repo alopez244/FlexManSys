@@ -30,7 +30,6 @@ public class SendTaskBehaviour extends SimpleBehaviour {
     public void action() {
         LOGGER.entry();
 
-            aAssetManagement.sendDataToPLC();
             block();
 
         LOGGER.exit();
