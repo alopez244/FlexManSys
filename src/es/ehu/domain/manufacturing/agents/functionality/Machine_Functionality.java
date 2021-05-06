@@ -3,6 +3,7 @@ package es.ehu.domain.manufacturing.agents.functionality;
 import com.google.gson.Gson;
 import es.ehu.SystemModelAgent;
 import es.ehu.domain.manufacturing.agents.MachineAgent;
+import es.ehu.domain.manufacturing.behaviour.ReceiveTaskBehaviour;
 import es.ehu.domain.manufacturing.behaviour.SendTaskBehaviour;
 import es.ehu.domain.manufacturing.utilities.Position;
 import es.ehu.platform.MWAgent;
@@ -423,7 +424,7 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                         orderQueueFlag = false;
                     } else{
                         sendingFlag = true; //if there is any operation left, send behavior is called
-                        SimpleBehaviour sendingBehaviour = new SendTaskBehaviour(myAgent);
+                        SimpleBehaviour sendingBehaviour = new ReceiveTaskBehaviour(myAgent);
                         sendingBehaviour.action();
                     }
                 }
@@ -576,8 +577,6 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
             }
             matReqDone = false;
         }
-
-        System.out.println(myAgent.availableMaterial);
 
         if(sendingFlag == true) {     //It is checked if the method is correctly activated and that orders do not overlap
             ArrayList<String> consumableList = new ArrayList<String>();

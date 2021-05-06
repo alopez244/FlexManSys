@@ -15,6 +15,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.util.*;
 
 import java.util.ArrayList;
@@ -160,11 +161,12 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
         //TODO Dar funcionalidad a los datos guardados en consumables (material que se ha pedido al transporte)
 
         //Peticion de entrada provisional para simular que el transporte entrega el material pedido
-        Scanner reader = new Scanner(System.in);
-        int caracter;
-        System.out.println("Introduzca cualquier numero cuando desee simular que el transporte ha entregado los nuevos consumibles");
-        caracter = reader.nextInt();
-
+        System.out.println("Pulse intro cuando desee simular que el transporte ha entregado los nuevos consumibles");
+        try {
+            System.in.read();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         String providedConsumables = "";
         for (int i = 0; i < consumables.get(0).size(); i++) {
             providedConsumables = providedConsumables.concat(consumables.get(0).get(i) + ":" + consumables.get(1).get(i) + ";");
