@@ -288,7 +288,7 @@ void publishData(char* TOPIC, char* payload) {
 ODK_RESULT initAgent() {
 	static bool uniqueStart = false;	//Variable to avoid multiple initializations
 	std::ofstream debugFile;
-	debugFile.open("C:\\Users\\Operator2\\Documents\\debugFile.txt", std::ios_base::app);
+	debugFile.open("C:\\Users\\Operator\\Documents\\debugFile.txt", std::ios_base::app);
 	if (!uniqueStart) {				//It only happens on the first run
 		uniqueStart = true;			//Update the flag to prevent it from being run again
 		if (!JNIinit())	return ODK_USER_ERROR_BASE;
@@ -306,7 +306,7 @@ ODK_RESULT initAgent() {
 //Parses a String in JSON format and leave its data in a structure
 ODK_RESULT SampleRead(/*OUT*/agent2plc& str_in,	/*OUT*/ODK_BOOL& tRecv, /*OUT*/ODK_BOOL& tData, /*INOUT*/control_flags& flags) {
 	std::ofstream debugFile;
-	debugFile.open("C:\\Users\\Operator2\\Documents\\debugFile.txt", std::ios_base::app);
+	debugFile.open("C:\\Users\\Operator\\Documents\\debugFile.txt", std::ios_base::app);
 
 	char msgInCa[254] = { 0 };		//An array is created to reserve that memory
 	const char* msgInC = msgInCa;	//Pointer to array of characters is created
@@ -332,6 +332,8 @@ ODK_RESULT SampleRead(/*OUT*/agent2plc& str_in,	/*OUT*/ODK_BOOL& tRecv, /*OUT*/O
 		tData = true;
 		//The received parameters are copied to the output structure		
 		flags.Control_Flag_New_Service = j["Control_Flag_New_Service"].get<bool>();
+		flags.Control_Flag_Item_Completed = false;
+		flags.Control_Flag_Service_Completed = false;
 		str_in.Id_Machine_Reference = j["Id_Machine_Reference"].get<int>();
 		str_in.Id_Order_Reference = j["Id_Order_Reference"].get<int>();
 		str_in.Id_Batch_Reference = j["Id_Batch_Reference"].get<int>();
@@ -432,7 +434,7 @@ bool JNIinit(void) {
 
 	JavaVMOption options[1];
 	JavaVMInitArgs vm_args;
-	options[0].optionString = "-Djava.class.path=C:\\Users\\Operator2\\Documents\\FlexManSys\\classes;C:\\Users\\Operator2\\Documents\\java\\libraries\\jade\\lib\\jade.jar;C:\\Users\\Operator2\\Documents\\java\\libraries\\gson\\gson-2.8.6.jar;C:\\Users\\Operator2\\Documents\\java\\libraries\\commons collections\\commons-collections4-4.4.jar";
+	options[0].optionString = "-Djava.class.path=C:\\Users\\Operator\\Documents\\FlexManSys\\classes;C:\\Users\\Operator2\\Documents\\java\\libraries\\jade\\lib\\jade.jar;C:\\Users\\Operator\\Documents\\java\\libraries\\gson\\gson-2.8.6.jar;C:\\Users\\Operator\\Documents\\java\\libraries\\commons collections\\commons-collections4-4.4.jar";
 	memset(&vm_args, 0, sizeof(vm_args));
 	vm_args.version = JNI_VERSION_1_6;
 	vm_args.nOptions = 1;

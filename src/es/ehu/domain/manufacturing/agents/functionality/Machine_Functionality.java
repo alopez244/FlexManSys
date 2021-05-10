@@ -224,113 +224,12 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
             }
         }
 
-        // Conseguimos toda la informacion del producto utilizando su ID
-        //productInfo = getProductInfo(productID);
-        //System.out.println("ID del producto asociado al agente " + myAgent.getLocalName() + ": " + productInfo.get(0).get(3).get(1) + " - " + productID);
-
-//        sendOperationsInfoToBatches();
-
         return LOGGER.exit(null);
     }
 
     @Override
     public Void terminate(MWAgent myAgent) { return null;}
 
-    private void sendOperationsInfoToBatches() {
-        if (!operationsWithBatchAgents.isEmpty()) {
-
-            //String operation = (String) input[0];
-            //String agentID = (String) input[1];
-            Map.Entry<String, String> data = operationsWithBatchAgents.entrySet().iterator().next();
-            String operation = data.getKey();
-            String agentID = data.getValue();
-
-            System.out.println("I have the operation: " + operation
-                    + " and the batchAgent: " + agentID);
-
-            PLCInformation info = new PLCInformation(true, "batch1", 1, 3, LocalDateTime.now(), LocalDateTime.of(2020, Month.NOVEMBER, 04, 11, 30), false);
-
-            String plcInfoString = info.toString();
-            System.out.println("Informacion del PLC--> " + plcInfoString);
-
-            System.out.println("El agente recurso " + myAgent.getLocalName() + " le va a enviar la informacion de la operacion "
-                    + operation + " al agente " + agentID);
-
-            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-            msg.addReceiver(new AID(agentID, AID.ISLOCALNAME));
-            if (!operation.equals("C_01")) {
-                //msg.setConversationId("PLC information about operations");
-                msg.setConversationId(operation + " " + Math.random());
-                msg.setContent(operation + " operation INFO--> " + plcInfoString);
-            } else {
-                msg.setConversationId("Hola");
-                msg.setContent("Ahora va o no");
-            }
-            myAgent.send(msg);
-
-            operationsWithBatchAgents.remove(operation);
-        }
-    }
-
-    private class PLCInformation  {
-
-        private boolean flagItemCompleted;
-        private String batchReference;
-        private int refSubproductType;
-        private int itemNumber;
-        private LocalDateTime initialTimeStamp;
-        private LocalDateTime finalTimeStamp;
-        private boolean flagServiceCompleted;
-
-        public PLCInformation(boolean flagItemCompleted, String batchReference, int refSubproductType, int itemNumber, LocalDateTime initialTimeStamp, LocalDateTime finalTimeStamp, boolean flagServiceCompleted) {
-            this.flagItemCompleted = flagItemCompleted;
-            this.batchReference = batchReference;
-            this.refSubproductType = refSubproductType;
-            this.itemNumber = itemNumber;
-            this.initialTimeStamp = initialTimeStamp;
-            this.finalTimeStamp = finalTimeStamp;
-            this.flagServiceCompleted = flagServiceCompleted;
-        }
-
-        public boolean isFlagItemCompleted() {
-            return flagItemCompleted;
-        }
-
-        public String getBatchReference() {
-            return batchReference;
-        }
-
-        public int getRefSubproductType() {
-            return refSubproductType;
-        }
-
-        public int getItemNumber() {
-            return itemNumber;
-        }
-
-        public LocalDateTime getInitialTimeStamp() {
-            return initialTimeStamp;
-        }
-
-        public LocalDateTime getFinalTimeStamp() {
-            return finalTimeStamp;
-        }
-
-        public boolean isFlagServiceCompleted() {
-            return flagServiceCompleted;
-        }
-
-        @Override
-        public String toString() {
-            return "flagItemCompleted=" + flagItemCompleted +
-                    ", batchReference=" + batchReference +
-                    ", refSubproductType=" + refSubproductType +
-                    ", itemNumber=" + itemNumber +
-                    ", initialTimeStamp=" + initialTimeStamp +
-                    ", finalTimeStamp=" + finalTimeStamp +
-                    ", flagServiceCompleted=" + flagServiceCompleted;
-        }
-    }
 
     @Override
     public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData) {
@@ -443,6 +342,8 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
         String neededMaterial = "";
         Integer neededConsumable = 0;
         HashMap msgToBatch = new HashMap();
+
+        // Se crea el array list con las keys que se necesitaran para eliminar el .0 de los datos que se pasen de a tipo string
         ArrayList<String> replace = new ArrayList<String>( Arrays.asList("Id_Machine_Reference", "Id_Order_Reference", "Id_Batch_Reference", "Id_Ref_Subproduct_Type", "Id_Item_Number") );
 
         msgToBatch = new Gson().fromJson(msg.getContent(), HashMap.class);  //Data type conversion Json->Hashmap class
@@ -470,6 +371,7 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                 String ServiceType = String.valueOf(msgToBatch.get("Id_Ref_Service_Type"));
                 ServiceType = ServiceType.split("\\.")[0];
 
+                //Bucle for para identificar las acciones que se han completado conociendo Ref_Service_Type
                 for (int j = 0; j < myAgent.resourceModel.size(); j++) {  // Knowing Ref_Service_Type, identification of the actions of each item
                     if (myAgent.resourceModel.get(j).get(0).get(0).equals("simple_operation")) {
                         if (myAgent.resourceModel.get(j).get(3).get(1).equals(ServiceType)) {
@@ -490,7 +392,7 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                     for (int j = 0; j < myAgent.availableMaterial.size(); j++){
                         if (myAgent.availableMaterial.get(j).get("consumable_id").equals(consumableList.get(i))){
                             int currentConsumables = Integer.parseInt(myAgent.availableMaterial.get(j).get("current"));
-                            currentConsumables--;
+                            currentConsumables--; //una vez identificado el nombre del consumible deseado, se descuenta
                             myAgent.availableMaterial.get(j).put("current", Integer.toString(currentConsumables));
                             int warningConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("warning"));
                             if (currentConsumables <= warningConsumable && !matReqDone){
@@ -498,8 +400,10 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                                 neededMaterial = neededMaterial.concat(myAgent.availableMaterial.get(j).get("consumable_id") + ":" + Integer.toString(neededConsumable) + ";");
                                 requestMaterial = true;
                             }
-                            if (i == consumableList.size()-1 && requestMaterial) {
 
+                            // Se inicia el proceso de peticion siempre y cuando el flag requestMaterial este activado y se haya comprobado el estado de los cuatro tipos de consumibles
+                            if (i == consumableList.size()-1 && requestMaterial) {
+                                //Se lanza la negociacion para decidir cual sera el transporte que reponga el material
                                 try {
                                     ACLMessage reply2 = sendCommand(myAgent, "get * category=transport", "TransportAgentID");
                                     if (reply2 != null) {   // If the id does not exist, it returns error
@@ -555,7 +459,7 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
     public void sendDataToDevice() {
 
         String targets = "";
-
+        // Se reciven los mensajes ACL que corresponden al material que se ha repuesto
         ACLMessage msg = myAgent.receive(template);
         if (msg != null) {
             ArrayList<ArrayList<String>> newConsumables = new ArrayList<>();

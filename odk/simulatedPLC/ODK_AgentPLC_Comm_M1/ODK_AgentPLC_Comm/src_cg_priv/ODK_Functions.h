@@ -3,7 +3,7 @@
  * This file contains the function prototypes of ODK 1500S.
  *
  * File created by ODK_CodeGenerator version 205.100.101.18
- * at Wed April 14 11:45:12 2021 
+ * at Fri May 7 18:00:48 2021 
 */
 
 #if !defined ODK_Functions_H

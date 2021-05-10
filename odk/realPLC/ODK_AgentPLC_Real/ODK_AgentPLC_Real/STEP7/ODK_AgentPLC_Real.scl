@@ -3,7 +3,7 @@ FUNCTION_BLOCK "ODK_AgentPLC_Real_Load"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 200.0.3002.1
-//at mié abril 14 10:10:23 2021
+//at lun mayo 10 16:20:45 2021
 //********************************************************
   VAR_INPUT 
     REQ : Bool;
@@ -49,7 +49,7 @@ FUNCTION_BLOCK "ODK_AgentPLC_Real_Unload"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 200.0.3002.1
-//at mié abril 14 10:10:23 2021
+//at lun mayo 10 16:20:45 2021
 //********************************************************
   VAR_INPUT 
     REQ : Bool;
@@ -92,7 +92,7 @@ TYPE "ODK_AgentPLC_Realcontrol_flags"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 200.0.3002.1
-//at mié abril 14 10:10:23 2021
+//at lun mayo 10 16:20:45 2021
 //********************************************************
   STRUCT
     "Control_Flag_New_Service" : BOOL;
@@ -105,7 +105,7 @@ TYPE "ODK_AgentPLC_Realagent2plc"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 200.0.3002.1
-//at mié abril 14 10:10:23 2021
+//at lun mayo 10 16:20:45 2021
 //********************************************************
   STRUCT
     "Id_Machine_Reference" : UDINT;
@@ -121,7 +121,7 @@ TYPE "ODK_AgentPLC_Realplc2agent"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 200.0.3002.1
-//at mié abril 14 10:10:23 2021
+//at lun mayo 10 16:20:45 2021
 //********************************************************
   STRUCT
     "Id_Machine_Reference" : UDINT;
@@ -141,7 +141,7 @@ FUNCTION_BLOCK "ODK_AgentPLC_RealinitAgent"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 200.0.3002.1
-//at mié abril 14 10:10:23 2021
+//at lun mayo 10 16:20:45 2021
 //********************************************************
   VAR_INPUT
     REQ : Bool;
@@ -201,7 +201,7 @@ FUNCTION_BLOCK "ODK_AgentPLC_RealSampleWrite"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 200.0.3002.1
-//at mié abril 14 10:10:23 2021
+//at lun mayo 10 16:20:45 2021
 //********************************************************
 //Agent Init
   VAR_INPUT
@@ -309,7 +309,7 @@ FUNCTION_BLOCK "ODK_AgentPLC_RealSampleRead"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 200.0.3002.1
-//at mié abril 14 10:10:23 2021
+//at lun mayo 10 16:20:45 2021
 //********************************************************
   VAR_INPUT
     REQ : Bool;
@@ -419,7 +419,7 @@ FUNCTION_BLOCK "ODK_AgentPLC_RealsendConf"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 200.0.3002.1
-//at mié abril 14 10:10:23 2021
+//at lun mayo 10 16:20:45 2021
 //********************************************************
   VAR_INPUT
     REQ : Bool;

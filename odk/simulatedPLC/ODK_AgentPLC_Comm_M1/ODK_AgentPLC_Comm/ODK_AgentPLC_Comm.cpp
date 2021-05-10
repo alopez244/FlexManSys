@@ -276,6 +276,8 @@ ODK_RESULT SampleRead(/*OUT*/agent2plc& str_in,	/*OUT*/ODK_BOOL& tRecv, /*OUT*/O
 		tData = true;
 		//The received parameters are copied to the output structure		
 		flags.Control_Flag_New_Service = j["Control_Flag_New_Service"].get<bool>();
+		flags.Control_Flag_Item_Completed = false;
+		flags.Control_Flag_Service_Completed = false;
 		str_in.Id_Machine_Reference = j["Id_Machine_Reference"].get<int>();
 		str_in.Id_Order_Reference = j["Id_Order_Reference"].get<int>();
 		str_in.Id_Batch_Reference = j["Id_Batch_Reference"].get<int>();
