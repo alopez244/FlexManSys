@@ -122,7 +122,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             if (firstTime) {
                 deserializedMessage = deserializeMsg(msg.getContent());
                 batchTraceability = addNewLevel(batchTraceability, deserializedMessage, true); //añade el espacio para la informacion de la orden en primera posicion, sumando un nivel mas a los datos anteriores
-                batchTraceability.get(0).get(0).get(0).add("OrderLevel"); // en ese espacio creado, se añade la informacion
+                batchTraceability.get(0).get(0).get(0).add("OrderLevel"); // en ese espacio creado, se añade la informacion del order
                 batchTraceability.get(0).get(0).get(2).add("orderReference");
                 String batchNumber = batchTraceability.get(1).get(0).get(3).get(0);
                 orderNumber = batchNumber.substring(0,2);
@@ -140,6 +140,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             newBatch = false; // hasta que el batch añadido no se complete, cada vez que se reciba un mensaje el dato se sobrescribira
         }
         ACLMessage msg2 = myAgent.receive(template2);
+        // Recepcion de mensajes para eliminar de la lista de agentes hijo los agentes batch que ya han enviado toda la informacion
         if (msg2 != null) {
             AID sender = msg2.getSender();
             if (msg2.getContent().equals("Batch completed")){

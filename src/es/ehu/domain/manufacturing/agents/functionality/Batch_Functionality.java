@@ -113,6 +113,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
                 infoForTraceability = new Gson().fromJson(msg.getContent(), HashMap.class);  //Data type conversion Json->Hashmap class
                 // Se extraen los datos necesarios del mensaje recibido
+                // Cada mensaje contiene informacion del item fabricado
                 String itemNumber = String.valueOf(infoForTraceability.get("Id_Item_Number"));
                 batchNumber = String.valueOf(infoForTraceability.get("Id_Batch_Reference"));
                 String idItem = batchNumber + itemNumber; //Se compone el ID del item. Ejemplo -> batchNumber = 121 + itemNumber = 2 -> itemID = 1212
@@ -150,7 +151,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                         ArrayList<ArrayList<ArrayList<ArrayList<String>>>> traceability = new ArrayList<>();
                         productsTraceability = addNewLevel(traceability, productsTraceability, true); //añade el espacio para la informacion del lote en primera posicion, sumando un nivel mas a los datos anteriores
 
-                        productsTraceability.get(0).get(0).get(0).add("BatchLevel"); // en ese espacio creado, se añade la informacion
+                        productsTraceability.get(0).get(0).get(0).add("BatchLevel"); // en ese espacio creado, se añade la informacion del lote
                         productsTraceability.get(0).get(0).get(2).add("batchReference");
                         productsTraceability.get(0).get(0).get(2).add("Data_Service_Time_Stamp");
                         productsTraceability.get(0).get(0).get(3).add(batchNumber);

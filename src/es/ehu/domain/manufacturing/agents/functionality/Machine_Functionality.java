@@ -459,17 +459,18 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
     public void sendDataToDevice() {
 
         String targets = "";
-        // Se reciven los mensajes ACL que corresponden al material que se ha repuesto
+        // Se reciben los mensajes ACL que corresponden al material que se ha repuesto
         ACLMessage msg = myAgent.receive(template);
         if (msg != null) {
             ArrayList<ArrayList<String>> newConsumables = new ArrayList<>();
             newConsumables.add(new ArrayList<>()); newConsumables.add(new ArrayList<>());
             String content = msg.getContent();
             String [] contentSplited = content.split(";");
-            for (int i = 0; i < contentSplited.length ; i++) {
+            for (int i = 0; i < contentSplited.length ; i++) {  //Se deserializa el mensaje y se guardan los datos en un arraylist
                 newConsumables.get(0).add(contentSplited[i].split(":")[0]);
                 newConsumables.get(1).add(contentSplited[i].split(":")[1]);
             }
+            // bucle para sumar los nuevos consumibles en el contador de material
             for (int i = 0; i < newConsumables.get(0).size(); i++){
                 for (int j = 0; j < myAgent.availableMaterial.size(); j++){
                     if (newConsumables.get(0).get(i).equals(myAgent.availableMaterial.get(j).get("consumable_id"))) {
@@ -479,7 +480,7 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                     }
                 }
             }
-            matReqDone = false;
+            matReqDone = false; // Una vez repuesto el material se resetea el flag
         }
 
         if(sendingFlag == true) {     //It is checked if the method is correctly activated and that orders do not overlap
@@ -505,7 +506,7 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                 for (int i = 0; i < myAgent.availableMaterial.size(); i++) {
                     if (consumableList.contains(myAgent.availableMaterial.get(i).get("consumable_id"))) {
                         if (Integer.parseInt(myAgent.availableMaterial.get(i).get("current")) < NumOfItems) {
-                            consumableShortage = true;
+                            consumableShortage = true; // No hay material suficiente, por lo que se activa el flag para hacer una petición de material y añalizar operaciones en cola
                         }
                     }
                 }
@@ -524,10 +525,10 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                     } else {
                         System.out.println("No es posible fabricar ninguna orden en cola por falta de material");
                         machinePlanIndex = 0;
-                        if (!matReqDone) {
+                        if (!matReqDone) { // Si aun no se ha hecho la petición de material se procede a hacerlo
                             String neededMaterial = "";
                             Integer neededConsumable = 0;
-                            for (int j = 0; j < myAgent.availableMaterial.size(); j++){
+                            for (int j = 0; j < myAgent.availableMaterial.size(); j++){ // Cálculo del material necesario para llenar el alimentador de piezas al maximo
                                 int currentConsumables = Integer.parseInt(myAgent.availableMaterial.get(j).get("current"));
                                 neededConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("max")) - currentConsumables;
                                 neededMaterial = neededMaterial.concat(myAgent.availableMaterial.get(j).get("consumable_id") + ":" + Integer.toString(neededConsumable) + ";");

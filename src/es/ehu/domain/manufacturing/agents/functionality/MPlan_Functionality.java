@@ -150,6 +150,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     }
 
     ACLMessage msgEnd = myAgent.receive();
+    // Recepcion de mensajes para eliminar de la lista de agentes hijo los agentes order que ya han enviado toda la informacion
     if (msgEnd != null) {
       if (msgEnd.getContent().equals("Order completed")){
         String msgSender = msgEnd.getOntology();

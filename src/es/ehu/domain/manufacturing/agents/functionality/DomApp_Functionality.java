@@ -536,19 +536,19 @@ public class DomApp_Functionality {
 
                         ItemContFlag = false;
                     }
-
-                    if (!itemNumbers.contains(auxiliar2.get(5)) && auxiliar2.get(4).equals(BathcID)) { //if item number already exists, it is not added
+                    // Se comprueba que el id del item no este registrado. En este caso, se añade el id a la lista y se activa el flag newItem para que sea contado
+                    if (!itemNumbers.contains(auxiliar2.get(5)) && auxiliar2.get(4).equals(BathcID)) {
                         itemNumbers.add(auxiliar2.get(5));
                         newItem = true;     //the item is counted
                     }
-
+                    //Si newItem esta a true y el batch ID concuerda con el esperado se incrementa el contador de piezas
                     if (ItemContFlag == false && auxiliar2.get(4).equals(BathcID) && newItem == true) { //counts all the items with the same batch number
                         NumOfItems++;
                         newItem = false;
                     }
-
+                    // Si se llega a una pieza que ya no pertene al lote que se esta contabilizando, se sale del bucle
                     if (!itemNumbers.contains(auxiliar2.get(5)) && !auxiliar2.get(4).equals(BathcID)) {
-                        index = j;
+                        index = j; // Se guarda el indice para seguir contando desde ese punto en la siguiente llamada a la funcion
                         breakFlag = true;
                         break;
                     }
