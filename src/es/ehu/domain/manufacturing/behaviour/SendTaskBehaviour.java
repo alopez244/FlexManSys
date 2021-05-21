@@ -12,6 +12,8 @@ import org.apache.logging.log4j.Logger;
 
 public class SendTaskBehaviour extends SimpleBehaviour {
 
+    // TODO ESTE COMPORTAMIENTO NO SE UTILIZA PARA NADA. SE PUEDE ELIMINAR.
+
     static final Logger LOGGER = LogManager.getLogger(SendTaskBehaviour.class.getName());
 
     private MessageTemplate template;

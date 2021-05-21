@@ -38,23 +38,23 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.*;
 
-public class Machine_Functionality extends DomApp_Functionality implements BasicFunctionality, NegFunctionality, AssetManagement, Traceability {
+public class Machine_Functionality extends DomRes_Functionality implements BasicFunctionality, NegFunctionality, AssetManagement, Traceability {
 
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
 
     private ArrayList<ArrayList<String>> productInfo;
     private HashMap<String, String> operationsWithBatchAgents = new HashMap<>();
-    private HashMap PLCmsgIn = new HashMap();
-    private HashMap PLCmsgOut = new HashMap();
-    private String BathcID = "";
-    private Integer NumOfItems = 0;
-    private Integer machinePlanIndex = 0;
-    private Boolean sendingFlag = false;
-    private Boolean matReqDone = false;
-    private Boolean requestMaterial = false;
-    private Boolean orderQueueFlag = false;
-    private String gatewayAgentName;
+    private HashMap PLCmsgIn = new HashMap(); // Estructura de datos que se envia al PLC
+    private HashMap PLCmsgOut = new HashMap(); // Estructura de datos que se recibe del PLC
+    private String BathcID = ""; // Variable que guarda el identificador del lote que se esta fabricando
+    private Integer NumOfItems = 0; // Representa el numero de intems que se estan fabricando (todos perteneciente al mismo lote)
+    private Integer machinePlanIndex = 0; // Indice dentro de la estructura de datos "MachinePlan" hasta donde se ha analizado
+    private Boolean sendingFlag = false; // Flag que se activa solo cuando la maquina este preparado para recibir una nueva orden
+    private Boolean matReqDone = false; // Flag que se mantiene activo desde que se hace la peticion de consumibles hasta que se reponen
+    private Boolean requestMaterial = false; // Flag que se activa cuando se necesita hacer una peticion de consumibles
+    private Boolean orderQueueFlag = false; // Flag que se activa cuando existen nuevas ordenes en cola para la maquina
+    private String gatewayAgentName; // Guarda el nombre del agente pasarela
     private MessageTemplate template;
 
     /** Identifier of the agent. */
@@ -299,10 +299,6 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
             if(PLCmsgIn.containsKey("Control_Flag_Service_Completed")) {    //At least the first field is checked
                 if (PLCmsgIn.get("Control_Flag_Service_Completed").equals(true)) {  //If service has been completed, the operation is deleted from machine plan variable
 
-                    HashMap confirmation = new HashMap();
-                    confirmation.put("Received", true);
-                    sendMessage(new Gson().toJson(confirmation), 7, gatewayAgentName); //Send confirmation message to PLC
-
                     BathcID = String.valueOf(PLCmsgIn.get("Id_Batch_Reference"));
                     BathcID = BathcID.split("\\.")[0];
 
@@ -330,18 +326,18 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
             }
         }
     }
-
+    // El metodo recvBatchInfo se encarga de enviar al agente batch la informacion con la trazabilidad de cada item fabricado
     @Override
     public void recvBatchInfo(ACLMessage msg) {
 
         ACLMessage reply = null;
         String targets = "";
-        ArrayList<String> actionList = new ArrayList<String>();
-        ArrayList<String> consumableList = new ArrayList<String>();
-        String  batchAgentName = "";
-        String neededMaterial = "";
-        Integer neededConsumable = 0;
-        HashMap msgToBatch = new HashMap();
+        ArrayList<String> actionList = new ArrayList<String>(); // Lista de acciones que componen el servicio actual
+        ArrayList<String> consumableList = new ArrayList<String>(); // Lista de consumibles que se utilizan para el servicio actual
+        String  batchAgentName = "";// Nombre del batch agent al que se le enviara el mensaje
+        String neededMaterial = ""; // String que contendra  ID + cantidad de consumibles para hacer la peticion a los transportes
+        Integer neededConsumable = 0; // variable que se utiliza para contar los consumibles necesarios (max - current)
+        HashMap msgToBatch = new HashMap(); // Estructura de datos que se enviara al agente batch
 
         // Se crea el array list con las keys que se necesitaran para eliminar el .0 de los datos que se pasen de a tipo string
         ArrayList<String> replace = new ArrayList<String>( Arrays.asList("Id_Machine_Reference", "Id_Order_Reference", "Id_Batch_Reference", "Id_Ref_Subproduct_Type", "Id_Item_Number") );
@@ -351,6 +347,19 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
         if(msgToBatch.containsKey("Control_Flag_Item_Completed")) {
             if (msgToBatch.get("Control_Flag_Item_Completed").equals(true)) {   //checks if the item has been manufactured
 
+                // Se extraen los datos necesarios del mensaje recibido
+                // Cada mensaje contiene informacion del item fabricado
+                String itemNumber = String.valueOf(msgToBatch.get("Id_Item_Number"));
+                String batchNumber = String.valueOf(msgToBatch.get("Id_Batch_Reference"));
+                String idItem = batchNumber + itemNumber; //Se compone el ID del item. Ejemplo -> batchNumber = 121 + itemNumber = 2 -> itemID = 1212
+                msgToBatch.put("Id_Item_Number", itemNumber);
+
+                // Al haber recibido el mensaje desde la maquina, se envia el mensaje de confirmacion
+                HashMap confirmation = new HashMap();
+                confirmation.put("Received", true);
+                AID gatewayAgentID = new AID(gatewayAgentName, false);
+                sendACLMessage(7, gatewayAgentID,"", "", new Gson().toJson(confirmation), myAgent); //Send confirmation message to PLC
+
                 for (int i = 0; i < replace.size(); i++) {  //for loop to remove the .0 of the data that contains the keys defined in replace variable
                     String newValue = String.valueOf(msgToBatch.get(replace.get(i)));
                     newValue = newValue.split("\\.")[0];
@@ -358,12 +367,8 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                     msgToBatch.put(replace.get(i), newValue);
                 }
 
-                if (msgToBatch.get("Control_Flag_Service_Completed").equals(false)) {   //If the batch has not yet been completed, this method is in charge of sending the confirmation message
-
+                if (msgToBatch.get("Control_Flag_Service_Completed").equals(false)) {
                     msgToBatch.remove("Data_Service_Time_Stamp");    //remove unnecessary data from message
-                    HashMap confirmation = new HashMap();
-                    confirmation.put("Received", true);
-                    sendMessage(new Gson().toJson(confirmation), 7, gatewayAgentName);  //Sends confirmation message to PLC
                 }
 
                 msgToBatch.remove("Control_Flag_Service_Completed");    //remove unnecessary data from message
@@ -417,9 +422,9 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                                     e.printStackTrace();
                                 }
 
-                                neededMaterial = "";
+                                neededMaterial = ""; // Una vez hecha la peticion, se reinicializa la variable
                                 matReqDone = true; // Flag que señala si la peticion de material se ha realizado
-                                requestMaterial = false;
+                                requestMaterial = false; // Una vez hecha la peticion se desactiva el flag
                             }
                         }
                     }
@@ -450,8 +455,8 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
-                sendMessage(MessageContent, 16, batchAgentName); //Sends item information to the batch agent
+                AID batchAgentID = new AID(batchAgentName, false);
+                sendACLMessage(16, batchAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
 
             }
         }
@@ -460,6 +465,7 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
 
         String targets = "";
         // Se reciben los mensajes ACL que corresponden al material que se ha repuesto
+        // El codigo implementado dentro de la condicion IF se encarga de añadir al contador de consumibles los nuevos consumibles que han sido repuestos
         ACLMessage msg = myAgent.receive(template);
         if (msg != null) {
             ArrayList<ArrayList<String>> newConsumables = new ArrayList<>();
@@ -480,12 +486,14 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                     }
                 }
             }
+            System.out.println("El transporte ha terminado de reponer el material pedido");
+            System.out.println(myAgent.availableMaterial);
             matReqDone = false; // Una vez repuesto el material se resetea el flag
         }
 
         if(sendingFlag == true) {     //It is checked if the method is correctly activated and that orders do not overlap
             ArrayList<String> consumableList = new ArrayList<String>();
-            Boolean consumableShortage = false;
+            Boolean consumableShortage = false; // Flag que se activa cuando no hay material suficiente para realizar una nueva orden
             String serviceType;
 
             if (myAgent.machinePlan.size() > 2) {   //checks that there are operations in the machine plan
@@ -514,7 +522,8 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                 if (!consumableShortage) {
                     PLCmsgOut.remove("Index");
                     String MessageContent = new Gson().toJson(PLCmsgOut);
-                    sendMessage(MessageContent, 16, gatewayAgentName);
+                    AID gatewayAgentID = new AID(gatewayAgentName, false);
+                    sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
                     sendingFlag = false;
                     machinePlanIndex = 0;
                 } else { // en caso contrario, se analizan las operaciones en cola para poder ser enviados
@@ -558,16 +567,6 @@ public class Machine_Functionality extends DomApp_Functionality implements Basic
                 sendingFlag = false;
             }
         }
-    }
-
-    private void sendMessage(String data, int performative, String agentName) {       //ACLMessage template for message sending to gateway agent
-        ACLMessage msgToPLC = new ACLMessage(performative);
-        AID gwAgent = new AID(agentName, false);
-        msgToPLC.addReceiver(gwAgent);
-        msgToPLC.setOntology("negotiation");
-        msgToPLC.setConversationId("PLCdata");
-        msgToPLC.setContent(data);
-        myAgent.send(msgToPLC);
     }
 
 }

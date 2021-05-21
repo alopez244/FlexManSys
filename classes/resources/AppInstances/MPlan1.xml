@@ -17,6 +17,6 @@
 		<simpleOperation id="4" type="insert_and_place" description="Insert the axis and place the cover (big product)" plannedMachineId="1" plannedStationId="11" plannedStartTime="08:02:00" plannedFinishTime="08:03:00"/>
 		<product productType="BB" description="Base (big product)" state="Planned">
 			<rawMaterial id="BB" description="Base (big product)"/>
-		</product>	
+		</product>
 	</PlannedItem>
 </mPlan>

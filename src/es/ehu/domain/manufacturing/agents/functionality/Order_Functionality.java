@@ -27,11 +27,11 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
     private String redundancy;
     private String parentAgentID, orderNumber;
     private ArrayList<String> myReplicasID = new ArrayList<>();
-    private ArrayList<AID> sonAgentID = new ArrayList<>();
+    private ArrayList<AID> sonAgentID = new ArrayList<>(); // lista con los nombres de los agentes de los que es padre
     private Integer batchIndex = 1;
     private Boolean newBatch = true, firstTime = true;
     private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> batchTraceability = new ArrayList<>();
-    private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> deserializedMessage = new ArrayList<>();
+    private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> deserializedMessage = new ArrayList<>(); // Mensaje recibido desde el batchAgent deserializado
     private String mySeType;
     private MessageTemplate template, template2;
 
