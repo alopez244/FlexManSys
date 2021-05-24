@@ -2,6 +2,7 @@
   <library name="commons">
     <CLASSES>
       <root url="file://$PROJECT_DIR$/lib/commons" />
+      <root url="jar://$USER_HOME$/Desktop/Java/libraries/jade/lib/jade.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
