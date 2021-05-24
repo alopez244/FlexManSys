@@ -8,14 +8,23 @@ import jade.lang.acl.MessageTemplate;
 
 
 
-public class TransportAgent extends DomResAgentTemplate {
+
+public class TransportAgent extends DomResAgentTemplate  {
+
+    private static final long serialVersionUID = -214426101233212079L;
 
     @Override
     protected MessageTemplate variableInitialization(Object[] arguments, Behaviour behaviour) {
-
+        System.out.println("es.ehu.platform.template.ApplicationAgentTemplate.variableInitialization()");
         functionalityInstance = new Transport_Functionality();
-        return null;
+        return null;  // return LOGGER.exit(null); //
 
+    }
+    protected void takeDown() {
+        try {
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 

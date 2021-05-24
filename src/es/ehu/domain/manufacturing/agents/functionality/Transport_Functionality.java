@@ -92,7 +92,7 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
     @Override
     public Void terminate(MWAgent myAgent) {return null;}
 
-    @Override
+    @Override  //cambiar//
     public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData) {
 
         if (negCriterion.equals("position")) {
@@ -106,7 +106,7 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
         }
     }
 
-    @Override
+    @Override  //cambiar//
     public int checkNegotiation(String conversationId, String sAction, double negReceivedValue, long negScalarValue, boolean tieBreak, boolean checkReplies, Object... negExternalData) {
 
         LOGGER.entry(conversationId, sAction, negReceivedValue, negScalarValue);

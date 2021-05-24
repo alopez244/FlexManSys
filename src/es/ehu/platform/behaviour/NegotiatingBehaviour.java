@@ -418,10 +418,9 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                 cfp.addReceiver(id);
             }
         }
-
+            //get distance of transport to X.
         long value = aNegFunctionality.calculateNegotiationValue(negMsg.getNegAction(), negMsg.getCriterion(), negMsg.getExternalData());
 
-        LOGGER.info("Negotiation value: " + value + " of conversationId: " + negId);
 
         try {
             cfp.setContentObject(new Long(value));
