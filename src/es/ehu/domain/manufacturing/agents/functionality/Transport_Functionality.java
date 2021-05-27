@@ -110,7 +110,9 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
         String externalData = (String) negExternalData[0];
         String MachineName = (String) negExternalData[1];
 
+        if (negCriterion.equals("position")){
 
+        }
         /*
         if (negCriterion.equals("position")) {
             Random rand = new Random();
@@ -169,8 +171,22 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
     @Override
     public void rcvDataFromDevice(ACLMessage msg) {
 
+        //Actualizar info del agente trasnporte necesario.
+
         //msg.getContent();
         //recibir msg de confirmacion, recibir nivel de bateria.
+        //myAgent.battery=
+
+        this.PLCmsgIn = new Gson().fromJson(msg.getContent(), HashMap.class);   //Data type conversion Json->Hashmap class
+        if(PLCmsgIn.containsKey("Received")) {   // Comprobar si es mensaje de confirmacion
+            if (PLCmsgIn.get("Received").equals(true)) {
+                System.out.println("<--PLC reception confirmation");
+            } else {
+                System.out.println("<--Problem receiving the message");
+            }
+        }else{
+
+        }
     }
 
 

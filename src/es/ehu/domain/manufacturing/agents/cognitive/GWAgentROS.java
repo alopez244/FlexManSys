@@ -41,14 +41,32 @@ public class GWAgentROS extends GatewayAgent {  //ROS
             ACLMessage msgToAgent = new ACLMessage(msgStruct.readPerformative()); //reads the performative saved in StructMessage data structure
             msgToAgent.addReceiver(TransportAgentName);
             // msgToAgent.setOntology("negotiation");
-            msgToAgent.setConversationId("PLCdata");
+            msgToAgent.setConversationId("PLCdata"); //prob change PLCDATA
             msgToAgent.setContent(msgStruct.readMessage()); //reads the message saved in StructMessage data structure
             send(msgToAgent);
 
-        } /*else if (action.equals("init")) {
+        } else if (action.equals("init")) {
 
-        }*/
+            System.out.println("---Gateway init command called");
+            System.out.println("---Hello, I am a Gateway Agent");
+        }else{ //Check if any msg is received
+            System.out.println("---Gateway recv function");
+            msgRecv = (String) msgInFIFO.poll();    //reads the oldest message from FIFO
+            if ( msgRecv != null ) {
+                System.out.println("---GW, new message to read");
+                ((StructMessage) command).setMessage(msgRecv);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
+                ((StructMessage) command).setNewData(true);
+            } else {
+                ((StructMessage) command).setNewData(false);
+                System.out.println("---GW, message queue is empty");
+            }
+        }
+
+        System.out.println("<--Gateway processes execute");
+        releaseCommand(command);
     }
+
+
     protected void setup(){ //agent already registered and is able to send and receive messages. Necessary to add behaviour in order to to anything.
 
         MessageTemplate template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.or(
@@ -59,7 +77,7 @@ public class GWAgentROS extends GatewayAgent {  //ROS
 
             public void action() {
                 System.out.println("Entering CyclicBehaviour");
-                ACLMessage msgToFIFO = receive(template);
+                ACLMessage msgToFIFO = receive(template); //recivir mensaje desde Transport Agent
                 if (msgToFIFO != null) {
                     System.out.println("GWagent, message received from Transport Agent");
                     TransportAgentName = msgToFIFO.getSender();   //saves the sender ID for a later reply
