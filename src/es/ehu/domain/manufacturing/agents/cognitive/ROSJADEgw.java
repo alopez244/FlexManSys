@@ -5,13 +5,17 @@ import jade.core.Profile;
 import jade.util.leap.Properties;
 import jade.wrapper.gateway.JadeGateway;
 
-public class ROSJADEgw  {
+public class ROSJADEgw  { //Rosjava, interfaz entre agentes y ROS.
+    // Gateway between non-JADE and a JADE agent system.
+    //Crear comportamientos adecuados que ejecuten los comandos que debe emitir al sistema JADE y pasarlos como parametro en execute()
 
-    public static void Init(String transportID){
+    public static void init(String transportID){
 
 
         //unir ROSJADEgw con GWAgentRos
-        String host = "192.168.2.17"; ///prueba
+
+        //Unirlo al contenedor que asumimos que esta en localHost, port 1099
+        String host = "192.168.187.129"; ///prueba
         String port = "1099";//prueba
         Properties pp = new Properties();
         pp.setProperty(Profile.MAIN_HOST, host);
@@ -39,7 +43,7 @@ public class ROSJADEgw  {
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("receive");
         try {
-            JadeGateway.execute(strMessage); //llamar a GWAgentRos process command
+            JadeGateway.execute(strMessage);
         } catch(Exception e) {
             System.out.println(e);
         }
@@ -79,3 +83,5 @@ public class ROSJADEgw  {
 
 
 }
+
+

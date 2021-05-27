@@ -1,5 +1,6 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
+import com.google.gson.Gson;
 import es.ehu.domain.manufacturing.agents.MachineAgent;
 import es.ehu.domain.manufacturing.agents.TransportAgent;
 import es.ehu.platform.MWAgent;
@@ -10,6 +11,7 @@ import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.platform.utilities.Cmd;
 import jade.lang.acl.ACLMessage;
 import jade.core.AID;
+import jade.lang.acl.MessageTemplate;
 import jade.wrapper.AgentController;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
@@ -23,6 +25,11 @@ import java.util.HashMap;
 
 public class Transport_Functionality extends DomApp_Functionality implements BasicFunctionality, NegFunctionality, AssetManagement {
 
+
+
+    private HashMap PLCmsgIn = new HashMap(); // Estructura de datos que se envia al PLC
+    private HashMap PLCmsgOut = new HashMap(); // Estructura de datos que se recibe del PLC
+
     static final Logger LOGGER = LogManager.getLogger(Transport_Functionality.class.getName());
 
     /** Identifier of the agent. */
@@ -31,9 +38,13 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
     /** Class name to switch on the agent */
     private String className;
 
+    private MessageTemplate template;
+
     @Override
     public Void init(MWAgent mwAgent) {
 
+
+        this.template = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
         //If the previous condition is accomplished, the agent is registered
         this.myAgent = (TransportAgent) mwAgent;
 
@@ -95,6 +106,12 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
     @Override  //cambiar//
     public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData) {
 
+
+        String externalData = (String) negExternalData[0];
+        String MachineName = (String) negExternalData[1];
+
+
+        /*
         if (negCriterion.equals("position")) {
             Random rand = new Random();
             float xPos = (float) (rand.nextFloat() * (10.0 - 0.0) + 0.0);// posicion en el eje x
@@ -104,6 +121,8 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
         }else {
             return Runtime.getRuntime().freeMemory();
         }
+        */
+        return Runtime.getRuntime().freeMemory();
     }
 
     @Override  //cambiar//
@@ -139,11 +158,19 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
     @Override
     public void sendDataToDevice() {
 
+        //enviar msg a GatewayAgent
+        //origen A5 coordenada B8, topic A5-> B8
+        ACLMessage msg = myAgent.receive(template);
+        if (msg != null) {
+
+        }
     }
 
     @Override
     public void rcvDataFromDevice(ACLMessage msg) {
 
+        //msg.getContent();
+        //recibir msg de confirmacion, recibir nivel de bateria.
     }
 
 
@@ -175,3 +202,4 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
         return providedConsumables;
     }
 }
+
