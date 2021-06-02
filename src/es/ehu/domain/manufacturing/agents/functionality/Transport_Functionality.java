@@ -13,6 +13,7 @@ import jade.lang.acl.ACLMessage;
 import jade.core.AID;
 import jade.lang.acl.MessageTemplate;
 import jade.wrapper.AgentController;
+import org.apache.commons.collections4.bag.SynchronizedSortedBag;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,7 +38,8 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
 
     /** Class name to switch on the agent */
     private String className;
-
+    private Boolean workingFlag = false; //Flag que se activa cuando el transporte esta trabajando.
+    private String gatewayAgentName; // guarda nombre del agente pasarela
     private MessageTemplate template;
 
     @Override
@@ -48,16 +50,25 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
         //If the previous condition is accomplished, the agent is registered
         this.myAgent = (TransportAgent) mwAgent;
 
-        //First, the Machine Model is read
 
+        String machineName = myAgent.resourceName;
+        Integer machineNumber = Integer.parseInt(machineName.split("_")[1]);
+        gatewayAgentName = "ControlGW" + machineNumber.toString(); //Se genera el nombre del Gateway Agent con el que se tendra que comunicar
+
+        //First, the Machine Model is read
         String [] args = (String[]) myAgent.getArguments();
 
         for (int i=0; i<args.length; i++){
             if (args[i].toLowerCase().startsWith("id=")) return null;
         }
 
-        //The TransportAgent is registered in the System Model
 
+        //?????
+
+
+
+
+        //The TransportAgent is registered in the System Model
         String cmd = "reg transport parent=system";
 
         ACLMessage reply = null;
@@ -67,6 +78,14 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
             e.printStackTrace();
         }
         String seId = reply.getContent();
+
+
+
+
+        myAgent.keyLocalization.put("Punto de carga","A2");
+        myAgent.keyLocalization.put("Almacen material","B4");
+        myAgent.keyLocalization.put("Entrada KUKA","C1");
+        myAgent.keyLocalization.put("Salida KUKA","D7");
 
         //Finally, the TransportAgent is started.
 
@@ -160,12 +179,28 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
     @Override
     public void sendDataToDevice() {
 
-        //enviar msg a GatewayAgent
-        //origen A5 coordenada B8, topic A5-> B8
-        ACLMessage msg = myAgent.receive(template);
-        if (msg != null) {
+        // Si puedes realizar trabajo enviar sendACLMessage
+        //enviar msg a GatewayAgentRos
+        //origen A5 coordenada B8, topic A5-> B8  [A5,B8]
+
+
+        if (workingFlag!=true){ //check transport is not working
+            if(!myAgent.pilaTareas.isEmpty()){//check they are works to do
+                String tarea = myAgent.pilaTareas.pop();
+                AID gatewayAgentID = new AID(gatewayAgentName,false);
+                sendACLMessage(7,gatewayAgentID,"work","movement",tarea,myAgent);
+                workingFlag=true;
+            }else{
+                System.out.println("No operations defined");
+
+            }
+
+        }else{
+            System.out.println("Already working");
 
         }
+
+
     }
 
     @Override
@@ -184,7 +219,22 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
             } else {
                 System.out.println("<--Problem receiving the message");
             }
-        }else{
+        }else{ //check if is availability messahe or work finished msg
+
+            if(PLCmsgIn.containsKey("Availability")){
+                if(PLCmsgIn.get("Availability").equals(true)){ //is prepared to work
+                    String battery = (String) PLCmsgIn.get("Battery");
+                    System.out.println(battery);
+
+                }else{ // work finished now.
+                    PLCmsgIn.put("Availability",true);
+                    String battery = (String) PLCmsgIn.get("Battery");
+                    System.out.println(battery);
+                    workingFlag=false;
+
+                }
+            }
+
 
         }
     }

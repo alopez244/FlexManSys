@@ -17,8 +17,8 @@ public class ExternalJADEgw {
         //redirectOutput();
         System.out.println("->Java Agent Init");
 //        String host = "127.0.0.1";              //Local host IP)
-        String host = "192.168.2.17";              // host of Alejandro PC
-        String localHost = "192.168.2.3";              //Local host of PLC
+        String host = "192.168.187.130";              // host of Iñigo PC
+        String localHost = "192.168.187.130";              //Local host of PLC
         String port = "1099";                   //Port on which the agent manager is running
 
         Properties pp = new Properties();
@@ -43,7 +43,7 @@ public class ExternalJADEgw {
     //Function to send ACL messages by receiving a String that is added in the message.
     public static void send(String msgOut) {  //Sends the data String that has been given
         System.out.println("->Java Send");
-        String host = "192.168.2.17";              // host of Alejandro PC
+        String host = "192.168.187.130";              // host of Iñigo PC
         String localHost = "192.168.2.3";              //Local host of PLC
         String port = "1099";                   //Port on which the agent manager is running
 

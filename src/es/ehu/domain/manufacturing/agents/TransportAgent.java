@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
+import java.util.Stack;
 
 
 public class TransportAgent extends DomResAgentTemplate  {
@@ -29,8 +30,11 @@ public class TransportAgent extends DomResAgentTemplate  {
     /*battery perc */
     public float battery;
 
-    /* HashMap to locate machines position*/
-    private HashMap<String, Integer> machinesLocalization = new HashMap<>();
+    /* HashMap to locate machines position, punto de carga, almacen de material, entrada de material KUKA, salida material KUKA.*/
+    public HashMap<String, String> keyLocalization = new HashMap<>();
+
+    /* Stack to know works transport has to do*/
+    public Stack<String> pilaTareas = new Stack<String>();
 
     @Override
     protected MessageTemplate variableInitialization(Object[] arguments, Behaviour behaviour) {
@@ -61,6 +65,8 @@ public class TransportAgent extends DomResAgentTemplate  {
             this.initTransition = ControlBehaviour.STOP;
         }
         */
+
+
         functionalityInstance = new Transport_Functionality();
         return null;  // return LOGGER.exit(null); //
 

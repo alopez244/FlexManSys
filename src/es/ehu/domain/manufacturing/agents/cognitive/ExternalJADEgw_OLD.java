@@ -16,7 +16,7 @@ public class ExternalJADEgw_OLD {
         redirectOutput();
         System.out.println("->Java Agent Init");
 //        String host = "127.0.0.1";              //Local host IP)
-        String host = "192.168.2.250";              // host of Alejandro PC
+        String host = "192.168.187.130";              // host of Alejandro PC
         String localHost = "192.168.2.2";              //Local host of PLC
         String port = "1099";                   //Port on which the agent manager is running
 
