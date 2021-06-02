@@ -186,7 +186,7 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
 
         if (workingFlag!=true){ //check transport is not working
             if(!myAgent.pilaTareas.isEmpty()){//check they are works to do
-                String tarea = myAgent.pilaTareas.pop();
+                String tarea = myAgent.pilaTareas.firstElement();
                 AID gatewayAgentID = new AID(gatewayAgentName,false);
                 sendACLMessage(7,gatewayAgentID,"work","movement",tarea,myAgent);
                 workingFlag=true;
@@ -206,11 +206,9 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
     @Override
     public void rcvDataFromDevice(ACLMessage msg) {
 
-        //Actualizar info del agente trasnporte necesario.
-
-        //msg.getContent();
+        //Actualizar info del agente trasnporte necesario. (bateria ,pila tareas..)
         //recibir msg de confirmacion, recibir nivel de bateria.
-        //myAgent.battery=
+
 
         this.PLCmsgIn = new Gson().fromJson(msg.getContent(), HashMap.class);   //Data type conversion Json->Hashmap class
         if(PLCmsgIn.containsKey("Received")) {   // Comprobar si es mensaje de confirmacion
