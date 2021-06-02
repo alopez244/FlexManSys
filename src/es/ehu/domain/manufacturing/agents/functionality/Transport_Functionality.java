@@ -232,6 +232,7 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
                     Float battery = (Float) PLCmsgIn.get("Battery");
                     System.out.println(battery);
                     myAgent.battery=battery;
+                    myAgent.pilaTareas.pop(); //remove work from stack because is done.
                     workingFlag=false;
 
                 }
