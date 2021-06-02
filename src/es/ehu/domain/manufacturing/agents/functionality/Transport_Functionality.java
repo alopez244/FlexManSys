@@ -219,17 +219,19 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
             } else {
                 System.out.println("<--Problem receiving the message");
             }
-        }else{ //check if is availability messahe or work finished msg
+        }else{ //check if is availability message or work finished msg
 
             if(PLCmsgIn.containsKey("Availability")){
                 if(PLCmsgIn.get("Availability").equals(true)){ //is prepared to work
-                    String battery = (String) PLCmsgIn.get("Battery");
+                    Float battery = (Float) PLCmsgIn.get("Battery");
                     System.out.println(battery);
+                    myAgent.battery=battery;
 
                 }else{ // work finished now.
                     PLCmsgIn.put("Availability",true);
-                    String battery = (String) PLCmsgIn.get("Battery");
+                    Float battery = (Float) PLCmsgIn.get("Battery");
                     System.out.println(battery);
+                    myAgent.battery=battery;
                     workingFlag=false;
 
                 }
