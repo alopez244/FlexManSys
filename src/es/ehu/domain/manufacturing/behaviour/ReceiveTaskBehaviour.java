@@ -26,8 +26,8 @@ public class ReceiveTaskBehaviour extends SimpleBehaviour {
         LOGGER.debug("*** Constructing RunningBehaviour ***");
         this.myAgent = a;
         this.aAssetManagement = (AssetManagement) a.functionalityInstance;
-        this.template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
-                MessageTemplate.MatchOntology("negotiation")),MessageTemplate.MatchConversationId("PLCdata"));
+        this.template = MessageTemplate.and(MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
+               MessageTemplate.or(MessageTemplate.MatchOntology("negotiation"),MessageTemplate.MatchOntology("data")));
     }
 
     @Override
