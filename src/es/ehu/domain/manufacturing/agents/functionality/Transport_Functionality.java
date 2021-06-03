@@ -225,8 +225,13 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
                     Float battery = (Float) PLCmsgIn.get("Battery");
                     System.out.println(battery);
                     myAgent.battery=battery;
+                    if (PLCmsgIn.containsKey("Location")){
+                        myAgent.pilaTareas.push((String)PLCmsgIn.get("Location")); //update work stack
+                    }else{
+                        System.out.println("No working location specified");
+                    }
 
-                    myAgent.pilaTareas.push((String)PLCmsgIn.get("Location")); //update work stack
+
 
                 }else{ // work finished now.
                     PLCmsgIn.put("Availability",true);
