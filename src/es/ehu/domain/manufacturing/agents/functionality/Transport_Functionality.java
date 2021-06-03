@@ -185,15 +185,15 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
 
 
         if (workingFlag!=true){ //check transport is not working
-            if(!myAgent.pilaTareas.isEmpty()){//check they are works to do
-                String tarea = myAgent.pilaTareas.peek();
-                AID gatewayAgentID = new AID(gatewayAgentName,false);
-                sendACLMessage(7,gatewayAgentID,"work","movement",tarea,myAgent);
-                workingFlag=true;
-            }else{
-                System.out.println("No operations defined");
-                workingFlag=false;
 
+            if(!myAgent.pilaTareas.isEmpty()){//check they are works to do
+                String tarea = myAgent.pilaTareas.peek(); //get first work of stack
+                AID gatewayAgentID = new AID(gatewayAgentName,false);
+                sendACLMessage(7,gatewayAgentID,"work","movement",tarea,myAgent); //send msg to GWAgentROS
+                workingFlag = true;  //update workingFlag
+            }else{
+                System.out.println("No operations defined");  // working stack is empty
+                workingFlag = false;
             }
 
         }else{
@@ -218,13 +218,14 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
             } else {
                 System.out.println("<--Problem receiving the message");
             }
-        }else{ //check if is availability message or work finished msg
+        }else{ //check if it's availability message or work finished msg
 
             if(PLCmsgIn.containsKey("Availability")){
                 if(PLCmsgIn.get("Availability").equals(true)){ //is prepared to work
                     Float battery = (Float) PLCmsgIn.get("Battery");
                     System.out.println("Ready to start working and battery is"+ battery);
-                    myAgent.battery=battery;
+                    myAgent.battery=battery; //update battery of agent
+
                     if (PLCmsgIn.containsKey("Location")){
                         myAgent.pilaTareas.push((String)PLCmsgIn.get("Location")); //update work stack
                     }else{
@@ -233,13 +234,13 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
 
 
                 }else{ // work finished now.
-                    PLCmsgIn.put("Availability",true);
+                    PLCmsgIn.put("Availability",true); // he finished work so now is ready again
                     Float battery = (Float) PLCmsgIn.get("Battery");
                     System.out.println("Working task is done and battery is"+ battery);
-                    myAgent.battery=battery;
+                    myAgent.battery=battery; //update battery of agent
 
                     myAgent.pilaTareas.pop(); //remove work from stack because is done.
-                    workingFlag=false;
+                    workingFlag=false;  //update flag
                 }
             }
         }
