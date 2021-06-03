@@ -226,6 +226,8 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
                     System.out.println(battery);
                     myAgent.battery=battery;
 
+                    myAgent.pilaTareas.push((String)PLCmsgIn.get("Location")); //update work stack
+
                 }else{ // work finished now.
                     PLCmsgIn.put("Availability",true);
                     Float battery = (Float) PLCmsgIn.get("Battery");
@@ -233,11 +235,8 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
                     myAgent.battery=battery;
                     myAgent.pilaTareas.pop(); //remove work from stack because is done.
                     workingFlag=false;
-
                 }
             }
-
-
         }
     }
 
