@@ -186,12 +186,13 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
 
         if (workingFlag!=true){ //check transport is not working
             if(!myAgent.pilaTareas.isEmpty()){//check they are works to do
-                String tarea = myAgent.pilaTareas.firstElement();
+                String tarea = myAgent.pilaTareas.peek();
                 AID gatewayAgentID = new AID(gatewayAgentName,false);
                 sendACLMessage(7,gatewayAgentID,"work","movement",tarea,myAgent);
                 workingFlag=true;
             }else{
                 System.out.println("No operations defined");
+                workingFlag=false;
 
             }
 
