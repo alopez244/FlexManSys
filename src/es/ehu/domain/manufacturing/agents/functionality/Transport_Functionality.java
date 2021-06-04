@@ -41,6 +41,7 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
     private Boolean workingFlag = false; //Flag que se activa cuando el transporte esta trabajando.
     private String gatewayAgentName; // guarda nombre del agente pasarela
     private MessageTemplate template;
+    private int conversation;
 
     @Override
     public Void init(MWAgent mwAgent) {
@@ -81,7 +82,7 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
 
 
 
-
+        this.conversation =1;
         myAgent.keyLocalization.put("Punto de carga","A2");
         myAgent.keyLocalization.put("Almacen material","B4");
         myAgent.keyLocalization.put("Entrada KUKA","C1");
@@ -188,9 +189,13 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
 
             if(!myAgent.pilaTareas.isEmpty()){//check they are works to do
                 String tarea = myAgent.pilaTareas.peek(); //get first work of stack
-                AID gatewayAgentID = new AID(gatewayAgentName,false);
-                sendACLMessage(7,gatewayAgentID,"work","movement",tarea,myAgent); //send msg to GWAgentROS
+                AID gatewayAgentID = new AID(gatewayAgentName,false); //receiver
+                String conversationID = Integer.toString(this.conversation); //each task has one ID
+                sendACLMessage(16,gatewayAgentID,"data",conversationID,tarea,myAgent); //send msg to GWAgentROS
                 workingFlag = true;  //update workingFlag
+                this.conversation = this.conversation+1;
+
+
             }else{
                 System.out.println("No operations defined");  // working stack is empty
                 workingFlag = false;
