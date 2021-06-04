@@ -40,7 +40,7 @@ public class GWAgentROS extends GatewayAgent {  //ROS
             System.out.println("---Gateway send command");
             ACLMessage msgToAgent = new ACLMessage(msgStruct.readPerformative()); //reads the performative saved in StructMessage data structure
             msgToAgent.addReceiver(TransportAgentName);
-            // msgToAgent.setOntology("negotiation");
+            msgToAgent.setOntology("data");
             msgToAgent.setConversationId("PLCdata"); //prob change PLCDATA
             msgToAgent.setContent(msgStruct.readMessage()); //reads the message saved in StructMessage data structure
             send(msgToAgent);
