@@ -43,30 +43,34 @@ public class TransportAgent extends DomResAgentTemplate  {
         System.out.println("es.ehu.platform.template.ApplicationAgentTemplate.variableInitialization()");
 
 
-        /* DEPENDE DE COMO SE PASAN LOS ARGUMENTS
 
         if ((arguments != null) && (arguments.length>=4)){//       introduce resourceName,resourceModel, xAxis,yAxis and battery.
-
             this.resourceName=arguments[0].toString();
-            this.xPos=(Float) arguments[1];
-            this.yPos = (Float) arguments[2] ;
-            this.battery = (Float) arguments[3];
-
+            //this.xPos= (int) arguments[1];
+            this.xPos= Integer.valueOf((String) arguments[1]);
+            //this.yPos = (int) arguments[2] ;
+            this.yPos= Integer.valueOf((String) arguments[2]);
+            //this.battery = (int) arguments[3];
+            this.battery = Integer.valueOf((String) arguments[3]);
+            System.out.println("Resource name es "+this.resourceName);
+            System.out.println("Position x es "+this.xPos);
+            System.out.println("Position y es "+this.yPos);
+            System.out.println("Battery percentage is %"+this.battery);
             XMLReader fileReader = new XMLReader();
             try {
                 this.resourceModel = fileReader.readFile(arguments[4].toString());
             } catch (Exception e) {
+                System.out.println("Parse can not generate documents");
                 LOGGER.info("Parse can not generate documents");
                 this.initTransition = ControlBehaviour.STOP;
             }
-
         } else {
             LOGGER.info("There are not sufficient arguments to start");
             this.initTransition = ControlBehaviour.STOP;
         }
-        */
 
-        this.resourceName = arguments[0].toString();
+
+        //this.resourceName = arguments[0].toString();
         functionalityInstance = new Transport_Functionality();
         return null;  // return LOGGER.exit(null); //
 
