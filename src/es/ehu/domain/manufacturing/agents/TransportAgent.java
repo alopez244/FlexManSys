@@ -66,7 +66,7 @@ public class TransportAgent extends DomResAgentTemplate  {
         }
         */
 
-
+        this.resourceName = arguments[0].toString();
         functionalityInstance = new Transport_Functionality();
         return null;  // return LOGGER.exit(null); //
 
