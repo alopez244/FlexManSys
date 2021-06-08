@@ -3,12 +3,14 @@ package es.ehu.domain.manufacturing.agents.functionality;
 import com.google.gson.Gson;
 import es.ehu.domain.manufacturing.agents.MachineAgent;
 import es.ehu.domain.manufacturing.agents.TransportAgent;
+import es.ehu.domain.manufacturing.behaviour.ReceiveTaskBehaviour;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.NegotiatingBehaviour;
 import es.ehu.platform.template.interfaces.AssetManagement;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.platform.utilities.Cmd;
+import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.core.AID;
 import jade.lang.acl.MessageTemplate;
@@ -69,7 +71,9 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
 
 
 
+
         //The TransportAgent is registered in the System Model
+
         String cmd = "reg transport parent=system";
 
         ACLMessage reply = null;
@@ -87,7 +91,7 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
         myAgent.keyLocalization.put("Almacen material","B4");
         myAgent.keyLocalization.put("Entrada KUKA","C1");
         myAgent.keyLocalization.put("Salida KUKA","D7");
-
+        System.out.println("proba");
         //Finally, the TransportAgent is started.
 
         try {
@@ -233,6 +237,8 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
 
                     if (PLCmsgIn.containsKey("Location")){
                         myAgent.pilaTareas.push((String)PLCmsgIn.get("Location")); //update work stack
+                       // SimpleBehaviour sendingBehaviour= new ReceiveTaskBehaviour(myAgent);  si se quiere responder al Kobuki.
+                       // sendingBehaviour.action();
                     }else{
                         System.out.println("No working location specified");
                     }

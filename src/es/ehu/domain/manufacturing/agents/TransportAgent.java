@@ -21,6 +21,9 @@ public class TransportAgent extends DomResAgentTemplate  {
     private static final long serialVersionUID = -214426101233212079L;
 
 
+    /** String representing the services machine agent offers. */
+    public String TransportServices;
+
     /* position x axis */
     public float xPos;
 
@@ -33,7 +36,7 @@ public class TransportAgent extends DomResAgentTemplate  {
     /* HashMap to locate machines position, punto de carga, almacen de material, entrada de material KUKA, salida material KUKA.*/
     public HashMap<String, String> keyLocalization = new HashMap<>();
 
-    /* Stack to know works transport has to do*/
+    /* Stack to know works transport has to do eg.[A3,B6]   */
     public Stack<String> pilaTareas = new Stack<String>();
 
     @Override
@@ -52,18 +55,24 @@ public class TransportAgent extends DomResAgentTemplate  {
             this.yPos= Integer.valueOf((String) arguments[2]);
             //this.battery = (int) arguments[3];
             this.battery = Integer.valueOf((String) arguments[3]);
+
+
+           // TransportServices = arguments[4].toString();
             System.out.println("Resource name es "+this.resourceName);
             System.out.println("Position x es "+this.xPos);
             System.out.println("Position y es "+this.yPos);
             System.out.println("Battery percentage is %"+this.battery);
-            XMLReader fileReader = new XMLReader();
-            try {
+            /* XMLReader fileReader = new XMLReader();
+
+           try {
                 this.resourceModel = fileReader.readFile(arguments[4].toString());
             } catch (Exception e) {
                 System.out.println("Parse can not generate documents");
                 LOGGER.info("Parse can not generate documents");
                 this.initTransition = ControlBehaviour.STOP;
             }
+
+            */
         } else {
             LOGGER.info("There are not sufficient arguments to start");
             this.initTransition = ControlBehaviour.STOP;

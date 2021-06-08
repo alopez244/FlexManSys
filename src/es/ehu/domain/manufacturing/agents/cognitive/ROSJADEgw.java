@@ -15,7 +15,7 @@ public class ROSJADEgw  { //Rosjava, interfaz entre agentes y ROS.
         //unir ROSJADEgw con GWAgentRos
 
         //Unirlo al contenedor que asumimos que esta en localHost, port 1099
-        String host = "192.168.187.129"; ///prueba
+        String host = "192.168.187.131"; ///prueba
         String port = "1099";//prueba
         Properties pp = new Properties();
         pp.setProperty(Profile.MAIN_HOST, host);
@@ -38,7 +38,7 @@ public class ROSJADEgw  { //Rosjava, interfaz entre agentes y ROS.
     }
 
     //Function for reading the data received in ACL messages
-    public static String recv() {
+    public static String recv() {  //Agent --> ROS
         String recvMs;
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("receive");
@@ -58,7 +58,7 @@ public class ROSJADEgw  { //Rosjava, interfaz entre agentes y ROS.
         return recvMs;
     }
 
-    public static void send(String msgOut) {  //Sends the data String that has been given
+    public static void send(String msgOut) {  //Sends the data String that has been given  ROS-->Agent
 
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("send");

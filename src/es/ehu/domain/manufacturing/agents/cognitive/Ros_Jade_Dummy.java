@@ -1,4 +1,7 @@
 package es.ehu.domain.manufacturing.agents.cognitive;
+import es.ehu.domain.manufacturing.agents.TransportAgent;
+import es.ehu.domain.manufacturing.behaviour.SendTaskBehaviour;
+import jade.wrapper.gateway.GatewayAgent;
 import org.ros.RosCore;
 import org.ros.message.MessageListener;
 import org.ros.namespace.GraphName;
@@ -16,14 +19,24 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 public class Ros_Jade_Dummy extends AbstractNodeMain{
     /** JADE Agent represented in the ROS platform */
-    private Agent myAgent;
+    private GatewayAgent myAgent;
     /** Behaviour to wake up the agent if there are new events */
     private Behaviour controlledBehaviour;
 
-    /** Publisher in the {@code ORDER_TOPIC} topic */
+    /** Publisher in the {@code TOPIC1} topic */
     private Publisher<social> publicista;
-    /** Subscriber in the {@code PECEPTION_TOPIC/<agent_name>} topic */
+    /** Publisher in the {@code TOPIC3} topic */
+    private Publisher<social> publicista2;
+    /** Publisher in the {@code TOPIC4} topic */
+    private Publisher<social> publicista3;
+    /** Subscriber in the {@code TOPIC1/<agent_name>} topic */
     private Subscriber<social> suscriptor;
+    /** Subscriber in the {@code TOPIC2/<agent_name>} topic */
+    private Subscriber<social> suscriptor2;
+    /** Subscriber in the {@code TOPIC3/<agent_name>} topic */
+    private Subscriber<social> suscriptor3;
+
+    private ConcurrentHashMap<String, Ros_Jade_Msg> messageStorage;
 
 
     private ConnectedNode connectedNode;
@@ -31,9 +44,7 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{
 
 
 
-
-
-    public Ros_Jade_Dummy(Agent a){
+    public Ros_Jade_Dummy(GatewayAgent a){
         this.myAgent=a;
         this.controlledBehaviour=null;
         RosCore rosCore = null;
@@ -53,10 +64,10 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{
         NodeMainExecutor nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
         nodeMainExecutor.execute(nodeMain, nodeConfiguration);
     }
-    public  Ros_Jade_Dummy(Agent a, Behaviour b){
+  /*  public  Ros_Jade_Dummy(Agent a, Behaviour b){
         this(a);
         this.controlledBehaviour = b;
-    }
+    }*/
     @Override
     public GraphName getDefaultNodeName() {
 
@@ -74,11 +85,14 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{
         System.out.println("Kobuki simulation running");
 
         this.connectedNode = connectedNode;
-        this.connected = true;
+        connected = true;
 
-        //maybe need 2 publishers, one first message , second with second message.
-        this.publicista = connectedNode.newPublisher("publi", social._TYPE);
-        this.suscriptor = connectedNode.newSubscriber("sus", social._TYPE);
+        this.suscriptor = connectedNode.newSubscriber("TOPICO1", social._TYPE);
+        this.suscriptor2 =connectedNode.newSubscriber("TOPICO2",social._TYPE);
+        this.publicista = connectedNode.newPublisher("TOPICO1", social._TYPE);
+        this.publicista2 = connectedNode.newPublisher("TOPICO2", social._TYPE);
+        this.publicista3 = connectedNode.newPublisher("TOPICO3", social._TYPE);
+
         //esperar a que el suscriptor reciba un mensaje
         suscriptor.addMessageListener(new MessageListener<social>() {
             @Override
@@ -86,25 +100,51 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{
                 managereceivedmsg(msg);
             }
         });
+        suscriptor2.addMessageListener(new MessageListener<social>() {
+            @Override
+            public void onNewMessage(social social) {
+                managerosmsg(social);
+            }
+        });
+        suscriptor3.addMessageListener(new MessageListener<social>() {
+            @Override
+            public void onNewMessage(social social) {
+                managerosmsg(social);
+            }
+        });
 
+    }
+    private void managerosmsg(social msg){  //  mensaje de Kobuki recibido, enviar al GWAgentROS
+
+        String cnvID= msg.getConversationID();
+        String onto= msg.getOntology();
+        Ros_Jade_Msg aux = new Ros_Jade_Msg(cnvID,onto,msg.getContent().toArray(new String[0]));
+
+        messageStorage.put(onto,aux);  // Prueba, almacenar info en un HashMap.
+    }
+    public ConcurrentHashMap<String, Ros_Jade_Msg> getMessageStorage() {
+        return this.messageStorage;
     }
 
     private void managereceivedmsg(social msg) {
         //leer topico, recibir posicion de entrada y salida leyendo del topico
         Ros_Jade_Msg aux=new Ros_Jade_Msg(msg.getConversationID(),msg.getOntology(),msg.getContent().toArray(new String[0]));
-        List msg_recv= msg.getContent();
+        //List msg_recv= msg.getContent();
+        System.out.println(msg.getContent());
         //....
 
         //Responder publicando en otro topico mensaje de confirmacion y nivel de bateria(azar).
 
         social msg2 =connectedNode.getTopicMessageFactory().newFromType(social._TYPE);
-        msg2.setOntology("");
-        final List<String> strings = Arrays.asList("received", "50");
+        msg2.setOntology("data");
+        ArrayList<String> strings = new ArrayList<String>();  //ROS msg ArrayList<String>
+        strings.add("received");
+        strings.add("50");
         msg2.setContent(strings);
-        msg2.setConversationID("");
+        msg2.setConversationID("1");
         msg2.setSender(this.getDefaultNodeName().toString());
         msg2.getHeader().setStamp(Time.fromMillis(System.currentTimeMillis()));
-        this.publicista.publish(msg2);
+        this.publicista2.publish(msg2);
         //esperar unos segundos mediante delay(simular desplazamiento)
 
         try {
@@ -114,15 +154,43 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{
         }
         //Enviar segundo mensaje de confirmacion de que tarea completa y nivel bateria
         social msg3=connectedNode.getTopicMessageFactory().newFromType(social._TYPE);
-        msg3.setOntology("");
-        final List<String> strings2 = Arrays.asList("received", "50");
+        msg3.setOntology("data");
+        ArrayList<String> strings2 = new ArrayList<String>(); //ROS msg ArrayList<String>
+        strings2.add("received");
+        strings2.add("45");
         msg3.setContent(strings2);
-        msg3.setConversationID("");
+        msg3.setConversationID("2");
         msg3.setSender(this.getDefaultNodeName().toString());
         msg3.getHeader().setStamp(Time.fromMillis(System.currentTimeMillis()));
-        this.publicista.publish(msg3);
+        this.publicista3.publish(msg3);
 
     }
+    public void send(Ros_Jade_Msg data) {  //ACL --> ROS  ,  Array to ArrayList
+
+        social msg = connectedNode.getTopicMessageFactory().newFromType(social._TYPE);
+        msg.setOntology(data.getOntology());
+        msg.setConversationID(data.getConversationID());
+        msg.setSender(this.getDefaultNodeName().toString());
+        msg.getHeader().setStamp(Time.fromMillis(System.currentTimeMillis()));
+        //Esto o
+        /*
+        String[] con= data.getContent();
+        ArrayList<String> setcontent = new ArrayList<String>();
+        int i=0;
+        while(i<con.length){
+            setcontent.add(con[i]);
+            i=i+1;
+        }
+        msg.setContent(setcontent);
+
+         */
+        //Esto
+        msg.setContent(Arrays.asList(data.getContent()));
+
+        publicista.publish(msg);
+    }
+
+
 }
 
 
