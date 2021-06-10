@@ -2,6 +2,7 @@ package es.ehu.domain.manufacturing.agents;
 
 import es.ehu.domain.manufacturing.agents.functionality.Batch_Functionality;
 import es.ehu.domain.manufacturing.agents.functionality.Transport_Functionality;
+import es.ehu.domain.manufacturing.behaviour.ReceiveTaskBehaviour;
 import es.ehu.domain.manufacturing.template.DomResAgentTemplate;
 import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.ResourceAgentTemplate;
@@ -61,7 +62,8 @@ public class TransportAgent extends DomResAgentTemplate  {
             System.out.println("Resource name es "+this.resourceName);
             System.out.println("Position x es "+this.xPos);
             System.out.println("Position y es "+this.yPos);
-            System.out.println("Battery percentage is %"+this.battery);
+            System.out.println("Battery percentageIñi is %"+this.battery);
+            //System.out.println("kontuz");
             /* XMLReader fileReader = new XMLReader();
 
            try {
@@ -73,6 +75,8 @@ public class TransportAgent extends DomResAgentTemplate  {
             }
 
             */
+
+
         } else {
             LOGGER.info("There are not sufficient arguments to start");
             this.initTransition = ControlBehaviour.STOP;

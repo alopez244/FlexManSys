@@ -49,7 +49,7 @@ public class GWAgentROS extends GatewayAgent {  //ROS
             }
         } else if (action.equals("send")) {
 
-            ConcurrentHashMap<String, Ros_Jade_Msg> chm= dummy.getMessageStorage();
+           // ConcurrentHashMap<String, Ros_Jade_Msg> chm= dummy.getMessageStorage();
 
 
             System.out.println("---Gateway send command");

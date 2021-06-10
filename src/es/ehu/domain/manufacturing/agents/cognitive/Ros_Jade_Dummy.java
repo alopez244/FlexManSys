@@ -1,5 +1,6 @@
 package es.ehu.domain.manufacturing.agents.cognitive;
 import es.ehu.domain.manufacturing.agents.TransportAgent;
+import es.ehu.domain.manufacturing.behaviour.InformAgent;
 import es.ehu.domain.manufacturing.behaviour.SendTaskBehaviour;
 import jade.wrapper.gateway.GatewayAgent;
 import org.ros.RosCore;
@@ -36,7 +37,7 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{
     /** Subscriber in the {@code TOPIC3/<agent_name>} topic */
     private Subscriber<social> suscriptor3;
 
-    private ConcurrentHashMap<String, Ros_Jade_Msg> messageStorage;
+
 
 
     private ConnectedNode connectedNode;
@@ -89,6 +90,7 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{
 
         this.suscriptor = connectedNode.newSubscriber("TOPICO1", social._TYPE);
         this.suscriptor2 =connectedNode.newSubscriber("TOPICO2",social._TYPE);
+        this.suscriptor3=connectedNode.newSubscriber("TOPICO3",social._TYPE);
         this.publicista = connectedNode.newPublisher("TOPICO1", social._TYPE);
         this.publicista2 = connectedNode.newPublisher("TOPICO2", social._TYPE);
         this.publicista3 = connectedNode.newPublisher("TOPICO3", social._TYPE);
@@ -120,11 +122,11 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{
         String onto= msg.getOntology();
         Ros_Jade_Msg aux = new Ros_Jade_Msg(cnvID,onto,msg.getContent().toArray(new String[0]));
 
-        messageStorage.put(onto,aux);  // Prueba, almacenar info en un HashMap.
+        Behaviour compMensaje=new InformAgent(this.myAgent,aux);
+        this.myAgent.addBehaviour(compMensaje);
+
     }
-    public ConcurrentHashMap<String, Ros_Jade_Msg> getMessageStorage() {
-        return this.messageStorage;
-    }
+
 
     private void managereceivedmsg(social msg) {
         //leer topico, recibir posicion de entrada y salida leyendo del topico

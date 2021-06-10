@@ -52,6 +52,7 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
         this.template = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
         //If the previous condition is accomplished, the agent is registered
         this.myAgent = (TransportAgent) mwAgent;
+        LOGGER.entry();
 
 
         String machineName = myAgent.resourceName;
@@ -64,12 +65,6 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
         for (int i=0; i<args.length; i++){
             if (args[i].toLowerCase().startsWith("id=")) return null;
         }
-
-
-        //?????
-
-
-
 
 
         //The TransportAgent is registered in the System Model
@@ -91,7 +86,8 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
         myAgent.keyLocalization.put("Almacen material","B4");
         myAgent.keyLocalization.put("Entrada KUKA","C1");
         myAgent.keyLocalization.put("Salida KUKA","D7");
-        System.out.println("proba");
+        System.out.println("Imprimir localization "+myAgent.keyLocalization.get("Salida KUKA"));
+
         //Finally, the TransportAgent is started.
 
         try {
@@ -113,13 +109,16 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
     @Override
     public Object execute(Object[] input) {
 
-        ACLMessage msg = (ACLMessage) input[0];
-        String content = msg.getContent();
-        AID sender = msg.getSender();
+        System.out.println("execute proba");
+        if (input[0] != null) {
+            ACLMessage msg = (ACLMessage) input[0];
+            String content = msg.getContent();
+            AID sender = msg.getSender();
 
-        String providedConsumables = processData(content);
+            String providedConsumables = processData(content);
 
-        sendACLMessage(7, sender, "data", "ProvidedConsumables", providedConsumables, myAgent);
+            sendACLMessage(7, sender, "data", "ProvidedConsumables", providedConsumables, myAgent);
+        }
 
         return null;
     }
@@ -181,13 +180,13 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
 
     }
 
-    @Override
+
     public void sendDataToDevice() {
 
         // Si puedes realizar trabajo enviar sendACLMessage
         //enviar msg a GatewayAgentRos
         //origen A5 coordenada B8, topic A5-> B8  [A5,B8]
-
+        System.out.println("En sendDataToDevice");
 
         if (workingFlag!=true){ //check transport is not working
 
