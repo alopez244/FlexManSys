@@ -26,7 +26,6 @@ public class GWAgentROS extends GatewayAgent {  //ROS
 
     protected void processCommand(java.lang.Object command) { //The method is called each time a request to process a command is received from the JSP Gateway. receive strmessage
 
-
         //MENSAJE DESDE NODE-KOKUKI-ROS
 
         System.out.println("-->Gateway processes execute");
@@ -84,6 +83,8 @@ public class GWAgentROS extends GatewayAgent {  //ROS
 
     protected void setup(){ //agent already registered and is able to send and receive messages. Necessary to add behaviour in order to to anything.
 
+
+        System.out.println(" en GWAgentRos");
         MessageTemplate template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.or(
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
                 MessageTemplate.MatchOntology("negotiation")),MessageTemplate.MatchConversationId("PLCdata"));

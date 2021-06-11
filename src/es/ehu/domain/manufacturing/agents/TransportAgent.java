@@ -64,6 +64,15 @@ public class TransportAgent extends DomResAgentTemplate  {
             System.out.println("Position y es "+this.yPos);
             System.out.println("Battery percentageIñi is %"+this.battery);
             //System.out.println("kontuz");
+
+            this.conversationId = "1";
+            keyLocalization.put("Punto de carga","A2");
+            keyLocalization.put("Almacen material","B4");
+            keyLocalization.put("Entrada KUKA","C1");
+            keyLocalization.put("Salida KUKA","D7");
+            System.out.println("Imprimir localization "+keyLocalization.get("Salida KUKA"));
+
+            pilaTareas.add("[A3,B5]");
             /* XMLReader fileReader = new XMLReader();
 
            try {

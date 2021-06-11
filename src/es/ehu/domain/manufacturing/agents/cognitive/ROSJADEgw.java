@@ -9,11 +9,11 @@ public class ROSJADEgw  { //Rosjava, interfaz entre agentes y ROS.
     // Gateway between non-JADE and a JADE agent system.
     //Crear comportamientos adecuados que ejecuten los comandos que debe emitir al sistema JADE y pasarlos como parametro en execute()
 
-    public static void init(String transportID){
+    public static void init(){
 
 
         //unir ROSJADEgw con GWAgentRos
-
+        System.out.println("En rosjadegw");
         //Unirlo al contenedor que asumimos que esta en localHost, port 1099
         String host = "192.168.187.131"; ///prueba
         String port = "1099";//prueba
@@ -23,7 +23,7 @@ public class ROSJADEgw  { //Rosjava, interfaz entre agentes y ROS.
         pp.setProperty(Profile.MAIN_PORT, port);
         pp.setProperty(Profile.LOCAL_PORT, port);
 
-        String containerName = "GatewayContenedor" + transportID;   // se define el nombre del contenedor donde se inicializara el agente
+        String containerName = "GatewayCont1";   // se define el nombre del contenedor donde se inicializara el agente
         pp.setProperty(Profile.CONTAINER_NAME, containerName);
         JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgentROS",pp);
 

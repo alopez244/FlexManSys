@@ -56,8 +56,8 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
 
 
         String machineName = myAgent.resourceName;
-        Integer machineNumber = Integer.parseInt(machineName.split("_")[1]);
-        gatewayAgentName = "ControlGW" + machineNumber.toString(); //Se genera el nombre del Gateway Agent con el que se tendra que comunicar
+        //Integer machineNumber = Integer.parseInt(machineName.split("_")[1]);
+        gatewayAgentName = "ControlGatewayCont1"; //Se genera el nombre del Gateway Agent con el que se tendra que comunicar
 
         //First, the Machine Model is read
         String [] args = (String[]) myAgent.getArguments();
@@ -80,16 +80,6 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
         String seId = reply.getContent();
 
 
-
-        this.conversation =1;
-        myAgent.keyLocalization.put("Punto de carga","A2");
-        myAgent.keyLocalization.put("Almacen material","B4");
-        myAgent.keyLocalization.put("Entrada KUKA","C1");
-        myAgent.keyLocalization.put("Salida KUKA","D7");
-        System.out.println("Imprimir localization "+myAgent.keyLocalization.get("Salida KUKA"));
-
-        //Finally, the TransportAgent is started.
-
         try {
             // Agent generation
             className = myAgent.getClass().getName();
@@ -99,8 +89,13 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
 
             Thread.sleep(1000);
         } catch (Exception e1) {
+
             e1.printStackTrace();
         }
+
+
+
+        System.out.println("Info del agente recien creado"+ myAgent.pilaTareas.peek());
 
         return null;
 
@@ -191,7 +186,9 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
         if (workingFlag!=true){ //check transport is not working
 
             if(!myAgent.pilaTareas.isEmpty()){//check they are works to do
+                System.out.println("Hay trabajos que hacer, me pongo con ello");
                 String tarea = myAgent.pilaTareas.peek(); //get first work of stack
+                System.out.println("Tarea"+ tarea);
                 AID gatewayAgentID = new AID(gatewayAgentName,false); //receiver
                 String conversationID = Integer.toString(this.conversation); //each task has one ID
                 sendACLMessage(16,gatewayAgentID,"data",conversationID,tarea,myAgent); //send msg to GWAgentROS
@@ -199,8 +196,10 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
                 this.conversation = this.conversation+1;
 
 
+
             }else{
-                System.out.println("No operations defined");  // working stack is empty
+
+                System.out.println("No operations defined, pila vacia");  // working stack is empty
                 workingFlag = false;
             }
 
@@ -218,7 +217,7 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
         //Actualizar info del agente trasnporte necesario. (bateria ,pila tareas..)
         //recibir msg de confirmacion, recibir nivel de bateria.
 
-
+        System.out.println("En rcvDataFromDevice");
         this.PLCmsgIn = new Gson().fromJson(msg.getContent(), HashMap.class);   //Data type conversion Json->Hashmap class
         if(PLCmsgIn.containsKey("Received")) {   // Comprobar si es mensaje de confirmacion
             if (PLCmsgIn.get("Received").equals(true)) {

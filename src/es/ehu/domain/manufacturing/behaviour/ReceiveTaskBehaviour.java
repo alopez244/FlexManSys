@@ -33,13 +33,12 @@ public class ReceiveTaskBehaviour extends SimpleBehaviour {
     @Override
     public void action() {
 
-        System.out.println("ReceiveTaskBehaviour Initilized");
+
+
         LOGGER.entry();
 
         aAssetManagement.sendDataToDevice();
-        ACLMessage acl;
-        aAssetManagement.rcvDataFromDevice( acl = new ACLMessage(16));
-        System.out.println("sendDataeginda");
+
 
         ACLMessage msg = myAgent.receive(template); // If ACL Message template matches, rcvDataFromPLC and recvBatchInfo methods are called
         if (msg != null) {
@@ -47,7 +46,6 @@ public class ReceiveTaskBehaviour extends SimpleBehaviour {
             this.aAssetManagement.rcvDataFromDevice(msg);  // processes the information of the received message and updates the machine plan
 
         } else {
-            System.out.println("msg == null");
             block();
         }
 
