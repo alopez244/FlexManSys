@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GWAgentROS extends GatewayAgent {  //ROS
 
 
-    private Boolean workingFlag = false; //Flag que se activa cuando el transporte esta trabajando.
+    public Boolean workingFlag = false; //Flag que se activa cuando el transporte esta trabajando.
     public String msgRecv;
     public AID TransportAgentName;
     public static final int bufferSize = 6;
@@ -26,7 +26,7 @@ public class GWAgentROS extends GatewayAgent {  //ROS
 
     protected void processCommand(java.lang.Object command) { //The method is called each time a request to process a command is received from the JSP Gateway. receive strmessage
 
-        ROSJADEgw rosgw= new ROSJADEgw(this);
+        //ROSJADEgw rosgw= new ROSJADEgw(this);
         System.out.println("-->Gateway processes execute");
         if (!(command instanceof StructMessage)) {
             System.out.println("---Error, unexpected type");
@@ -36,18 +36,19 @@ public class GWAgentROS extends GatewayAgent {  //ROS
         String action = msgStruct.readAction();
         if (action.equals("receive")) {     // JadeGateway.execute command was called for new message reading (Agent -> PLC)
             System.out.println("---GW, recv function");
+            msgRecv = (String) msgInFIFO.peek();
             ACLMessage msgACL = (ACLMessage) msgInFIFO.poll();
-            //msgRecv = (String) msgInFIFO.poll();    //reads the oldest message from FIFO ,ACL message
+                //reads the oldest message from FIFO ,ACL message
 
             if (msgRecv != null) {
                 System.out.println("---GW, new message to read");
-                //((StructMessage) command).setMessage(msgRecv);  //message is saved in StructMessage data structure, then ROSJADEgw class will read it from there
-                //((StructMessage) command).setNewData(true);
+                ((StructMessage) command).setMessage(msgRecv);  //message is saved in StructMessage data structure, then ROSJADEgw class will read it from there
+                ((StructMessage) command).setNewData(true);
                 // poner mensaje en topico y publicar
                 workingFlag=true;
                 Ros_Jade_Msg msg= new Ros_Jade_Msg(msgACL.getConversationId(),msgACL.getOntology(),msgACL.getContent());
 
-                rosgw.enviarMSG(msg);
+                //rosgw.enviarMSG(msg);
             } else {
                 ((StructMessage) command).setNewData(false);
                 System.out.println("---GW, message queue is empty");
@@ -97,7 +98,7 @@ public class GWAgentROS extends GatewayAgent {  //ROS
 
         //pruebas de ejecucion
 
-        ROSJADEgw gw= new ROSJADEgw(this);
+        //ROSJADEgw gw= new ROSJADEgw(this);
 
         // MENSAJE DESDE TRANSPORT AGENT
 
@@ -117,12 +118,18 @@ public class GWAgentROS extends GatewayAgent {  //ROS
                     msgInFIFO.add(msgToFIFO); // safe ACL message in FIFO
                     // comprobar con flag que no haya tarea trabajando, flag.Instanciar rosjadeGW , llamar a recv, que leerea tarea del FIFO
                     // de GWAgentROS, y lo publicara.
+
+
                     if (workingFlag!=true){
                         ROSJADEgw.recv();
 
                     }else{
                         System.out.println("Kobuki is working now");
                     }
+
+
+
+
 
 
                 } else {

@@ -2,6 +2,7 @@ package es.ehu.domain.manufacturing.agents.cognitive;
 
 import es.ehu.domain.manufacturing.behaviour.InformAgent;
 import es.ehu.domain.manufacturing.utilities.StructMessage;
+import jade.core.Agent;
 import jade.core.Profile;
 import jade.core.behaviours.Behaviour;
 import jade.util.leap.Properties;
@@ -22,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 public class ROSJADEgw extends AbstractNodeMain { //Nodo Rosjava del agente, interfaz entre agentes y ROS.
     // Gateway between non-JADE and a JADE agent system.
     //Crear comportamientos adecuados que ejecuten los comandos que debe emitir al sistema JADE y pasarlos como parametro en execute()
-    private GatewayAgent myAgent;
+    private Agent myAgent;
     private  Boolean workingFlag = false; //Flag que se activa cuando el transporte esta trabajando.
 
     private ConnectedNode connectedNode;
@@ -37,7 +38,7 @@ public class ROSJADEgw extends AbstractNodeMain { //Nodo Rosjava del agente, int
     /** Publisher in the {@code TOPIC1} topic */
     private Publisher<social> publicista;
 
-    public ROSJADEgw (GatewayAgent a){
+    public ROSJADEgw (Agent a){
         this.myAgent=a;
         //this.controlledBehaviour=null;
         RosCore rosCore = null;
