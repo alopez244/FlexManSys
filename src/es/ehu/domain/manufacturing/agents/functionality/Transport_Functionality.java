@@ -190,8 +190,10 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
                 String tarea = myAgent.pilaTareas.peek(); //get first work of stack . String like [A4,B4]
                 System.out.println("Tarea"+ tarea);
                 AID gatewayAgentID = new AID(gatewayAgentName,false); //receiver
-                String conversationID = Integer.toString(this.conversation); //each task has one ID
+                //String conversationID = Integer.toString(this.conversation); //each task has one ID
+                String conversationID = "1";
                 sendACLMessage(16,gatewayAgentID,"data",conversationID,tarea,myAgent); //send msg to GWAgentROS
+                System.out.println("mensaje enviado a GWAgentROS");
                 //workingFlag = true;  //update workingFlag
                 this.conversation = this.conversation+1;
 
@@ -200,7 +202,8 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
             }else{
 
                 System.out.println("No operations defined, pila vacia");  // working stack is empty
-                workingFlag = false;
+                //
+                //workingFlag = false;
             }
 
         }else{
@@ -248,7 +251,7 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
                     myAgent.battery=battery; //update battery of agent
 
                     myAgent.pilaTareas.pop(); //remove work from stack because is done.
-                    workingFlag=false;  //update flag
+                    //workingFlag=false;  //update flag
                 }
             }
         }

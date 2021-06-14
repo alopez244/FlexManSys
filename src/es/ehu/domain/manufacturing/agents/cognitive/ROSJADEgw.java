@@ -34,13 +34,15 @@ public class ROSJADEgw extends AbstractNodeMain { //Nodo Rosjava del agente, int
 
     /** Subscriber in the {@code TOPIC3/<agent_name>} topic */
     private Subscriber<social> suscriptor2;
+    /** Behaviour to wake up the agent if there are new events */
+    private Behaviour controlledBehaviour;
 
     /** Publisher in the {@code TOPIC1} topic */
     private Publisher<social> publicista;
 
     public ROSJADEgw (Agent a){
         this.myAgent=a;
-        //this.controlledBehaviour=null;
+        this.controlledBehaviour=null;
         RosCore rosCore = null;
         try {
             rosCore.newPublic(11311);
@@ -117,32 +119,24 @@ public class ROSJADEgw extends AbstractNodeMain { //Nodo Rosjava del agente, int
         //unir ROSJADEgw con GWAgentRos
         System.out.println("En rosjadegw");
         //Unirlo al contenedor que asumimos que esta en localHost, port 1099
-        String host = "192.168.187.131"; ///prueba
-        String port = "1099";//prueba
+        String host = "192.168.187.131"; ///
+        String port = "1099";//
+
         Properties pp = new Properties();
         pp.setProperty(Profile.MAIN_HOST, host);
-//
         pp.setProperty(Profile.MAIN_PORT, port);
         pp.setProperty(Profile.LOCAL_PORT, port);
 
         String containerName = "GatewayCont1";   // se define el nombre del contenedor donde se inicializara el agente
         pp.setProperty(Profile.CONTAINER_NAME, containerName);
-
-        try{
-            JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgentROS",pp);
-        }catch(Exception e){
-            e.printStackTrace();
-
-        }
-
-
+        JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgentROS",pp); //hace bien
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("init");
         try {
-            JadeGateway.execute(strMessage);    // calls processCommand method of Gateway Agent
+            JadeGateway.execute(strMessage);// calls processCommand method of Gateway Agent
+
         } catch(Exception e) {
             e.printStackTrace();
-
         }
         System.out.println("<-Java Agent Init");
     }

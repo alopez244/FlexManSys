@@ -78,9 +78,11 @@ public class GWAgent extends GatewayAgent {
             public void action() {
                 System.out.println("Entering CyclicBehaviour");
                 ACLMessage msgToFIFO = receive(template);
+
                 if (msgToFIFO != null) {
                     System.out.println("GWagent, message received from Machine Agent");
-                    machineAgentName = msgToFIFO.getSender();   //saves the sender ID for a later reply
+                    machineAgentName = msgToFIFO.getSender();//saves the sender ID for a later reply
+                    System.out.println("MachineAgentName :"+machineAgentName);
                     if(msgInFIFO.isAtFullCapacity()) {
                         System.out.println("buffer full, old message lost");
                     }
