@@ -40,6 +40,7 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{ // SIMULADOR KOBUKI
 
     public Ros_Jade_Dummy(Agent a){
         this.myAgent=a;
+        //this.controlledBehaviour=null; quitar para prueba Iñi
         this.controlledBehaviour=null;
         RosCore rosCore = null;
         try {
@@ -75,6 +76,7 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{ // SIMULADOR KOBUKI
      */
     @Override
     public void onStart(final ConnectedNode connectedNode) {
+
 
         System.out.println("Kobuki simulation running");
 

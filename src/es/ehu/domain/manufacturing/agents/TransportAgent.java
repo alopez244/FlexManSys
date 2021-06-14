@@ -1,10 +1,12 @@
 package es.ehu.domain.manufacturing.agents;
 
+import es.ehu.domain.manufacturing.agents.cognitive.Ros_Jade_Dummy;
 import es.ehu.domain.manufacturing.agents.functionality.Batch_Functionality;
 import es.ehu.domain.manufacturing.agents.functionality.Transport_Functionality;
 import es.ehu.domain.manufacturing.behaviour.ReceiveTaskBehaviour;
 import es.ehu.domain.manufacturing.template.DomResAgentTemplate;
 import es.ehu.platform.behaviour.ControlBehaviour;
+import es.ehu.platform.behaviour.RunningBehaviour;
 import es.ehu.platform.template.ResourceAgentTemplate;
 import es.ehu.platform.utilities.XMLReader;
 import jade.core.behaviours.Behaviour;
@@ -90,9 +92,10 @@ public class TransportAgent extends DomResAgentTemplate  {
             LOGGER.info("There are not sufficient arguments to start");
             this.initTransition = ControlBehaviour.STOP;
         }
-
+        //pruebas
 
         //this.resourceName = arguments[0].toString();
+
         functionalityInstance = new Transport_Functionality();
         return null;  // return LOGGER.exit(null); //
 

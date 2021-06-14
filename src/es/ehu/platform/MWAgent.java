@@ -196,7 +196,6 @@ public class MWAgent extends Agent {
         System.out.println("cmd="+cmd);
 
         try { resolveMWM(); } catch (Exception e) {e.printStackTrace();}
-
         ACLMessage aMsg = new ACLMessage(ACLMessage.REQUEST);
 
         aMsg.setContent(cmd);
@@ -336,27 +335,26 @@ public class MWAgent extends Agent {
         LOGGER.info(cmpID+"("+getLocalName() + "):data("+
                 ((msg.getClass()==null)?"null":msg.getClass().getSimpleName())+
                 ") > "+sTargets );
-			
+
 			/*MessageTemplate mt = MessageTemplate.MatchInReplyTo(aMsg.getReplyWith());
-			
+
 			int repliesCnt = 0;
 			while (repliesCnt<cmpIDs.length) {
 				ACLMessage aReply = receive(mt);
 				if (aReply != null){
-					if (aReply.getPerformative() == ACLMessage.FAILURE) {                        	
+					if (aReply.getPerformative() == ACLMessage.FAILURE) {
 	                	String name=aReply.getContent().substring(aReply.getContent().indexOf(":name ", aReply.getContent().indexOf("MTS-error"))+":name ".length());
-	                	name=name.substring(0, name.indexOf('@'));                        
+	                	name=name.substring(0, name.indexOf('@'));
 	                	System.out.println(name+" FAILURE");
 					}
 					repliesCnt++;
 				}
 			  System.out.println("sendMessage.rcvReply.block()");
-
 			  try { Thread.sleep(100); } catch (InterruptedException e) { e.printStackTrace(); }
 			  ACLMessage test = receive();
 			  if (test == null) System.out.println("*********** desbloqueado con mensaje nulo�?");
 			  else System.out.println("*************** "+test.getContent());
-			  
+
 			} */
 
         //sendMessage(msg, ontology, targets);
@@ -490,6 +488,7 @@ public class MWAgent extends Agent {
             //System.out.print(".");
             DFAgentDescription[] result = DFService.search(this,dfd);
             if ((result != null) && (result.length > 0)) {
+
                 dfd = result[0];
                 runningMwm.put("tmwm", dfd.getName().getLocalName());
                 System.out.println("sa > "+dfd.getName().getLocalName());
@@ -550,4 +549,3 @@ public class MWAgent extends Agent {
         }
     }
 }
-

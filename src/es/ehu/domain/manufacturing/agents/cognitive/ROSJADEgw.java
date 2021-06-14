@@ -57,7 +57,9 @@ public class ROSJADEgw extends AbstractNodeMain { //Nodo Rosjava del agente, int
         NodeMainExecutor nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
         nodeMainExecutor.execute(nodeMain, nodeConfiguration);
         //lamar al metodo init dentro de ROSJADEgw, para que se incie el GWAgentROS
-        init();
+
+       //pruebas de ejecucion
+       // init();
     }
     @Override
     public GraphName getDefaultNodeName() {
@@ -132,7 +134,9 @@ public class ROSJADEgw extends AbstractNodeMain { //Nodo Rosjava del agente, int
             JadeGateway.execute(strMessage);    // calls processCommand method of Gateway Agent
         } catch(Exception e) {
             e.printStackTrace();
+
         }
+
         System.out.println("<-Java Agent Init");
     }
 

@@ -26,9 +26,8 @@ public class GWAgentROS extends GatewayAgent {  //ROS
     //ROSJADEgw rgw=new ROSJADEgw ();
     //Ros_Jade_Dummy dummy= new Ros_Jade_Dummy(this);  // instanciar Nodo dummy
     ROSJADEgw rosgw= new ROSJADEgw(this);
+
     protected void processCommand(java.lang.Object command) { //The method is called each time a request to process a command is received from the JSP Gateway. receive strmessage
-
-
 
         System.out.println("-->Gateway processes execute");
         if (!(command instanceof StructMessage)) {
@@ -92,10 +91,13 @@ public class GWAgentROS extends GatewayAgent {  //ROS
     protected void setup(){ //agent already registered and is able to send and receive messages. Necessary to add behaviour in order to to anything.
 
 
-        System.out.println(" en GWAgentRos");
+        System.out.println("en GWAgentRos");
         MessageTemplate template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.or(
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
                 MessageTemplate.MatchOntology("negotiation")),MessageTemplate.MatchConversationId("PLCdata"));
+
+        //pruebas de ejecucion
+        ROSJADEgw gw= new ROSJADEgw(this);
 
 
         // MENSAJE DESDE TRANSPORT AGENT
@@ -122,9 +124,6 @@ public class GWAgentROS extends GatewayAgent {  //ROS
                         System.out.println("Kobuki is working now");
                     }
 
-
-                    //Ros_Jade_Msg msg =new Ros_Jade_Msg(msgToFIFO.getConversationId(),msgToFIFO.getOntology(),msgToFIFO.getContent());  //PREPARING MSG TO KOBUKI
-                    //dummy.send(msg);  // publicar mensaje
 
                 } else {
                     System.out.println("Block the agent");
