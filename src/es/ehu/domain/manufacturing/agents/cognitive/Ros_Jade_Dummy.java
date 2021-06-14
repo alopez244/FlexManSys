@@ -18,26 +18,19 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import java.util.concurrent.TimeUnit;
-public class Ros_Jade_Dummy extends AbstractNodeMain{
+
+public class Ros_Jade_Dummy extends AbstractNodeMain{ // SIMULADOR KOBUKI
     /** JADE Agent represented in the ROS platform */
-    private GatewayAgent myAgent;
+    private Agent myAgent;
     /** Behaviour to wake up the agent if there are new events */
     private Behaviour controlledBehaviour;
 
-    /** Publisher in the {@code TOPIC1} topic */
-    private Publisher<social> publicista;
-    /** Publisher in the {@code TOPIC3} topic */
+
     private Publisher<social> publicista2;
     /** Publisher in the {@code TOPIC4} topic */
     private Publisher<social> publicista3;
     /** Subscriber in the {@code TOPIC1/<agent_name>} topic */
     private Subscriber<social> suscriptor;
-    /** Subscriber in the {@code TOPIC2/<agent_name>} topic */
-    private Subscriber<social> suscriptor2;
-    /** Subscriber in the {@code TOPIC3/<agent_name>} topic */
-    private Subscriber<social> suscriptor3;
-
-
 
 
     private ConnectedNode connectedNode;
@@ -45,7 +38,7 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{
 
 
 
-    public Ros_Jade_Dummy(GatewayAgent a){
+    public Ros_Jade_Dummy(Agent a){
         this.myAgent=a;
         this.controlledBehaviour=null;
         RosCore rosCore = null;
@@ -89,9 +82,6 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{
         connected = true;
 
         this.suscriptor = connectedNode.newSubscriber("TOPICO1", social._TYPE);
-        this.suscriptor2 =connectedNode.newSubscriber("TOPICO2",social._TYPE);
-        this.suscriptor3=connectedNode.newSubscriber("TOPICO3",social._TYPE);
-        this.publicista = connectedNode.newPublisher("TOPICO1", social._TYPE);
         this.publicista2 = connectedNode.newPublisher("TOPICO2", social._TYPE);
         this.publicista3 = connectedNode.newPublisher("TOPICO3", social._TYPE);
 
@@ -99,31 +89,10 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{
         suscriptor.addMessageListener(new MessageListener<social>() {
             @Override
             public void onNewMessage(social msg) {
+
                 managereceivedmsg(msg);
             }
         });
-        suscriptor2.addMessageListener(new MessageListener<social>() {
-            @Override
-            public void onNewMessage(social social) {
-                managerosmsg(social);
-            }
-        });
-        suscriptor3.addMessageListener(new MessageListener<social>() {
-            @Override
-            public void onNewMessage(social social) {
-                managerosmsg(social);
-            }
-        });
-
-    }
-    private void managerosmsg(social msg){  //  mensaje de Kobuki recibido, enviar al GWAgentROS
-
-        String cnvID= msg.getConversationID();
-        String onto= msg.getOntology();
-        Ros_Jade_Msg aux = new Ros_Jade_Msg(cnvID,onto,msg.getContent().toArray(new String[0]));
-
-        Behaviour compMensaje=new InformAgent(this.myAgent,aux);
-        this.myAgent.addBehaviour(compMensaje);
 
     }
 
@@ -132,7 +101,7 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{
         //leer topico, recibir posicion de entrada y salida leyendo del topico
         Ros_Jade_Msg aux=new Ros_Jade_Msg(msg.getConversationID(),msg.getOntology(),msg.getContent().toArray(new String[0]));
         //List msg_recv= msg.getContent();
-        System.out.println(msg.getContent());
+        System.out.println("Imprimir contenido recibido en el Kobuki "+ Arrays.toString(aux.getContent()));
         //....
 
         //Responder publicando en otro topico mensaje de confirmacion y nivel de bateria(azar).
@@ -143,7 +112,7 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{
         strings.add("received");
         strings.add("50");
         msg2.setContent(strings);
-        msg2.setConversationID("1");
+        msg2.setConversationID(msg.getConversationID());
         msg2.setSender(this.getDefaultNodeName().toString());
         msg2.getHeader().setStamp(Time.fromMillis(System.currentTimeMillis()));
         this.publicista2.publish(msg2);
@@ -167,31 +136,6 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{
         this.publicista3.publish(msg3);
 
     }
-    public void send(Ros_Jade_Msg data) {  //ACL --> ROS  ,  Array to ArrayList
-
-        social msg = connectedNode.getTopicMessageFactory().newFromType(social._TYPE);
-        msg.setOntology(data.getOntology());
-        msg.setConversationID(data.getConversationID());
-        msg.setSender(this.getDefaultNodeName().toString());
-        msg.getHeader().setStamp(Time.fromMillis(System.currentTimeMillis()));
-        //Esto o
-        /*
-        String[] con= data.getContent();
-        ArrayList<String> setcontent = new ArrayList<String>();
-        int i=0;
-        while(i<con.length){
-            setcontent.add(con[i]);
-            i=i+1;
-        }
-        msg.setContent(setcontent);
-
-         */
-        //Esto
-        msg.setContent(Arrays.asList(data.getContent()));
-
-        publicista.publish(msg);
-    }
-
 
 }
 

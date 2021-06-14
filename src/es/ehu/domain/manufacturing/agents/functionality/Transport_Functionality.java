@@ -187,7 +187,7 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
 
             if(!myAgent.pilaTareas.isEmpty()){//check they are works to do
                 System.out.println("Hay trabajos que hacer, me pongo con ello");
-                String tarea = myAgent.pilaTareas.peek(); //get first work of stack
+                String tarea = myAgent.pilaTareas.peek(); //get first work of stack . String like [A4,B4]
                 System.out.println("Tarea"+ tarea);
                 AID gatewayAgentID = new AID(gatewayAgentName,false); //receiver
                 String conversationID = Integer.toString(this.conversation); //each task has one ID
