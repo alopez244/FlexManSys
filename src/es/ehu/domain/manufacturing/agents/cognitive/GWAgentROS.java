@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class GWAgentROS extends GatewayAgent {  //ROS
 
-    private GatewayListener listener;
+
     private Boolean workingFlag = false; //Flag que se activa cuando el transporte esta trabajando.
     public String msgRecv;
     public AID TransportAgentName;
@@ -25,7 +25,7 @@ public class GWAgentROS extends GatewayAgent {  //ROS
     CircularFifoQueue msgInFIFO = new CircularFifoQueue(bufferSize);
     //ROSJADEgw rgw=new ROSJADEgw ();
     //Ros_Jade_Dummy dummy= new Ros_Jade_Dummy(this);  // instanciar Nodo dummy
-    ROSJADEgw rosgw= new ROSJADEgw(this);
+   // ROSJADEgw rosgw= new ROSJADEgw(this);
 
     protected void processCommand(java.lang.Object command) { //The method is called each time a request to process a command is received from the JSP Gateway. receive strmessage
 
@@ -48,6 +48,7 @@ public class GWAgentROS extends GatewayAgent {  //ROS
                 // poner mensaje en topico y publicar
                 workingFlag=true;
                 Ros_Jade_Msg msg= new Ros_Jade_Msg(msgACL.getConversationId(),msgACL.getOntology(),msgACL.getContent());
+                ROSJADEgw rosgw= new ROSJADEgw(this);
                 rosgw.enviarMSG(msg);
             } else {
                 ((StructMessage) command).setNewData(false);
@@ -97,14 +98,15 @@ public class GWAgentROS extends GatewayAgent {  //ROS
                 MessageTemplate.MatchOntology("negotiation")),MessageTemplate.MatchConversationId("PLCdata"));
 
         //pruebas de ejecucion
-        ROSJADEgw gw= new ROSJADEgw(this);
 
+        ROSJADEgw gw= new ROSJADEgw(this);
 
         // MENSAJE DESDE TRANSPORT AGENT
 
         addBehaviour(new CyclicBehaviour() { //keep executing constantly
 
             public void action() {
+
                 System.out.println("Entering CyclicBehaviour");
                 ACLMessage msgToFIFO = receive(template); //recivir mensaje desde Transport Agent
                 if (msgToFIFO != null) {
@@ -133,11 +135,7 @@ public class GWAgentROS extends GatewayAgent {  //ROS
         });
         super.setup();
     }
-    protected void takeDown(){
-        if(listener!=null){
-            listener.handleGatewayDisconnected();
-        }
-    }
+
 }
 
 

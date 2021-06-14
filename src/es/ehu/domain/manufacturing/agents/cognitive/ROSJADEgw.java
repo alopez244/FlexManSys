@@ -126,7 +126,14 @@ public class ROSJADEgw extends AbstractNodeMain { //Nodo Rosjava del agente, int
 
         String containerName = "GatewayCont1";   // se define el nombre del contenedor donde se inicializara el agente
         pp.setProperty(Profile.CONTAINER_NAME, containerName);
-        JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgentROS",pp);
+
+        try{
+            JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgentROS",pp);
+        }catch(Exception e){
+            e.printStackTrace();
+
+        }
+
 
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("init");
@@ -136,7 +143,6 @@ public class ROSJADEgw extends AbstractNodeMain { //Nodo Rosjava del agente, int
             e.printStackTrace();
 
         }
-
         System.out.println("<-Java Agent Init");
     }
 
