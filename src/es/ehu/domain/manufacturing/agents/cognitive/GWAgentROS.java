@@ -23,12 +23,10 @@ public class GWAgentROS extends GatewayAgent {  //ROS
     public AID TransportAgentName;
     public static final int bufferSize = 6;
     CircularFifoQueue msgInFIFO = new CircularFifoQueue(bufferSize);
-    //ROSJADEgw rgw=new ROSJADEgw ();
-    //Ros_Jade_Dummy dummy= new Ros_Jade_Dummy(this);  // instanciar Nodo dummy
-   // ROSJADEgw rosgw= new ROSJADEgw(this);
 
     protected void processCommand(java.lang.Object command) { //The method is called each time a request to process a command is received from the JSP Gateway. receive strmessage
 
+        ROSJADEgw rosgw= new ROSJADEgw(this);
         System.out.println("-->Gateway processes execute");
         if (!(command instanceof StructMessage)) {
             System.out.println("---Error, unexpected type");
@@ -48,7 +46,7 @@ public class GWAgentROS extends GatewayAgent {  //ROS
                 // poner mensaje en topico y publicar
                 workingFlag=true;
                 Ros_Jade_Msg msg= new Ros_Jade_Msg(msgACL.getConversationId(),msgACL.getOntology(),msgACL.getContent());
-                ROSJADEgw rosgw= new ROSJADEgw(this);
+
                 rosgw.enviarMSG(msg);
             } else {
                 ((StructMessage) command).setNewData(false);

@@ -192,7 +192,7 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
                 AID gatewayAgentID = new AID(gatewayAgentName,false); //receiver
                 String conversationID = Integer.toString(this.conversation); //each task has one ID
                 sendACLMessage(16,gatewayAgentID,"data",conversationID,tarea,myAgent); //send msg to GWAgentROS
-                workingFlag = true;  //update workingFlag
+                //workingFlag = true;  //update workingFlag
                 this.conversation = this.conversation+1;
 
 
@@ -228,6 +228,7 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
         }else{ //check if it's availability message or work finished msg
 
             if(PLCmsgIn.containsKey("Availability")){
+
                 if(PLCmsgIn.get("Availability").equals(true)){ //is prepared to work
                     Float battery = (Float) PLCmsgIn.get("Battery");
                     System.out.println("Ready to start working and battery is"+ battery);
@@ -235,8 +236,6 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
 
                     if (PLCmsgIn.containsKey("Location")){
                         myAgent.pilaTareas.push((String)PLCmsgIn.get("Location")); //update work stack
-                       // SimpleBehaviour sendingBehaviour= new ReceiveTaskBehaviour(myAgent);  si se quiere responder al Kobuki.
-                       // sendingBehaviour.action();
                     }else{
                         System.out.println("No working location specified");
                     }

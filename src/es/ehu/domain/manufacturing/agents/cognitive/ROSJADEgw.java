@@ -174,6 +174,7 @@ public class ROSJADEgw extends AbstractNodeMain { //Nodo Rosjava del agente, int
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("send");
         strMessage.setMessage(msgOut);
+        System.out.println(msgOut);
         strMessage.setPerformative(7); //INFORM
 
         //Dependiendo del tipo de mensaje recivido cambiar el performative

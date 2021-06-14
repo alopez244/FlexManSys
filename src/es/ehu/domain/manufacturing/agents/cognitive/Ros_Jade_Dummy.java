@@ -112,6 +112,10 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{ // SIMULADOR KOBUKI
         msg2.setOntology("data");
         ArrayList<String> strings = new ArrayList<String>();  //ROS msg ArrayList<String>
         strings.add("received");
+        strings.add("true");
+        strings.add("availability");
+        strings.add("true");
+        strings.add("battery");
         strings.add("50");
         msg2.setContent(strings);
         msg2.setConversationID(msg.getConversationID());
@@ -129,8 +133,12 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{ // SIMULADOR KOBUKI
         social msg3=connectedNode.getTopicMessageFactory().newFromType(social._TYPE);
         msg3.setOntology("data");
         ArrayList<String> strings2 = new ArrayList<String>(); //ROS msg ArrayList<String>
-        strings2.add("received");
-        strings2.add("45");
+        strings.add("received");
+        strings.add("true");
+        strings.add("availability");
+        strings.add("true");
+        strings.add("battery");
+        strings.add("45");
         msg3.setContent(strings2);
         msg3.setConversationID("2");
         msg3.setSender(this.getDefaultNodeName().toString());
