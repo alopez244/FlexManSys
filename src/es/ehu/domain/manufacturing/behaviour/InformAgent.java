@@ -7,6 +7,9 @@ import jade.lang.acl.ACLMessage;
 import jade.wrapper.gateway.GatewayAgent;
 
 public class InformAgent  extends SimpleBehaviour {
+
+    // TODO ESTE COMPORTAMIENTO NO SE UTILIZA PARA NADA. SE PUEDE ELIMINAR.
+
     boolean done=false;
     Ros_Jade_Msg msg=null;
 

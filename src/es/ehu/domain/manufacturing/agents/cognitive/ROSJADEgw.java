@@ -19,11 +19,11 @@ import social_msgs.social;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-public class ROSJADEgw extends AbstractNodeMain { //Rosjava, interfaz entre agentes y ROS.
+public class ROSJADEgw extends AbstractNodeMain { //Nodo Rosjava del agente, interfaz entre agentes y ROS.
     // Gateway between non-JADE and a JADE agent system.
     //Crear comportamientos adecuados que ejecuten los comandos que debe emitir al sistema JADE y pasarlos como parametro en execute()
     private GatewayAgent myAgent;
-    private Boolean workingFlag = false; //Flag que se activa cuando el transporte esta trabajando.
+    private  Boolean workingFlag = false; //Flag que se activa cuando el transporte esta trabajando.
 
     private ConnectedNode connectedNode;
     private boolean connected;
