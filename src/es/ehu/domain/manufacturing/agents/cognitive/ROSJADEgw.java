@@ -16,6 +16,7 @@ import org.ros.node.*;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
 import social_msgs.social;
+import org.ros.address.AdvertiseAddress;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -40,23 +41,20 @@ public class ROSJADEgw extends AbstractNodeMain { //Nodo Rosjava del agente, int
     /** Publisher in the {@code TOPIC1} topic */
     private Publisher<social> publicista;
 
-    private RosCore rosCore;
-    public ROSJADEgw (Agent a ){
+
+    public ROSJADEgw ( Agent a ){
+
+        System.out.println("Comienza arranque de Nodo pasarela");
         this.myAgent=a;
         this.controlledBehaviour=null;
 
 
-        rosCore.newPublic(11311); // se crea instancia de tipo RosCore y se define numero de puerto al que se conecta
-
-        System.out.println(rosCore);
-        rosCore.start();//no hace bien
-
+        RosCore rosCore = RosCore.newPublic(11311);
+        rosCore.start();
         try {
-            rosCore.awaitStart(1, TimeUnit.SECONDS);
-           // rosCore.awaitStart();
-        } catch (Exception e) {
-           //rosCore = null;
-            //System.out.println("e");
+            rosCore.awaitStart();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
         NodeMain nodeMain = (NodeMain) this;
@@ -70,7 +68,7 @@ public class ROSJADEgw extends AbstractNodeMain { //Nodo Rosjava del agente, int
         NodeMainExecutor nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
         nodeMainExecutor.execute(nodeMain, nodeConfiguration);
 
-
+        System.out.println("Nodo pasarela iniciado");
         //lamar al metodo init dentro de ROSJADEgw, para que se incie el GWAgentROS
 
        //pruebas de ejecucion
@@ -132,7 +130,7 @@ public class ROSJADEgw extends AbstractNodeMain { //Nodo Rosjava del agente, int
 
 
         //unir ROSJADEgw con GWAgentRos
-        System.out.println("En ROSJADEgw");
+        System.out.println("En ROSJADEgw INIT");
         //Unirlo al contenedor que asumimos que esta en localHost, port 1099
         String host = "192.168.187.131"; ///
         String port = "1099";//
@@ -148,8 +146,9 @@ public class ROSJADEgw extends AbstractNodeMain { //Nodo Rosjava del agente, int
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("init");
         try {
+            System.out.println("Ejecutar jadeGateway.execute()");
             JadeGateway.execute(strMessage);// calls processCommand method of Gateway Agent
-
+            System.out.println("Fuera de jadeGateway.execute()");
         } catch(Exception e) {
             e.printStackTrace();
         }
@@ -163,7 +162,9 @@ public class ROSJADEgw extends AbstractNodeMain { //Nodo Rosjava del agente, int
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("receive");
         try {
+            System.out.println("En recv jadeexecute");
             JadeGateway.execute(strMessage);
+            System.out.println("fuera de recv jadeexecute");
         } catch(Exception e) {
             System.out.println(e);
         }

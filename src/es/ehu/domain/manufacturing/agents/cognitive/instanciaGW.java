@@ -1,27 +1,27 @@
 package es.ehu.domain.manufacturing.agents.cognitive;
 
-import es.ehu.domain.manufacturing.agents.TransportAgent;
-import jade.core.Agent;
-
 public class instanciaGW {
+
 
     public static void main(String[] args){
 
         //Opcion 1. Error al hacer RosCore.start
 
-        //ROSJADEgw.init();
+
+
+        ROSJADEgw.init();
 
 
         //Opcion 2
        // TransportAgent ta=new TransportAgent();
-        //ROSJADEgw gw = new ROSJADEgw(ta);
+       // ROSJADEgw gw = new ROSJADEgw();
 
 
-        //Ros_Jade rj=new Ros_Jade(ta);
-
-
+        System.out.println("Comienza arranque del Nodo Dummy(Kobuki)");
         //Arrancar nodo dummy
-        Ros_Jade_Dummy dummy=new Ros_Jade_Dummy();
+        //Ros_Jade_Dummy dummy=new Ros_Jade_Dummy();
+
+
 
     }
 }

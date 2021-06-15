@@ -68,7 +68,7 @@ public class GWAgentROS extends GatewayAgent {  //ROS
             send(msgToAgent);
 
         } else if (action.equals("init")) {
-
+            System.out.println("En init");
             System.out.println("---Gateway init command called");
             System.out.println("---Hello, I am a Gateway Agent");
         }else{ //Check if any msg is received
@@ -91,7 +91,7 @@ public class GWAgentROS extends GatewayAgent {  //ROS
 
     protected void setup(){ //agent already registered and is able to send and receive messages. Necessary to add behaviour in order to to anything.
 
-        System.out.println("en GWAgentRos");
+        System.out.println("En GWAgentRos");
         MessageTemplate template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.or(
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
                 MessageTemplate.MatchOntology("data")),MessageTemplate.MatchConversationId("1"));
@@ -99,7 +99,9 @@ public class GWAgentROS extends GatewayAgent {  //ROS
 
         //pruebas de ejecucion
 
-        //ROSJADEgw gw= new ROSJADEgw(this);
+
+        ROSJADEgw gw= new ROSJADEgw(this);
+
 
         // MENSAJE DESDE TRANSPORT AGENT
 

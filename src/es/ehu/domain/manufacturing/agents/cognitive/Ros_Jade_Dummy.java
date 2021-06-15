@@ -13,6 +13,17 @@ import org.ros.message.Time;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import social_msgs.social;
+import org.ros.RosCore;
+import java.util.concurrent.TimeUnit;
+import org.apache.commons.logging.Log;
+import org.ros.message.MessageListener;
+import org.ros.namespace.GraphName;
+import org.ros.node.AbstractNodeMain;
+import org.ros.node.ConnectedNode;
+import org.ros.node.NodeMain;
+import org.ros.node.topic.Publisher;
+import org.ros.node.*;
+import jade.core.Agent;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,40 +37,47 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{ // SIMULADOR KOBUKI
     private Behaviour controlledBehaviour;
 
 
-    private Publisher<social> publicista2;
+    private Publisher<social> publicistaDummy2;
     /** Publisher in the {@code TOPIC4} topic */
-    private Publisher<social> publicista3;
+    private Publisher<social> publicistaDummy3;
     /** Subscriber in the {@code TOPIC1/<agent_name>} topic */
-    private Subscriber<social> suscriptor;
+    private Subscriber<social> suscriptorDummy;
 
 
     private ConnectedNode connectedNode;
     private boolean connected;
 
-
-
-    public Ros_Jade_Dummy(){
+    public Ros_Jade_Dummy()  {
         //this.myAgent=a;
         //this.controlledBehaviour=null; quitar para prueba Iñi
        // this.controlledBehaviour=null;
-        RosCore rosCore = null;
+        RosCore rosCore = RosCore.newPublic(11311);
+        rosCore.start();
         try {
-           // rosCore.newPublic(11311);
-            rosCore.newPublic("192.168.187.131",11311);
-            rosCore.start();
-            rosCore.awaitStart(1, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            rosCore = null;
+            rosCore.awaitStart();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+
+        NodeConfiguration nodeConfiguration = NodeConfiguration.newPrivate();
+        nodeConfiguration.setMasterUri(rosCore.getUri());
+        nodeConfiguration.setNodeName("Ros_Jade_Dummy");
+        NodeMain nodeMain = (NodeMain) this;
+        NodeMainExecutor nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
+        nodeMainExecutor.execute(nodeMain, nodeConfiguration);
+/*
         NodeMain nodeMain = (NodeMain) this;
         NodeConfiguration nodeConfiguration = NodeConfiguration.newPrivate();
-       // nodeConfiguration.setNodeName(myAgent.getLocalName());
+        //nodeConfiguration.setNodeName(myAgent.getLocalName());
         nodeConfiguration.setNodeName("Ros_Jade_Dummy");
         if (rosCore != null) {
             nodeConfiguration.setMasterUri(rosCore.getUri());
         }
         NodeMainExecutor nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
         nodeMainExecutor.execute(nodeMain, nodeConfiguration);
+
+ */
+        System.out.println("Node ejecutado");
     }
   /*  public  Ros_Jade_Dummy(Agent a, Behaviour b){
         this(a);
@@ -87,12 +105,12 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{ // SIMULADOR KOBUKI
         this.connectedNode = connectedNode;
         connected = true;
 
-        this.suscriptor = connectedNode.newSubscriber("TOPICO1", social._TYPE);
-        this.publicista2 = connectedNode.newPublisher("TOPICO2", social._TYPE);
-        this.publicista3 = connectedNode.newPublisher("TOPICO3", social._TYPE);
+        this.suscriptorDummy = connectedNode.newSubscriber("TOPICO1", social._TYPE);
+        this.publicistaDummy2 = connectedNode.newPublisher("TOPICO2", social._TYPE);
+        this.publicistaDummy3 = connectedNode.newPublisher("TOPICO3", social._TYPE);
 
         //esperar a que el suscriptor reciba un mensaje
-        suscriptor.addMessageListener(new MessageListener<social>() {
+        suscriptorDummy.addMessageListener(new MessageListener<social>() {
             @Override
             public void onNewMessage(social msg) {
 
@@ -125,7 +143,7 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{ // SIMULADOR KOBUKI
         msg2.setConversationID(msg.getConversationID());
         msg2.setSender(this.getDefaultNodeName().toString());
         msg2.getHeader().setStamp(Time.fromMillis(System.currentTimeMillis()));
-        this.publicista2.publish(msg2);
+        this.publicistaDummy2.publish(msg2);
         //esperar unos segundos mediante delay(simular desplazamiento)
 
         try {
@@ -147,7 +165,7 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{ // SIMULADOR KOBUKI
         msg3.setConversationID("2");
         msg3.setSender(this.getDefaultNodeName().toString());
         msg3.getHeader().setStamp(Time.fromMillis(System.currentTimeMillis()));
-        this.publicista3.publish(msg3);
+        this.publicistaDummy3.publish(msg3);
 
     }
 
