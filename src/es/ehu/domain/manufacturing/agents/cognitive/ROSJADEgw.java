@@ -44,8 +44,6 @@ public class ROSJADEgw extends AbstractNodeMain {
     private Publisher<social> publicista;
 
 
-
-
     public ROSJADEgw (   ){
 
         System.out.println("Comienza arranque de Nodo pasarela");
@@ -108,7 +106,8 @@ public class ROSJADEgw extends AbstractNodeMain {
         suscriptor2.addMessageListener(new MessageListener<social>() {
             @Override
             public void onNewMessage(social msg) {
-                send(msg.getContent().get(0));
+                send(msg.getContent().get(0)); // mala pi
+
                 //managereceivedmsg(msg);
                 workingFlag=false;
             }
@@ -127,7 +126,7 @@ public class ROSJADEgw extends AbstractNodeMain {
 
         msg.setContent(Arrays.asList(data.getContent()));
         publicista.publish(msg);
-        System.out.println("Mensaje publicado en topico1");
+        System.out.println("Mensaje publicado en topico1 es :"+ msg.getContent()+"con ontology: "+msg.getOntology());
     }
 
 
@@ -217,7 +216,7 @@ public class ROSJADEgw extends AbstractNodeMain {
     public static void send(String msgOut) {  //Sends the data String that has been given from kobuki ROS-->Agent
 
 
-        System.out.println("En ROSJADEgw recv");
+        System.out.println("En ROSJADEgw send");
         //Unirlo al contenedor que asumimos que esta en localHost, port 1099
         String host = "192.168.187.131"; ///
         String port = "1099";//
@@ -234,7 +233,7 @@ public class ROSJADEgw extends AbstractNodeMain {
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("send");
         strMessage.setMessage(msgOut);
-        System.out.println(msgOut);
+        System.out.println("Mensaje tipo social(ROS) recibido" +msgOut);
         strMessage.setPerformative(7); //INFORM
 
         //Dependiendo del tipo de mensaje recivido cambiar el performative

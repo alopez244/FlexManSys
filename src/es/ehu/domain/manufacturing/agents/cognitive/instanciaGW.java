@@ -27,7 +27,7 @@ public class instanciaGW {
         }
 
         System.out.println("///////////////////////////////////////////////////////////////////");
-       while(working!=true){
+       //while(working!=true){
 
            String recMS=ROSJADEgw.recv();
 
@@ -35,14 +35,14 @@ public class instanciaGW {
                 Ros_Jade_Msg nuevoMsg = new Ros_Jade_Msg("1","data",recMS);
 
                 gw.enviarMSG(nuevoMsg);
-                working=true;
+                //working=true;
 
            }else{
                //System.out.println("No se ha recibido mensaje");
            }
 
 
-        }
+       // }
 
 
 

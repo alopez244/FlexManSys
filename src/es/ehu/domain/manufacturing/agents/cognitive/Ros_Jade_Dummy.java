@@ -51,6 +51,7 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{ // SIMULADOR KOBUKI
         //this.myAgent=a;
         //this.controlledBehaviour=null; quitar para prueba Iñi
        // this.controlledBehaviour=null;
+
         RosCore rosCore = RosCore.newPublic(11311);
         rosCore.start();
         try {
@@ -58,6 +59,8 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{ // SIMULADOR KOBUKI
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+
 
         NodeConfiguration nodeConfiguration = NodeConfiguration.newPrivate();
         nodeConfiguration.setMasterUri(rosCore.getUri());
