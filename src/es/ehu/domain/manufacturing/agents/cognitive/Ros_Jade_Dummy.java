@@ -77,7 +77,7 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{ // SIMULADOR KOBUKI
         nodeMainExecutor.execute(nodeMain, nodeConfiguration);
 
  */
-        System.out.println("Node ejecutado");
+        System.out.println("Node Dummy en marcha ");
     }
   /*  public  Ros_Jade_Dummy(Agent a, Behaviour b){
         this(a);
@@ -100,7 +100,7 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{ // SIMULADOR KOBUKI
     public void onStart(final ConnectedNode connectedNode) {
 
 
-        System.out.println("Kobuki simulation running");
+        System.out.println("en OnStart de Dummy, preparando suscriptores y publicistas");
 
         this.connectedNode = connectedNode;
         connected = true;

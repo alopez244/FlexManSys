@@ -77,6 +77,9 @@ public class ExternalJADEgw {
 
     //Function for reading the data received in ACL messages
     public static String recv() {    // Agent -->  ROS (Kobuki)
+
+
+
         String recvMsg;
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("receive");

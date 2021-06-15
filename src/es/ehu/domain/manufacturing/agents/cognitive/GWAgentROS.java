@@ -24,6 +24,7 @@ public class GWAgentROS extends GatewayAgent {  //ROS
     public static final int bufferSize = 6;
     CircularFifoQueue msgInFIFO = new CircularFifoQueue(bufferSize);
 
+
     protected void processCommand(java.lang.Object command) { //The method is called each time a request to process a command is received from the JSP Gateway. receive strmessage
 
 
@@ -37,19 +38,15 @@ public class GWAgentROS extends GatewayAgent {  //ROS
         String action = msgStruct.readAction();
         if (action.equals("receive")) {     // JadeGateway.execute command was called for new message reading (Agent -> PLC)
             System.out.println("---GW, recv function");
-            msgRecv = (String) msgInFIFO.peek();
-            ACLMessage msgACL = (ACLMessage) msgInFIFO.poll();
-                //reads the oldest message from FIFO ,ACL message
+            //msgRecv = (String) msgInFIFO.peek();
+            msgRecv = (String) msgInFIFO.poll(); //reads the oldest message from FIFO ,ACL message
 
             if (msgRecv != null) {
                 System.out.println("---GW, new message to read");
-                ((StructMessage) command).setMessage(msgRecv);  //message is saved in StructMessage data structure, then ROSJADEgw class will read it from there
+                ((StructMessage) command).setMessage(msgRecv);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
                 ((StructMessage) command).setNewData(true);
-                // poner mensaje en topico y publicar
                 workingFlag=true;
-                Ros_Jade_Msg msg= new Ros_Jade_Msg(msgACL.getConversationId(),msgACL.getOntology(),msgACL.getContent());
 
-                //rosgw.enviarMSG(msg);
             } else {
                 ((StructMessage) command).setNewData(false);
                 System.out.println("---GW, message queue is empty");
@@ -95,14 +92,6 @@ public class GWAgentROS extends GatewayAgent {  //ROS
         MessageTemplate template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.or(
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
                 MessageTemplate.MatchOntology("data")),MessageTemplate.MatchConversationId("1"));
-
-
-        //pruebas de ejecucion
-
-
-        ROSJADEgw gw= new ROSJADEgw(this);
-
-
         // MENSAJE DESDE TRANSPORT AGENT
 
         addBehaviour(new CyclicBehaviour() { //keep executing constantly
@@ -114,24 +103,34 @@ public class GWAgentROS extends GatewayAgent {  //ROS
                 if (msgToFIFO != null) {
                     System.out.println("GWagent, message received from Transport Agent");
                     TransportAgentName = msgToFIFO.getSender();//saves the sender ID for a later reply
-                    System.out.println("Imprimir el mensaje enviado por el TransportAgent : "+msgToFIFO);
                     if(msgInFIFO.isAtFullCapacity()) {
                         System.out.println("buffer full, old message lost");
                     }
+                    if(!msgInFIFO.isEmpty()){
+                        if (!msgInFIFO.peek().equals(msgToFIFO)){
+                            msgInFIFO.add((String) msgToFIFO.getContent());
+                            System.out.println("AÑADIR MENSAJE UNICO");
+                        }
+                    }else {
+                        msgInFIFO.add((String) msgToFIFO.getContent());
+                    }
                     //msgInFIFO.add((String) msgToFIFO.getContent());//adds the message to be send in the buffer (max capacity = 6) ex. [A5,B4]
-                    msgInFIFO.add(msgToFIFO); // safe ACL message in FIFO
+                     // safe ACL message in FIFO
                     // comprobar con flag que no haya tarea trabajando, flag.Instanciar rosjadeGW , llamar a recv, que leerea tarea del FIFO
                     // de GWAgentROS, y lo publicara.
-
+                    /*
 
                     if (workingFlag!=true){
                         System.out.println("Preparando mensaje para ser publicado");
 
                         ROSJADEgw.recv();
 
+
                     }else{
                         System.out.println("Kobuki is working now");
                     }
+
+                     */
 
                 } else {
                     System.out.println("Block the agent");
