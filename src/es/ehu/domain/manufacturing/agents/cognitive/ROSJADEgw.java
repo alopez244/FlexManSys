@@ -40,34 +40,49 @@ public class ROSJADEgw extends AbstractNodeMain { //Nodo Rosjava del agente, int
     /** Publisher in the {@code TOPIC1} topic */
     private Publisher<social> publicista;
 
-    public ROSJADEgw (Agent a){
+    private RosCore rosCore;
+    public ROSJADEgw (Agent a ){
         this.myAgent=a;
         this.controlledBehaviour=null;
-        RosCore rosCore = null;
+
+
+        rosCore.newPublic(11311); // se crea instancia de tipo RosCore y se define numero de puerto al que se conecta
+
+        System.out.println(rosCore);
+        rosCore.start();//no hace bien
+
         try {
-            rosCore.newPublic(11311);
-            rosCore.start();
             rosCore.awaitStart(1, TimeUnit.SECONDS);
+           // rosCore.awaitStart();
         } catch (Exception e) {
-            rosCore = null;
+           //rosCore = null;
+            //System.out.println("e");
         }
+
         NodeMain nodeMain = (NodeMain) this;
         NodeConfiguration nodeConfiguration = NodeConfiguration.newPrivate();
         nodeConfiguration.setNodeName(myAgent.getLocalName());
+        //nodeConfiguration.setNodeName("ROSJADEgw");
+
         if (rosCore != null) {
             nodeConfiguration.setMasterUri(rosCore.getUri());
         }
         NodeMainExecutor nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
         nodeMainExecutor.execute(nodeMain, nodeConfiguration);
+
+
         //lamar al metodo init dentro de ROSJADEgw, para que se incie el GWAgentROS
 
        //pruebas de ejecucion
+
+
        // init();
     }
     @Override
     public GraphName getDefaultNodeName() {
 
         return GraphName.of(myAgent.getLocalName());
+        //return GraphName.of("ROSJADEgw");
     }
     @Override
     public void onStart(final ConnectedNode connectedNode) {
@@ -117,7 +132,7 @@ public class ROSJADEgw extends AbstractNodeMain { //Nodo Rosjava del agente, int
 
 
         //unir ROSJADEgw con GWAgentRos
-        System.out.println("En rosjadegw");
+        System.out.println("En ROSJADEgw");
         //Unirlo al contenedor que asumimos que esta en localHost, port 1099
         String host = "192.168.187.131"; ///
         String port = "1099";//
@@ -143,6 +158,7 @@ public class ROSJADEgw extends AbstractNodeMain { //Nodo Rosjava del agente, int
 
     //Function for reading the data received in ACL messages
     public static String recv() {  //Agent --> ROS
+        System.out.println("en metodo recv de ROSJADEgw");
         String recvMs;
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("receive");

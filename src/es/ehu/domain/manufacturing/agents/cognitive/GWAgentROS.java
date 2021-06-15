@@ -25,6 +25,9 @@ public class GWAgentROS extends GatewayAgent {  //ROS
     CircularFifoQueue msgInFIFO = new CircularFifoQueue(bufferSize);
 
     protected void processCommand(java.lang.Object command) { //The method is called each time a request to process a command is received from the JSP Gateway. receive strmessage
+
+
+        //ROSJADEgw gw =new ROSJADEgw(this);
         System.out.println("-->Gateway processes execute");
         if (!(command instanceof StructMessage)) {
             System.out.println("---Error, unexpected type");
@@ -34,8 +37,8 @@ public class GWAgentROS extends GatewayAgent {  //ROS
         String action = msgStruct.readAction();
         if (action.equals("receive")) {     // JadeGateway.execute command was called for new message reading (Agent -> PLC)
             System.out.println("---GW, recv function");
-            msgRecv = (String) msgInFIFO.poll();
-            //ACLMessage msgACL = (ACLMessage) msgInFIFO.poll();
+            msgRecv = (String) msgInFIFO.peek();
+            ACLMessage msgACL = (ACLMessage) msgInFIFO.poll();
                 //reads the oldest message from FIFO ,ACL message
 
             if (msgRecv != null) {
@@ -44,7 +47,7 @@ public class GWAgentROS extends GatewayAgent {  //ROS
                 ((StructMessage) command).setNewData(true);
                 // poner mensaje en topico y publicar
                 workingFlag=true;
-                //Ros_Jade_Msg msg= new Ros_Jade_Msg(msgACL.getConversationId(),msgACL.getOntology(),msgACL.getContent());
+                Ros_Jade_Msg msg= new Ros_Jade_Msg(msgACL.getConversationId(),msgACL.getOntology(),msgACL.getContent());
 
                 //rosgw.enviarMSG(msg);
             } else {
@@ -88,11 +91,11 @@ public class GWAgentROS extends GatewayAgent {  //ROS
 
     protected void setup(){ //agent already registered and is able to send and receive messages. Necessary to add behaviour in order to to anything.
 
-        //ROSJADEgw gw= new ROSJADEgw(this);
         System.out.println("en GWAgentRos");
         MessageTemplate template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.or(
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
                 MessageTemplate.MatchOntology("data")),MessageTemplate.MatchConversationId("1"));
+
 
         //pruebas de ejecucion
 
@@ -121,8 +124,8 @@ public class GWAgentROS extends GatewayAgent {  //ROS
 
                     if (workingFlag!=true){
                         System.out.println("Preparando mensaje para ser publicado");
-                        ROSJADEgw.recv();
 
+                        ROSJADEgw.recv();
 
                     }else{
                         System.out.println("Kobuki is working now");

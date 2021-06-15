@@ -78,6 +78,7 @@ public class Ros_Jade extends AbstractNodeMain {
 
 		RosCore rosCore = null;
 		try {
+
 			rosCore.newPublic(11311);
 			rosCore.start();
 			rosCore.awaitStart(1, TimeUnit.SECONDS);

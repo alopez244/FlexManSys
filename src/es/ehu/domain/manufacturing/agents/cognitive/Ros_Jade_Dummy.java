@@ -38,13 +38,14 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{ // SIMULADOR KOBUKI
 
 
 
-    public Ros_Jade_Dummy(Agent a){
-        this.myAgent=a;
+    public Ros_Jade_Dummy(){
+        //this.myAgent=a;
         //this.controlledBehaviour=null; quitar para prueba Iñi
-        this.controlledBehaviour=null;
+       // this.controlledBehaviour=null;
         RosCore rosCore = null;
         try {
-            rosCore.newPublic(11311);
+           // rosCore.newPublic(11311);
+            rosCore.newPublic("192.168.187.131",11311);
             rosCore.start();
             rosCore.awaitStart(1, TimeUnit.SECONDS);
         } catch (Exception e) {
@@ -52,7 +53,8 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{ // SIMULADOR KOBUKI
         }
         NodeMain nodeMain = (NodeMain) this;
         NodeConfiguration nodeConfiguration = NodeConfiguration.newPrivate();
-        nodeConfiguration.setNodeName(myAgent.getLocalName());
+       // nodeConfiguration.setNodeName(myAgent.getLocalName());
+        nodeConfiguration.setNodeName("Ros_Jade_Dummy");
         if (rosCore != null) {
             nodeConfiguration.setMasterUri(rosCore.getUri());
         }
@@ -66,7 +68,9 @@ public class Ros_Jade_Dummy extends AbstractNodeMain{ // SIMULADOR KOBUKI
     @Override
     public GraphName getDefaultNodeName() {
 
-        return GraphName.of(myAgent.getLocalName());
+        //return GraphName.of(myAgent.getLocalName());
+        return GraphName.of("Ros_Jade_Dummy");
+
     }
 
     /**
