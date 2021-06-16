@@ -59,11 +59,7 @@
 		
 		
 		<logger name="es.ehu.domain.manufacturing.agents.functionality.MPlan_Functionality"> <appenderRef ref="console" level="debug"/></logger>
-		
-		
-		
-		
-		
+
 		<logger name="es.ehu.BootBehaviour">			<appenderRef ref="console" level="info"/><!-- <appenderRef ref="rFile" level="debug"/>--></logger>
 		<logger name="es.ehu.ControlBehaviour">			<appenderRef ref="console" level="info"/><!-- <appenderRef ref="rFile" level="debug"/>--></logger>
 		<logger name="es.ehu.RunningBehaviour">			<appenderRef ref="console" level="info"/><!-- <appenderRef ref="rFile" level="debug"/>--></logger>

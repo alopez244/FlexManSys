@@ -76,7 +76,6 @@ public class TransportAgent extends DomResAgentTemplate  {
 
             pilaTareas.add("[A3,B5]");
             /* XMLReader fileReader = new XMLReader();
-
            try {
                 this.resourceModel = fileReader.readFile(arguments[4].toString());
             } catch (Exception e) {
@@ -84,9 +83,7 @@ public class TransportAgent extends DomResAgentTemplate  {
                 LOGGER.info("Parse can not generate documents");
                 this.initTransition = ControlBehaviour.STOP;
             }
-
             */
-
 
         } else {
             LOGGER.info("There are not sufficient arguments to start");

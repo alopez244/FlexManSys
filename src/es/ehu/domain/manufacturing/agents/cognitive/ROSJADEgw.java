@@ -14,6 +14,8 @@ import org.ros.node.*;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
 import social_msgs.social;
+import std_msgs.String;
+
 
 import java.util.Arrays;
 
@@ -29,17 +31,17 @@ public class ROSJADEgw extends AbstractNodeMain {
     private boolean connected;
 
     /** Subscriber in the {@code TOPIC2/<agent_name>} topic */
-    private Subscriber<social> suscriptor;
+    private Subscriber<std_msgs.String> suscriptor;
     public Boolean sendMsgFlag=false;
-    public social message;
+    public std_msgs.String message;
 
     /** Subscriber in the {@code TOPIC3/<agent_name>} topic */
-    private Subscriber<social> suscriptor2;
+    private Subscriber<std_msgs.String> suscriptor2;
     /** Behaviour to wake up the agent if there are new events */
     private Behaviour controlledBehaviour;
 
     /** Publisher in the {@code TOPIC1} topic */
-    private Publisher<social> publicista;
+    private Publisher<std_msgs.String> publicista;
 
 
     public ROSJADEgw (   ){
@@ -68,6 +70,8 @@ public class ROSJADEgw extends AbstractNodeMain {
         NodeMainExecutor nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
         nodeMainExecutor.execute(nodeMain, nodeConfiguration);
 
+
+
         System.out.println("Nodo pasarela iniciado");
         //lamar al metodo init dentro de ROSJADEgw, para que se incie el GWAgentROS
 
@@ -88,19 +92,20 @@ public class ROSJADEgw extends AbstractNodeMain {
         System.out.println("en onStart, preparando suscriptores y publicistas del ROSJADEgw");
         this.connectedNode = connectedNode;
         connected = true;
-        this.publicista = connectedNode.newPublisher("TOPICO1", social._TYPE);
-        this.suscriptor = connectedNode.newSubscriber("TOPICO2", social._TYPE);
-        this.suscriptor2 = connectedNode.newSubscriber("TOPICO3", social._TYPE);
+        this.publicista = connectedNode.newPublisher("TOPICO1", std_msgs.String._TYPE);
+        this.suscriptor = connectedNode.newSubscriber("TOPICO2", std_msgs.String._TYPE);
+        this.suscriptor2 = connectedNode.newSubscriber("TOPICO3", std_msgs.String._TYPE);
 
         //esperar a que el suscriptor reciba un mensaje
-        suscriptor.addMessageListener(new MessageListener<social>() {
+
+        suscriptor.addMessageListener(new MessageListener<std_msgs.String>() {
             @Override
-            public void onNewMessage(social msg) {
+            public void onNewMessage(std_msgs.String a) {
 
                 System.out.println("Mensaje 1 del Kobuki recibido correctamente");
 
                 sendMsgFlag=true;
-                message= msg;
+
 
                 /// O /
                 //ROSJADEgw.send(msg.getContent().get(0));
@@ -109,9 +114,9 @@ public class ROSJADEgw extends AbstractNodeMain {
 
             }
         });
-        suscriptor2.addMessageListener(new MessageListener<social>() {
+        suscriptor2.addMessageListener(new MessageListener<std_msgs.String>() {
             @Override
-            public void onNewMessage(social msg) {
+            public void onNewMessage(std_msgs.String a) {
                 //send(msg.getContent().get(0)); // mala pi
                 System.out.println("Mensaje 2 del Kobuki recibido correctamente");
                 //managereceivedmsg(msg);
@@ -128,7 +133,7 @@ public class ROSJADEgw extends AbstractNodeMain {
         workingFlag=state;
     }
 
-    public social getMessage(){
+    public String getMessage(){
         return this.message;
     }
     public Boolean getSendMsgFlag(){
@@ -141,15 +146,20 @@ public class ROSJADEgw extends AbstractNodeMain {
     public void enviarMSG (Ros_Jade_Msg data) {  //ACL --> ROS  ,  Array to ArrayList
 
         System.out.println("Publicando mensaje del Agente Transporte en el primer topico");
-        social msg = connectedNode.getTopicMessageFactory().newFromType(social._TYPE);
-        msg.setOntology(data.getOntology());
-        msg.setConversationID(data.getConversationID());
-        msg.setSender(this.getDefaultNodeName().toString());
-        msg.getHeader().setStamp(Time.fromMillis(System.currentTimeMillis()));
+        //std_msgs.String msg = connectedNode.getTopicMessageFactory().newFromType(std_msgs.String._TYPE);
+        std_msgs.String msg= publicista.newMessage();
 
-        msg.setContent(Arrays.asList(data.getContent()));
+        //msg.setOntology(data.getOntology());
+        //msg.setConversationID(data.getConversationID());
+        //msg.setSender(this.getDefaultNodeName().toString());
+        //msg.getHeader().setStamp(Time.fromMillis(System.currentTimeMillis()));
+
+        //sg.setContent(Arrays.asList(data.getContent()));
+        //msg.setData(data.getContent()[0]);
+        msg.setData("Hola mundo");
+
         publicista.publish(msg);
-        System.out.println("Mensaje publicado en topico1 es :"+ msg.getContent()+"con ontology: "+msg.getOntology());
+        System.out.println("Mensaje publicado en topico1 "+ msg.getData());
     }
 
 
@@ -162,15 +172,15 @@ public class ROSJADEgw extends AbstractNodeMain {
         //unir ROSJADEgw con GWAgentRos
         System.out.println("En ROSJADEgw INIT");
         //Unirlo al contenedor que asumimos que esta en localHost, port 1099
-        String host = "192.168.187.131"; ///
-        String port = "1099";//
+        java.lang.String host = "192.168.187.131"; ///
+        java.lang.String port = "1099";//
 
         Properties pp = new Properties();
         pp.setProperty(Profile.MAIN_HOST, host);
         pp.setProperty(Profile.MAIN_PORT, port);
         pp.setProperty(Profile.LOCAL_PORT, port);
 
-        String containerName = "GatewayCont1";   // se define el nombre del contenedor donde se inicializara el agente
+        java.lang.String containerName = "GatewayCont1";   // se define el nombre del contenedor donde se inicializara el agente
         pp.setProperty(Profile.CONTAINER_NAME, containerName);
         JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgentROS",pp);
         StructMessage strMessage = new StructMessage();
@@ -185,23 +195,23 @@ public class ROSJADEgw extends AbstractNodeMain {
     }
 
     //Function for reading the data received in ACL messages
-    public static String recv() {  //Agent --> ROS
+    public static java.lang.String recv() {  //Agent --> ROS
 
         System.out.println("en recv");
         if (workingFlag!=true) {
             workingFlag=true;
-            String host = "192.168.187.131"; ///
-            String port = "1099";//
+            java.lang.String host = "192.168.187.131"; ///
+            java.lang.String port = "1099";//
 
             Properties pp = new Properties();
             pp.setProperty(Profile.MAIN_HOST, host);
             pp.setProperty(Profile.MAIN_PORT, port);
             pp.setProperty(Profile.LOCAL_PORT, port);
 
-            String containerName = "GatewayCont1";   // se define el nombre del contenedor donde se inicializara el agente
+            java.lang.String containerName = "GatewayCont1";   // se define el nombre del contenedor donde se inicializara el agente
             pp.setProperty(Profile.CONTAINER_NAME, containerName);
             //JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgentROS",pp);
-            String recvMs;
+            java.lang.String recvMs;
             StructMessage strMessage = new StructMessage();
             strMessage.setAction("receive");
             try {
@@ -236,20 +246,20 @@ public class ROSJADEgw extends AbstractNodeMain {
 
     }
 
-    public static void send(String msgOut) {  //Sends the data String that has been given from kobuki ROS-->Agent
+    public static void send(java.lang.String msgOut) {  //Sends the data String that has been given from kobuki ROS-->Agent
 
 
         System.out.println("En ROSJADEgw send");
         //Unirlo al contenedor que asumimos que esta en localHost, port 1099
-        String host = "192.168.187.131"; ///
-        String port = "1099";//
+        java.lang.String host = "192.168.187.131"; ///
+        java.lang.String port = "1099";//
 
         Properties pp = new Properties();
         pp.setProperty(Profile.MAIN_HOST, host);
         pp.setProperty(Profile.MAIN_PORT, port);
         pp.setProperty(Profile.LOCAL_PORT, port);
 
-        String containerName = "GatewayCont1";   // se define el nombre del contenedor donde se inicializara el agente
+        java.lang.String containerName = "GatewayCont1";   // se define el nombre del contenedor donde se inicializara el agente
         pp.setProperty(Profile.CONTAINER_NAME, containerName);
 
         //crea mensaje ACL que se lo envia al TransportAgent
