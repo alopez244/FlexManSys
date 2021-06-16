@@ -1,12 +1,10 @@
 package es.ehu.domain.manufacturing.agents.cognitive;
 
-import es.ehu.domain.manufacturing.behaviour.InformAgent;
 import es.ehu.domain.manufacturing.utilities.StructMessage;
 import jade.core.Agent;
 import jade.core.Profile;
 import jade.core.behaviours.Behaviour;
 import jade.util.leap.Properties;
-import jade.wrapper.gateway.GatewayAgent;
 import jade.wrapper.gateway.JadeGateway;
 import org.ros.RosCore;
 import org.ros.message.MessageListener;
@@ -16,13 +14,11 @@ import org.ros.node.*;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
 import social_msgs.social;
-import org.ros.address.AdvertiseAddress;
 
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 public class ROSJADEgw extends AbstractNodeMain {
-    private static boolean workingFlag =false;
+    public static boolean workingFlag =false;
     //Nodo Rosjava del agente, interfaz entre agentes y ROS.
     // Gateway between non-JADE and a JADE agent system.
     //Crear comportamientos adecuados que ejecuten los comandos que debe emitir al sistema JADE y pasarlos como parametro en execute()
@@ -34,6 +30,8 @@ public class ROSJADEgw extends AbstractNodeMain {
 
     /** Subscriber in the {@code TOPIC2/<agent_name>} topic */
     private Subscriber<social> suscriptor;
+    public Boolean sendMsgFlag=false;
+    public social message;
 
     /** Subscriber in the {@code TOPIC3/<agent_name>} topic */
     private Subscriber<social> suscriptor2;
@@ -98,7 +96,15 @@ public class ROSJADEgw extends AbstractNodeMain {
         suscriptor.addMessageListener(new MessageListener<social>() {
             @Override
             public void onNewMessage(social msg) {
-                send(msg.getContent().get(0));
+
+                System.out.println("Mensaje 1 del Kobuki recibido correctamente");
+
+                sendMsgFlag=true;
+                message= msg;
+
+                /// O /
+                //ROSJADEgw.send(msg.getContent().get(0));
+                // send(msg.getContent().get(0));
 
 
             }
@@ -106,13 +112,30 @@ public class ROSJADEgw extends AbstractNodeMain {
         suscriptor2.addMessageListener(new MessageListener<social>() {
             @Override
             public void onNewMessage(social msg) {
-                send(msg.getContent().get(0)); // mala pi
-
+                //send(msg.getContent().get(0)); // mala pi
+                System.out.println("Mensaje 2 del Kobuki recibido correctamente");
                 //managereceivedmsg(msg);
+                sendMsgFlag=true;
                 workingFlag=false;
             }
         });
 
+    }
+    public static Boolean getWorkingFlag(){
+        return workingFlag;
+    }
+    public void setWorkingFlag(Boolean state){
+        workingFlag=state;
+    }
+
+    public social getMessage(){
+        return this.message;
+    }
+    public Boolean getSendMsgFlag(){
+        return this.sendMsgFlag;
+    }
+    public void setSendMsgFlag(Boolean state){
+        this.sendMsgFlag=state;
     }
 
     public void enviarMSG (Ros_Jade_Msg data) {  //ACL --> ROS  ,  Array to ArrayList
@@ -202,7 +225,7 @@ public class ROSJADEgw extends AbstractNodeMain {
 
             } else {
                 System.out.println("--No answer");
-                recvMs = "";
+                recvMs = null;
             }
             System.out.println("<-Java recv");
             return recvMs;

@@ -1,6 +1,7 @@
 package es.ehu.domain.manufacturing.agents.cognitive;
 
 import jade.core.Agent;
+import social_msgs.social;
 
 public class instanciaGW {
 
@@ -27,35 +28,32 @@ public class instanciaGW {
         }
 
         System.out.println("///////////////////////////////////////////////////////////////////");
-       //while(working!=true){
+
 
            String recMS=ROSJADEgw.recv();
 
            if(recMS!=null){
                 Ros_Jade_Msg nuevoMsg = new Ros_Jade_Msg("1","data",recMS);
-
                 gw.enviarMSG(nuevoMsg);
                 //working=true;
+               int cont =0;
+                //while(cont<2) {
+               while(ROSJADEgw.getWorkingFlag()==true){
+                   if (gw.getSendMsgFlag() == true) {
+                       social msg = gw.getMessage();
+                       if (msg != null) {
+                           ROSJADEgw.send(msg.getContent().get(0));
+                           gw.setSendMsgFlag(false);
+                           //cont++;
+                       }
 
+                   }
+
+                }
+               gw.setWorkingFlag(false);
            }else{
-               //System.out.println("No se ha recibido mensaje");
+               System.out.println("No se ha recibido mensaje");
            }
-
-
-       // }
-
-
-
-        //System.out.println("Comienza arranque del Nodo Dummy(Kobuki)");
-        //Arrancar nodo dummy
-        // Ros_Jade_Dummy dummy=new Ros_Jade_Dummy();
-
-        //Opcion 2
-
-
-        //ROSJADEgw gw =new ROSJADEgw();
-
-
 
     }
 }

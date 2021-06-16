@@ -49,7 +49,7 @@ public class GWAgentROS extends GatewayAgent {  //ROS
 
             } else {
                 ((StructMessage) command).setNewData(false);
-                System.out.println("---GW, message queue is empty");
+                System.out.println("---GW, message queue is empty, no new message, please send a new one ");
             }
         } else if (action.equals("send")) {
 
