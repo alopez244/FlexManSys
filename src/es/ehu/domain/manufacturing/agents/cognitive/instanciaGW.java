@@ -56,10 +56,8 @@ public class instanciaGW {
                            ROSJADEgw.send(msg);
                            System.out.println("AAAAAAAAAAAAAAAAAAA");
                        }
-
                    }
                }
-
          */
 
 /*
@@ -71,11 +69,8 @@ public class instanciaGW {
                            gw.setSendMsgFlag(false);
                            //cont++;
                        }
-
                    }
-
                 }
-
  */
 
 

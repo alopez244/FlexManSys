@@ -196,7 +196,7 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
                 String conversationID = "1";
                 sendACLMessage(16,gatewayAgentID,"data",conversationID,tarea,myAgent); //send msg to GWAgentROS
                 System.out.println("Mensaje enviado a GWAgentROS: "+tarea);
-                //workingFlag = true;  //update workingFlag
+                workingFlag = true;  //update workingFlag
                 this.conversation = this.conversation+1;
 
 

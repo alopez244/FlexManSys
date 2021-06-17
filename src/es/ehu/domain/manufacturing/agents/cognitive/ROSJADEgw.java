@@ -76,7 +76,7 @@ public class ROSJADEgw extends AbstractNodeMain {
         System.out.println("Nodo pasarela iniciado");
         //lamar al metodo init dentro de ROSJADEgw, para que se incie el GWAgentROS
 
-       //pruebas de ejecucion
+        //pruebas de ejecucion
 
         //haciendo primero en main instanciar
         //init();
@@ -96,7 +96,7 @@ public class ROSJADEgw extends AbstractNodeMain {
         this.publicista = connectedNode.newPublisher("TOPICO1", std_msgs.String._TYPE);
         this.suscriptor = connectedNode.newSubscriber("TOPICO2", std_msgs.String._TYPE);
         this.suscriptor2 = connectedNode.newSubscriber("TOPICO3", std_msgs.String._TYPE);
- //
+        //
         //esperar a que el suscriptor reciba un mensaje
 
         suscriptor.addMessageListener(new MessageListener<std_msgs.String>() {
@@ -178,7 +178,7 @@ public class ROSJADEgw extends AbstractNodeMain {
         //unir ROSJADEgw con GWAgentRos
         System.out.println("En ROSJADEgw INIT");
         //Unirlo al contenedor que asumimos que esta en localHost, port 1099
-        java.lang.String host = "192.168.227.1"; ///
+        java.lang.String host = "192.168.187.131"; ///
         java.lang.String port = "1099";//
 
         Properties pp = new Properties();
@@ -206,7 +206,7 @@ public class ROSJADEgw extends AbstractNodeMain {
         System.out.println("en recv");
         if (workingFlag!=true) {
 //            workingFlag=true;
-            java.lang.String host = "192.168.227.1"; ///
+            java.lang.String host = "192.168.187.131"; ///
             java.lang.String port = "1099";//
 
             Properties pp = new Properties();
@@ -221,7 +221,7 @@ public class ROSJADEgw extends AbstractNodeMain {
             StructMessage strMessage = new StructMessage();
             strMessage.setAction("receive");
             try {
-               // System.out.println("recv jadeGateway.execute");
+                // System.out.println("recv jadeGateway.execute");
                 JadeGateway.execute(strMessage);
                 //System.out.println("fuera de recv jadeexecute");
             } catch (Exception e) {
@@ -238,7 +238,7 @@ public class ROSJADEgw extends AbstractNodeMain {
             if (strMessage.readNewData()) {
                 recvMs = strMessage.readMessage();
                 workingFlag=true;
-              //  System.out.println("--Received oooo: " + recvMs);
+                //  System.out.println("--Received oooo: " + recvMs);
 
             } else {
                 System.out.println("--No answer");
@@ -256,9 +256,9 @@ public class ROSJADEgw extends AbstractNodeMain {
     public static void send(java.lang.String msgOut) {  //Sends the data String that has been given from kobuki ROS-->Agent
 
 
-       // System.out.println("En ROSJADEgw send");
+        // System.out.println("En ROSJADEgw send");
         //Unirlo al contenedor que asumimos que esta en localHost, port 1099
-        java.lang.String host = "192.168.227.1"; ///
+        java.lang.String host = "192.168.187.131"; ///
         java.lang.String port = "1099";//
 
         Properties pp = new Properties();
@@ -273,7 +273,7 @@ public class ROSJADEgw extends AbstractNodeMain {
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("send");
         strMessage.setMessage(msgOut);
-       // System.out.println("Mensaje tipo social(ROS) recibido" +msgOut);
+        // System.out.println("Mensaje tipo social(ROS) recibido" +msgOut);
         strMessage.setPerformative(7); //INFORM
 
         //Dependiendo del tipo de mensaje recivido cambiar el performative
@@ -283,10 +283,9 @@ public class ROSJADEgw extends AbstractNodeMain {
         } else {
             strMessage.setPerformative(16); // Performative = REQUEST
         }
-
         */
 
-       // System.out.println("--Sended message: " + strMessage.readMessage());
+        // System.out.println("--Sended message: " + strMessage.readMessage());
         try {
             JadeGateway.execute(strMessage);    // Llamar a GWAgentROS para que envie el mensaje finalmente.
         } catch(Exception e) {
@@ -297,5 +296,3 @@ public class ROSJADEgw extends AbstractNodeMain {
 
 
 }
-
-
