@@ -178,7 +178,7 @@ public class ROSJADEgw extends AbstractNodeMain {
         //unir ROSJADEgw con GWAgentRos
         System.out.println("En ROSJADEgw INIT");
         //Unirlo al contenedor que asumimos que esta en localHost, port 1099
-        java.lang.String host = "192.168.187.131"; ///
+        java.lang.String host = "192.168.227.1"; ///
         java.lang.String port = "1099";//
 
         Properties pp = new Properties();
@@ -205,8 +205,8 @@ public class ROSJADEgw extends AbstractNodeMain {
 
         System.out.println("en recv");
         if (workingFlag!=true) {
-            workingFlag=true;
-            java.lang.String host = "192.168.187.131"; ///
+//            workingFlag=true;
+            java.lang.String host = "192.168.227.1"; ///
             java.lang.String port = "1099";//
 
             Properties pp = new Properties();
@@ -237,6 +237,7 @@ public class ROSJADEgw extends AbstractNodeMain {
 
             if (strMessage.readNewData()) {
                 recvMs = strMessage.readMessage();
+                workingFlag=true;
               //  System.out.println("--Received oooo: " + recvMs);
 
             } else {
@@ -257,7 +258,7 @@ public class ROSJADEgw extends AbstractNodeMain {
 
        // System.out.println("En ROSJADEgw send");
         //Unirlo al contenedor que asumimos que esta en localHost, port 1099
-        java.lang.String host = "192.168.187.131"; ///
+        java.lang.String host = "192.168.227.1"; ///
         java.lang.String port = "1099";//
 
         Properties pp = new Properties();
