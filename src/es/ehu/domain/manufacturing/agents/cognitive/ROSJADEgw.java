@@ -128,8 +128,6 @@ public class ROSJADEgw extends AbstractNodeMain {
                 sendMsgFlag=true;
                 workingFlag=false;
                 ROSJADEgw.send(message);
-
-
             }
         });
 

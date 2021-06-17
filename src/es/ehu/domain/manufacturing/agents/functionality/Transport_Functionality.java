@@ -21,6 +21,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.sql.SQLOutput;
 import java.util.*;
 
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
 
 
 
-    private HashMap PLCmsgIn = new HashMap(); // Estructura de datos que se envia al PLC
+    private HashMap<String, String> PLCmsgIn = new HashMap<String, String>(); // Estructura de datos que se envia al PLC
     private HashMap PLCmsgOut = new HashMap(); // Estructura de datos que se recibe del PLC
 
     static final Logger LOGGER = LogManager.getLogger(Transport_Functionality.class.getName());
@@ -181,19 +182,20 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
         // Si puedes realizar trabajo enviar sendACLMessage
         //enviar msg a GatewayAgentRos
         //origen A5 coordenada B8, topic A5-> B8  [A5,B8]
-        System.out.println("En sendDataToDevice");
+        //System.out.println("En sendDataToDevice");
 
         if (workingFlag!=true){ //check transport is not working
 
             if(!myAgent.pilaTareas.isEmpty()){//check they are works to do
-                System.out.println("Hay trabajos que hacer, me pongo con ello");
+
+                //System.out.println("Hay trabajos que hacer, me pongo con ello");
                 String tarea = myAgent.pilaTareas.peek(); //get first work of stack . String like [A4,B4]
-                System.out.println("Tarea"+ tarea);
+                //System.out.println("Tarea"+ tarea);
                 AID gatewayAgentID = new AID(gatewayAgentName,false); //receiver
                 //String conversationID = Integer.toString(this.conversation); //each task has one ID
                 String conversationID = "1";
                 sendACLMessage(16,gatewayAgentID,"data",conversationID,tarea,myAgent); //send msg to GWAgentROS
-                System.out.println("mensaje enviado a GWAgentROS");
+                System.out.println("Mensaje enviado a GWAgentROS: "+tarea);
                 //workingFlag = true;  //update workingFlag
                 this.conversation = this.conversation+1;
 
@@ -220,11 +222,45 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
         //Actualizar info del agente trasnporte necesario. (bateria ,pila tareas..)
         //recibir msg de confirmacion, recibir nivel de bateria.
 
-        System.out.println("En rcvDataFromDevice");
-        this.PLCmsgIn = new Gson().fromJson(msg.getContent(), HashMap.class);   //Data type conversion Json->Hashmap class
+
+        String[] parts = msg.getContent().split(","); //Guardar info recibida en PLCmsgIN
+        int cont= parts.length;
+        int aux=0;
+        while(cont>0) {
+            this.PLCmsgIn.put(parts[aux],(parts[aux+1]));
+            aux=aux+2;
+            cont =cont-2;
+        }
+
+
+       // this.PLCmsgIn = new Gson().fromJson(msg.getContent(), HashMap.class);   //Data type conversion Json->Hashmap class
         if(PLCmsgIn.containsKey("Received")) {   // Comprobar si es mensaje de confirmacion
-            if (PLCmsgIn.get("Received").equals(true)) {
+            if (PLCmsgIn.get("Received").equals("true")) {
                 System.out.println("<--PLC reception confirmation");
+
+                if(PLCmsgIn.containsKey("Availability")){
+                    if(PLCmsgIn.get("Availability").equals("true")){ //is prepared to work
+                        Float battery = Float.parseFloat(PLCmsgIn.get("Battery"));
+                        System.out.println("Ready to start working and battery is"+ battery);
+                        myAgent.battery=battery; //update battery of agent
+
+                        if (PLCmsgIn.containsKey("Location")){ // Si el mensaje recibido es para añadir tarea.
+                            myAgent.pilaTareas.push((String)PLCmsgIn.get("Location")); //update work stack
+                        }else{
+                            System.out.println("No working location specified");
+                        }
+
+                    }else{ // work finished now.
+                        PLCmsgIn.put("Availability","true"); // he finished work so now is ready again
+                        Float battery =  Float.parseFloat(PLCmsgIn.get("Battery"));
+                        System.out.println("Working task is done and battery is"+ battery);
+                        myAgent.battery=battery; //update battery of agent
+
+                        //myAgent.pilaTareas.pop(); //remove work from stack because is done.
+                        //workingFlag=false;  //update flag
+                    }
+                }
+
             } else {
                 System.out.println("<--Problem receiving the message");
             }
@@ -232,29 +268,32 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
 
             if(PLCmsgIn.containsKey("Availability")){
 
-                if(PLCmsgIn.get("Availability").equals(true)){ //is prepared to work
-                    Float battery = (Float) PLCmsgIn.get("Battery");
+                if(PLCmsgIn.get("Availability").equals("true")){ //is prepared to work
+                    Float battery = Float.parseFloat(PLCmsgIn.get("Battery"));
                     System.out.println("Ready to start working and battery is"+ battery);
                     myAgent.battery=battery; //update battery of agent
 
-                    if (PLCmsgIn.containsKey("Location")){
+                    if (PLCmsgIn.containsKey("Location")){ // Si el mensaje recibido es para añadir tarea.
                         myAgent.pilaTareas.push((String)PLCmsgIn.get("Location")); //update work stack
                     }else{
                         System.out.println("No working location specified");
                     }
 
-
                 }else{ // work finished now.
-                    PLCmsgIn.put("Availability",true); // he finished work so now is ready again
-                    Float battery = (Float) PLCmsgIn.get("Battery");
+                    PLCmsgIn.put("Availability","true"); // he finished work so now is ready again
+                    Float battery = Float.parseFloat(PLCmsgIn.get("Battery"));
                     System.out.println("Working task is done and battery is"+ battery);
                     myAgent.battery=battery; //update battery of agent
 
-                    myAgent.pilaTareas.pop(); //remove work from stack because is done.
+                    //myAgent.pilaTareas.pop(); //remove work from stack because is done.
                     //workingFlag=false;  //update flag
                 }
             }
+
+
         }
+
+
     }
 
 

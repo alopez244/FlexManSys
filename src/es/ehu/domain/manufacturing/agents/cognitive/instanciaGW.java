@@ -10,6 +10,12 @@ public class instanciaGW {
 
         //Opcion 1.
 
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException ie)
+        {
+            System.out.println("Scanning...");
+        }
         ROSJADEgw gw = new ROSJADEgw();
         try {
             Thread.sleep(3);
@@ -21,7 +27,7 @@ public class instanciaGW {
         ROSJADEgw.init();
 
         try {
-            Thread.sleep(10);
+            Thread.sleep(20);
         } catch (InterruptedException ie)
         {
             System.out.println("Scanning...");

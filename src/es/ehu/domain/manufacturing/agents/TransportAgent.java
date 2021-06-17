@@ -61,10 +61,10 @@ public class TransportAgent extends DomResAgentTemplate  {
 
 
            // TransportServices = arguments[4].toString();
-            System.out.println("Resource name es "+this.resourceName);
-            System.out.println("Position x es "+this.xPos);
-            System.out.println("Position y es "+this.yPos);
-            System.out.println("Battery percentageIñi is %"+this.battery);
+           // System.out.println("Resource name es "+this.resourceName);
+            //System.out.println("Position x es "+this.xPos);
+            //System.out.println("Position y es "+this.yPos);
+            //System.out.println("Battery percentageIñi is %"+this.battery);
             //System.out.println("kontuz");
 
             this.conversationId = "1";

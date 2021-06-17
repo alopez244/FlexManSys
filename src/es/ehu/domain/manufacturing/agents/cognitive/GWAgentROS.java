@@ -103,6 +103,7 @@ public class GWAgentROS extends GatewayAgent {  //ROS
                 ACLMessage msgToFIFO = receive(template); //recivir mensaje desde Transport Agent
                 if (msgToFIFO != null) {
                     System.out.println("GWagent, message received from Transport Agent");
+
                     TransportAgentName = msgToFIFO.getSender();//saves the sender ID for a later reply
                     if(msgInFIFO.isAtFullCapacity()) {
                         System.out.println("buffer full, old message lost");
@@ -110,9 +111,11 @@ public class GWAgentROS extends GatewayAgent {  //ROS
                     if(!msgInFIFO.isEmpty()){
                         if (!msgInFIFO.peek().equals(msgToFIFO)){
                             msgInFIFO.add((String) msgToFIFO.getContent());
-
+                            System.out.println("Queriendo enviar");
+                            //ROSJADEgw.send(msgToFIFO.getContent());
                         }
                     }else {
+
                         msgInFIFO.add((String) msgToFIFO.getContent());
                     }
                     //msgInFIFO.add((String) msgToFIFO.getContent());//adds the message to be send in the buffer (max capacity = 6) ex. [A5,B4]
