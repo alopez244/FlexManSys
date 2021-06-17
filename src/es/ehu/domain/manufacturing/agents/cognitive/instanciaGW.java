@@ -30,21 +30,32 @@ public class instanciaGW {
         System.out.println("///////////////////////////////////////////////////////////////////");
 
 
-           String recMS=ROSJADEgw.recv();
+           java.lang.String recMS=ROSJADEgw.recv();
 
            if(recMS!=null){
                 Ros_Jade_Msg nuevoMsg = new Ros_Jade_Msg("1","data",recMS);
-                while(true){
-                    gw.enviarMSG(nuevoMsg);
-                    gw.setWorkingFlag(false);
-                }
 
+                gw.enviarMSG(nuevoMsg);
+                gw.setWorkingFlag(false);
+
+
+        /*
                 //working=true;
-               /*
-               int cont =0;
-                //while(cont<2) {
+               while (ROSJADEgw.getWorkingFlag()==true) {
+                   if (gw.getSendMsgFlag() == true) {
+                       java.lang.String msg = gw.getMessage();
+                       if(msg!=null){
+                           gw.setSendMsgFlag(false);
+                           ROSJADEgw.send(msg);
+                           System.out.println("AAAAAAAAAAAAAAAAAAA");
+                       }
 
+                   }
+               }
 
+         */
+
+/*
                while(ROSJADEgw.getWorkingFlag()==true){
                    if (gw.getSendMsgFlag() == true) {
                        social msg = gw.getMessage();
@@ -58,7 +69,9 @@ public class instanciaGW {
 
                 }
 
-                */
+ */
+
+
 
            }else{
                System.out.println("No se ha recibido mensaje");

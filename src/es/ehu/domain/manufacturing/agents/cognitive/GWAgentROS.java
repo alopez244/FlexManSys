@@ -56,13 +56,14 @@ public class GWAgentROS extends GatewayAgent {  //ROS
            //KOBUKI ha contestado, enviar mensaje al TransportAgent
 
             workingFlag=false; // ha terminado de trabajar
-            System.out.println("---Gateway send command");
+            System.out.println("---Gateway send command ojo");
             ACLMessage msgToAgent = new ACLMessage(msgStruct.readPerformative()); //reads the performative saved in StructMessage data structure
             msgToAgent.addReceiver(TransportAgentName);
             msgToAgent.setOntology("data");
             msgToAgent.setConversationId(msgToAgent.getConversationId()); //numbers
             msgToAgent.setContent(msgStruct.readMessage()); // Confirmation y bateria  reads the message saved in StructMessage data structure
             send(msgToAgent);
+            System.out.println("Mensaje enviado ACL enviado al transport Agent LOOOL"+ msgToAgent.getContent());
 
         } else if (action.equals("init")) {
             System.out.println("En init");
@@ -98,7 +99,7 @@ public class GWAgentROS extends GatewayAgent {  //ROS
 
             public void action() {
 
-                System.out.println("Entering CyclicBehaviour");
+                //System.out.println("Entering CyclicBehaviour");
                 ACLMessage msgToFIFO = receive(template); //recivir mensaje desde Transport Agent
                 if (msgToFIFO != null) {
                     System.out.println("GWagent, message received from Transport Agent");
@@ -109,7 +110,7 @@ public class GWAgentROS extends GatewayAgent {  //ROS
                     if(!msgInFIFO.isEmpty()){
                         if (!msgInFIFO.peek().equals(msgToFIFO)){
                             msgInFIFO.add((String) msgToFIFO.getContent());
-                            System.out.println("AÑADIR MENSAJE UNICO");
+
                         }
                     }else {
                         msgInFIFO.add((String) msgToFIFO.getContent());
@@ -133,7 +134,7 @@ public class GWAgentROS extends GatewayAgent {  //ROS
                      */
 
                 } else {
-                    System.out.println("Block the agent");
+                    //System.out.println("Block the agent");
                     block();
                 }
             }

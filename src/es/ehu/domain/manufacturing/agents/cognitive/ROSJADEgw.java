@@ -26,6 +26,7 @@ public class ROSJADEgw extends AbstractNodeMain {
     //Crear comportamientos adecuados que ejecuten los comandos que debe emitir al sistema JADE y pasarlos como parametro en execute()
     private Agent myAgent;
 
+    public java.lang.String message;
 
     private ConnectedNode connectedNode;
     private boolean connected;
@@ -33,7 +34,7 @@ public class ROSJADEgw extends AbstractNodeMain {
     /** Subscriber in the {@code TOPIC2/<agent_name>} topic */
     private Subscriber<std_msgs.String> suscriptor;
     public Boolean sendMsgFlag=false;
-    public std_msgs.String message;
+    //public std_msgs.String message;
 
     /** Subscriber in the {@code TOPIC3/<agent_name>} topic */
     private Subscriber<std_msgs.String> suscriptor2;
@@ -89,22 +90,25 @@ public class ROSJADEgw extends AbstractNodeMain {
     @Override
     public void onStart(final ConnectedNode connectedNode) {
 
-        System.out.println("en onStart, preparando suscriptores y publicistas del ROSJADEgw");
+        //System.out.println("en onStart, preparando suscriptores y publicistas del ROSJADEgw");
         this.connectedNode = connectedNode;
         connected = true;
         this.publicista = connectedNode.newPublisher("TOPICO1", std_msgs.String._TYPE);
         this.suscriptor = connectedNode.newSubscriber("TOPICO2", std_msgs.String._TYPE);
         this.suscriptor2 = connectedNode.newSubscriber("TOPICO3", std_msgs.String._TYPE);
-
+ //
         //esperar a que el suscriptor reciba un mensaje
 
         suscriptor.addMessageListener(new MessageListener<std_msgs.String>() {
             @Override
             public void onNewMessage(std_msgs.String a) {
 
-                System.out.println("Mensaje 1 del Kobuki recibido correctamente");
+                System.out.println("Mensaje 1 del Kobuki recibido correctamente :"+ a.getData());
 
+                message = a.getData();
                 sendMsgFlag=true;
+                System.out.println("ojo");
+                ROSJADEgw.send(message);
 
 
                 /// O /
@@ -118,10 +122,14 @@ public class ROSJADEgw extends AbstractNodeMain {
             @Override
             public void onNewMessage(std_msgs.String a) {
                 //send(msg.getContent().get(0)); // mala pi
-                System.out.println("Mensaje 2 del Kobuki recibido correctamente");
+                System.out.println("Mensaje 2 del Kobuki recibido correctamente :" +a.getData());
                 //managereceivedmsg(msg);
+                message = a.getData();
                 sendMsgFlag=true;
                 workingFlag=false;
+                ROSJADEgw.send(message);
+
+
             }
         });
 
@@ -133,7 +141,7 @@ public class ROSJADEgw extends AbstractNodeMain {
         workingFlag=state;
     }
 
-    public String getMessage(){
+    public java.lang.String getMessage(){
         return this.message;
     }
     public Boolean getSendMsgFlag(){
@@ -145,7 +153,7 @@ public class ROSJADEgw extends AbstractNodeMain {
 
     public void enviarMSG (Ros_Jade_Msg data) {  //ACL --> ROS  ,  Array to ArrayList
 
-        System.out.println("Publicando mensaje del Agente Transporte en el primer topico");
+        //System.out.println("Publicando mensaje del Agente Transporte en el primer topico");
         //std_msgs.String msg = connectedNode.getTopicMessageFactory().newFromType(std_msgs.String._TYPE);
         std_msgs.String msg= publicista.newMessage();
 
@@ -155,8 +163,8 @@ public class ROSJADEgw extends AbstractNodeMain {
         //msg.getHeader().setStamp(Time.fromMillis(System.currentTimeMillis()));
 
         //sg.setContent(Arrays.asList(data.getContent()));
-        //msg.setData(data.getContent()[0]);
-        msg.setData("Hola mundo");
+        msg.setData(data.getContent()[0]);
+        //msg.setData("Hola mundo");
 
         publicista.publish(msg);
         System.out.println("Mensaje publicado en topico1 "+ msg.getData());
@@ -215,9 +223,9 @@ public class ROSJADEgw extends AbstractNodeMain {
             StructMessage strMessage = new StructMessage();
             strMessage.setAction("receive");
             try {
-                System.out.println("recv jadeGateway.execute");
+               // System.out.println("recv jadeGateway.execute");
                 JadeGateway.execute(strMessage);
-                System.out.println("fuera de recv jadeexecute");
+                //System.out.println("fuera de recv jadeexecute");
             } catch (Exception e) {
 
                 System.out.println("Error jadeGateway.execute : " + e);
@@ -231,7 +239,7 @@ public class ROSJADEgw extends AbstractNodeMain {
 
             if (strMessage.readNewData()) {
                 recvMs = strMessage.readMessage();
-                System.out.println("--Received oooo: " + recvMs);
+              //  System.out.println("--Received oooo: " + recvMs);
 
             } else {
                 System.out.println("--No answer");
@@ -249,7 +257,7 @@ public class ROSJADEgw extends AbstractNodeMain {
     public static void send(java.lang.String msgOut) {  //Sends the data String that has been given from kobuki ROS-->Agent
 
 
-        System.out.println("En ROSJADEgw send");
+       // System.out.println("En ROSJADEgw send");
         //Unirlo al contenedor que asumimos que esta en localHost, port 1099
         java.lang.String host = "192.168.187.131"; ///
         java.lang.String port = "1099";//
@@ -266,7 +274,7 @@ public class ROSJADEgw extends AbstractNodeMain {
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("send");
         strMessage.setMessage(msgOut);
-        System.out.println("Mensaje tipo social(ROS) recibido" +msgOut);
+       // System.out.println("Mensaje tipo social(ROS) recibido" +msgOut);
         strMessage.setPerformative(7); //INFORM
 
         //Dependiendo del tipo de mensaje recivido cambiar el performative
@@ -279,7 +287,7 @@ public class ROSJADEgw extends AbstractNodeMain {
 
         */
 
-        System.out.println("--Sended message: " + strMessage.readMessage());
+       // System.out.println("--Sended message: " + strMessage.readMessage());
         try {
             JadeGateway.execute(strMessage);    // Llamar a GWAgentROS para que envie el mensaje finalmente.
         } catch(Exception e) {
