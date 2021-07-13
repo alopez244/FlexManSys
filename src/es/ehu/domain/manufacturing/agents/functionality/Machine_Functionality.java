@@ -42,7 +42,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
-
+    private String QsysAgentTestName="QsysAgentTest";
     private ArrayList<ArrayList<String>> productInfo;
     private HashMap<String, String> operationsWithBatchAgents = new HashMap<>();
     private HashMap PLCmsgIn = new HashMap(); // Estructura de datos que se envia al PLC
@@ -55,6 +55,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private Boolean requestMaterial = false; // Flag que se activa cuando se necesita hacer una peticion de consumibles
     private Boolean orderQueueFlag = false; // Flag que se activa cuando existen nuevas ordenes en cola para la maquina
     private String gatewayAgentName; // Guarda el nombre del agente pasarela
+    private String QsysAgentName;
     private MessageTemplate template;
 
     /** Identifier of the agent. */
@@ -458,6 +459,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 AID batchAgentID = new AID(batchAgentName, false);
                 sendACLMessage(16, batchAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
 
+
             }
         }
 
@@ -523,9 +525,16 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     PLCmsgOut.remove("Index");
                     String MessageContent = new Gson().toJson(PLCmsgOut);
                     AID gatewayAgentID = new AID(gatewayAgentName, false);
-                    sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
-                    sendingFlag = false;
-                    machinePlanIndex = 0;
+                    //*****************************************Testing diego
+
+                        sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
+                        sendingFlag = false;
+                        machinePlanIndex = 0;
+
+
+
+                    //*****************************************Fin Testing diego
+
                 } else { // en caso contrario, se analizan las operaciones en cola para poder ser enviados
                     System.out.println("El lote " + BathcID + " no se puede fabricar por falta de material");
                     machinePlanIndex = (Integer) PLCmsgOut.get("Index");

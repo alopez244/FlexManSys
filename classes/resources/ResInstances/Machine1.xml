@@ -10,7 +10,7 @@
 			<consumable id="LB" description="Lower Bearing" type="bearing"/>
 		</buffer>
 		<buffer id="B2_ST_01" description="Buffer 2 contains bearings" current="10" max="10" warning="5" xPos="320" yPos="580" zPos="40" consumable_id="HB">
-			<consumable id="HB" description="Higher Bearing" type="bearing"/>
+			<consumable id="HB" description="Higher Bearing" type="bearing"1/>
 		</buffer>
 		<buffer id="B3_ST_01" description="Buffer 3 contains axes" current="10" max="10" warning="5" xPos="420" yPos="580" zPos="40" consumable_id="A">
 			<consumable id="A" description="Shaft" type="axle"/>
