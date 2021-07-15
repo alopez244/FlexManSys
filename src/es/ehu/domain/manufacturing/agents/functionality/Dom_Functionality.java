@@ -1,5 +1,6 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
+import es.ehu.domain.manufacturing.test.timeout;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.DFService;
@@ -10,9 +11,9 @@ import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import jade.domain.AMSService;
-
-//*******************
-
+import jade.domain.DFService;
+import jade.domain.FIPAAgentManagement.*;
+import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.*;
 
 
@@ -70,46 +71,27 @@ public class Dom_Functionality {
 
         return LOGGER.exit(reply);
     }
-    static AMSAgentDescription [] agents = null;
+
     public void sendACLMessage(int performative, AID reciever, String ontology, String conversationId, String content, Agent agent) {
-        boolean sendflag=true;
-        this.myAgent = agent;
 
+                this.myAgent = agent;
+                ACLMessage msg = new ACLMessage(performative); //envio del mensaje
+                msg.addReceiver(reciever);
+                msg.setOntology(ontology);
+                msg.setConversationId(conversationId);
+                msg.setContent(content);
+                myAgent.send(msg);
 
-        //**************************************Testing Diego
-
-        try {
-            //Se busca el agente en el ams, por ID, antes de enviar el mensaje.
-            SearchConstraints c = new SearchConstraints();
-            c.setMaxResults ( new Long(-1) );
-            agents = AMSService.search(this.myAgent, reciever, new AMSAgentDescription (), c);
-            //myAgent.send(msg);
-            return;
-        } catch (Exception e) {
-            //En caso de no existir se envia aviso al QoS.
-            sendflag=false;
-            AID QoSAgentID = new AID(QoSManagerName, false);
-            ACLMessage msgErr = new ACLMessage(ACLMessage.INFORM);
-            recieverName= reciever.getName();
-            SenderName=agent.getName();
-            msgErrContent="Error in communication between agents "+SenderName+" and "+recieverName+"\n"+"Message content: "+content+"\n"+"Performative: "+performative+"\n"+"Ontology: "+ontology+"\n"+"Conversation ID: "+conversationId;
-            msgErr.addReceiver(QoSAgentID);
-            msgErr.setOntology(ontology);
-            msgErr.setConversationId(conversationId);
-            msgErr.setContent(msgErrContent);
-            myAgent.send(msgErr);
-        }
-        //if(sendflag==true){
-           // myAgent.send(msg);
-        this.myAgent = agent;
-            ACLMessage msg = new ACLMessage(performative); //envio del mensaje
-            msg.addReceiver(reciever);
-            msg.setOntology(ontology);
-            msg.setConversationId(conversationId);
-            msg.setContent(content);
-            myAgent.send(msg);
-       // }
-                //**************************************Fin testing Diego
+                /*AID QoSAgentID = new AID(QoSManagerName, false);
+                ACLMessage msgErr = new ACLMessage(ACLMessage.INFORM);
+                recieverName = reciever.getName();
+                SenderName = agent.getName();
+                msgErrContent = "Error in communication between agents " + SenderName + " and " + recieverName + "\n" + "Message content: " + content + "\n" + "Performative: " + performative + "\n" + "Ontology: " + ontology + "\n" + "Conversation ID: " + conversationId;
+                msgErr.addReceiver(QoSAgentID);
+                msgErr.setOntology(ontology);
+                msgErr.setConversationId(conversationId);
+                msgErr.setContent(msgErrContent);
+                myAgent.send(msgErr);*/
 
         }
     }

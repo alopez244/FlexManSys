@@ -22,20 +22,40 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
-
+import es.ehu.domain.manufacturing.test.timeout;
 
 public class QoSManagerAgent extends Agent {
     private String mensaje;
-
+    String AgentToPing;
     protected void setup() {
 
         addBehaviour(new CyclicBehaviour(this) {
             public void action() {
+                System.out.println("Sendind ping...");
+                AgentToPing="ControlGatewayCont1";
+                ACLMessage ping = new ACLMessage(ACLMessage.REQUEST);
+                ping.setPerformative(ACLMessage.REQUEST);
+                AID AgentToPingID = new AID(AgentToPing, false);
+                ping.addReceiver(AgentToPingID);
+                ping.setContent("¿Alive? :(");
+                ping.setOntology("ping");
+                myAgent.send(ping);
+
                 System.out.println("Searching for errors...");
+                System.out.println("Waiting for pong...");
                 ACLMessage msg = blockingReceive();
                 mensaje = msg.getContent();
-                //System.out.println("test2");
+
                 System.out.println(mensaje);
+                while(true){}
+                /*
+                AgentToPing=msg.getOntology();
+                ACLMessage ping = new ACLMessage(ACLMessage.INFORM);
+                AID AgentToPingID = new AID(AgentToPing, false);
+                ping.addReceiver(AgentToPingID);
+                ping.setContent("¿Alive? :(");
+                myAgent.send(ping);
+*/
             }
         });
     }

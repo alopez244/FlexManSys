@@ -31,15 +31,16 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import std_msgs.Bool;
-
+import es.ehu.domain.manufacturing.test.timeout;
 import java.io.File;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 
 public class Machine_Functionality extends DomRes_Functionality implements BasicFunctionality, NegFunctionality, AssetManagement, Traceability {
-
+    private boolean aknowledge=false;
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
     private String QsysAgentTestName="QsysAgentTest";
@@ -291,6 +292,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         this.PLCmsgIn = new Gson().fromJson(msg.getContent(), HashMap.class);   //Data type conversion Json->Hashmap class
         if(PLCmsgIn.containsKey("Received")){   //Checks if it is a confirmation message
             if(PLCmsgIn.get("Received").equals(true)){
+
                 System.out.println("<--PLC reception confirmation");
             }else{
                 System.out.println("<--Problem receiving the message");
@@ -525,15 +527,11 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     PLCmsgOut.remove("Index");
                     String MessageContent = new Gson().toJson(PLCmsgOut);
                     AID gatewayAgentID = new AID(gatewayAgentName, false);
-                    //*****************************************Testing diego
 
                         sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
                         sendingFlag = false;
                         machinePlanIndex = 0;
 
-
-
-                    //*****************************************Fin Testing diego
 
                 } else { // en caso contrario, se analizan las operaciones en cola para poder ser enviados
                     System.out.println("El lote " + BathcID + " no se puede fabricar por falta de material");

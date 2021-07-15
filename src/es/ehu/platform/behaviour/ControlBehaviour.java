@@ -9,6 +9,7 @@ import static es.ehu.platform.utilities.MWMCommands.CMD_REPORT;
 import static es.ehu.platform.utilities.MWMCommands.CMD_SET;
 import static es.ehu.platform.utilities.MasReconOntologies.ONT_CONTROL;
 
+import jade.core.AID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,7 +23,9 @@ import jade.core.behaviours.FSMBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
+
 public class ControlBehaviour extends SimpleBehaviour {
+    public static String QoSAgentName="QoSManagerAgent";
     private static final long serialVersionUID = -4041584544631810983L;
     static final Logger LOGGER = LogManager.getLogger(ControlBehaviour.class.getName()) ;
     private static final String CMD_INCORRECTSTATE = "incorrect state";
@@ -88,10 +91,21 @@ public class ControlBehaviour extends SimpleBehaviour {
                 return;
             }
             if (msg.getPerformative()==ACLMessage.FAILURE) { // if FAILURE
+
                 LOGGER.info("****************ACLMessage.FAILURE (control):"+msg.getContent());
                 String name=msg.getContent().substring(msg.getContent().indexOf(":name ", msg.getContent().indexOf("MTS-error"))+":name ".length());
                 name=name.substring(0, name.indexOf('@'));
                 LOGGER.info("msg.getPerformative()==ACLMessage.FAILURE (sender="+name+")");
+
+                //************************** Modificaciones Diego
+                AID QoSAgentID = new AID(QoSAgentName, false);
+                ACLMessage msgQoS=new ACLMessage(ACLMessage.INFORM);
+                msgQoS.setContent("FAILURE. Agent "+name+" not found.");
+                msgQoS.addReceiver(QoSAgentID);
+                msgQoS.setOntology("control");
+                myAgent.send(msgQoS);
+                //************************** Fin Modificaciones Diego
+
                 try { LOGGER.info(myAgent.sendCommand(CMD_REPORT + " (" + CMD_GETCOMPONENTS + " "+name+") type=notFound cmpins="+name));} catch (Exception e) {e.printStackTrace();}
 
             } else {

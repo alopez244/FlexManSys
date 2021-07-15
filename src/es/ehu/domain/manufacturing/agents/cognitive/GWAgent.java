@@ -72,14 +72,30 @@ public class GWAgent extends GatewayAgent {
         MessageTemplate template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.or(
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
                 MessageTemplate.MatchOntology("negotiation")),MessageTemplate.MatchConversationId("PLCdata"));
+        //**************************** Modificacion Diego
+        MessageTemplate QoS = MessageTemplate.and(
+                (MessageTemplate.MatchPerformative(ACLMessage.REQUEST)),
+                MessageTemplate.MatchOntology("ping"));
+        //**************************** Fin Modificación Diego
 
         addBehaviour(new CyclicBehaviour() {
 
             public void action() {
                 System.out.println("Entering CyclicBehaviour");
                 ACLMessage msgToFIFO = receive(template);
+                //**************************** Modificacion Diego
+                ACLMessage QoSPing = receive(QoS);
+                if(QoSPing!=null){
+                    ACLMessage pong = new ACLMessage(ACLMessage.INFORM);
+                    AID AgentToPongID = QoSPing.getSender();
+                    pong.addReceiver(AgentToPongID);
+                    pong.setContent("Yes :)");
+                    pong.setOntology("pong");
+                    myAgent.send(pong);
 
-                if (msgToFIFO != null) {
+                 }
+                //**************************** Fin Modificación Diego
+                else if (msgToFIFO != null) {
                     System.out.println("GWagent, message received from Machine Agent");
                     machineAgentName = msgToFIFO.getSender();//saves the sender ID for a later reply
                     System.out.println("MachineAgentName :"+machineAgentName);
