@@ -1,5 +1,6 @@
 package es.ehu.domain.manufacturing.utilities;
 
+import com.sun.org.apache.xerces.internal.xs.ItemPSVI;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.DFService;
@@ -134,14 +135,23 @@ public class MPlanInterpreter {
             myAgent.send(msg);
 
         }
+        //No es necesario con la estructura nueva de XML ***************************************************************
+
 
         //Ahora componenmos el plan de fabricación con su jerarquía a partir de la secuencia de Master Recipes.
+
         ArrayList<ArrayList<ArrayList<String>>> structuredPlan = new ArrayList<ArrayList<ArrayList<String>>>();
+
+
         ArrayList<String> orderList = new ArrayList<String>();
         ArrayList<String> batchList = new ArrayList<String>();
+        ArrayList<String> ItemList = new ArrayList<String>();
+        ArrayList<String> OPList = new ArrayList<String>();
+        ArrayList<String> ActionList = new ArrayList<String>();
         String thisOrder = "";
         String thisBatch = "";
         String thisItem = "";
+        String thisOp = "";
         Integer index;
         Integer hl = 1;
         Integer entities = structuredPlan.size();
@@ -200,6 +210,8 @@ public class MPlanInterpreter {
                 index=masterRecipes.get(j).get(2).indexOf("item_ID");
                 thisItem = masterRecipes.get(j).get(3).get(index);
 
+
+
                 //Compruebo si es la primera receta asociada a este batch
                 if (!batchList.contains(thisBatch)) {//Si no lo contiene, lo guardo
                     structuredPlan.add(entities,new ArrayList<ArrayList<String>>());
@@ -207,12 +219,14 @@ public class MPlanInterpreter {
                     structuredPlan.get(entities).add(1,new ArrayList<String>());
                     structuredPlan.get(entities).add(2,new ArrayList<String>());
                     structuredPlan.get(entities).add(3,new ArrayList<String>());
+
                     //La información que está escrita en string directamente, posteriormente se leerá de un modelo
                     structuredPlan.get(entities).get(0).add("batch");
                     structuredPlan.get(entities).get(1).add(hl.toString());
                     structuredPlan.get(entities).get(2).add("batch_ID");
                     structuredPlan.get(entities).get(2).add("numberOfItems");
                     structuredPlan.get(entities).get(2).add("productType");
+
                     structuredPlan.get(entities).get(3).add(thisBatch); //El batch_ID lo tengo buscado de antes
 
                     // Añado a la lista de items ID
@@ -223,13 +237,20 @@ public class MPlanInterpreter {
                     index=masterRecipes.get(j).get(2).indexOf("productType");
                     structuredPlan.get(entities).get(3).add(masterRecipes.get(j).get(3).get(index));
                     entities=entities+1;//Después de guardar un elemento, sumo 1 al contador
-                    batchList.add(thisBatch);//Añadimos el order al orderList
+                    batchList.add(thisBatch);//Añadimos el batch al batchList
+
+
+
                 } else {//Si lo contiene, tengo que actualizar el número de items //AQUÍ LO HE DEJADO
 
                     structuredPlan.get(entities - 1).get(3).set(1, structuredPlan.get(entities-1).get(3).get(1) + "," + thisItem);
                     //String allItems = structuredPlan.get(entities-1).get(3).get(1);
                     //structuredPlan.get(entities-1).get(3).set(1,allItems.substring(0, allItems.length()-1));
                 }
+
+
+
+
             }
         }
 
@@ -243,7 +264,7 @@ public class MPlanInterpreter {
         while (it.hasNext())
             System.out.println(it.next());
 
-        return structuredPlan;
+        return roughPlan;
     }
 
     public static ACLMessage sendMessage(Agent myAgent, String cmd, String conversationId) throws Exception {

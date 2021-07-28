@@ -1,6 +1,5 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
-import es.ehu.domain.manufacturing.test.timeout;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.DFService;
@@ -17,17 +16,13 @@ import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.*;
 
 
-public class Dom_Functionality {
+public class Dom_Functionality{
 
     static final Logger LOGGER = LogManager.getLogger(DomApp_Functionality.class.getName());
-
-    private String QoSManagerName="QoSManagerAgent";
 
     private String recieverName;
 
     private String SenderName;
-
-    private String msgErrContent;
 
     private Agent myAgent;
 
@@ -82,18 +77,8 @@ public class Dom_Functionality {
                 msg.setContent(content);
                 myAgent.send(msg);
 
-                /*AID QoSAgentID = new AID(QoSManagerName, false);
-                ACLMessage msgErr = new ACLMessage(ACLMessage.INFORM);
-                recieverName = reciever.getName();
-                SenderName = agent.getName();
-                msgErrContent = "Error in communication between agents " + SenderName + " and " + recieverName + "\n" + "Message content: " + content + "\n" + "Performative: " + performative + "\n" + "Ontology: " + ontology + "\n" + "Conversation ID: " + conversationId;
-                msgErr.addReceiver(QoSAgentID);
-                msgErr.setOntology(ontology);
-                msgErr.setConversationId(conversationId);
-                msgErr.setContent(msgErrContent);
-                myAgent.send(msgErr);*/
-
         }
+
     }
 
 

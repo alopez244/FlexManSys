@@ -14,7 +14,8 @@ import java.io.PrintStream;
 public class ExternalJADEgw {
 
     public static void agentInit(String machineID){
-        //redirectOutput();
+
+        redirectOutput();
         System.out.println("->Java Agent Init");
 //        String host = "127.0.0.1";              //Local host IP)
        // String host = "192.168.187.130";              // host of Iñigo PC
@@ -71,6 +72,7 @@ public class ExternalJADEgw {
             strMessage.setPerformative(16); // Performative = REQUEST
         }
         System.out.println("--Sended message: " + strMessage.readMessage());
+
         try {
             JadeGateway.execute(strMessage);    // calls processCommand method of Gateway Agent
         } catch(Exception e) {
@@ -106,7 +108,7 @@ public class ExternalJADEgw {
     //Modifica la direccon de Sistem.out, teniendo las trazas en un fichero en lugar de por terminal.
     public static void redirectOutput(){
         // Create a log directory
-        File directoryLogs = new File("C:\\Users\\Operator\\Documents");
+        File directoryLogs = new File("C:");
         directoryLogs.mkdirs();
         try {
             // Create a log file

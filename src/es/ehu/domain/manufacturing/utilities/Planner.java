@@ -139,6 +139,8 @@ public class Planner extends Agent {
             ConcurrentHashMap<String, String> serviceList = new ConcurrentHashMap<String, String>();
             ConcurrentHashMap<String, ConcurrentHashMap<String, String>> serviceLists = new ConcurrentHashMap<String, ConcurrentHashMap<String, String>>();
             ConcurrentHashMap<String, String> agentAttributes = new ConcurrentHashMap<String, String>();
+            String itemList = "";
+            Integer index;
 
             agentAttributes.put("seClass", "es.ehu.domain.manufacturing.agents.MPlanAgent");
 
@@ -198,47 +200,62 @@ public class Planner extends Agent {
 
                 //First the attributes are collected
                 attributes.clear();
-                for (int j = 0; j < xmlelements.get(i).get(2).size(); j++) {
-                    String attrName = xmlelements.get(i).get(2).get(j);
-                    if ((attrName.equals("batch_ID")) || (attrName.equals("order_ID")))
-                        attributes.put("reference", xmlelements.get(i).get(3).get(j));
-                    else if (attrName.equals("productType"))
-                        attributes.put("refProductID", xmlelements.get(i).get(3).get(j));
-                    else
-                        attributes.put(xmlelements.get(i).get(2).get(j), xmlelements.get(i).get(3).get(j));
-                }
 
-                //The parent Id is always the last element Id of the upper level
-                parentId = parentIdList.get(Integer.parseInt(xmlelements.get(i).get(1).get(0)) - 1);
+                    String attrName = xmlelements.get(i).get(0).get(0);
+                    if (attrName.equals("batch")||attrName.equals("order")||attrName.equals("mPlan")){
+                        if(attrName.equals("mPlan")){
+                            //attributes.put("reference",xmlelements.get(i).get(2).get(2));
+                            attributes.put("name",xmlelements.get(i).get(3).get(0)); //buscamos y añadimos los atributos para el agente mplan
+                        }
+                        if(attrName.equals("order")){ //buscamos y añadimos los atributos para el agente order
+                            attributes.put("reference",xmlelements.get(i).get(3).get(0));
+                        }
+                        if(attrName.equals("batch")){ //buscamos y añadimos los atributos para el agente batch
 
-                String commandSeReg = "seregister seParent="+parentId+ " parent=concepts seType=" + xmlelements.get(i).get(0).get(0);
-                for (Map.Entry<String, String> entry : attributes.entrySet()) {
-                    commandSeReg = commandSeReg+" "+entry.getKey()+"="+entry.getValue();
-                }
+                            for(int j=i;j<xmlelements.size();j++){
+                                if(xmlelements.get(j).get(0).get(0).equals("PlannedItem")){
+                                    index=xmlelements.get(j).get(2).indexOf("item_ID");
+                                    itemList= itemList + xmlelements.get(j).get(3).get(index)+","; //concatenamos cada item ID separandolo con comas. Queda coma al final del último item pero no parece dar problemas al registrar.
 
-                if (!restrictionLists.isEmpty()) {
-                    commandSeReg = commandSeReg + " & " + restrictionLists.keys().nextElement();
-                    for (Map.Entry<String, ConcurrentHashMap<String, String>> restriction : restrictionLists.entrySet()) {
-                        for (Map.Entry<String, String> entry : restriction.getValue().entrySet()) {
-                            //Aquí se obtienen las restricciones asociadas a ese tipo de recurso
+                                }attributes.put("numberOfItems",itemList);
+
+                            }
+                            attributes.put("reference",xmlelements.get(i).get(3).get(2));
+                            attributes.put("refProductID",xmlelements.get(i).get(3).get(1));
+                            }
+
+                        //The parent Id is always the last element Id of the upper level
+                        parentId = parentIdList.get(Integer.parseInt(xmlelements.get(i).get(1).get(0)) - 1);
+
+                        String commandSeReg = "seregister seParent=" + parentId + " parent=concepts seType=" + xmlelements.get(i).get(0).get(0);
+                        for (Map.Entry<String, String> entry : attributes.entrySet()) {
                             commandSeReg = commandSeReg + " " + entry.getKey() + "=" + entry.getValue();
                         }
+
+                        if (!restrictionLists.isEmpty()) {
+                            commandSeReg = commandSeReg + " & " + restrictionLists.keys().nextElement();
+                            for (Map.Entry<String, ConcurrentHashMap<String, String>> restriction : restrictionLists.entrySet()) {
+                                for (Map.Entry<String, String> entry : restriction.getValue().entrySet()) {
+                                    //Aquí se obtienen las restricciones asociadas a ese tipo de recurso
+                                    commandSeReg = commandSeReg + " " + entry.getKey() + "=" + entry.getValue();
+                                }
+                            }
+                        }
+
+
+                        try {
+                            ACLMessage reply = sendCommand(commandSeReg, conversationId);
+                            seId = reply.getContent();
+                        } catch (FIPAException e) {
+                            e.printStackTrace();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                        //Finally, the new seId is added to the parent Id list
+                        parentIdList.add(Integer.parseInt(xmlelements.get(i).get(1).get(0)), seId);
                     }
                 }
-
-
-                try {
-                    ACLMessage reply = sendCommand(commandSeReg, conversationId);
-                    seId = reply.getContent();
-                } catch (FIPAException e) {
-                    e.printStackTrace();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                //Finally, the new seId is added to the parent Id list
-                parentIdList.add(Integer.parseInt(xmlelements.get(i).get(1).get(0)), seId);
-            }
 
             //After the register, the element to be validated and started will be the second on the list (the level 1 element)
             String app = parentIdList.get(1);

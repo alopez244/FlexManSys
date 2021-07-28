@@ -24,27 +24,27 @@ public class DomRes_Functionality extends Dom_Functionality{
                     ArrayList<String> auxiliar2 = machinePlan.get(j).get(k + 3);
 
                     if (ItemContFlag == true) { //saves the information of the operation only when founds the first item, then just increments the item counter
-                        BathcID = auxiliar2.get(4);  //saves the information of the operation in PLCmsgOut
+                        BathcID = auxiliar2.get(3);  //saves the information of the operation in PLCmsgOut   antes get 4 tras cambio en xml -> 3
                         PLCmsgOut.put("Control_Flag_New_Service", true);
                         PLCmsgOut.put("Id_Batch_Reference", Integer.parseInt(BathcID));
-                        PLCmsgOut.put("Id_Order_Reference", Integer.parseInt(auxiliar2.get(6)));
-                        PLCmsgOut.put("Id_Ref_Subproduct_Type", Integer.parseInt(auxiliar2.get(7)));
+                        PLCmsgOut.put("Id_Order_Reference", Integer.parseInt(auxiliar2.get(5))); //antes get 6 tras cambio en xml -> 5
+                        PLCmsgOut.put("Id_Ref_Subproduct_Type", Integer.parseInt(auxiliar2.get(6))); //antes get 7 tras cambio en xml -> 6
                         PLCmsgOut.put("Operation_Ref_Service_Type", Integer.parseInt(auxiliar2.get(0)));
 
                         ItemContFlag = false;
                     }
                     // Se comprueba que el id del item no este registrado. En este caso, se añade el id a la lista y se activa el flag newItem para que sea contado
-                    if (!itemNumbers.contains(auxiliar2.get(5)) && auxiliar2.get(4).equals(BathcID)) {
-                        itemNumbers.add(auxiliar2.get(5));
+                    if (!itemNumbers.contains(auxiliar2.get(4)) && auxiliar2.get(3).equals(BathcID)) { //se cambia get(5) por get(4) y get(4) por get(3)
+                        itemNumbers.add(auxiliar2.get(4)); //get(4) por get(3)
                         newItem = true;     //the item is counted
                     }
                     //Si newItem esta a true y el batch ID concuerda con el esperado se incrementa el contador de piezas
-                    if (ItemContFlag == false && auxiliar2.get(4).equals(BathcID) && newItem == true) { //counts all the items with the same batch number
+                    if (ItemContFlag == false && auxiliar2.get(3).equals(BathcID) && newItem == true) { //counts all the items with the same batch number
                         NumOfItems++;
                         newItem = false;
                     }
                     // Si se llega a una pieza que ya no pertene al lote que se esta contabilizando, se sale del bucle
-                    if (!itemNumbers.contains(auxiliar2.get(5)) && !auxiliar2.get(4).equals(BathcID)) {
+                    if (!itemNumbers.contains(auxiliar2.get(4)) && !auxiliar2.get(3).equals(BathcID)) {
                         index = j; // Se guarda el indice para seguir contando desde ese punto en la siguiente llamada a la funcion
                         breakFlag = true;
                         break;

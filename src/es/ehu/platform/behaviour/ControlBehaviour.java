@@ -97,15 +97,6 @@ public class ControlBehaviour extends SimpleBehaviour {
                 name=name.substring(0, name.indexOf('@'));
                 LOGGER.info("msg.getPerformative()==ACLMessage.FAILURE (sender="+name+")");
 
-                //************************** Modificaciones Diego
-                AID QoSAgentID = new AID(QoSAgentName, false);
-                ACLMessage msgQoS=new ACLMessage(ACLMessage.INFORM);
-                msgQoS.setContent("FAILURE. Agent "+name+" not found.");
-                msgQoS.addReceiver(QoSAgentID);
-                msgQoS.setOntology("control");
-                myAgent.send(msgQoS);
-                //************************** Fin Modificaciones Diego
-
                 try { LOGGER.info(myAgent.sendCommand(CMD_REPORT + " (" + CMD_GETCOMPONENTS + " "+name+") type=notFound cmpins="+name));} catch (Exception e) {e.printStackTrace();}
 
             } else {

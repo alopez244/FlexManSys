@@ -137,7 +137,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
     private ConcurrentHashMap<String, NegotiationData> negotiationRuntime = new ConcurrentHashMap<String, NegotiationData>();
 
     private static String actionValue = null;
-    private static String QoSAgentName="QoSManagerAgent";
+    //private static String QoSAgentName="QoSManagerAgent";
 
     public NegotiatingBehaviour(MWAgent a) {
         super(a);
@@ -387,14 +387,14 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                     try {
                         String name = msg.getContent().substring(msg.getContent().indexOf(":name ", msg.getContent().indexOf("MTS-error")) + ":name ".length());
                         LOGGER.warn(name.substring(0, name.indexOf('@')) + " FAILURE");
-                        //************************** Modificaciones Diego
+                        /*//************************** Modificaciones Diego
                         AID QoSAgentID = new AID(QoSAgentName, false);
                         ACLMessage msgQoS=new ACLMessage(ACLMessage.INFORM);
                         msgQoS.setContent("FAILURE. Agent "+name.substring(0, name.indexOf('@'))+" not found. Conversation ID is "+conversationId);
                         msgQoS.addReceiver(QoSAgentID);
                         msgQoS.setOntology(name.substring(0, name.indexOf('@')));
                         myAgent.send(msgQoS);
-                        //************************** Fin Modificaciones Diego
+                        //************************** Fin Modificaciones Diego*/
 
                     } catch (Exception e) {
                     }

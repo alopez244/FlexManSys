@@ -8,10 +8,8 @@ import jade.lang.acl.MessageTemplate;
 import jade.wrapper.gateway.GatewayAgent;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
+import java.util.Iterator;
 
 public class GWAgent extends GatewayAgent {
 
@@ -72,33 +70,21 @@ public class GWAgent extends GatewayAgent {
         MessageTemplate template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.or(
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
                 MessageTemplate.MatchOntology("negotiation")),MessageTemplate.MatchConversationId("PLCdata"));
-        //**************************** Modificacion Diego
-        MessageTemplate QoS = MessageTemplate.and(
-                (MessageTemplate.MatchPerformative(ACLMessage.REQUEST)),
-                MessageTemplate.MatchOntology("ping"));
-        //**************************** Fin Modificación Diego
+
+
 
         addBehaviour(new CyclicBehaviour() {
 
             public void action() {
                 System.out.println("Entering CyclicBehaviour");
-                ACLMessage msgToFIFO = receive(template);
-                //**************************** Modificacion Diego
-                ACLMessage QoSPing = receive(QoS);
-                if(QoSPing!=null){
-                    ACLMessage pong = new ACLMessage(ACLMessage.INFORM);
-                    AID AgentToPongID = QoSPing.getSender();
-                    pong.addReceiver(AgentToPongID);
-                    pong.setContent("Yes :)");
-                    pong.setOntology("pong");
-                    myAgent.send(pong);
 
-                 }
-                //**************************** Fin Modificación Diego
-                else if (msgToFIFO != null) {
+                ACLMessage msgToFIFO = receive(template);
+
+               if (msgToFIFO != null) {
                     System.out.println("GWagent, message received from Machine Agent");
                     machineAgentName = msgToFIFO.getSender();//saves the sender ID for a later reply
                     System.out.println("MachineAgentName :"+machineAgentName);
+
                     if(msgInFIFO.isAtFullCapacity()) {
                         System.out.println("buffer full, old message lost");
                     }

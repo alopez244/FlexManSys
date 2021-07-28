@@ -12,6 +12,7 @@ public class BatchAgent extends ApplicationAgentTemplate {
     @Override
     protected MessageTemplate variableInitialization(Object[] arguments, Behaviour behaviour) {
         System.out.println("es.ehu.platform.template.ApplicationAgentTemplate.variableInitialization()");
+
         this.functionalityInstance = new Batch_Functionality();  //TODO
         return null;
     }

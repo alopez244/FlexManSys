@@ -1,11 +1,9 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
+import FIPA.DateTime;
 import com.google.gson.Gson;
-import es.ehu.SystemModelAgent;
 import es.ehu.domain.manufacturing.agents.MachineAgent;
 import es.ehu.domain.manufacturing.behaviour.ReceiveTaskBehaviour;
-import es.ehu.domain.manufacturing.behaviour.SendTaskBehaviour;
-import es.ehu.domain.manufacturing.utilities.Position;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.NegotiatingBehaviour;
 import es.ehu.platform.template.interfaces.AssetManagement;
@@ -13,37 +11,28 @@ import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.platform.template.interfaces.Traceability;
 import es.ehu.platform.utilities.Cmd;
-import es.ehu.platform.utilities.XMLReader;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.SimpleBehaviour;
-import jade.domain.DFService;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.tools.gui.ACLPerformativesRenderer;
 import jade.wrapper.AgentController;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import std_msgs.Bool;
-import es.ehu.domain.manufacturing.test.timeout;
-import java.io.File;
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.time.Month;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import java.util.*;
-import java.util.concurrent.TimeoutException;
+import java.util.spi.CalendarDataProvider;
 
 public class Machine_Functionality extends DomRes_Functionality implements BasicFunctionality, NegFunctionality, AssetManagement, Traceability {
-    private boolean aknowledge=false;
+    private boolean firstItemFlag=false;
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
-    private String QsysAgentTestName="QsysAgentTest";
+    //private String QsysAgentTestName="QsysAgentTest";
     private ArrayList<ArrayList<String>> productInfo;
     private HashMap<String, String> operationsWithBatchAgents = new HashMap<>();
     private HashMap PLCmsgIn = new HashMap(); // Estructura de datos que se envia al PLC
@@ -56,7 +45,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private Boolean requestMaterial = false; // Flag que se activa cuando se necesita hacer una peticion de consumibles
     private Boolean orderQueueFlag = false; // Flag que se activa cuando existen nuevas ordenes en cola para la maquina
     private String gatewayAgentName; // Guarda el nombre del agente pasarela
-    private String QsysAgentName;
+    Calendar calendario = Calendar.getInstance();
+    int hora, minutos, segundos, dia, mes, ano;
+//    String stime;
+
     private MessageTemplate template;
 
     /** Identifier of the agent. */
@@ -309,7 +301,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         for (int j = 0; j < myAgent.machinePlan.get(i).size(); j++){
                             if (myAgent.machinePlan.get(i).get(j).get(0).equals("operation")){
                                 if (NumOfItems != 0) {
-                                    if (myAgent.machinePlan.get(i).get(j + 3).get(4).equals(BathcID)) { //The manufactured batch is compared with the expected batch
+                                    if (myAgent.machinePlan.get(i).get(j + 3).get(3).equals(BathcID)) { //The manufactured batch is compared with the expected batch ***With new XML is trying to compare item ID with batch ID, get(4) changed to get(3)
                                         myAgent.machinePlan.remove(i);
                                         i--;
                                         NumOfItems--;   //only the references to the items that were expected to be manufactured are deleted, that's why it is counted how many remains to be deleted
@@ -524,14 +516,70 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 }
                 // Solo se envia la operación si hay material suficiente
                 if (!consumableShortage) {
+
+                    /**************** TRAMO DE ESPERA PLAN PROGRAMADO *************Modificaciones Diego*/
+
+                    for(int j = 0 ; j < myAgent.machinePlan.size()&&firstItemFlag==false;j++){    //Buscamos de todos los plannedStartTime el primero (se asume que estan ordenados)
+                        if(myAgent.machinePlan.get(j).get(0).get(0).equals("operation")){
+                            for(int k = 0 ; k < myAgent.machinePlan.get(j).get(2).size()&&firstItemFlag==false;k++){
+                                if(myAgent.machinePlan.get(j).get(2).get(k).equals("plannedStartTime")){
+                                    String starttime=myAgent.machinePlan.get(j).get(3).get(k);
+//                                    SimpleDateFormat formatter1=new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+                                    SimpleDateFormat formatter=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"); //Se usa el formato XS:DateTime
+                                    ano = calendario.get(Calendar.YEAR);
+                                    mes = calendario.get(Calendar.MONTH)+1;
+                                    dia = calendario.get(Calendar.DAY_OF_MONTH);
+                                    hora = calendario.get(Calendar.HOUR_OF_DAY);
+                                    minutos = calendario.get(Calendar.MINUTE);
+                                    segundos = calendario.get(Calendar.SECOND);
+                                    String actualTime = ano + "-" + mes + "-" + dia + "T" + hora + ":" + minutos + ":" + segundos; //Consigue la fecha actual para inicializar la variable date2, la fecha actual
+//                                    System.out.println("Hora actual: " + hora + ":" + minutos + ":" + segundos);
+                                    Date date1 = null;
+                                    Date date2 = null;
+                                    try {
+                                        date1 = formatter.parse(starttime);
+                                        date2 = formatter.parse(actualTime);
+                                    } catch (ParseException e) {
+                                        System.out.println("ERROR dando formato a una fecha");
+                                        e.printStackTrace();
+                                    }
+                                        while(date1.after(date2)) { //Se queda actualizando la fecha cada segundo hasta que se alcance la fecha definida en el plan de fabricación
+                                            Calendar calendario = Calendar.getInstance();
+                                            ano = calendario.get(Calendar.YEAR);
+                                            mes = calendario.get(Calendar.MONTH)+1;
+                                            dia = calendario.get(Calendar.DAY_OF_MONTH);
+                                            hora = calendario.get(Calendar.HOUR_OF_DAY);
+                                            minutos = calendario.get(Calendar.MINUTE);
+                                            segundos = calendario.get(Calendar.SECOND);
+                                            actualTime = ano + "-" + mes + "-" + dia + "T" + hora + ":" + minutos + ":" + segundos; //Actualiza la fecha actual
+//                                            System.out.println("Hora actual: " + hora + ":" + minutos + ":" + segundos);
+                                            try {
+//                                               date1 = formatter.parse(starttime);
+                                               date2 = formatter.parse(actualTime);
+                                                } catch (ParseException e) {
+                                                    System.out.println("ERROR dando formato a una fecha");
+                                                    e.printStackTrace();
+                                                }
+                                            try {
+                                                Thread.sleep(10000);
+                                            } catch (InterruptedException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    firstItemFlag=true;
+                                }
+                            }
+                        }
+                    }
+                    firstItemFlag=false;
+
+                    /*******************************************FIN Modificaciones Diego*/
                     PLCmsgOut.remove("Index");
                     String MessageContent = new Gson().toJson(PLCmsgOut);
                     AID gatewayAgentID = new AID(gatewayAgentName, false);
-
-                        sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
-                        sendingFlag = false;
-                        machinePlanIndex = 0;
-
+                    sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
+                    sendingFlag = false;
+                    machinePlanIndex = 0;
 
                 } else { // en caso contrario, se analizan las operaciones en cola para poder ser enviados
                     System.out.println("El lote " + BathcID + " no se puede fabricar por falta de material");

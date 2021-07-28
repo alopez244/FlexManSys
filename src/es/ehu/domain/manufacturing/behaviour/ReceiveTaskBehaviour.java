@@ -8,9 +8,6 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import es.ehu.domain.manufacturing.test.timeout;
-
-import java.util.HashMap;
 
 public class ReceiveTaskBehaviour extends SimpleBehaviour {
 
