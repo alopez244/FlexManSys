@@ -21,7 +21,8 @@ import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Planner extends Agent {
-
+    private MessageTemplate template;
+    private String itemfinishtime=null;
     private static final long serialVersionUID = 1L;
     static final Logger LOGGER = LogManager.getLogger(Planner.class.getName()) ;
 
@@ -168,6 +169,8 @@ public class Planner extends Agent {
             String uri=appPath+file;
             XMLReader fileReader = new XMLReader();
             ArrayList<ArrayList<ArrayList<String>>> xmlelements = null;
+            ArrayList<ArrayList<String>> batchlist =new ArrayList<ArrayList<String>>();
+            String finnish_time=null;
             try {
                 xmlelements = fileReader.readFile(uri);
             } catch (Exception e) {
@@ -210,20 +213,38 @@ public class Planner extends Agent {
                         if(attrName.equals("order")){ //buscamos y añadimos los atributos para el agente order
                             attributes.put("reference",xmlelements.get(i).get(3).get(0));
                         }
+                        int l=0;
                         if(attrName.equals("batch")){ //buscamos y añadimos los atributos para el agente batch
+
+                            batchlist.add(new ArrayList<>());
+                            batchlist.get(l).add(xmlelements.get(i).get(3).get(2));
+//                            for(int m=i+1;m<xmlelements.size()&&!xmlelements.get(m).get(0).get(0).equals("batch");m++){
+//
+//                                if(xmlelements.get(m).get(0).get(0).contains("Operation")){
+//                                 finnish_time=xmlelements.get(m).get(3).get(2);
+////                                }
+//                            }
+//                            batchlist.get(l).add(finnish_time);//se añade el finish time por cada batch en una lista
+
 
                             for(int j=i;j<xmlelements.size();j++){
                                 if(xmlelements.get(j).get(0).get(0).equals("PlannedItem")){
                                     index=xmlelements.get(j).get(2).indexOf("item_ID");
                                     itemList= itemList + xmlelements.get(j).get(3).get(index)+","; //concatenamos cada item ID separandolo con comas. Queda coma al final del último item pero no parece dar problemas al registrar.
 
+                                    for(int n=j+1;n<xmlelements.size()&&!xmlelements.get(n).get(0).get(0).contains("PlannedItem");n++) {
+                                        if(xmlelements.get(n).get(0).get(0).contains("Operation")) {
+                                            itemfinishtime = xmlelements.get(j).get(3).get(index) + "/" + xmlelements.get(n).get(3).get(2);
+                                        }
+                                    }
+                                    batchlist.get(l).add(itemfinishtime);
                                 }attributes.put("numberOfItems",itemList);
 
                             }
                             attributes.put("reference",xmlelements.get(i).get(3).get(2));
                             attributes.put("refProductID",xmlelements.get(i).get(3).get(1));
                             }
-
+                        l++;
                         //The parent Id is always the last element Id of the upper level
                         parentId = parentIdList.get(Integer.parseInt(xmlelements.get(i).get(1).get(0)) - 1);
 
@@ -277,6 +298,44 @@ public class Planner extends Agent {
                 LOGGER.error("ERROR IN start METHOD OF PLANNER: Sending command to systemModelAgent");
                 e.printStackTrace();
             }
+/*******************************Modifiaciones Diego*/
+
+            template = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+                    MessageTemplate.MatchOntology("Ftime_ask"));
+            String BatchToFind;
+            while(batchlist.size()>0){//Se queda a la espera de recibir las consultas de finish time de cada batch
+
+                ACLMessage reply=blockingReceive(template);
+                AID batchAID = reply.getSender();
+                BatchToFind=reply.getContent();
+                for(int k=0;k<batchlist.size();k++){
+                    String BatchOnList=batchlist.get(k).get(0);
+                        if(BatchOnList.equals(BatchToFind)){
+                            String each_operation_time="";
+                            for(int n=0;n<batchlist.get(k).size();n++) {
+                                if(each_operation_time.equals("")){
+                                    each_operation_time=batchlist.get(k).get(n)+"&"; //Añade batch separando con "&"
+                                }
+                                else if(n==1){
+                                    each_operation_time = each_operation_time+batchlist.get(k).get(n); //Añade el primer FT
+                                }
+                                else {
+                                    each_operation_time = each_operation_time + "_" + batchlist.get(k).get(n);
+                                }
+                            }
+                            reply.setContent(each_operation_time);  //Busca en el batch list la referencia y devuelve el finish time
+                            reply.addReceiver(batchAID);
+                            reply.setOntology("Ftime_ask");
+                            reply.setPerformative(ACLMessage.INFORM);
+                            myAgent.send(reply);
+                            batchlist.remove(k);
+
+                        }
+                }
+            }
+/*******************************************************/
+
+
         }
 
         private boolean finished = false;
@@ -356,6 +415,7 @@ public class Planner extends Agent {
                 , 1000);
 
         LOGGER.info((cmd.startsWith("validate"))?"xsd: "+reply.getContent(): cmd+" > "+reply.getContent());
+
 
         return LOGGER.exit(reply);
     }

@@ -30,6 +30,7 @@ import java.util.spi.CalendarDataProvider;
 
 public class Machine_Functionality extends DomRes_Functionality implements BasicFunctionality, NegFunctionality, AssetManagement, Traceability {
     private boolean firstItemFlag=false;
+    private ArrayList<String> msgToQoS;
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
     //private String QsysAgentTestName="QsysAgentTest";
@@ -46,7 +47,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private Boolean orderQueueFlag = false; // Flag que se activa cuando existen nuevas ordenes en cola para la maquina
     private String gatewayAgentName; // Guarda el nombre del agente pasarela
     Calendar calendario = Calendar.getInstance();
-    int hora, minutos, segundos, dia, mes, ano;
+    int hora, minutos, segundos, milisegundos, dia, mes, ano;
 //    String stime;
 
     private MessageTemplate template;
@@ -158,7 +159,25 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         return null;
 
         }
-
+    protected Date getactualtime(){
+        String actualTime;
+        int ano, mes, dia, hora, minutos, segundos;
+        Calendar calendario = Calendar.getInstance();
+        ano = calendario.get(Calendar.YEAR);
+        mes = calendario.get(Calendar.MONTH) + 1;
+        dia = calendario.get(Calendar.DAY_OF_MONTH);
+        hora = calendario.get(Calendar.HOUR_OF_DAY);
+        minutos = calendario.get(Calendar.MINUTE);
+        segundos = calendario.get(Calendar.SECOND);
+        actualTime = ano + "-" + mes + "-" + dia + "T" + hora + ":" + minutos + ":" + segundos;
+        Date actualdate = null;
+        try {
+            actualdate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(actualTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return actualdate;
+    }
     @Override
     public Object execute(Object[] input) {
 
@@ -279,9 +298,9 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         return NegotiatingBehaviour.NEG_WON;
     }
 
-    public void rcvDataFromDevice(ACLMessage msg) {
+    public void rcvDataFromDevice(ACLMessage msg2) {
 
-        this.PLCmsgIn = new Gson().fromJson(msg.getContent(), HashMap.class);   //Data type conversion Json->Hashmap class
+        this.PLCmsgIn = new Gson().fromJson(msg2.getContent(), HashMap.class);   //Data type conversion Json->Hashmap class
         if(PLCmsgIn.containsKey("Received")){   //Checks if it is a confirmation message
             if(PLCmsgIn.get("Received").equals(true)){
 
@@ -290,7 +309,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 System.out.println("<--Problem receiving the message");
             }
         }else{
-            recvBatchInfo(msg);   // sends item information to batch agent
+            recvBatchInfo(msg2);   // sends item information to batch agent
             if(PLCmsgIn.containsKey("Control_Flag_Service_Completed")) {    //At least the first field is checked
                 if (PLCmsgIn.get("Control_Flag_Service_Completed").equals(true)) {  //If service has been completed, the operation is deleted from machine plan variable
 
@@ -526,45 +545,41 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                                     String starttime=myAgent.machinePlan.get(j).get(3).get(k);
 //                                    SimpleDateFormat formatter1=new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
                                     SimpleDateFormat formatter=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"); //Se usa el formato XS:DateTime
-                                    ano = calendario.get(Calendar.YEAR);
-                                    mes = calendario.get(Calendar.MONTH)+1;
-                                    dia = calendario.get(Calendar.DAY_OF_MONTH);
-                                    hora = calendario.get(Calendar.HOUR_OF_DAY);
-                                    minutos = calendario.get(Calendar.MINUTE);
-                                    segundos = calendario.get(Calendar.SECOND);
-                                    String actualTime = ano + "-" + mes + "-" + dia + "T" + hora + ":" + minutos + ":" + segundos; //Consigue la fecha actual para inicializar la variable date2, la fecha actual
+                                    SimpleDateFormat formatter2=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS"); //Se usa el formato con milisegundos agregados para mayor precision
+                                    Date date2=getactualtime();
 //                                    System.out.println("Hora actual: " + hora + ":" + minutos + ":" + segundos);
                                     Date date1 = null;
-                                    Date date2 = null;
+
                                     try {
                                         date1 = formatter.parse(starttime);
-                                        date2 = formatter.parse(actualTime);
+
                                     } catch (ParseException e) {
                                         System.out.println("ERROR dando formato a una fecha");
                                         e.printStackTrace();
                                     }
                                         while(date1.after(date2)) { //Se queda actualizando la fecha cada segundo hasta que se alcance la fecha definida en el plan de fabricación
-                                            Calendar calendario = Calendar.getInstance();
-                                            ano = calendario.get(Calendar.YEAR);
-                                            mes = calendario.get(Calendar.MONTH)+1;
-                                            dia = calendario.get(Calendar.DAY_OF_MONTH);
-                                            hora = calendario.get(Calendar.HOUR_OF_DAY);
-                                            minutos = calendario.get(Calendar.MINUTE);
-                                            segundos = calendario.get(Calendar.SECOND);
-                                            actualTime = ano + "-" + mes + "-" + dia + "T" + hora + ":" + minutos + ":" + segundos; //Actualiza la fecha actual
-//                                            System.out.println("Hora actual: " + hora + ":" + minutos + ":" + segundos);
-                                            try {
-//                                               date1 = formatter.parse(starttime);
-                                               date2 = formatter.parse(actualTime);
-                                                } catch (ParseException e) {
-                                                    System.out.println("ERROR dando formato a una fecha");
-                                                    e.printStackTrace();
-                                                }
-                                            try {
-                                                Thread.sleep(10000);
-                                            } catch (InterruptedException e) {
-                                                e.printStackTrace();
-                                            }
+                                            date2=getactualtime();
+
+//                                            try {
+//                                                Thread.sleep(10000);
+//                                            } catch (InterruptedException e) {
+//                                                e.printStackTrace();
+//                                            }
+                                        }
+                                        date2=getactualtime();
+                                        if(date1.before(date2)){
+                                            long diferencia=((date2.getTime()-date1.getTime())); //calculamos el retraso en iniciar en milisegundos
+
+                                            AID QoSID = new AID("QoSManagerAgent", false);
+
+//                                            ACLMessage delay= new ACLMessage(ACLMessage.INFORM);
+//                                            delay.setOntology("batch_delay");
+//                                            delay.addReceiver(QoSID);
+                                            String content=BathcID;
+                                            String delay=String.valueOf(diferencia);
+                                            content=content+"/"+delay;
+//                                            delay.setContent(content);
+                                            sendACLMessage(ACLMessage.INFORM, QoSID, "delay", "batch_delay", content, myAgent);
                                         }
                                     firstItemFlag=true;
                                 }
@@ -621,7 +636,9 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 PLCmsgOut.put("Control_Flag_New_Service", false);
                 sendingFlag = false;
             }
+
         }
+
     }
 
 }

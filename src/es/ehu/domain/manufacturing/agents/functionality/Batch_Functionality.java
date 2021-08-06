@@ -1,6 +1,7 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
 import com.google.gson.Gson;
+import es.ehu.domain.manufacturing.agents.BatchAgent;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
@@ -9,8 +10,10 @@ import es.ehu.platform.utilities.XMLReader;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import jade.wrapper.AgentController;
 import org.apache.commons.io.FilenameUtils;
-
+import jade.wrapper.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -18,10 +21,10 @@ import java.io.PrintStream;
 import java.util.*;
 
 public class Batch_Functionality extends DomApp_Functionality implements BasicFunctionality, AvailabilityFunctionality {
-
+    private MessageTemplate templateFT;
     private static final long serialVersionUID = 1L;
     private Agent myAgent;
-
+    private ACLMessage batchName;
     private String productID, batchNumber;
     private ArrayList<String> actionList = new ArrayList<>();
     private ArrayList<ArrayList<ArrayList<String>>> productInfo;
@@ -29,11 +32,12 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private HashMap<String, String> machinesForOperations = new HashMap<>();
     private String itemsID;
     private Boolean firstTime = true;
-
+    private String batchreference=null;
     private int chatID = 0; // Numero incremental para crear conversationID
     private String firstState;
     private String redundancy;
     private String parentAgentID;
+    private String finish_time_of_batch=null;
     private String mySeType;
     private Object myReplicasID  = new HashMap<>();
 
@@ -57,6 +61,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         firstState = getArgumentOfAgent(myAgent, "firstState");
         redundancy = getArgumentOfAgent(myAgent, "redundancy");
         parentAgentID = getArgumentOfAgent(myAgent, "parentAgent");
+
         mySeType = getMySeType(myAgent, conversationId);
 
         // Hay que leer el modelo de trazabilidad que estara en alguna carpeta
@@ -78,7 +83,35 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             // TODO esta comentado ya que peta al estar en el init --> La ejecucion sigue adelante antes de recoger todos los mensajes y despues da problemas
             // sendPlan method of interface ITraceability
             createPlan(myAgent, conversationId);
+            /****************************Modificaciones Diego*/
+            templateFT=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                    MessageTemplate.MatchOntology("Ftime_ask"));
+            try {
+                ACLMessage batchName=sendCommand(myAgent,"get "+myAgent.getLocalName()+" attrib=parent","name"); //consigue el nombre del batch
+                ACLMessage reference=sendCommand(myAgent,"get "+batchName.getContent()+" attrib=reference","Reference"); //consigue la referencia del batch
+                AID plannerID = new AID("planner", false);
+                batchreference=reference.getContent();
+                sendACLMessage(16, plannerID,"Ftime_ask", "finnish_time", reference.getContent(), myAgent ); //pide el finish time al planner
+                ACLMessage finishtime= myAgent.blockingReceive(templateFT);
+                System.out.println(finishtime.getContent());
+                finish_time_of_batch=finishtime.getContent();
+            } catch (Exception e) {
+                System.out.println("ERROR. Something happened asking for finish time to planner");
+                e.printStackTrace();
+            }
+            AgentContainer tc= myAgent.getContainerController();
+            try {
+                AgentController timeout = tc.createNewAgent(batchreference+"timeout", "es.ehu.domain.manufacturing.test.BatchTimeout", new Object[]{});
+                timeout.start(); //inicia un timeout para el batch
+                AID timeoutID = new AID(batchreference+"timeout", false);
+                sendACLMessage(7, timeoutID,batchreference+"timeout", "timeout_info", finish_time_of_batch, myAgent ); //se envia el finish time al timeout
+            } catch (StaleProxyException e) {
+                System.out.println("ERROR. Something went wrong creating or sending info to timeout agent");
+                e.printStackTrace();
+            }
+            System.out.println("***************************************");
 
+            /*************************************************/
 
         } else {
             // Si su estado es tracking
@@ -104,6 +137,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
         ACLMessage msg = myAgent.receive();
         if (msg != null) {
+
             if (msg.getPerformative() == ACLMessage.REQUEST) {
 
                 System.out.println("Mensaje con la informacion del PLC");
@@ -117,6 +151,12 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 String idItem = String.valueOf(infoForTraceability.get("Id_Item_Number"));
                 batchNumber = String.valueOf(infoForTraceability.get("Id_Batch_Reference"));
                 String ActionTypes = String.valueOf(infoForTraceability.get("Id_Action_Type"));
+
+                /*****************Tramo para pedir reset al timeout ***********************Modificaciones diego*/
+                AID timeoutID = new AID(batchNumber+"timeout", false);
+                sendACLMessage(7, timeoutID,"timeout_reset", "feedback", "Item completed", myAgent );
+
+                /***********************************************************************************************/
 
                 for (int i=0; i < productsTraceability.size(); i++) {
                     // Se identifica la estructura de datos correspondiente al item que se ha fabricado
@@ -476,5 +516,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         System.out.println("PRODUCT TRACEABILITY OF " + myAgent.getLocalName() + ":\n" + productsTraceability);
         System.out.println("\n");
     }
+
+
 
 }
