@@ -37,7 +37,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private String firstState;
     private String redundancy;
     private String parentAgentID;
-    private String finish_time_of_batch=null;
+    private String finish_times_of_batch=null;
     private String mySeType;
     private Object myReplicasID  = new HashMap<>();
 
@@ -83,7 +83,8 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             // TODO esta comentado ya que peta al estar en el init --> La ejecucion sigue adelante antes de recoger todos los mensajes y despues da problemas
             // sendPlan method of interface ITraceability
             createPlan(myAgent, conversationId);
-            /****************************Modificaciones Diego*/
+            /****************************Tramo de creación de timeout***************Modificaciones Diego**/
+
             templateFT=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                     MessageTemplate.MatchOntology("Ftime_ask"));
             try {
@@ -91,10 +92,10 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 ACLMessage reference=sendCommand(myAgent,"get "+batchName.getContent()+" attrib=reference","Reference"); //consigue la referencia del batch
                 AID plannerID = new AID("planner", false);
                 batchreference=reference.getContent();
-                sendACLMessage(16, plannerID,"Ftime_ask", "finnish_time", reference.getContent(), myAgent ); //pide el finish time al planner
-                ACLMessage finishtime= myAgent.blockingReceive(templateFT);
+                sendACLMessage(16, plannerID,"Ftime_ask", "finnish_time", reference.getContent(), myAgent ); //pide el finish time de cada item al planner
+                ACLMessage finishtime= myAgent.blockingReceive(templateFT); //recibe los finish times concatenados
                 System.out.println(finishtime.getContent());
-                finish_time_of_batch=finishtime.getContent();
+                finish_times_of_batch=finishtime.getContent();
             } catch (Exception e) {
                 System.out.println("ERROR. Something happened asking for finish time to planner");
                 e.printStackTrace();
@@ -103,15 +104,14 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             try {
                 AgentController timeout = tc.createNewAgent(batchreference+"timeout", "es.ehu.domain.manufacturing.test.BatchTimeout", new Object[]{});
                 timeout.start(); //inicia un timeout para el batch
-                AID timeoutID = new AID(batchreference+"timeout", false);
-                sendACLMessage(7, timeoutID,batchreference+"timeout", "timeout_info", finish_time_of_batch, myAgent ); //se envia el finish time al timeout
+                AID timeoutID = new AID(batchreference+"timeout", false); //De ontologia se usa el nombre del agente para que este sepa de que agente batch tiene que recibir el mensaje
+                sendACLMessage(7, timeoutID,batchreference+"timeout", "timeout_info", finish_times_of_batch, myAgent ); //se envian, los finish times al timeout.
             } catch (StaleProxyException e) {
                 System.out.println("ERROR. Something went wrong creating or sending info to timeout agent");
                 e.printStackTrace();
             }
-            System.out.println("***************************************");
 
-            /*************************************************/
+            /*************************************************************************************/
 
         } else {
             // Si su estado es tracking

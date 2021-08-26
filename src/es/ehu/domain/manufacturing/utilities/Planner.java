@@ -305,9 +305,9 @@ public class Planner extends Agent {
             String BatchToFind;
             while(batchlist.size()>0){//Se queda a la espera de recibir las consultas de finish time de cada batch
 
-                ACLMessage reply=blockingReceive(template);
-                AID batchAID = reply.getSender();
-                BatchToFind=reply.getContent();
+                ACLMessage batch_asking=blockingReceive(template);
+                AID batchAID = batch_asking.getSender();
+                BatchToFind=batch_asking.getContent();
                 for(int k=0;k<batchlist.size();k++){
                     String BatchOnList=batchlist.get(k).get(0);
                         if(BatchOnList.equals(BatchToFind)){
@@ -323,11 +323,11 @@ public class Planner extends Agent {
                                     each_operation_time = each_operation_time + "_" + batchlist.get(k).get(n);
                                 }
                             }
-                            reply.setContent(each_operation_time);  //Busca en el batch list la referencia y devuelve el finish time
-                            reply.addReceiver(batchAID);
-                            reply.setOntology("Ftime_ask");
-                            reply.setPerformative(ACLMessage.INFORM);
-                            myAgent.send(reply);
+                            batch_asking.setContent(each_operation_time);  //Busca en el batch list la referencia y devuelve el finish time
+                            batch_asking.addReceiver(batchAID);
+                            batch_asking.setOntology("Ftime_ask");
+                            batch_asking.setPerformative(ACLMessage.INFORM);
+                            myAgent.send(batch_asking);
                             batchlist.remove(k);
 
                         }

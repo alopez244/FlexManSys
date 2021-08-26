@@ -40,12 +40,12 @@ public class BatchTimeout extends Agent{
         batchreference=get_batch_ID(rawfinishtime);
         int j=0;
         while(!takedown_flag) {
-            if (j < items_finish_times.size()) {        //por cada planned item comprobará los tiempos
+            if (j < items_finish_times.size()) {        //se comprueba item a item si ha habido timeout
 
                 now = getactualtime();
 
                 try {
-                    if(delay_already_incremented==false) {
+                    if(!delay_already_incremented) {
                         expected_finish_date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(items_finish_times.get(j));
                     }
                     while (now.before(expected_finish_date)&&msg==null) {//mientras que no se exceda el tiempo definido que compruebe que no haya habido timeout
@@ -62,20 +62,20 @@ public class BatchTimeout extends Agent{
                     }
                     now = getactualtime();
                     if (now.after(expected_finish_date)){
-                    if(delay_already_asked==true) {                  //Si ya se ha pedido el delay, actualiza el finish time del item seleccionado
-                        if (j == 0 && delay_already_incremented == false) {                                  //Para calcular el tiempo de operación se necesita calcular el start time de la primera operacion
-                            long startime = date_when_delay_was_asked.getTime() - (delaynum);
-                            Date d = new Date(startime); //descomentar para debug
+                    if(delay_already_asked) {                  //Si ya se ha pedido el delay, actualiza el finish time del item seleccionado
+                        if (j == 0 && !delay_already_incremented) {
+                            long startime = date_when_delay_was_asked.getTime() - (delaynum);    //Para calcular el tiempo de operación se necesita calcular el start time de la primera operacion
+//                            Date d = new Date(startime); //descomentar para debug
                             LocalDateTime new_expected_finish_time = convertToLocalDateTimeViaSqlTimestamp(now);
                             new_expected_finish_time = new_expected_finish_time.plusSeconds(((expected_finish_date.getTime() - startime) / 1000)+1);
-                            expected_finish_date = convertToDateViaSqlTimestamp(new_expected_finish_time);
+                            expected_finish_date = convertToDateViaSqlTimestamp(new_expected_finish_time);   //el finish time se calcula segun el tiempo de operacion y la fecha actual
                             System.out.println("Finish time of operation incremented. Caused by delay on machine plan startup");
                             delay_already_incremented = true;
-                        } else if (j > 0 && delay_already_incremented == false) {                                       //Para el resto podemos calcular el tiempo de operacion usando los finishtime anteriores
+                        } else if (j > 0 && !delay_already_incremented) {           //Para el resto de items podemos calcular el tiempo de operacion usando los finishtime anteriores. Se asume que son correlativos
                             Date finish_date_last_item = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(items_finish_times.get(j - 1));
                             expected_finish_date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(items_finish_times.get(j));
                             LocalDateTime new_expected_finish_time = convertToLocalDateTimeViaSqlTimestamp(now);
-                            new_expected_finish_time = new_expected_finish_time.plusSeconds((expected_finish_date.getTime() - finish_date_last_item.getTime()) / 1000);
+                            new_expected_finish_time = new_expected_finish_time.plusSeconds(((expected_finish_date.getTime() - finish_date_last_item.getTime()) / 1000)+1);
                             expected_finish_date = convertToDateViaSqlTimestamp(new_expected_finish_time);
                             System.out.println("New item finish time updated.");
                             delay_already_incremented = true;
@@ -93,14 +93,14 @@ public class BatchTimeout extends Agent{
                 now = getactualtime();
 
                 if (now.after(expected_finish_date) &&msg==null) {  //Si now es posterior a la fecha de finish time es posible que haya habido un timeout -> Se consulta el delay de inicio del plan al QoS, una única vez
-                    if (delay_already_asked == false) {
+                    if (!delay_already_asked) {
                         AID QoSID = new AID("QoSManagerAgent", false);
                         ACLMessage ask = new ACLMessage(ACLMessage.REQUEST);
                         ask.addReceiver(QoSID);
                         ask.setOntology("askdelay");
                         ask.setContent(batchreference);
                         try {
-                            Thread.sleep(6000); //Espera 8 segundos para dar tiempo al QoS a recibir los delays de inicio del los machine agent.
+                            Thread.sleep(6000); //Espera 6 segundos para dar tiempo al QoS a recibir los delays de inicio del los machine agent.
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -113,12 +113,15 @@ public class BatchTimeout extends Agent{
                         delay_already_asked = true;
                         delay_already_incremented=false;
                     }
-                    if (delay_already_asked == true && delay_already_incremented == true) { //Si ya se ha pedido el delay una vez y ha habido timeout, lanza FAILURE
+                    if (delay_already_asked && delay_already_incremented) { //Si ya se ha pedido el delay una vez y ha habido timeout, lanza FAILURE
                         ACLMessage timeout = new ACLMessage(ACLMessage.FAILURE);
+                        AID QoSID = new AID("QoSManagerAgent", false);
                         timeout.setOntology("timeout");
+                        timeout.addReceiver(QoSID);
                         timeout.setContent(batchreference);
-                        System.out.println(batchreference + " batch has thrown a timeout. Check if machine is OK");
-                        doDelete();
+                        System.out.println(batchreference + " batch has thrown a timeout. Checking failure with QoS Agent...");
+                        send(timeout);
+                        takedown_flag=true;
                     }
                 }
                 msg = null;

@@ -3,33 +3,33 @@
 	<order reference="11">
 		<batch reference="111" numberOfItems="3" refProductID="1">
 			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="111" item_ID="1111">
-				<simpleOperation id="4" description="Insert the axis and place the cover (big product)" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-07-29T08:00:00" plannedFinishTime="2021-07-29T08:01:00">
-					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-07-28T08:00:00" plannedFinishTime="2021-07-28T08:01:00"/>
-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-07-28T08:00:00" plannedFinishTime="2021-07-28T08:01:00"/>
-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-07-28T08:00:00" plannedFinishTime="2021-07-28T08:01:00"/>
-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-07-28T08:00:00" plannedFinishTime="2021-07-28T08:01:00"/>
+				<simpleOperation id="4" description="Insert the axis and place the cover (big product)" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-08-23T11:15:00" plannedFinishTime="2021-08-23T11:16:00">
+					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-08-23T08:00:00" plannedFinishTime="2021-08-23T08:01:00"/>
+					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-08-23T08:00:00" plannedFinishTime="2021-08-23T08:01:00"/>
+					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-08-23T08:00:00" plannedFinishTime="2021-08-23T08:01:00"/>
+					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-08-23T08:00:00" plannedFinishTime="2021-08-23T08:01:00"/>
 				</simpleOperation>
 				<product productType="BB" description="Base (big product)" state="Planned">
 					<rawMaterial id="BB" description="Base (big product)"/>
 				</product>
 			</PlannedItem>
 			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="111" item_ID="1112">
-				<simpleOperation id="4" description="Insert the axis and place the cover (big product)" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-07-29T08:01:00" plannedFinishTime="2021-07-29T08:02:00">
-					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-07-28T08:01:00" plannedFinishTime="2021-07-28T08:02:00"/>
-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-07-28T08:01:00" plannedFinishTime="2021-07-28T08:02:00"/>
-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-07-28T08:01:00" plannedFinishTime="2021-07-28T08:02:00"/>
-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-07-28T08:01:00" plannedFinishTime="2021-07-28T08:02:00"/>
+				<simpleOperation id="4" description="Insert the axis and place the cover (big product)" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-08-23T11:16:00" plannedFinishTime="2021-08-23T11:17:00">
+					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-08-23T08:01:00" plannedFinishTime="2021-08-23T08:02:00"/>
+					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-08-23T08:01:00" plannedFinishTime="2021-08-23T08:02:00"/>
+					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-08-23T08:01:00" plannedFinishTime="2021-08-23T08:02:00"/>
+					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-08-23T08:01:00" plannedFinishTime="2021-08-23T08:02:00"/>
 				</simpleOperation>
 				<product productType="BB" description="Base (big product)" state="Planned">
 					<rawMaterial id="BB" description="Base (big product)"/>
 				</product>
 			</PlannedItem>
 			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="111" item_ID="1113">
-				<simpleOperation id="4" description="Insert the axis and place the cover (big product)" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-07-29T08:02:00" plannedFinishTime="2021-07-29T08:03:00">
-					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-07-28T08:02:00" plannedFinishTime="2021-07-28T08:03:00"/>
-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-07-28T08:02:00" plannedFinishTime="2021-07-28T08:03:00"/>
-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-07-28T08:02:00" plannedFinishTime="2021-07-28T08:03:00"/>
-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-07-28T08:02:00" plannedFinishTime="2021-07-28T08:03:00"/>
+				<simpleOperation id="4" description="Insert the axis and place the cover (big product)" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-08-23T11:17:00" plannedFinishTime="2021-08-23T11:18:00">
+					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-08-23T08:02:00" plannedFinishTime="2021-08-23T08:03:00"/>
+					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-08-23T08:02:00" plannedFinishTime="2021-08-23T08:03:00"/>
+					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-08-23T08:02:00" plannedFinishTime="2021-08-23T08:03:00"/>
+					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-08-23T08:02:00" plannedFinishTime="2021-08-23T08:03:00"/>
 				</simpleOperation>
 				<product productType="BB" description="Base (big product)" state="Planned">
 					<rawMaterial id="BB" description="Base (big product)"/>

@@ -33,7 +33,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private ArrayList<String> msgToQoS;
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
-    //private String QsysAgentTestName="QsysAgentTest";
+
     private ArrayList<ArrayList<String>> productInfo;
     private HashMap<String, String> operationsWithBatchAgents = new HashMap<>();
     private HashMap PLCmsgIn = new HashMap(); // Estructura de datos que se envia al PLC
@@ -46,9 +46,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private Boolean requestMaterial = false; // Flag que se activa cuando se necesita hacer una peticion de consumibles
     private Boolean orderQueueFlag = false; // Flag que se activa cuando existen nuevas ordenes en cola para la maquina
     private String gatewayAgentName; // Guarda el nombre del agente pasarela
-    Calendar calendario = Calendar.getInstance();
-    int hora, minutos, segundos, milisegundos, dia, mes, ano;
-//    String stime;
+
+
 
     private MessageTemplate template;
 
@@ -567,20 +566,18 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 //                                            }
                                         }
                                         date2=getactualtime();
-                                        if(date1.before(date2)){
+//                                        if(date1.before(date2)){
                                             long diferencia=((date2.getTime()-date1.getTime())); //calculamos el retraso en iniciar en milisegundos
 
                                             AID QoSID = new AID("QoSManagerAgent", false);
 
-//                                            ACLMessage delay= new ACLMessage(ACLMessage.INFORM);
-//                                            delay.setOntology("batch_delay");
-//                                            delay.addReceiver(QoSID);
+
                                             String content=BathcID;
                                             String delay=String.valueOf(diferencia);
                                             content=content+"/"+delay;
 //                                            delay.setContent(content);
                                             sendACLMessage(ACLMessage.INFORM, QoSID, "delay", "batch_delay", content, myAgent);
-                                        }
+//                                        }
                                     firstItemFlag=true;
                                 }
                             }
