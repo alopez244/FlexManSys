@@ -1,7 +1,6 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
 import com.google.gson.Gson;
-import es.ehu.domain.manufacturing.agents.BatchAgent;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
@@ -11,16 +10,19 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.wrapper.AgentController;
 import org.apache.commons.io.FilenameUtils;
-import jade.wrapper.*;
+
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 
+
+
 public class Batch_Functionality extends DomApp_Functionality implements BasicFunctionality, AvailabilityFunctionality {
+
+    private volatile ArrayList<String> itemreference=new ArrayList<String>();
     private MessageTemplate templateFT;
     private static final long serialVersionUID = 1L;
     private Agent myAgent;
@@ -32,14 +34,24 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private HashMap<String, String> machinesForOperations = new HashMap<>();
     private String itemsID;
     private Boolean firstTime = true;
-    private String batchreference=null;
+    private volatile String batchreference=null;
     private int chatID = 0; // Numero incremental para crear conversationID
     private String firstState;
     private String redundancy;
     private String parentAgentID;
-    private String finish_times_of_batch=null;
+    private volatile String finish_times_of_batch=null;
     private String mySeType;
     private Object myReplicasID  = new HashMap<>();
+    public volatile int wait=0;
+    private volatile Date now=null;
+    private volatile Date date_when_delay_was_asked=null;
+    private volatile Date expected_finish_date=null;
+    private volatile ArrayList<String> items_finish_times=new ArrayList<String>();
+    private volatile int actual_item_number=0;
+    private volatile long delaynum=0;
+    private volatile boolean takedown_flag,update_timeout_flag=false, delay_already_asked=false;
+    private volatile AID QoSID = new AID("QoSManagerAgent", false);
+
 
     @Override
     public Object getState() {
@@ -49,6 +61,57 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     @Override
     public void setState(Object state) {
 
+    }
+
+
+    class timeout extends Thread {
+        private boolean delay_already_incremented=false;
+        public void run() {
+            while (finish_times_of_batch == null) {} //tramo de espera de seguridad hasta tener los finish times
+            items_finish_times = take_finish_times(finish_times_of_batch); //extrae la información útil que se usa en el timeout
+            itemreference=take_item_references(finish_times_of_batch);//nos devuelve las referencias de los item para este batch, ordenados como los tiempos extraidos en la anterior función
+            try {
+                expected_finish_date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(items_finish_times.get(actual_item_number));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
+            while (actual_item_number < items_finish_times.size() && !takedown_flag) {
+
+                if(getactualtime().after(expected_finish_date)){
+                    if(!delay_already_incremented){
+                        while(!delay_already_asked){} //espera a tener el dato del delay por seguridad
+                        long startime = date_when_delay_was_asked.getTime() - (delaynum);    //Para calcular el tiempo de operación se necesita calcular el start time de la primera operacion
+//                            Date d = new Date(startime); //para debug
+                        LocalDateTime new_expected_finish_time = convertToLocalDateTimeViaSqlTimestamp(getactualtime());
+                        new_expected_finish_time = new_expected_finish_time.plusSeconds(((expected_finish_date.getTime() - startime) / 1000)+1);
+                        expected_finish_date = convertToDateViaSqlTimestamp(new_expected_finish_time);   //el finish time se calcula segun el tiempo de operacion y la fecha actual
+                        System.out.println("Finish time of operation incremented. Caused by delay on machine plan startup");
+                        System.out.println("New expected finish time: "+expected_finish_date);
+                        delay_already_incremented = true; // se comprueba el delay de inicio y se calcula un nuevo finish time
+                    }else{
+                        System.out.println(batchreference + " batch has thrown a timeout on item number "+itemreference.get(actual_item_number)+" Checking failure with QoS Agent...");
+                        sendACLMessage(ACLMessage.FAILURE,QoSID,"timeout","timeout "+batchreference,batchreference+"/"+itemreference.get(actual_item_number),myAgent); //avisa al QoS de fallo por timeout
+                        takedown_flag=true;
+                    }
+                }
+
+                while (getactualtime().before(expected_finish_date)&&actual_item_number<items_finish_times.size()) {  //se queda a la espera siempre que no se supere la fecha de finishtime
+
+                    if (update_timeout_flag) {
+                        actual_item_number++;
+                        if(actual_item_number<items_finish_times.size()) {
+                            expected_finish_date = UpdateFinishTimes(actual_item_number); //actualiza la fecha de finish time
+                            System.out.println("New expected finish time: " + expected_finish_date);
+                            update_timeout_flag = false;
+                        }
+                    }
+                }
+            }
+            if(!takedown_flag){
+                System.out.println("Batch finished without throwing timeouts");
+            }
+        }
     }
 
     @Override
@@ -96,20 +159,24 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 ACLMessage finishtime= myAgent.blockingReceive(templateFT); //recibe los finish times concatenados
                 System.out.println(finishtime.getContent());
                 finish_times_of_batch=finishtime.getContent();
+
+                sendACLMessage(16,QoSID,"askdelay","delayasking",batchreference,myAgent);
+                ACLMessage reply = myAgent.blockingReceive(MessageTemplate.MatchOntology("askdelay"));
+                String delay = reply.getContent();
+                delaynum = Long.parseLong(delay);
+                date_when_delay_was_asked = getactualtime();
+                delay_already_asked = true;
+
             } catch (Exception e) {
                 System.out.println("ERROR. Something happened asking for finish time to planner");
                 e.printStackTrace();
             }
-            AgentContainer tc= myAgent.getContainerController();
-            try {
-                AgentController timeout = tc.createNewAgent(batchreference+"timeout", "es.ehu.domain.manufacturing.test.BatchTimeout", new Object[]{});
-                timeout.start(); //inicia un timeout para el batch
-                AID timeoutID = new AID(batchreference+"timeout", false); //De ontologia se usa el nombre del agente para que este sepa de que agente batch tiene que recibir el mensaje
-                sendACLMessage(7, timeoutID,batchreference+"timeout", "timeout_info", finish_times_of_batch, myAgent ); //se envian, los finish times al timeout.
-            } catch (StaleProxyException e) {
-                System.out.println("ERROR. Something went wrong creating or sending info to timeout agent");
-                e.printStackTrace();
-            }
+
+//            SimpleBehaviour timeoutBehaviour = new TimeoutBehaviour();
+//            timeoutBehaviour.action();
+
+            timeout thread=new timeout();
+            thread.start(); //se inicia el timeout
 
             /*************************************************************************************/
 
@@ -119,7 +186,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
             myAgent.initTransition = ControlBehaviour.TRACKING;
         }
-
 
         return null;
     }
@@ -140,6 +206,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
             if (msg.getPerformative() == ACLMessage.REQUEST) {
 
+
                 System.out.println("Mensaje con la informacion del PLC");
                 System.out.println("Quien envia el mensaje: " + msg.getSender());
                 System.out.println("Contenido: " + msg.getContent());
@@ -153,8 +220,9 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 String ActionTypes = String.valueOf(infoForTraceability.get("Id_Action_Type"));
 
                 /*****************Tramo para pedir reset al timeout ***********************Modificaciones diego*/
-                AID timeoutID = new AID(batchNumber+"timeout", false);
-                sendACLMessage(7, timeoutID,"timeout_reset", "feedback", "Item completed", myAgent );
+//                AID timeoutID = new AID(batchNumber+"timeout", false);
+//                sendACLMessage(7, timeoutID,"timeout_reset", "feedback", "Item completed", myAgent );
+                update_timeout_flag=true;
 
                 /***********************************************************************************************/
 
@@ -517,6 +585,85 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         System.out.println("\n");
     }
 
+    protected ArrayList<String> take_item_references(String rawdata){
+        ArrayList<String> data= new ArrayList<String>(Arrays.asList(rawdata.split("_")));
+        ArrayList<String> item_references= new ArrayList<String>();
+        for(int i=0;i<data.size();i++){
+            String temp=data.get(i);
+            String[] parts=temp.split("/");
+
+            if(parts[0].contains("&")){
+                String[] parts2=parts[0].split("&");
+                item_references.add(parts2[1]);
+            }else{
+                item_references.add(parts[0]);
+            }
+        }
+
+        return item_references;
+    }
+
+    protected ArrayList<String> take_finish_times(String rawdata){
+        ArrayList<String> data= new ArrayList<String>(Arrays.asList(rawdata.split("_")));
+        ArrayList<String> itemFT= new ArrayList<String>();
+        for(int i=0;i<data.size();i++){
+            String temp=data.get(i);
+            String[] parts=temp.split("/");
+            itemFT.add(parts[1]);     //Por ahora solo se coge el dato del tiempo, el cual asumimos que está bien ordenado en el plan
+        }
+
+        return itemFT;
+    }
+
+    protected Date getactualtime(){
+        String actualTime;
+        int ano, mes, dia, hora, minutos, segundos;
+        Calendar calendario = Calendar.getInstance();
+        ano = calendario.get(Calendar.YEAR);
+        mes = calendario.get(Calendar.MONTH) + 1;
+        dia = calendario.get(Calendar.DAY_OF_MONTH);
+        hora = calendario.get(Calendar.HOUR_OF_DAY);
+        minutos = calendario.get(Calendar.MINUTE);
+        segundos = calendario.get(Calendar.SECOND);
+        actualTime = ano + "-" + mes + "-" + dia + "T" + hora + ":" + minutos + ":" + segundos;
+        Date actualdate = null;
+        try {
+            actualdate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(actualTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return actualdate;
+    }
+
+    protected LocalDateTime convertToLocalDateTimeViaSqlTimestamp(Date dateToConvert) {
+        return new java.sql.Timestamp(
+                dateToConvert.getTime()).toLocalDateTime();
+    }
+    protected Date convertToDateViaSqlTimestamp(LocalDateTime dateToConvert) {
+        return java.sql.Timestamp.valueOf(dateToConvert);
+    }
+
+    protected Date UpdateFinishTimes(int itemnumber){
+        now = getactualtime();
+        Date finish_date_last_item = null;
+        try {
+            finish_date_last_item = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(items_finish_times.get(itemnumber - 1));
+            expected_finish_date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(items_finish_times.get(itemnumber));
+            LocalDateTime new_expected_finish_time = convertToLocalDateTimeViaSqlTimestamp(now);
+            new_expected_finish_time = new_expected_finish_time.plusSeconds(((expected_finish_date.getTime() - finish_date_last_item.getTime()) / 1000)+1);
+            expected_finish_date = convertToDateViaSqlTimestamp(new_expected_finish_time);
+            System.out.println("New item finish time updated.");
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        return expected_finish_date;
+    }
 
 
 }
+
+
+
+

@@ -25,8 +25,9 @@ public class QoSManagerAgent extends Agent {
     private ArrayList<ArrayList<String>> allDelays = new ArrayList<ArrayList<String>>();
     private MessageTemplate delaytemplate;
     private int j=0;
-    private int k=0;
+    private int l=0;
     private ArrayList<ArrayList<String>> batch_and_machine = new ArrayList<ArrayList<String>>();
+    private ArrayList<String> delay_asking_queue=new ArrayList<String>();
 
     protected void setup() {
         delaytemplate= MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
@@ -43,6 +44,21 @@ public class QoSManagerAgent extends Agent {
 
                         System.out.println(msg.getContent());
                         ActualBatch= getDelays(msg.getContent()); //Añade el batch especificado con su correspondiente delay a la lista de delays
+
+                       for(int l=0;l<delay_asking_queue.size();l++){
+                        if(ActualBatch.get(0).equals(delay_asking_queue.get(l))){
+                           ACLMessage msgtobatch=new ACLMessage(ACLMessage.INFORM);
+                           AID batchID = new AID(delay_asking_queue.get(l+1), false);
+                           msgtobatch.addReceiver(batchID);
+                           msgtobatch.setContent(ActualBatch.get(1));
+                           msgtobatch.setOntology("askdelay");
+                           send(msgtobatch);
+                           delay_asking_queue.remove(l+1);
+                           delay_asking_queue.remove(l);
+                           System.out.println("DELAY SENDED");
+
+                        }
+                       }
                         allDelays.add(i,ActualBatch);
                         i++;
 
@@ -51,67 +67,95 @@ public class QoSManagerAgent extends Agent {
                         batch_and_machine.add(j,temp);
                         j++;
                     }
-                    else if(msg.getOntology().equals("askdelay")){ //Si le consultan el delay
+                    else if(msg.getOntology().equals("askdelay")){ //Si un timeout le consulta el delay
 
-                        System.out.println("DELAY ASKED. BEFORE OR AFTER HAVING THE DATA?"); //usar para debug
+//                        System.out.println("DELAY ASKED. BEFORE OR AFTER HAVING THE DATA?"); //usar para debug
 
                         ACLMessage reply=new ACLMessage(ACLMessage.INFORM);
                         String asking_batch=msg.getContent();
-                        reply.setContent("0"); //si no encuentra singun batch que coincida en la lista devuelve un 0
+                        reply.setContent("0"); //si no encuentra ningun batch que coincida en la lista devuelve un 0
                         boolean flag=true;
                         if(allDelays.size()!=0) {
-                            for (int i = 0; i < allDelays.size() || flag == true; i++) {
+                            for (int k = 0; k < allDelays.size() || flag; k++) {
 
-                                if (allDelays.get(i).get(0).equals(asking_batch)) {
-                                    reply.setContent(allDelays.get(i).get(1));
+                                if (allDelays.get(k).get(0).equals(asking_batch)) {
+                                    reply.setContent(allDelays.get(k).get(1));
                                     flag = false;
                                 }
+                            }
 
-                            }
-                            if(flag){
-                                System.out.println("Batch "+asking_batch+" has no delays registered");
-                            }
                         }
-                        flag=true;
-                        reply.addReceiver(msg.getSender());
-                        reply.setOntology(msg.getOntology());
-                        send(reply);
-                        System.out.println("DELAY SENDED"); //usar para debug
+                        if(flag){
+                            System.out.println("Batch "+asking_batch+" has no delays registered yet. Adding to queue.");
+                            delay_asking_queue.add(asking_batch);
+                            delay_asking_queue.add(msg.getSender().getLocalName());
+
+                        }else {
+                            flag = true;
+                            reply.addReceiver(msg.getSender());
+                            reply.setOntology(msg.getOntology());
+                            send(reply);
+                            System.out.println("DELAY SENDED"); //usar para debug
+                        }
                     }
                     else if(msg.getOntology().equals("timeout")){ //Se recibe aviso de que ha habido un timeout
-
-                        String timeout_batch_id=msg.getContent();
-                        System.out.println(timeout_batch_id +" batch has thrown a timeout. Checking failure");
+                        ErrorList.add(l,new ArrayList<>());  //Añade al listado de errores el timeout
+                        ErrorList.get(l).add(0,"timeout");
+                        String[] parts=msg.getContent().split("/");
+                        String timeout_batch_id=parts[0];
+                        String timeout_item_id=parts[1];
+                        System.out.println(timeout_batch_id +" batch has thrown a timeout on item "+timeout_item_id+" Checking failure...");
                         if(batch_and_machine.size()>0){ //buscamos el batch en el listado y conseguimos el ID del machine agent responsable
                          for(int k=0;k<batch_and_machine.size();k++){
-                            if(batch_and_machine.get(k).get(0).equals(msg.getContent())){
+                            if(batch_and_machine.get(k).get(0).equals(timeout_batch_id)){
 
                                 String MA=batch_and_machine.get(k).get(1);
                                 agent_found_qty=SearchAgent(MA); //La funcion search agent devuelve la cantidad de coincidencias con el nombre que le pasemos
-
+                                ErrorList.get(l).add(1,timeout_batch_id);
+                                ErrorList.get(l).add(2,timeout_item_id);
                                 if(agent_found_qty>0){  //Si es mayor de 0, el agente maquina vive
-                                    System.out.println("The machine agent "+MA+ " which was executing batch number "+msg.getContent()+" is alive");
-
-                                    String[] parts=MA.split("machine");
-                                    String machinenumber = parts[1];
-                                    gateway_found_qty=SearchAgent("ControlGatewayCont"+machinenumber); //Buscamos a su vez que el agente gateway este vivo
-                                    if(gateway_found_qty>0){  //Si es mayor de 0, el agente gateway vive
-                                        System.out.println("Gateway agent for "+MA+" found alive");
-                                    }else{
-                                       System.out.println("No gateway agent found for "+MA);
-                                    }
+                                    System.out.println("The machine agent "+MA+ " which was executing batch number "+timeout_batch_id+" is alive");
+                                    ErrorList.get(l).add(3,MA+"->OK");
 
                                 }else{
-                                    System.out.println("The machine agent "+MA+ " which was executing batch number "+msg.getContent()+" is not alive"); //Si no hay coincidencias el agente máquina no esta activo
+                                    System.out.println("The machine agent "+MA+ " which was executing batch number "+timeout_batch_id+" is not alive"); //Si no hay coincidencias el agente máquina no esta activo
+                                    ErrorList.get(l).add(3,MA+"->NO OK");
                                 }
-                                System.out.println(" ");
+                                String[] parts2=MA.split("machine");
+                                String machinenumber = parts2[1];
+                                gateway_found_qty=SearchAgent("ControlGatewayCont"+machinenumber); //Buscamos a su vez que el agente gateway este vivo
+                                if(gateway_found_qty>0){  //Si es mayor de 0, el agente gateway vive
+                                    System.out.println("Gateway agent of "+MA+" found alive");
+                                    ErrorList.get(l).add(4,"ControlGatewayCont"+machinenumber+"->OK");
+                                }else{
+                                    System.out.println("No gateway agent found for "+MA);
+                                    ErrorList.get(l).add(4,"ControlGatewayCont"+machinenumber+"->NO OK");
+
+                                }
+                                /**
+                                 * Situaciones tras timeout:
+                                 *
+                                 * -> Si machine agent OK y control gateway OK, posible fallo fisico de máquina, atasco, etc. Añadimos tiempo al timeout¿?
+                                 *
+                                 * -> Si machine agent NO OK y control gateway OK, posible fallo en software de machine agent, la máquina seguirá trabajando y posiblemente complete el batch
+                                 *    pero no tendremos trazabilidad
+                                 *
+                                 * -> Si machine agent OK y control gateway NO OK, posible fallo de red entre asset y machine agent, es posible que la máquina siga trabajando y complete el batch
+                                 *    pero no tendremos trazabilidad. Es posible tambien que la máquina haya caido.
+                                 *
+                                 * -> Si machine agent NO OK y control gateway NO OK, fallo de red o de software, o el timeout no tenia la info correcta.
+                                 *
+                                 * **/
 
                             }
                          }
                         }else{
                             System.out.println("No data available to check failure");
+                            ErrorList.get(l).add(1,timeout_batch_id);
+                            ErrorList.get(l).add(2,"machine agent unknown");
+                            ErrorList.get(l).add(3,"gateway agent unknown");
                         }
-
+                        l++;
                     }
 
                 }
