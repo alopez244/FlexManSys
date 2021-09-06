@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- editado con XMLSpy v2020 sp1 (x64) (http://www.altova.com) por  (University of the Basque Country) -->
-<!-- edited with XMLSpy v2020 (http://www.altova.com) by  (University of the Basque Country) -->
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by  (University of the Basque Country) -->
 <xs:schema xmlns="ManufacturingPlan" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" targetNamespace="ManufacturingPlan" elementFormDefault="qualified" attributeFormDefault="unqualified">
 	<xs:redefine schemaLocation="../Base Schemas/Operations.xsd">
 		<xs:complexType name="TAction">
@@ -11,17 +11,11 @@
 				</xs:extension>
 			</xs:complexContent>
 		</xs:complexType>
-		<xs:complexType name="SimpleOperation">
+	</xs:redefine>
+	<xs:redefine schemaLocation="../ListOfOperations.xsd">
+		<xs:complexType name="Operation">
 			<xs:complexContent>
-				<xs:extension base="SimpleOperation">
-					<xs:attributeGroup ref="masterRecipe"/>
-					<xs:attributeGroup ref="controlRecipe"/>
-				</xs:extension>
-			</xs:complexContent>
-		</xs:complexType>
-		<xs:complexType name="ComplexOperation">
-			<xs:complexContent>
-				<xs:extension base="ComplexOperation">
+				<xs:extension base="Operation">
 					<xs:attributeGroup ref="masterRecipe"/>
 					<xs:attributeGroup ref="controlRecipe"/>
 				</xs:extension>
@@ -32,8 +26,8 @@
 	<xs:attributeGroup name="masterRecipe">
 		<xs:attribute name="plannedMachineId" type="xs:string" use="optional"/>
 		<xs:attribute name="plannedStationId" type="xs:string" use="optional"/>
-		<xs:attribute name="plannedStartTime" type="xs:time" use="optional"/>
-		<xs:attribute name="plannedFinishTime" type="xs:time" use="optional"/>
+		<xs:attribute name="plannedStartTime" type="xs:dateTime" use="optional"/>
+		<xs:attribute name="plannedFinishTime" type="xs:dateTime" use="optional"/>
 	</xs:attributeGroup>
 	<!-- info procedente de la control Recipe -->
 	<xs:attributeGroup name="controlRecipe">
@@ -50,13 +44,6 @@
 			<xs:enumeration value="Completed"/>
 		</xs:restriction>
 	</xs:simpleType>
-	<!-- Raw Material -->
-	<xs:element name="rawMaterial">
-		<xs:complexType>
-			<xs:attribute name="id" type="xs:string" use="required"/>
-			<xs:attribute name="description" type="xs:string" use="required"/>
-		</xs:complexType>
-	</xs:element>
 	<xs:complexType name="TProduct">
 		<xs:choice>
 			<xs:element ref="rawMaterial" maxOccurs="1"/>
@@ -64,15 +51,8 @@
 				<xs:annotation>
 					<xs:documentation>t1 and t2</xs:documentation>
 				</xs:annotation>
-				<xs:element name="simpleOperation" type="SimpleOperation"/>
+				<xs:element name="simpleOperation" type="Operation"/>
 				<xs:element name="product" type="TProduct"/>
-			</xs:sequence>
-			<xs:sequence>
-				<xs:annotation>
-					<xs:documentation>t3</xs:documentation>
-				</xs:annotation>
-				<xs:element name="complexOperation" type="ComplexOperation"/>
-				<xs:element name="product" type="TProduct" minOccurs="2" maxOccurs="2"/>
 			</xs:sequence>
 		</xs:choice>
 		<xs:attribute name="productType" type="xs:string" use="required"/>

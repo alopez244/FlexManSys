@@ -216,8 +216,10 @@ public class Planner extends Agent {
                         int l=0;
                         if(attrName.equals("batch")){ //buscamos y añadimos los atributos para el agente batch
 
-                            batchlist.add(new ArrayList<>());
+//                            batchlist.add(new ArrayList<>());
+                            batchlist.add(l,new ArrayList<>());
                             batchlist.get(l).add(xmlelements.get(i).get(3).get(2));
+
 //                            for(int m=i+1;m<xmlelements.size()&&!xmlelements.get(m).get(0).get(0).equals("batch");m++){
 //
 //                                if(xmlelements.get(m).get(0).get(0).contains("Operation")){

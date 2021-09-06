@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mPlan xmlns="ManufacturingPlan" name="MPlan1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="ManufacturingPlan file:///C:/Users/dgarcia129/Desktop/Version%20actualizada/AppInstances/ManufacturingPlan.xsd">
+<mPlan xmlns="ManufacturingPlan" name="MPlan1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="ManufacturingPlan file:///C:/Users/dgarcia129/IdeaProjects/FlexManSys/src/resources/AppInstances/ManufacturingPlan.xsd">
 	<order reference="11">
 		<batch reference="111" numberOfItems="3" refProductID="1">
 			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="111" item_ID="1111">

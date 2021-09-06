@@ -18,8 +18,6 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 
-
-
 public class Batch_Functionality extends DomApp_Functionality implements BasicFunctionality, AvailabilityFunctionality {
 
     private volatile ArrayList<String> itemreference=new ArrayList<String>();
@@ -87,7 +85,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                         new_expected_finish_time = new_expected_finish_time.plusSeconds(((expected_finish_date.getTime() - startime) / 1000)+1);
                         expected_finish_date = convertToDateViaSqlTimestamp(new_expected_finish_time);   //el finish time se calcula segun el tiempo de operacion y la fecha actual
                         System.out.println("Finish time of operation incremented. Caused by delay on machine plan startup");
-                        System.out.println("New expected finish time: "+expected_finish_date);
+                        System.out.println("New expected finish time on item "+itemreference.get(actual_item_number)+": "+expected_finish_date);
                         delay_already_incremented = true; // se comprueba el delay de inicio y se calcula un nuevo finish time
                     }else{
                         System.out.println(batchreference + " batch has thrown a timeout on item number "+itemreference.get(actual_item_number)+" Checking failure with QoS Agent...");
@@ -102,7 +100,8 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                         actual_item_number++;
                         if(actual_item_number<items_finish_times.size()) {
                             expected_finish_date = UpdateFinishTimes(actual_item_number); //actualiza la fecha de finish time
-                            System.out.println("New expected finish time: " + expected_finish_date);
+                            System.out.println("Next item started");
+                            System.out.println("New expected finish time on item "+itemreference.get(actual_item_number)+": " + expected_finish_date);
                             update_timeout_flag = false;
                         }
                     }
@@ -206,7 +205,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
             if (msg.getPerformative() == ACLMessage.REQUEST) {
 
-
                 System.out.println("Mensaje con la informacion del PLC");
                 System.out.println("Quien envia el mensaje: " + msg.getSender());
                 System.out.println("Contenido: " + msg.getContent());
@@ -219,17 +217,12 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 batchNumber = String.valueOf(infoForTraceability.get("Id_Batch_Reference"));
                 String ActionTypes = String.valueOf(infoForTraceability.get("Id_Action_Type"));
 
-                /*****************Tramo para pedir reset al timeout ***********************Modificaciones diego*/
-//                AID timeoutID = new AID(batchNumber+"timeout", false);
-//                sendACLMessage(7, timeoutID,"timeout_reset", "feedback", "Item completed", myAgent );
                 update_timeout_flag=true;
-
-                /***********************************************************************************************/
 
                 for (int i=0; i < productsTraceability.size(); i++) {
                     // Se identifica la estructura de datos correspondiente al item que se ha fabricado
                     if (productsTraceability.get(i).get(0).get(3).size() > 2) { //se comprueba que contenga mas de dos elementos, ya que en la siguiente linea se accede al tercero
-                        if (productsTraceability.get(i).get(0).get(3).get(3).equals(idItem)) {
+                        if (productsTraceability.get(i).get(0).get(3).get(3).equals(GetItemIDForTraceability(idItem,itemreference))) {
                             for (int j = 0; j < productsTraceability.get(i).size(); j++) {
                                 if (productsTraceability.get(i).get(j).get(0).get(0).equals("action")) {    // Dentro del action, se registran los datos de fabricacion
                                     if (ActionTypes.contains(productsTraceability.get(i).get(j).get(3).get(1))) {   //solo se escribe en los actions que esten definidos en el ActionTypes
@@ -329,8 +322,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
         // Ahora podremos proceder a conseguir la trazabilidad de los productos
         getProductsTraceability();
-
-
 
     }
 
@@ -652,7 +643,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             LocalDateTime new_expected_finish_time = convertToLocalDateTimeViaSqlTimestamp(now);
             new_expected_finish_time = new_expected_finish_time.plusSeconds(((expected_finish_date.getTime() - finish_date_last_item.getTime()) / 1000)+1);
             expected_finish_date = convertToDateViaSqlTimestamp(new_expected_finish_time);
-            System.out.println("New item finish time updated.");
 
         } catch (ParseException e) {
             e.printStackTrace();
@@ -661,6 +651,12 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         return expected_finish_date;
     }
 
+    public String GetItemIDForTraceability(String numberofitem, ArrayList<String> Ireferences) {
+        String itemreference;
+        int index=Integer.parseInt(numberofitem);
+        itemreference=Ireferences.get(index-1);
+        return itemreference;
+    }
 
 }
 
