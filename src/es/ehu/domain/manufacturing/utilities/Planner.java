@@ -25,7 +25,6 @@ public class Planner extends Agent {
     private String itemfinishtime=null;
     private static final long serialVersionUID = 1L;
     static final Logger LOGGER = LogManager.getLogger(Planner.class.getName()) ;
-
     private int chatID = 0;
 
     protected void setup() {
@@ -216,17 +215,11 @@ public class Planner extends Agent {
                         int l=0;
                         if(attrName.equals("batch")){ //buscamos y añadimos los atributos para el agente batch
 
-//                            batchlist.add(new ArrayList<>());
+
                             batchlist.add(l,new ArrayList<>());
                             batchlist.get(l).add(xmlelements.get(i).get(3).get(2));
 
-//                            for(int m=i+1;m<xmlelements.size()&&!xmlelements.get(m).get(0).get(0).equals("batch");m++){
-//
-//                                if(xmlelements.get(m).get(0).get(0).contains("Operation")){
-//                                 finnish_time=xmlelements.get(m).get(3).get(2);
-////                                }
-//                            }
-//                            batchlist.get(l).add(finnish_time);//se añade el finish time por cada batch en una lista
+
 
 
                             for(int j=i;j<xmlelements.size();j++){
@@ -305,9 +298,11 @@ public class Planner extends Agent {
             template = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
                     MessageTemplate.MatchOntology("Ftime_ask"));
             String BatchToFind;
+
             while(batchlist.size()>0){//Se queda a la espera de recibir las consultas de finish time de cada batch
 
                 ACLMessage batch_asking=blockingReceive(template);
+                ACLMessage reply_to_batch=new ACLMessage();
                 AID batchAID = batch_asking.getSender();
                 BatchToFind=batch_asking.getContent();
                 for(int k=0;k<batchlist.size();k++){
@@ -325,12 +320,13 @@ public class Planner extends Agent {
                                     each_operation_time = each_operation_time + "_" + batchlist.get(k).get(n);
                                 }
                             }
-                            batch_asking.setContent(each_operation_time);  //Busca en el batch list la referencia y devuelve el finish time
-                            batch_asking.addReceiver(batchAID);
-                            batch_asking.setOntology("Ftime_ask");
-                            batch_asking.setPerformative(ACLMessage.INFORM);
-                            myAgent.send(batch_asking);
+                            reply_to_batch.setContent(each_operation_time);  //Busca en el batch list la referencia y devuelve el finish time
+                            reply_to_batch.addReceiver(batchAID);
+                            reply_to_batch.setOntology("Ftime_ask");
+                            reply_to_batch.setPerformative(ACLMessage.INFORM);
+                            send(reply_to_batch);
                             batchlist.remove(k);
+
 
                         }
                 }

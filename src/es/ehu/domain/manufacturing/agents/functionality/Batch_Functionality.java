@@ -49,6 +49,8 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private volatile long delaynum=0;
     private volatile boolean takedown_flag,update_timeout_flag=false, delay_already_asked=false;
     private volatile AID QoSID = new AID("QoSManagerAgent", false);
+    private volatile boolean reset_flag=false;
+    private volatile boolean delay_already_incremented=false;
 
 
     @Override
@@ -63,30 +65,26 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
 
     class timeout extends Thread {
-        private boolean delay_already_incremented=false;
+
         public void run() {
             while (finish_times_of_batch == null) {} //tramo de espera de seguridad hasta tener los finish times
             items_finish_times = take_finish_times(finish_times_of_batch); //extrae la información útil que se usa en el timeout
             itemreference=take_item_references(finish_times_of_batch);//nos devuelve las referencias de los item para este batch, ordenados como los tiempos extraidos en la anterior función
-            try {
-                expected_finish_date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(items_finish_times.get(actual_item_number));
-            } catch (ParseException e) {
-                e.printStackTrace();
+            if(!reset_flag) {
+                try {
+                    expected_finish_date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(items_finish_times.get(actual_item_number));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
             }
-
             while (actual_item_number < items_finish_times.size() && !takedown_flag) {
 
                 if(getactualtime().after(expected_finish_date)){
                     if(!delay_already_incremented){
                         while(!delay_already_asked){} //espera a tener el dato del delay por seguridad
-                        long startime = date_when_delay_was_asked.getTime() - (delaynum);    //Para calcular el tiempo de operación se necesita calcular el start time de la primera operacion
-//                            Date d = new Date(startime); //para debug
-                        LocalDateTime new_expected_finish_time = convertToLocalDateTimeViaSqlTimestamp(getactualtime());
-                        new_expected_finish_time = new_expected_finish_time.plusSeconds(((expected_finish_date.getTime() - startime) / 1000)+1);
-                        expected_finish_date = convertToDateViaSqlTimestamp(new_expected_finish_time);   //el finish time se calcula segun el tiempo de operacion y la fecha actual
                         System.out.println("Finish time of operation incremented. Caused by delay on machine plan startup");
-                        System.out.println("New expected finish time on item "+itemreference.get(actual_item_number)+": "+expected_finish_date);
-                        delay_already_incremented = true; // se comprueba el delay de inicio y se calcula un nuevo finish time
+                        expected_finish_date=FIUpdateFinishTimes();
+
                     }else{
                         System.out.println(batchreference + " batch has thrown a timeout on item number "+itemreference.get(actual_item_number)+" Checking failure with QoS Agent...");
                         sendACLMessage(ACLMessage.FAILURE,QoSID,"timeout","timeout "+batchreference,batchreference+"/"+itemreference.get(actual_item_number),myAgent); //avisa al QoS de fallo por timeout
@@ -99,16 +97,15 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     if (update_timeout_flag) {
                         actual_item_number++;
                         if(actual_item_number<items_finish_times.size()) {
-                            expected_finish_date = UpdateFinishTimes(actual_item_number); //actualiza la fecha de finish time
                             System.out.println("Next item started");
-                            System.out.println("New expected finish time on item "+itemreference.get(actual_item_number)+": " + expected_finish_date);
+                            expected_finish_date = UpdateFinishTimes(actual_item_number); //actualiza la fecha de finish time
                             update_timeout_flag = false;
                         }
                     }
                 }
             }
             if(!takedown_flag){
-                System.out.println("Batch finished without throwing timeouts");
+                System.out.println("Batch finished");
             }
         }
     }
@@ -203,6 +200,22 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         ACLMessage msg = myAgent.receive();
         if (msg != null) {
 
+            if(msg.getPerformative()==ACLMessage.INFORM&&msg.getContent().equals("reset_timeout")){
+
+                reset_flag=true;
+                takedown_flag=false;
+                System.out.println("QoS has asked to reset timeout");
+                if(actual_item_number==0) {
+                    expected_finish_date = FIUpdateFinishTimes();
+                }else{
+                    expected_finish_date = UpdateFinishTimes(actual_item_number);
+                }
+                timeout thread=new timeout();
+                thread.start();
+            }else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getContent().equals("confirmed_timeout")){
+                System.out.println("Timeout confirmed.");
+            }
+
             if (msg.getPerformative() == ACLMessage.REQUEST) {
 
                 System.out.println("Mensaje con la informacion del PLC");
@@ -241,6 +254,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 String msgToOrder = "";
 
                 if (infoForTraceability.containsKey("Data_Service_Time_Stamp")) { //El lote ha terminado de fabricarse y se envian los datos al order agent
+                    sendACLMessage(7,QoSID,"batch_finish",batchreference+" finish",batchreference,myAgent);
                     for (int k = 0; k < actionList.size(); k++) { // Se eliminan las acciones que ya se han realizado
                         if (ActionTypes.contains(actionList.get(k))) {
                             actionList.remove(k);
@@ -250,7 +264,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     if (firstTime) { //solo se añade la informacion la primera vez
                         ArrayList<ArrayList<ArrayList<ArrayList<String>>>> traceability = new ArrayList<>();
                         productsTraceability = addNewLevel(traceability, productsTraceability, true); //añade el espacio para la informacion del lote en primera posicion, sumando un nivel mas a los datos anteriores
-
                         productsTraceability.get(0).get(0).get(0).add("BatchLevel"); // en ese espacio creado, se añade la informacion del lote
                         productsTraceability.get(0).get(0).get(2).add("batchReference");
                         productsTraceability.get(0).get(0).get(2).add("Data_Service_Time_Stamp");
@@ -284,6 +297,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     public Void terminate(MWAgent myAgent) {
         this.myAgent = myAgent;
         String parentName = "";
+
         try {
             ACLMessage reply = sendCommand(myAgent, "get * reference=" + batchNumber, "parentAgentID");
             //returns the names of all the agents that are sons
@@ -634,7 +648,26 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         return java.sql.Timestamp.valueOf(dateToConvert);
     }
 
-    protected Date UpdateFinishTimes(int itemnumber){
+    protected Date FIUpdateFinishTimes(){  //Actualiza el finish time para el primer item cuando ha habido delay
+
+            try {
+                expected_finish_date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(items_finish_times.get(actual_item_number));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
+        long startime = date_when_delay_was_asked.getTime() - (delaynum);    //Para calcular el tiempo de operación se necesita calcular el start time de la primera operacion
+//                            Date d = new Date(startime); //para debug
+        LocalDateTime new_expected_finish_time = convertToLocalDateTimeViaSqlTimestamp(getactualtime());
+        new_expected_finish_time = new_expected_finish_time.plusSeconds(((expected_finish_date.getTime() - startime) / 1000)+1);
+        expected_finish_date = convertToDateViaSqlTimestamp(new_expected_finish_time);   //el finish time se calcula segun el tiempo de operacion y la fecha actual
+        delay_already_incremented = true;
+        System.out.println("New expected finish time on item "+itemreference.get(actual_item_number)+": "+expected_finish_date);
+        return expected_finish_date;
+    }
+
+
+    protected Date UpdateFinishTimes(int itemnumber){ //Actualiza el finish time para los item que no son el primero
         now = getactualtime();
         Date finish_date_last_item = null;
         try {
@@ -643,6 +676,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             LocalDateTime new_expected_finish_time = convertToLocalDateTimeViaSqlTimestamp(now);
             new_expected_finish_time = new_expected_finish_time.plusSeconds(((expected_finish_date.getTime() - finish_date_last_item.getTime()) / 1000)+1);
             expected_finish_date = convertToDateViaSqlTimestamp(new_expected_finish_time);
+            System.out.println("New expected finish time on item "+itemreference.get(actual_item_number)+": "+expected_finish_date);
 
         } catch (ParseException e) {
             e.printStackTrace();
