@@ -281,12 +281,12 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             }
         }
         ACLMessage msg3=myAgent.receive(template3);
-        if(msg3!=null){
+        if(msg3!=null){                                 //confirmación de timeout
             QoSresponse_flag=true;
             batch_to_take_down=msg3.getContent();
         }
         ACLMessage msg4=myAgent.receive(template4);
-        if(msg4!=null){
+        if(msg4!=null){                                 //Actualiza el finish time del batch recibido (por petición de reset del QoS)
             String[] parts=msg4.getContent().split("/");
             String timeout_batch_id=parts[0];
             String s_difference=parts[1];
