@@ -2,6 +2,7 @@ package es.ehu.domain.manufacturing.agents.functionality;
 
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.NotFoundException;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
@@ -70,12 +71,15 @@ public class Dom_Functionality{
     public void sendACLMessage(int performative, AID reciever, String ontology, String conversationId, String content, Agent agent) {
 
                 this.myAgent = agent;
+
                 ACLMessage msg = new ACLMessage(performative); //envio del mensaje
                 msg.addReceiver(reciever);
                 msg.setOntology(ontology);
                 msg.setConversationId(conversationId);
                 msg.setContent(content);
-                myAgent.send(msg);
+
+                    myAgent.send(msg);
+
 
         }
 

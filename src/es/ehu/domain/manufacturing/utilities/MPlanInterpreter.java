@@ -268,6 +268,64 @@ public class MPlanInterpreter {
         return roughPlan;
     }
 
+    public static ArrayList<String> getItemFT (Agent myAgent, ArrayList<ArrayList<ArrayList<String>>> roughPlan, String planName, String batch) {
+
+        ArrayList<String>itemFT=new ArrayList<String>();
+        for(int i=0;i<roughPlan.size();i++){
+            if(roughPlan.get(i).get(0).get(0).equals("batch")){
+                if(roughPlan.get(i).get(3).get(2).equals(batch)) {
+                    for (int j = 1; j + i < roughPlan.size() && !roughPlan.get(j + i).get(0).get(0).equals("batch"); j++) {
+                        if (roughPlan.get(j + i).get(0).get(0).contains("PlannedItem")) {
+                            String ToAdd=roughPlan.get(j + i).get(3).get(1);
+                            String FTItem="";
+                            for (int k = 1; k + j + i < roughPlan.size() && !roughPlan.get(k + j + i).get(0).get(0).contains("PlannedItem"); k++) {
+                                if (roughPlan.get(k + j + i).get(0).get(0).contains("Operation")) {
+                                    FTItem=roughPlan.get(k + j + i).get(3).get(2);
+                                }
+                            }
+//                            ToAdd=ToAdd+"/"+FTItem;
+                            itemFT.add(ToAdd+"/"+FTItem);
+                        }
+                    }
+                }
+            }
+        }
+        return itemFT;
+    }
+
+    public static ArrayList<String> getBatchFT (Agent myAgent, ArrayList<ArrayList<ArrayList<String>>> roughPlan, String planName, String order) {
+
+        ArrayList<String>batchFT=new ArrayList<String>();
+        for(int i=0;i<roughPlan.size();i++){
+            if(roughPlan.get(i).get(0).get(0).equals("order")){
+                if(roughPlan.get(i).get(3).get(0).equals(order)) {
+                    for(int j=1;j+i<roughPlan.size()&& !roughPlan.get(j+i).get(0).get(0).equals("order");j++) {
+                        if(roughPlan.get(j+i).get(0).get(0).equals("batch")) {
+                            String ToAdd = roughPlan.get(j + i).get(3).get(2);
+                            String FTBatch = "";
+                            for (int k = 1; k + j + i < roughPlan.size() && !roughPlan.get(k + j + i).get(0).get(0).equals("batch"); k++) {
+                                if (roughPlan.get(k + j + i).get(0).get(0).contains("PlannedItem")) {
+
+                                    for (int l = 1; l + k + j + i < roughPlan.size() && !roughPlan.get(l + k + j + i).get(0).get(0).contains("PlannedItem"); l++) {
+                                        if (roughPlan.get(l + k + j + i).get(0).get(0).contains("Operation")) {
+                                            FTBatch = roughPlan.get(l + k + j + i).get(3).get(2);
+                                        }
+                                    }
+//                            ToAdd=ToAdd+"/"+FTItem;
+
+                                }
+
+                            }
+                            batchFT.add(ToAdd + "/" + FTBatch);
+                        }
+                    }
+                }
+            }
+        }
+        return batchFT;
+    }
+
+
     public static ACLMessage sendMessage(Agent myAgent, String cmd, String conversationId) throws Exception {
         DFAgentDescription dfd = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();

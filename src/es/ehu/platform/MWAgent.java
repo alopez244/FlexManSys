@@ -516,6 +516,7 @@ public class MWAgent extends Agent {
         return builder.toString();
     }
 
+
     class ShutdownThread extends Thread {
         private MWAgent myAgent = null;
 

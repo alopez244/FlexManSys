@@ -48,6 +48,12 @@ public class ResourceAgentTemplate extends MWAgent {
         /** Comportamiento running **/
         Behaviour running = new ResourceRunningBehaviour(this);
 
+        /** Comportamiento idle **/
+        Behaviour idle = new IdleBehaviour(this);
+
+        /** Comportamiento ping **/
+        Behaviour ping = new PingBehaviour(this);
+
         /** Comportamiento negociación **/
         Behaviour negotiating = new NegotiatingBehaviour(this);
 
@@ -56,13 +62,22 @@ public class ResourceAgentTemplate extends MWAgent {
 
         /** FSM state definition **/
         behaviourFSM.registerFirstState(new StateParallel(this, behaviourFSM, boot), ST_BOOT);
-        behaviourFSM.registerState(new StateParallel(this, behaviourFSM, running, negotiating), ControlBehaviour.ST_RUNNING);
+        behaviourFSM.registerState(new StateParallel(this, behaviourFSM, running, negotiating, ping), ControlBehaviour.ST_RUNNING);
+        behaviourFSM.registerState(new StateParallel(this, behaviourFSM, ping, idle), ControlBehaviour.ST_IDLE);
         behaviourFSM.registerLastState(new StateParallel(this, behaviourFSM, end), ControlBehaviour.ST_STOP);
 
         /** FSM transition **/
         behaviourFSM.registerTransition(ST_BOOT, ControlBehaviour.ST_RUNNING, ControlBehaviour.RUNNING, new String[] { ST_BOOT });
 
         behaviourFSM.registerTransition(ST_BOOT, ControlBehaviour.ST_STOP, ControlBehaviour.STOP, new String[] { ST_BOOT });
+
+
+        behaviourFSM.registerTransition(ControlBehaviour.ST_RUNNING, ControlBehaviour.ST_IDLE, ControlBehaviour.IDLE, new String[] { ControlBehaviour.ST_RUNNING });
+
+        behaviourFSM.registerTransition(ControlBehaviour.ST_IDLE, ControlBehaviour.ST_RUNNING, ControlBehaviour.RUNNING, new String[] { ControlBehaviour.ST_IDLE });
+
+        behaviourFSM.registerTransition(ControlBehaviour.ST_IDLE, ControlBehaviour.ST_STOP, ControlBehaviour.STOP, new String[] { ControlBehaviour.ST_IDLE });
+
 
         behaviourFSM.registerTransition(ControlBehaviour.ST_RUNNING, ControlBehaviour.ST_STOP, ControlBehaviour.STOP, new String[] { ControlBehaviour.ST_RUNNING });
 

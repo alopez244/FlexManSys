@@ -20,6 +20,7 @@ import jade.wrapper.AgentController;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import jade.core.NotFoundException;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -33,7 +34,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private ArrayList<String> msgToQoS;
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
-
+    public boolean traceability_flag=false;
     private ArrayList<ArrayList<String>> productInfo;
     private HashMap<String, String> operationsWithBatchAgents = new HashMap<>();
     private HashMap PLCmsgIn = new HashMap(); // Estructura de datos que se envia al PLC
@@ -46,7 +47,9 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private Boolean requestMaterial = false; // Flag que se activa cuando se necesita hacer una peticion de consumibles
     private Boolean orderQueueFlag = false; // Flag que se activa cuando existen nuevas ordenes en cola para la maquina
     private String gatewayAgentName; // Guarda el nombre del agente pasarela
-
+    private MessageTemplate echotemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+            MessageTemplate.MatchOntology("Acknowledge"));
+    private String result;
 
 
     private MessageTemplate template;
@@ -470,9 +473,19 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 }
                 AID batchAgentID = new AID(batchAgentName, false);
                 sendACLMessage(16, batchAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
-
-
+                result=CheckAcknowledge(batchAgentName,MessageContent);
+            if(result.equals("retry")){
+                sendACLMessage(16, batchAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
+                CheckAcknowledge(batchAgentName,MessageContent);
+            }else if(result.equals("isolated")){
+                System.out.println("I'm probably isolated. Shutting down agent");
+//                myAgent.doDelete();
+                System.exit(0);
+            }else if(result.equals("confirmed")){
+                System.out.println("Communication error with "+batchAgentName);
             }
+
+        }
         }
 
     public void sendDataToDevice() {
@@ -570,8 +583,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                                             long diferencia=((date2.getTime()-date1.getTime())); //calculamos el retraso en iniciar en milisegundos
 
                                             AID QoSID = new AID("QoSManagerAgent", false);
-
-
                                             String content=BathcID;
                                             String delay=String.valueOf(diferencia);
                                             content=content+"/"+delay;
@@ -590,6 +601,19 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     String MessageContent = new Gson().toJson(PLCmsgOut);
                     AID gatewayAgentID = new AID(gatewayAgentName, false);
                     sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
+                    result=CheckAcknowledge(gatewayAgentID.getLocalName(),MessageContent);
+
+                    if(result.equals("retry")){
+                        sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
+                        CheckAcknowledge(gatewayAgentID.getLocalName(),MessageContent);
+                    }else if(result.equals("isolated")){
+                        System.out.println("I'm probably isolated. Shutting down agent");
+//                        myAgent.doDelete();
+                        System.exit(0);
+                    }else if(result.equals("confirmed")){
+                        System.out.println("Communication error with "+gatewayAgentID.getLocalName());
+                    }
+
                     sendingFlag = false;
                     machinePlanIndex = 0;
 
@@ -637,5 +661,39 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         }
 
     }
+    public String CheckAcknowledge(String receiver, String content){
+        String command="";
+        try {
+            Thread.sleep(250);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        ACLMessage acknowledge = myAgent.receive(echotemplate);
+        if(acknowledge==null){
+            AID QoSID = new AID("QoSManagerAgent", false);
+            String informQoS=receiver+"_____"+content;
+            sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            ACLMessage msg= myAgent.receive();
+            if(msg!=null) {
+                if (msg.getContent().contains("confirmed")) {
+                    command = "confirmed";
+                } else if(msg.getContent().contains("retry")){
+                    command = "retry";
+                }
+            }else{
+                command = "isolated";
+            }
+
+        }else{
+            command="ok";
+        }
+        return command;
+    }
+
 
 }

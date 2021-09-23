@@ -16,6 +16,7 @@ public interface BasicFunctionality extends Serializable {
 	public Void terminate(MWAgent myAgent);
 		
 	public Object execute(Object[] input); //ejecutar funcionalidad y devuelve un objeto
+
 	
 	//public void stop();
 	

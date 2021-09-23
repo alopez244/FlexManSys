@@ -44,6 +44,10 @@ public class ApplicationAgentTemplate extends MWAgent {
 
     /** Comportamiento running **/
     Behaviour running = new RunningBehaviour(this);
+
+    /** Comportamiento de ping **/
+
+    Behaviour ping = new PingBehaviour(this);
     
     /** Tracking Behaviour **/
     Behaviour tracking = new TrackingBehaviour(this);
@@ -56,9 +60,9 @@ public class ApplicationAgentTemplate extends MWAgent {
 
     /** FSM state definition **/
     behaviourFSM.registerFirstState(new StateParallel(this, behaviourFSM, boot), ST_BOOT);
-    behaviourFSM.registerState(new StateParallel(this, behaviourFSM, running),ControlBehaviour.ST_RUNNING);
-    behaviourFSM.registerState(new StateParallel(this, behaviourFSM, tracking),ControlBehaviour.ST_TRACKING);
-    behaviourFSM.registerState(new StateParallel(this, behaviourFSM, waitingForDecision),ControlBehaviour.ST_WAITINGFORDECISION);
+    behaviourFSM.registerState(new StateParallel(this, behaviourFSM, running, ping),ControlBehaviour.ST_RUNNING);
+    behaviourFSM.registerState(new StateParallel(this, behaviourFSM, tracking, ping),ControlBehaviour.ST_TRACKING);
+    behaviourFSM.registerState(new StateParallel(this, behaviourFSM, waitingForDecision, ping),ControlBehaviour.ST_WAITINGFORDECISION);
     behaviourFSM.registerLastState(end, ControlBehaviour.ST_STOP);
 
     /** FSM transition **/

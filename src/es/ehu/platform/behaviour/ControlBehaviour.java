@@ -25,14 +25,15 @@ import jade.lang.acl.MessageTemplate;
 
 
 public class ControlBehaviour extends SimpleBehaviour {
-    public static String QoSAgentName="QoSManagerAgent";
+
     private static final long serialVersionUID = -4041584544631810983L;
     static final Logger LOGGER = LogManager.getLogger(ControlBehaviour.class.getName()) ;
     private static final String CMD_INCORRECTSTATE = "incorrect state";
     public static final String CMD_SETSTATE = "setstate";
-    public static final int STOP=0, RUNNING=1, TRACKING=2,  WAITINGFORDECISION=3, RECOVERING=4, NEGOTIATING=5;
+    public static final int STOP=0, RUNNING=1, TRACKING=2,  WAITINGFORDECISION=3, RECOVERING=4, NEGOTIATING=5, IDLE=6;
     public static final String ST_STOP = "stop";
     public static final String ST_RUNNING = "running";
+    public static final String ST_IDLE= "idle"; //idle behaviour
     public static final String ST_TRACKING = "tracking";
     public static final String ST_WAITINGFORDECISION = "waitingfordecision";
     public static final String ST_RECOVERING = "recovering";
@@ -92,10 +93,20 @@ public class ControlBehaviour extends SimpleBehaviour {
             }
             if (msg.getPerformative()==ACLMessage.FAILURE) { // if FAILURE
 
+
                 LOGGER.info("****************ACLMessage.FAILURE (control):"+msg.getContent());
                 String name=msg.getContent().substring(msg.getContent().indexOf(":name ", msg.getContent().indexOf("MTS-error"))+":name ".length());
                 name=name.substring(0, name.indexOf('@'));
                 LOGGER.info("msg.getPerformative()==ACLMessage.FAILURE (sender="+name+")");
+
+                /*****************Modificaciones Diego*************************/
+//                AID QoSID = new AID("QoSManagerAgent", false);
+//                ACLMessage inform_qos=new ACLMessage(ACLMessage.FAILURE);
+//                inform_qos.setOntology("acl_error");
+//                inform_qos.setContent(name);
+//                inform_qos.addReceiver(QoSID);
+//                myAgent.send(inform_qos);
+                /**********************************************************/
 
                 try { LOGGER.info(myAgent.sendCommand(CMD_REPORT + " (" + CMD_GETCOMPONENTS + " "+name+") type=notFound cmpins="+name));} catch (Exception e) {e.printStackTrace();}
 
@@ -136,6 +147,8 @@ public class ControlBehaviour extends SimpleBehaviour {
                         exitValue = RECOVERING;
                     } else if (cmd[1].equals(ST_NEGOTIATING)) {
                         exitValue = NEGOTIATING;
+                    }  else if(cmd[1].equals(ST_IDLE)){
+                        exitValue = IDLE;
                     } else {
                         result = CMD_INCORRECTSTATE;
                     }

@@ -70,7 +70,8 @@ public class GWAgent extends GatewayAgent {
         MessageTemplate template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.or(
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
                 MessageTemplate.MatchOntology("negotiation")),MessageTemplate.MatchConversationId("PLCdata"));
-
+        MessageTemplate templateping = MessageTemplate.and(MessageTemplate.MatchOntology("ping"),
+                MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
 
 
         addBehaviour(new CyclicBehaviour() {
@@ -78,9 +79,27 @@ public class GWAgent extends GatewayAgent {
             public void action() {
                 System.out.println("Entering CyclicBehaviour");
 
+                ACLMessage ping = receive(templateping);
+
+                if(ping!=null) {
+                    ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
+                    reply.addReceiver(ping.getSender());
+                    reply.setOntology(ping.getOntology());
+                    reply.setContent("Yes :)");
+                    System.out.println(ping.getSender().getLocalName()+" sent a ping. Answering.");
+                    send(reply);
+                }
+
                 ACLMessage msgToFIFO = receive(template);
 
                if (msgToFIFO != null) {
+
+                   ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
+                   reply.addReceiver(msgToFIFO.getSender());
+                   reply.setOntology("Acknowledge");
+                   reply.setContent("Received");
+                   send(reply);
+
                     System.out.println("GWagent, message received from Machine Agent");
                     machineAgentName = msgToFIFO.getSender();//saves the sender ID for a later reply
                     System.out.println("MachineAgentName :"+machineAgentName);

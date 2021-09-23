@@ -26,6 +26,8 @@ public class Planner extends Agent {
     private static final long serialVersionUID = 1L;
     static final Logger LOGGER = LogManager.getLogger(Planner.class.getName()) ;
     private int chatID = 0;
+    private ArrayList<String> item_ft_list=new ArrayList<String>();
+    private ArrayList<String> batch_ft_list=new ArrayList<String>();
 
     protected void setup() {
         LOGGER.entry();
@@ -168,7 +170,9 @@ public class Planner extends Agent {
             String uri=appPath+file;
             XMLReader fileReader = new XMLReader();
             ArrayList<ArrayList<ArrayList<String>>> xmlelements = null;
-            ArrayList<ArrayList<String>> batchlist =new ArrayList<ArrayList<String>>();
+            ArrayList<String> batchlist =new ArrayList<String>();
+            ArrayList<String> orderlist =new ArrayList<String>();
+            ArrayList<String> mplanlist =new ArrayList<String>();
             String finnish_time=null;
             try {
                 xmlelements = fileReader.readFile(uri);
@@ -208,19 +212,16 @@ public class Planner extends Agent {
                         if(attrName.equals("mPlan")){
                             //attributes.put("reference",xmlelements.get(i).get(2).get(2));
                             attributes.put("name",xmlelements.get(i).get(3).get(0)); //buscamos y añadimos los atributos para el agente mplan
+                            mplanlist.add(xmlelements.get(i).get(3).get(0));
                         }
                         if(attrName.equals("order")){ //buscamos y añadimos los atributos para el agente order
                             attributes.put("reference",xmlelements.get(i).get(3).get(0));
+                            orderlist.add(xmlelements.get(i).get(3).get(0));
+
                         }
                         int l=0;
                         if(attrName.equals("batch")){ //buscamos y añadimos los atributos para el agente batch
-
-
-                            batchlist.add(l,new ArrayList<>());
-                            batchlist.get(l).add(xmlelements.get(i).get(3).get(2));
-
-
-
+                            batchlist.add(xmlelements.get(i).get(3).get(2));
 
                             for(int j=i;j<xmlelements.size();j++){
                                 if(xmlelements.get(j).get(0).get(0).equals("PlannedItem")){
@@ -229,12 +230,11 @@ public class Planner extends Agent {
 
                                     for(int n=j+1;n<xmlelements.size()&&!xmlelements.get(n).get(0).get(0).contains("PlannedItem");n++) {
                                         if(xmlelements.get(n).get(0).get(0).contains("Operation")) {
-                                            itemfinishtime = xmlelements.get(j).get(3).get(index) + "/" + xmlelements.get(n).get(3).get(2);
+//                                            itemfinishtime = xmlelements.get(j).get(3).get(index) + "/" + xmlelements.get(n).get(3).get(2);
                                         }
                                     }
-                                    batchlist.get(l).add(itemfinishtime);
-                                }attributes.put("numberOfItems",itemList);
 
+                                }attributes.put("numberOfItems",itemList);
                             }
                             attributes.put("reference",xmlelements.get(i).get(3).get(2));
                             attributes.put("refProductID",xmlelements.get(i).get(3).get(1));
@@ -293,42 +293,66 @@ public class Planner extends Agent {
                 LOGGER.error("ERROR IN start METHOD OF PLANNER: Sending command to systemModelAgent");
                 e.printStackTrace();
             }
-/*******************************Modifiaciones Diego*/
+/*******************************Modificaciones Diego*/
 
             template = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
-                    MessageTemplate.MatchOntology("Ftime_ask"));
+                    MessageTemplate.MatchOntology("Ftime_batch_ask"));
+
             String BatchToFind;
+            String OrderToFind;
 
             while(batchlist.size()>0){//Se queda a la espera de recibir las consultas de finish time de cada batch
 
                 ACLMessage batch_asking=blockingReceive(template);
-                ACLMessage reply_to_batch=new ACLMessage();
+                ACLMessage reply_to_batch=new ACLMessage(ACLMessage.INFORM);
                 AID batchAID = batch_asking.getSender();
                 BatchToFind=batch_asking.getContent();
-                for(int k=0;k<batchlist.size();k++){
-                    String BatchOnList=batchlist.get(k).get(0);
-                        if(BatchOnList.equals(BatchToFind)){
-                            String each_operation_time="";
-                            for(int n=0;n<batchlist.get(k).size();n++) {
-                                if(each_operation_time.equals("")){
-                                    each_operation_time=batchlist.get(k).get(n)+"&"; //Añade batch separando con "&"
-                                }
-                                else if(n==1){
-                                    each_operation_time = each_operation_time+batchlist.get(k).get(n); //Añade el primer FT
-                                }
-                                else {
-                                    each_operation_time = each_operation_time + "_" + batchlist.get(k).get(n);
+                item_ft_list=MPlanInterpreter.getItemFT(myAgent, xmlelements, planName,BatchToFind); //devuelve el finish time de la última operacion de cada item
+                String each_operation_time=BatchToFind+"&";
+                for(int i=0;i<item_ft_list.size();i++){
+                    each_operation_time=each_operation_time+item_ft_list.get(i);
+                    if(i+1!=item_ft_list.size()){
+                        each_operation_time=each_operation_time+"_";
+                    }
+                }
+                            reply_to_batch.setContent(each_operation_time);
+                            reply_to_batch.addReceiver(batchAID);
+                            reply_to_batch.setOntology("Ftime_batch_ask");
+                            send(reply_to_batch);
+
+                            for(int j=0;j<batchlist.size();j++){
+                                if(batchlist.get(j).equals(BatchToFind)){
+                                    batchlist.remove(j);
                                 }
                             }
-                            reply_to_batch.setContent(each_operation_time);  //Busca en el batch list la referencia y devuelve el finish time
-                            reply_to_batch.addReceiver(batchAID);
-                            reply_to_batch.setOntology("Ftime_ask");
-                            reply_to_batch.setPerformative(ACLMessage.INFORM);
-                            send(reply_to_batch);
-                            batchlist.remove(k);
 
+            }
+//            batch_ft_list=MPlanInterpreter.getBatchFT(myAgent, xmlelements, planName,"11"); //para debug
+            template = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+                    MessageTemplate.MatchOntology("Ftime_order_ask"));
 
-                        }
+            while(orderlist.size()>0){
+                ACLMessage order_asking=blockingReceive(template);
+                ACLMessage reply_to_order=new ACLMessage(ACLMessage.INFORM);
+                AID orderAID = order_asking.getSender();
+                OrderToFind=order_asking.getContent();
+                batch_ft_list=MPlanInterpreter.getBatchFT(myAgent, xmlelements, planName,OrderToFind); //devuelve ve el finish time de la ultima operación de cada batch
+                String each_batch_time=OrderToFind+"&";
+                for(int i=0;i<batch_ft_list.size();i++){
+                    each_batch_time=each_batch_time+batch_ft_list.get(i);
+                    if(i+1!=batch_ft_list.size()){
+                        each_batch_time=each_batch_time+"_";
+                    }
+                }
+                reply_to_order.setContent(each_batch_time);
+                reply_to_order.addReceiver(orderAID);
+                reply_to_order.setOntology("Ftime_order_ask");
+                send(reply_to_order);
+
+                for(int j=0;j<orderlist.size();j++){
+                    if(orderlist.get(j).equals(OrderToFind)){
+                        orderlist.remove(j);
+                    }
                 }
             }
 /*******************************************************/

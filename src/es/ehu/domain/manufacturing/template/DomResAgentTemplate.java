@@ -21,6 +21,7 @@ public class DomResAgentTemplate extends ResourceAgentTemplate {
 
     private static final String ST_BOOT = "boot";
 
+
     /**
      * Resource Name
      */
@@ -47,6 +48,14 @@ public class DomResAgentTemplate extends ResourceAgentTemplate {
         /** Comportamiento running **/
         Behaviour running = new ResourceRunningBehaviour(this);
 
+        /** Comportamiento de ping **/
+
+        Behaviour ping = new PingBehaviour(this);
+
+        /** Comportamiento idle **/
+
+        Behaviour idle = new IdleBehaviour(this);
+
         /** Comportamiento negociación **/
         Behaviour negotiating = new NegotiatingBehaviour(this);
 
@@ -61,13 +70,23 @@ public class DomResAgentTemplate extends ResourceAgentTemplate {
 
         /** FSM state definition **/
         behaviourFSM.registerFirstState(new StateParallel(this, behaviourFSM, boot), ST_BOOT);
-        behaviourFSM.registerState(new StateParallel(this, behaviourFSM, running, negotiating, sending, receiving), ControlBehaviour.ST_RUNNING);
+        behaviourFSM.registerState(new StateParallel(this, behaviourFSM, running, negotiating, sending, receiving, ping), ControlBehaviour.ST_RUNNING);
+        behaviourFSM.registerState(new StateParallel(this, behaviourFSM, ping, idle), ControlBehaviour.ST_IDLE);
         behaviourFSM.registerLastState(new StateParallel(this, behaviourFSM, end), ControlBehaviour.ST_STOP);
 
         /** FSM transition **/
         behaviourFSM.registerTransition(ST_BOOT, ControlBehaviour.ST_RUNNING, ControlBehaviour.RUNNING, new String[] { ST_BOOT });
 
         behaviourFSM.registerTransition(ST_BOOT, ControlBehaviour.ST_STOP, ControlBehaviour.STOP, new String[] { ST_BOOT });
+
+
+
+        behaviourFSM.registerTransition(ControlBehaviour.ST_RUNNING, ControlBehaviour.ST_IDLE, ControlBehaviour.IDLE, new String[] { ControlBehaviour.ST_RUNNING });
+
+        behaviourFSM.registerTransition(ControlBehaviour.ST_IDLE, ControlBehaviour.ST_RUNNING, ControlBehaviour.RUNNING, new String[] { ControlBehaviour.ST_IDLE });
+
+        behaviourFSM.registerTransition(ControlBehaviour.ST_IDLE, ControlBehaviour.ST_STOP, ControlBehaviour.STOP, new String[] { ControlBehaviour.ST_IDLE });
+
 
         behaviourFSM.registerTransition(ControlBehaviour.ST_RUNNING, ControlBehaviour.ST_STOP, ControlBehaviour.STOP, new String[] { ControlBehaviour.ST_RUNNING });
 
