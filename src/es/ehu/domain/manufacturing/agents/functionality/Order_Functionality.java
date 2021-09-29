@@ -35,7 +35,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
     private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> batchTraceability = new ArrayList<>();
     private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> deserializedMessage = new ArrayList<>(); // Mensaje recibido desde el batchAgent deserializado
     private String mySeType;
-    private MessageTemplate template, template2,templateFT,template3,template4;
+    private MessageTemplate template, template2,templateFT,template3,template4,template5;
     private volatile String orderreference=null;
     private volatile String raw_ft=null;
     private volatile AID QoSID = new AID("QoSManagerAgent", false);
@@ -43,6 +43,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
     private volatile String batch_to_take_down="";
     private volatile Date new_expected_finish_time=null;
     private volatile boolean QoSresponse_flag=false;
+    private volatile String batch_to_update=null;
 
 
     private ArrayList<ArrayList<String>> batch_last_items_ft=new ArrayList<ArrayList<String>>();
@@ -67,10 +68,13 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                     if (batch_to_take_down.equals(batch)) {
                         exit_timeout = true;
                     }
-                    if (new_expected_finish_time != null) {
-                        expected_finish_time = new_expected_finish_time;
-                        System.out.println("Batch " + batch + " finish time updated to: " + expected_finish_time);
-                        new_expected_finish_time = null;
+                    if (new_expected_finish_time != null&&batch_to_update!=null) { //comprueba que se actualice
+                        if(batch_to_update.equals(batch)) {
+                            expected_finish_time = new_expected_finish_time;
+                            System.out.println("Batch " + batch + " finish time updated to: " + expected_finish_time);
+                            new_expected_finish_time = null;
+                            batch_to_update=null;
+                        }
                     }
                 }
                 if (!expected_finish_time.after(getactualtime()) && !exit_timeout&&!QoSreported) {
@@ -82,17 +86,19 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                         e.printStackTrace();
                     }
 
-                    if (!QoSresponse_flag) {
+                    if (!QoSresponse_flag) { //En caso de no recibir respuesta del QoS a tiempo el order agent se detecta asi mismo aislado
                         System.out.println("I'm probably isolated. Shutting down entire node");
-                        System.exit(0);
+                        System.exit(0);  //mata a su nodo
                     } else {
                         QoSresponse_flag = false;
                     }
                     QoSreported=true;
                 }
-                if (batch_to_take_down.equals(batch)) {
+                if (batch_to_take_down.equals(batch)) { //cuando la variable volatil batch_to_take_down coincide con el batch del timeout el timeout finaliza porque el batch ha terminado
                     exit_timeout = true;
+                    batch_to_take_down=""; //resetea la variable para el siguiente batch (evita bugs)
                 }
+
             }
             batch_to_take_down = "";
             System.out.println("Batch "+batch+" timeout finished.");
@@ -121,6 +127,8 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 MessageTemplate.MatchOntology("timeout_confirmed"));
         this.template4 = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                 MessageTemplate.MatchOntology("update_timeout"));
+        this.template5=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                MessageTemplate.MatchOntology("delay"));
         this.myAgent = myAgent;
 
         // Crear un nuevo conversationID
@@ -166,30 +174,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 System.out.println(finishtime.getContent());
                 raw_ft=finishtime.getContent();
                 batch_last_items_ft=batch_finish_times(raw_ft);
-                batch_last_items_ft=add_delays(batch_last_items_ft); //se añade delay
-                for(int k=0;k<batch_last_items_ft.size();k++){
 
-                    System.out.println(myAgent.getLocalName()+ " is starting a timeout thread for batch "+batch_last_items_ft.get(k).get(0));
-                    Date expected_FT=null;
-                    try {
-                        expected_FT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(batch_last_items_ft.get(k).get(1));
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
-                    long startime = getactualtime().getTime() - (Long.parseLong(batch_last_items_ft.get(k).get(2)));
-                    LocalDateTime new_expected_finish_time = convertToLocalDateTimeViaSqlTimestamp(getactualtime());
-                    new_expected_finish_time = new_expected_finish_time.plusSeconds(((expected_FT.getTime() - startime) / 1000));
-                    expected_FT = convertToDateViaSqlTimestamp(new_expected_finish_time);
-
-                    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-                    String strDate = dateFormat.format( expected_FT);
-
-                    batch_last_items_ft.get(k).add(strDate); //expected finish date con delay
-
-                    System.out.println(batch_last_items_ft.get(k).get(0)+" batch expected finish time: "+expected_FT);
-                    Ordertimeout t=new Ordertimeout(expected_FT,batch_last_items_ft.get(k).get(0));
-                    t.start();
-                }
 
             }catch(Exception e) {
                 System.out.println(myAgent.getLocalName()+ " ERROR. Something happened at some point during initialization");
@@ -228,6 +213,8 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
         System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
 
+
+
         ACLMessage msg = myAgent.receive(template);
         if (msg != null) {
             if (firstTime) {
@@ -242,12 +229,16 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 batchTraceability.get(0).get(0).get(3).add(orderNumber);
                 firstTime = false;
             } else {
+
                 if (newBatch == false) {
                     for (int i = batchTraceability.size() - 1; i >= batchIndex; i--) {
                         batchTraceability.remove(i); //se elimina el ultimo batch añadido para poder sobreescribirlo
                     }
                 }
                 deserializedMessage = deserializeMsg(msg.getContent());
+                String batchNumber =deserializedMessage.get(0).get(0).get(3).get(0);
+                while(!batch_to_take_down.equals("")){} //espera al reseteo de la variable para escribir el batch (evita bugs)
+                batch_to_take_down=batchNumber;
                 batchTraceability = addNewLevel(batchTraceability, deserializedMessage,false);
             }
             newBatch = false; // hasta que el batch añadido no se complete, cada vez que se reciba un mensaje el dato se sobrescribira
@@ -301,16 +292,50 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
                 try {
                     Date tdate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(ft_of_batch);
+                    batch_to_update=timeout_batch_id;
                     new_expected_finish_time= convertToDateViaSqlTimestamp(convertToLocalDateTimeViaSqlTimestamp(tdate).plusSeconds(difference/1000));
 
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
 
-
             }else{
                 System.out.println("Not my batch, something went wrong");
             }
+        }
+
+        ACLMessage msg5=myAgent.receive(template5);
+        if(msg5!=null){                                 //Genera el timeout al recibir el delay de cada batch
+            String rawdelay=msg5.getContent();
+            String[] parts=rawdelay.split("/");
+            String batchref=parts[0];
+            String delay=parts[1];
+            Date expected_FT=null;
+            String batchFT=null;
+            for(int p=0;p<batch_last_items_ft.size();p++) {
+                if(batch_last_items_ft.get(p).get(0).equals(batchref)){
+                    batchFT=batch_last_items_ft.get(p).get(1);
+                }
+            }
+            if(batchFT!=null) {
+                try {
+                    expected_FT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(batchFT);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                long startime = getactualtime().getTime() - (Long.parseLong(delay));
+                Date d = new Date(startime); //para debug
+                LocalDateTime new_expected_FT = convertToLocalDateTimeViaSqlTimestamp(getactualtime());
+                new_expected_FT = new_expected_FT.plusSeconds(((expected_FT.getTime() - startime) / 1000));
+                expected_FT = convertToDateViaSqlTimestamp(new_expected_FT);
+                System.out.println("Generating a thread for timeout");
+                System.out.println(batchref + " batch expected finish time: " + expected_FT);
+                Ordertimeout t = new Ordertimeout(expected_FT, batchref);
+                t.start();
+            }else{
+                System.out.println("No timeout generated for batch "+ batchref);
+            }
+
         }
         return false;
     }
@@ -356,28 +381,6 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
         return batchFT;
     }
-
-    protected ArrayList<ArrayList<String>> add_delays(ArrayList<ArrayList<String>> allbatches){
-        ArrayList<ArrayList<String>> batches_with_delays=allbatches;
-        MessageTemplate template3=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                MessageTemplate.MatchOntology("delay"));
-        int j=0;
-        while (allbatches.size() > j) {
-        ACLMessage msg=myAgent.blockingReceive(template3);
-        String rawdelay=msg.getContent();
-        String[] parts=rawdelay.split("/");
-        String batch=parts[0];
-        String delay=parts[1];
-        for(int i=0;i<batches_with_delays.size();i++){
-            if(batches_with_delays.get(i).get(0).equals(batch)){
-                batches_with_delays.get(i).add(delay);
-                j++;
-            }
-        }
-        }
-        return batches_with_delays;
-    }
-
 
     protected Date getactualtime(){
         String actualTime;

@@ -17,6 +17,7 @@ public class GWAgent extends GatewayAgent {
     public AID machineAgentName;
     public static final int bufferSize =6;
     CircularFifoQueue msgInFIFO = new CircularFifoQueue(bufferSize);
+    CircularFifoQueue msgInFIFO2 = new CircularFifoQueue(bufferSize);
 
 
     protected void processCommand(java.lang.Object command) {   //this method will be executed when the externalJAde class executes the command JadeGateway.execute
@@ -49,7 +50,28 @@ public class GWAgent extends GatewayAgent {
         } else if(action.equals("init")) {      // JadeGateway.execute command was called for new message sending (PLC -> Agent)
             System.out.println("---Gateway init command");
             System.out.println("---Hello, I am a Gateway Agent");
-        } else {
+
+        } else if(action.equals("ask_state")){
+            msgRecv = (String) msgInFIFO2.poll();    //reads the oldest message from FIFO
+            if ( msgRecv != null ) {
+                System.out.println("---Someone asked to check asset state");
+                ((StructMessage) command).setMessage(msgRecv);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
+                ((StructMessage) command).setNewData(true);
+            } else {
+                ((StructMessage) command).setNewData(false);
+                System.out.println("---State checking queue is empty");
+            }
+
+        }else if(action.equals("rcv_state")) {
+            System.out.println("---Asset answered with his state");
+            AID QoSID=new AID("QoSManagerAgent",false);
+            ACLMessage msgToQoS = new ACLMessage(msgStruct.readPerformative());
+            msgToQoS.addReceiver(QoSID);
+            msgToQoS.setOntology("asset_state");
+            msgToQoS.setContent(msgStruct.readMessage());
+            send(msgToQoS);
+
+        }else {
             System.out.println("---GW, recv function");
             msgRecv = (String) msgInFIFO.poll();    //reads the oldest message from FIFO
             if ( msgRecv != null ) {
@@ -72,6 +94,8 @@ public class GWAgent extends GatewayAgent {
                 MessageTemplate.MatchOntology("negotiation")),MessageTemplate.MatchConversationId("PLCdata"));
         MessageTemplate templateping = MessageTemplate.and(MessageTemplate.MatchOntology("ping"),
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+        MessageTemplate checkasset = MessageTemplate.and(MessageTemplate.MatchOntology("check_asset"),
+                MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
 
 
         addBehaviour(new CyclicBehaviour() {
@@ -88,6 +112,13 @@ public class GWAgent extends GatewayAgent {
                     reply.setContent("Yes :)");
                     System.out.println(ping.getSender().getLocalName()+" sent a ping. Answering.");
                     send(reply);
+                }
+                ACLMessage check_asset_state=receive(checkasset);
+                if(check_asset_state!=null) {
+                    if(msgInFIFO2.isAtFullCapacity()) {
+                        System.out.println("buffer full, old message lost");
+                    }
+                    msgInFIFO2.add((String) check_asset_state.getContent()); //adds the message to be send in the buffer (max capacity = 6)
                 }
 
                 ACLMessage msgToFIFO = receive(template);

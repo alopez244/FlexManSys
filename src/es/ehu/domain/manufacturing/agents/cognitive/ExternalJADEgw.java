@@ -2,8 +2,11 @@ package es.ehu.domain.manufacturing.agents.cognitive;
 
 import com.google.gson.Gson;
 import es.ehu.domain.manufacturing.utilities.StructMessage;
+import jade.core.AID;
 import jade.core.Profile;
+import jade.lang.acl.ACLMessage;
 import jade.util.leap.Properties;
+import jade.wrapper.ControllerException;
 import jade.wrapper.gateway.JadeGateway;
 
 import java.io.File;
@@ -84,8 +87,6 @@ public class ExternalJADEgw {
     //Function for reading the data received in ACL messages
     public static String recv() {    // Agent -->  ROS (Kobuki)
 
-
-
         String recvMsg;
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("receive");
@@ -120,6 +121,37 @@ public class ExternalJADEgw {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static boolean askstate(){
+        StructMessage strMessage = new StructMessage();
+        strMessage.setAction("ask_state");
+        try {
+            JadeGateway.execute(strMessage);
+        } catch(Exception e) {
+            System.out.println(e);
+        }
+        if(strMessage.readNewData()){
+            System.out.println("--Asked asset state");
+            return true;
+        }else{
+            System.out.println("--No answer");
+            return false;
+        }
+    }
+
+    public static void rcvstate(String state){
+
+        StructMessage strMessage = new StructMessage();
+            strMessage.setAction("rcv_state");
+            strMessage.setMessage(state);
+            strMessage.setPerformative(7);
+            try {
+                JadeGateway.execute(strMessage);
+            } catch(Exception e) {
+                System.out.println(e);
+            }
+            System.out.println("--Received: " + state);
     }
 
 }

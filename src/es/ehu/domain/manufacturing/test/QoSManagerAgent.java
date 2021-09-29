@@ -17,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 
 
 public class QoSManagerAgent extends Agent {
+
     private Agent myAgent=this;
     private int agent_found_qty=0;
     private int gateway_found_qty=0;
@@ -164,6 +165,8 @@ public class QoSManagerAgent extends Agent {
                                                 System.out.println("ControlGatewayCont" + ch[0] + "->OK");
                                                 System.out.println("All agents online, everything OK theoretically. Lengthening timeout.");
                                                 sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),"reset_timeout");
+                                                sendACL(ACLMessage.REQUEST,"ControlGatewayCont1","check_asset","How are you feeling PLC?");
+
                                             } else {
                                                 LOGGER.error("Timeout confirmed");
                                                 sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),"confirmed_timeout");
@@ -302,11 +305,13 @@ public class QoSManagerAgent extends Agent {
                         for(int n=0;n<allDelays.size();n++){ //Se elimina de la lista de los delays el batch que ha terminado
                             if(allDelays.get(n).get(0).equals(finishing_batch)){
                                 allDelays.remove(n);
+                                i--;
                             }
                         }
                         for(int o=0;o<batch_and_machine.size();o++){
                             if(batch_and_machine.get(o).get(0).equals(finishing_batch)){
                                 batch_and_machine.remove(o);
+                                j--;
                             }
                         }
                         System.out.println("Batch "+finishing_batch+" finished.");
@@ -334,6 +339,10 @@ public class QoSManagerAgent extends Agent {
                         ArrayList<String> temp = BatchAndMachines(msg.getContent(), sender); //Crea un listado de agentes maquina con los batch que tengan asignados
                         batch_and_machine.add(j, temp);
                         j++;
+                    }
+                    if(msg.getOntology().equals("asset_state")){
+
+                        System.out.println("Recieved asset state: "+msg.getContent());
                     }
                 }
                 if(msg.getPerformative()==ACLMessage.REQUEST) { //Se recibe algun tipo de petición
