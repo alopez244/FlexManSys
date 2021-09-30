@@ -690,7 +690,8 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         new_expected_finish_time = new_expected_finish_time.plusSeconds(((expected_FT.getTime() - startime) / 1000));
         expected_FT = convertToDateViaSqlTimestamp(new_expected_finish_time);   //el finish time se calcula segun el tiempo de operacion y la fecha actual
         delay_already_incremented = true;
-        System.out.println("New expected finish time on item "+itemreference.get(actual_item_number)+": "+expected_FT);
+        System.out.println("ITEM FINISH-TIME UPDATED");
+        System.out.println(itemreference.get(actual_item_number)+" item expected finish time: "+expected_FT);
         return expected_FT;
     }
 

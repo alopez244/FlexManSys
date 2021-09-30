@@ -45,8 +45,6 @@ public class QoSManagerAgent extends Agent {
 
         public void action(){
             LOGGER.entry();
-            delaytemplate= MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                    MessageTemplate.MatchOntology("delay"));
 
             ACLMessage msg = blockingReceive();
 
@@ -116,7 +114,7 @@ public class QoSManagerAgent extends Agent {
                                                 if (batch_and_machine.get(p).get(0).equals(timeout_batch_id)) {
                                                     String MA = batch_and_machine.get(p).get(1);
                                                     sendACL(ACLMessage.REQUEST,MA,"control","setstate idle");
-                                                    //Poner en modo espera el agente máquina responsable del batch
+                                                    //Poner en modo idle el agente máquina responsable del batch para que no ordene la ejecución de más batchs
                                                 }
                                             }
                                         }
@@ -165,7 +163,7 @@ public class QoSManagerAgent extends Agent {
                                                 System.out.println("ControlGatewayCont" + ch[0] + "->OK");
                                                 System.out.println("All agents online, everything OK theoretically. Lengthening timeout.");
                                                 sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),"reset_timeout");
-                                                sendACL(ACLMessage.REQUEST,"ControlGatewayCont1","check_asset","How are you feeling PLC?");
+//                                                sendACL(ACLMessage.REQUEST,"ControlGatewayCont1","check_asset","How are you feeling PLC?"); //ping a asset, solo para test
 
                                             } else {
                                                 LOGGER.error("Timeout confirmed");
@@ -213,7 +211,7 @@ public class QoSManagerAgent extends Agent {
                             String timeout_batch_id=parts[1];
                             LOGGER.warn(timeout_order_id+" order has thrown timeout on batch "+timeout_batch_id);
                             for(int k=0;k<ErrorList.size();k++){
-                                if(ErrorList.get(k).get(0).equals("timeout")&&ErrorList.get(k).get(1).equals(timeout_batch_id)){
+                                if(ErrorList.get(k).get(0).equals("timeout")&&ErrorList.get(k).get(1).equals(timeout_batch_id)){ //checkea si ha habido timeout en
                                     LOGGER.info("Batch "+timeout_batch_id+" has already reported a timeout. Ignoring error.");
                                     sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),"timeout_confirmed",timeout_batch_id);
                                     add_timeout_error_flag=false; //no se añade porque ya existe
@@ -309,7 +307,7 @@ public class QoSManagerAgent extends Agent {
                             }
                         }
                         for(int o=0;o<batch_and_machine.size();o++){
-                            if(batch_and_machine.get(o).get(0).equals(finishing_batch)){
+                            if(batch_and_machine.get(o).get(0).equals(finishing_batch)){ //se elimina la asignación batch-máquina
                                 batch_and_machine.remove(o);
                                 j--;
                             }
@@ -320,7 +318,7 @@ public class QoSManagerAgent extends Agent {
                         String[] parts2=msg.getContent().split("/");
                         String batch_id=parts2[0];
                         String ms_of_delay=parts2[1];
-                       LOGGER.info("Batch" +batch_id+" started with "+ms_of_delay+" ms of delay");
+                        LOGGER.info("Batch" +batch_id+" started with "+ms_of_delay+" ms of delay");
                         ActualBatch = getDelays(msg.getContent()); //Añade el batch especificado con su correspondiente delay a la lista de delays
 
                         for (int l = 0; l < delay_asking_queue.size(); l++) {
@@ -340,18 +338,18 @@ public class QoSManagerAgent extends Agent {
                         batch_and_machine.add(j, temp);
                         j++;
                     }
-                    if(msg.getOntology().equals("asset_state")){
+                    if(msg.getOntology().equals("asset_state")){ //recibe ping de vuelta del asset (solo para testing)
 
                         System.out.println("Recieved asset state: "+msg.getContent());
                     }
                 }
                 if(msg.getPerformative()==ACLMessage.REQUEST) { //Se recibe algun tipo de petición
 
-                    if (msg.getOntology().equals("askdelay")) { //Se recibe consulta el delay
+                    if (msg.getOntology().equals("askdelay")) { //Se recibe consulta del delay
 
                         ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
                         String asking_batch = msg.getContent();
-                        reply.setContent("0"); //si no encuentra ningun batch que coincida en la lista devuelve un 0
+                        reply.setContent("0"); //si no encuentra ningun batch que coincida en la lista predefine un valor de 0
                         boolean flag = true;
                         if (allDelays.size() != 0) {
                             for (int k = 0; k < allDelays.size() || flag; k++) {

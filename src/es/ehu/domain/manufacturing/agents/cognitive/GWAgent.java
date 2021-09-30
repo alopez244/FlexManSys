@@ -125,11 +125,11 @@ public class GWAgent extends GatewayAgent {
 
                if (msgToFIFO != null) {
 
-                   ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
-                   reply.addReceiver(msgToFIFO.getSender());
-                   reply.setOntology("Acknowledge");
-                   reply.setContent("Received");
-                   send(reply);
+//                   ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
+//                   reply.addReceiver(msgToFIFO.getSender());
+//                   reply.setOntology("Acknowledge");
+//                   reply.setContent("Received");
+//                   send(reply);
 
                     System.out.println("GWagent, message received from Machine Agent");
                     machineAgentName = msgToFIFO.getSender();//saves the sender ID for a later reply

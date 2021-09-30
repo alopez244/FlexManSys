@@ -38,6 +38,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private ArrayList<ArrayList<String>> productInfo;
     private HashMap<String, String> operationsWithBatchAgents = new HashMap<>();
     private HashMap PLCmsgIn = new HashMap(); // Estructura de datos que se envia al PLC
+    private HashMap rcvd=new HashMap();
     private HashMap PLCmsgOut = new HashMap(); // Estructura de datos que se recibe del PLC
     private String BathcID = ""; // Variable que guarda el identificador del lote que se esta fabricando
     private Integer NumOfItems = 0; // Representa el numero de intems que se estan fabricando (todos perteneciente al mismo lote)
@@ -49,7 +50,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private String gatewayAgentName; // Guarda el nombre del agente pasarela
     private MessageTemplate echotemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
             MessageTemplate.MatchOntology("Acknowledge"));
+    private MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+            MessageTemplate.MatchOntology("acl_error"));
     private String result;
+    private AID QoSID = new AID("QoSManagerAgent", false);
 
 
     private MessageTemplate template;
@@ -304,12 +308,13 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
         this.PLCmsgIn = new Gson().fromJson(msg2.getContent(), HashMap.class);   //Data type conversion Json->Hashmap class
         if(PLCmsgIn.containsKey("Received")){   //Checks if it is a confirmation message
-            if(PLCmsgIn.get("Received").equals(true)){
-
-                System.out.println("<--PLC reception confirmation");
-            }else{
-                System.out.println("<--Problem receiving the message");
-            }
+//            if(PLCmsgIn.get("Received").equals(true)){
+//
+//                System.out.println("<--PLC reception confirmation");
+//            }else{
+//                System.out.println("<--Problem receiving the message");
+//            }
+            LOGGER.debug("Received a confirmation message out of the timeout. Timeout duration might be increased.");
         }else{
             recvBatchInfo(msg2);   // sends item information to batch agent
             if(PLCmsgIn.containsKey("Control_Flag_Service_Completed")) {    //At least the first field is checked
@@ -479,7 +484,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 CheckAcknowledge(batchAgentName,MessageContent);
             }else if(result.equals("isolated")){
                 System.out.println("I'm probably isolated. Shutting down agent");
-//                myAgent.doDelete();
                 System.exit(0);
             }else if(result.equals("confirmed")){
                 System.out.println("Communication error with "+batchAgentName);
@@ -601,17 +605,42 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     String MessageContent = new Gson().toJson(PLCmsgOut);
                     AID gatewayAgentID = new AID(gatewayAgentName, false);
                     sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
-                    result=CheckAcknowledge(gatewayAgentID.getLocalName(),MessageContent);
+                    //result=CheckAcknowledge(gatewayAgentID.getLocalName(),MessageContent);
+                    MessageTemplate PLCconfirmation=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                            MessageTemplate.MatchOntology("negotiation"));
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    ACLMessage acknowledge= myAgent.receive(PLCconfirmation);
 
-                    if(result.equals("retry")){
-                        sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
-                        CheckAcknowledge(gatewayAgentID.getLocalName(),MessageContent);
-                    }else if(result.equals("isolated")){
-                        System.out.println("I'm probably isolated. Shutting down agent");
-//                        myAgent.doDelete();
-                        System.exit(0);
-                    }else if(result.equals("confirmed")){
-                        System.out.println("Communication error with "+gatewayAgentID.getLocalName());
+                    if(acknowledge!=null){
+                        rcvd = new Gson().fromJson(acknowledge.getContent(), HashMap.class);
+                        if(rcvd.containsKey("Received")) {   //Se asegura que se trate de un mensaje de confirmacion del PLC
+                            LOGGER.info("PLC confirmed reception");
+                        }
+                    }else{
+                        LOGGER.info("Did not receive answer from PLC");
+                        String report_error=gatewayAgentName+"_____"+MessageContent;
+                        sendACLMessage(6, QoSID, "acl_error", "communication error", report_error, myAgent);
+                        try {
+                            Thread.sleep(250);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        ACLMessage QoScommand= myAgent.receive(QoStemplate);
+                        if(QoScommand==null){ //si no se recibe respuesta del QoS, se asume que esta aislado
+                            LOGGER.error("I'm probably isolated. Shutting down agent");
+                            System.exit(0);
+                        }else{
+                            if(QoScommand.getContent().equals("confirmed")){
+                                LOGGER.error("QoS confirmed that GW is down");
+                            } else if (QoScommand.getContent().equals("retry")) { //repetiría en mensaje si el QoS se lo ordenase.
+                                LOGGER.info("QoS asked to repeat  message to GW");
+                                sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
+                            }
+                        }
                     }
 
                     sendingFlag = false;
@@ -670,7 +699,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         }
         ACLMessage acknowledge = myAgent.receive(echotemplate);
         if(acknowledge==null){
-            AID QoSID = new AID("QoSManagerAgent", false);
+
             String informQoS=receiver+"_____"+content;
             sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
             try {
@@ -678,7 +707,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            ACLMessage msg= myAgent.receive();
+            ACLMessage msg= myAgent.receive(QoStemplate);
             if(msg!=null) {
                 if (msg.getContent().contains("confirmed")) {
                     command = "confirmed";

@@ -25,7 +25,7 @@ public class IdleBehaviour extends SimpleBehaviour {
     @Override
     public void action(){
         LOGGER.entry();
-//        ACLMessage msg = myAgent.receive(template);
+
 
         try {
             Thread.sleep(5000);
@@ -33,14 +33,7 @@ public class IdleBehaviour extends SimpleBehaviour {
             e.printStackTrace();
         }
         LOGGER.debug("********Idling********");
-//        if(msg!=null) {
-//            ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
-//            reply.addReceiver(msg.getSender());
-//            reply.setOntology(msg.getOntology());
-//            reply.setContent("OK. I'm passing to idle state.");
-//            LOGGER.warn(msg.getSender().getLocalName()+" sent a ping. Answering.");
-//            myAgent.send(reply);
-//        }
+
     }
 
 

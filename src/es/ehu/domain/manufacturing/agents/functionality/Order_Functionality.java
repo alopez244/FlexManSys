@@ -61,7 +61,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         }
 
         public void run() {
-
+            System.out.println(batch+" batch expected finish time: "+expected_finish_time);
             while (!exit_timeout) {
                 while (expected_finish_time.after(getactualtime()) && !exit_timeout) {
 
@@ -71,7 +71,9 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                     if (new_expected_finish_time != null&&batch_to_update!=null) { //comprueba que se actualice
                         if(batch_to_update.equals(batch)) {
                             expected_finish_time = new_expected_finish_time;
-                            System.out.println("Batch " + batch + " finish time updated to: " + expected_finish_time);
+                            System.out.println("BATCH FINISH-TIME UPDATED");
+                            System.out.println(batch+" batch expected finish time: "+expected_finish_time);
+                            //System.out.println("Batch " + batch + " finish time updated to: " + expected_finish_time);
                             new_expected_finish_time = null;
                             batch_to_update=null;
                         }
@@ -284,7 +286,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             String ft_of_batch="";
             for(int m=0;m<batch_last_items_ft.size();m++){
                 if(batch_last_items_ft.get(m).get(0).equals(timeout_batch_id)){
-                    ft_of_batch= batch_last_items_ft.get(m).get(3);
+                    ft_of_batch= batch_last_items_ft.get(m).get(2);
                 }
             }
             if(ft_of_batch!="") {
@@ -312,9 +314,11 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             String delay=parts[1];
             Date expected_FT=null;
             String batchFT=null;
+            int temp=0;
             for(int p=0;p<batch_last_items_ft.size();p++) {
                 if(batch_last_items_ft.get(p).get(0).equals(batchref)){
                     batchFT=batch_last_items_ft.get(p).get(1);
+                    temp=p;
                 }
             }
             if(batchFT!=null) {
@@ -328,8 +332,11 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 LocalDateTime new_expected_FT = convertToLocalDateTimeViaSqlTimestamp(getactualtime());
                 new_expected_FT = new_expected_FT.plusSeconds(((expected_FT.getTime() - startime) / 1000));
                 expected_FT = convertToDateViaSqlTimestamp(new_expected_FT);
-                System.out.println("Generating a thread for timeout");
                 System.out.println(batchref + " batch expected finish time: " + expected_FT);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+                String FT_string = sdf.format(expected_FT);
+                batch_last_items_ft.get(temp).add(FT_string);
+
                 Ordertimeout t = new Ordertimeout(expected_FT, batchref);
                 t.start();
             }else{
