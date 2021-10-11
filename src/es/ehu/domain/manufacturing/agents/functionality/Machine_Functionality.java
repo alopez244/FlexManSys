@@ -17,6 +17,7 @@ import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.wrapper.AgentController;
+import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,7 +32,7 @@ import java.util.spi.CalendarDataProvider;
 
 public class Machine_Functionality extends DomRes_Functionality implements BasicFunctionality, NegFunctionality, AssetManagement, Traceability {
     private boolean firstItemFlag=false;
-    private ArrayList<String> msgToQoS;
+    public static CircularFifoQueue msgFIFO = new CircularFifoQueue(5);
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
     public boolean traceability_flag=false;
@@ -52,8 +53,11 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             MessageTemplate.MatchOntology("Acknowledge"));
     private MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
             MessageTemplate.MatchOntology("acl_error"));
+    private MessageTemplate pingt = MessageTemplate.and(MessageTemplate.MatchOntology("ping"),
+            MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
     private String result;
     private AID QoSID = new AID("QoSManagerAgent", false);
+
 
 
     private MessageTemplate template;
@@ -306,6 +310,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
     public void rcvDataFromDevice(ACLMessage msg2) {
 
+        msgFIFO.add((String) msg2.getContent());
         this.PLCmsgIn = new Gson().fromJson(msg2.getContent(), HashMap.class);   //Data type conversion Json->Hashmap class
         if(PLCmsgIn.containsKey("Received")){   //Checks if it is a confirmation message
 //            if(PLCmsgIn.get("Received").equals(true)){
@@ -350,7 +355,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     // El metodo recvBatchInfo se encarga de enviar al agente batch la informacion con la trazabilidad de cada item fabricado
     @Override
     public void recvBatchInfo(ACLMessage msg) {
-
+        msgFIFO.add((String) msg.getContent());
         ACLMessage reply = null;
         String targets = "";
         ArrayList<String> actionList = new ArrayList<String>(); // Lista de acciones que componen el servicio actual
@@ -462,31 +467,54 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     BathcID = BathcID.split("\\.")[0];
                     reply = sendCommand(myAgent, "get * reference=" + BathcID, "BatchAgentID");
                     //returns the id of the element that matches with the reference of the required batch
-                    if (reply != null)   // If the id does not exist, it returns error
+                    if (reply != null) {   // If the id does not exist, it returns error
+                        msgFIFO.add((String) reply.getContent());
                         batchAgentName = reply.getContent();
+                    }else{
+                        String informQoS="sa"+"/div/"+"get * reference=" + BathcID +", BatchAgentID";
+                        sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
+
+                        ACLMessage QoSR= myAgent.blockingReceive(QoStemplate,1000);
+                        if(QoSR==null) {//si tampoco contesta el QoS se asume que esta aislado
+                            System.out.println("I'm probably isolated. Idling");
+                            sendACLMessage(16,myAgent.getAID(),"control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
+//                            System.exit(0);
+                        }
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
 
                 try {
                     reply = sendCommand(myAgent, "get * parent=" + batchAgentName, "BatchAgentID");
+
                     //returns the names of all the agents that are sons
-                    if (reply != null)   // Si no existe el id en el registro devuelve error
+                    if (reply != null) {   // Si no existe el id en el registro devuelve error
+                        msgFIFO.add((String) reply.getContent());
                         batchAgentName = reply.getContent(); //gets the name of the batch agent to which the message should be sent
+                    }else{//si no se recibe respuesta habría que checkear el estado del SA con el QoS
+                        String informQoS="sa"+"/div/"+"get * parent=" + batchAgentName+ ", BatchAgentID";
+                        sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
+
+                        ACLMessage QoSR= myAgent.blockingReceive(QoStemplate,1000);
+                        if(QoSR==null) {//si tampoco contesta el QoS se asume ue esta aislado
+                            System.out.println("I'm probably isolated. Idling");
+                            sendACLMessage(16,myAgent.getAID(),"control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
+//                            System.exit(0);
+                        }
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 AID batchAgentID = new AID(batchAgentName, false);
                 sendACLMessage(16, batchAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
                 result=CheckAcknowledge(batchAgentName,MessageContent);
-            if(result.equals("retry")){
-                sendACLMessage(16, batchAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
-                CheckAcknowledge(batchAgentName,MessageContent);
-            }else if(result.equals("isolated")){
-                System.out.println("I'm probably isolated. Shutting down agent");
-                System.exit(0);
+            if(result.equals("isolated")){
+                System.out.println("I'm probably isolated. Idling");
+                sendACLMessage(16,myAgent.getAID(),"control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
             }else if(result.equals("confirmed")){
-                System.out.println("Communication error with "+batchAgentName);
+                System.out.println("Communication error with "+batchAgentName+". Waiting to fix the error.");
+
             }
 
         }
@@ -499,6 +527,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         // El codigo implementado dentro de la condicion IF se encarga de añadir al contador de consumibles los nuevos consumibles que han sido repuestos
         ACLMessage msg = myAgent.receive(template);
         if (msg != null) {
+            msgFIFO.add((String) msg.getContent());
             ArrayList<ArrayList<String>> newConsumables = new ArrayList<>();
             newConsumables.add(new ArrayList<>()); newConsumables.add(new ArrayList<>());
             String content = msg.getContent();
@@ -605,15 +634,9 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     String MessageContent = new Gson().toJson(PLCmsgOut);
                     AID gatewayAgentID = new AID(gatewayAgentName, false);
                     sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
-                    //result=CheckAcknowledge(gatewayAgentID.getLocalName(),MessageContent);
                     MessageTemplate PLCconfirmation=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                             MessageTemplate.MatchOntology("negotiation"));
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    ACLMessage acknowledge= myAgent.receive(PLCconfirmation);
+                    ACLMessage acknowledge= myAgent.blockingReceive(PLCconfirmation,1000);
 
                     if(acknowledge!=null){
                         rcvd = new Gson().fromJson(acknowledge.getContent(), HashMap.class);
@@ -622,23 +645,16 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         }
                     }else{
                         LOGGER.info("Did not receive answer from PLC");
-                        String report_error=gatewayAgentName+"_____"+MessageContent;
+                        String report_error=gatewayAgentName+"/div/"+MessageContent;
                         sendACLMessage(6, QoSID, "acl_error", "communication error", report_error, myAgent);
-                        try {
-                            Thread.sleep(250);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        ACLMessage QoScommand= myAgent.receive(QoStemplate);
+                        ACLMessage QoScommand= myAgent.blockingReceive(QoStemplate,1000);
                         if(QoScommand==null){ //si no se recibe respuesta del QoS, se asume que esta aislado
-                            LOGGER.error("I'm probably isolated. Shutting down agent");
-                            System.exit(0);
+                            LOGGER.error("I'm probably isolated. Idling");
+                            sendACLMessage(16,myAgent.getAID(),"control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
                         }else{
-                            if(QoScommand.getContent().equals("confirmed")){
-                                LOGGER.error("QoS confirmed that GW is down");
-                            } else if (QoScommand.getContent().equals("retry")) { //repetiría en mensaje si el QoS se lo ordenase.
-                                LOGGER.info("QoS asked to repeat  message to GW");
-                                sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
+                            LOGGER.info("Received reply from QoS");
+                            if(QoScommand.getContent().contains("confirmed")) {
+                                LOGGER.error("QoS confirmed that GW is down. Waiting until GW is recovered."); //pendiente de wake, por ahora solo manual
                             }
                         }
                     }
@@ -700,19 +716,15 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         ACLMessage acknowledge = myAgent.receive(echotemplate);
         if(acknowledge==null){
 
-            String informQoS=receiver+"_____"+content;
+            String informQoS=receiver+"/div/"+content;
             sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
-            try {
-                Thread.sleep(250);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            ACLMessage msg= myAgent.receive(QoStemplate);
+
+            ACLMessage msg= myAgent.blockingReceive(QoStemplate,1000);
             if(msg!=null) {
                 if (msg.getContent().contains("confirmed")) {
                     command = "confirmed";
-                } else if(msg.getContent().contains("retry")){
-                    command = "retry";
+                } else if(msg.getContent().contains("ignore")){
+                    command = "ok";
                 }
             }else{
                 command = "isolated";

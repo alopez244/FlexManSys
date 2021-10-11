@@ -99,14 +99,7 @@ public class ControlBehaviour extends SimpleBehaviour {
                 name=name.substring(0, name.indexOf('@'));
                 LOGGER.info("msg.getPerformative()==ACLMessage.FAILURE (sender="+name+")");
 
-                /*****************Modificaciones Diego*************************/
-//                AID QoSID = new AID("QoSManagerAgent", false);
-//                ACLMessage inform_qos=new ACLMessage(ACLMessage.FAILURE);
-//                inform_qos.setOntology("acl_error");
-//                inform_qos.setContent(name);
-//                inform_qos.addReceiver(QoSID);
-//                myAgent.send(inform_qos);
-                /**********************************************************/
+
 
                 try { LOGGER.info(myAgent.sendCommand(CMD_REPORT + " (" + CMD_GETCOMPONENTS + " "+name+") type=notFound cmpins="+name));} catch (Exception e) {e.printStackTrace();}
 

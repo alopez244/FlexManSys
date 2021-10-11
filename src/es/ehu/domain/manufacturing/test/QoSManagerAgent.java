@@ -1,12 +1,17 @@
 package es.ehu.domain.manufacturing.test;
 
+import es.ehu.domain.manufacturing.utilities.DiagnosisAndDecision;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.concurrent.TimeoutException;
 
 import jade.domain.DFService;
@@ -15,6 +20,8 @@ import jade.domain.AMSService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 public class QoSManagerAgent extends Agent {
 
@@ -26,19 +33,25 @@ public class QoSManagerAgent extends Agent {
     private int i=0;
     private ArrayList<ArrayList<String>> allDelays = new ArrayList<ArrayList<String>>();
     private MessageTemplate delaytemplate;
-    private int j=0;
+    private int j=0,n=0;
     private int l=0;
     private ArrayList<ArrayList<String>> batch_and_machine = new ArrayList<ArrayList<String>>();
     private ArrayList<String> delay_asking_queue=new ArrayList<String>();
     private ACLMessage machinenbr=null;
     static final Logger LOGGER = LogManager.getLogger(QoSManagerAgent.class.getName());
-    private boolean add_timeout_error_flag=true,pong=false,add_communication_error_flag=true;
+    private boolean add_timeout_error_flag=true,pong=false,add_communication_error_flag=true,confirmed_isol=false;
+    private String argument1="",argument2="",argument3="",argument4="",argument5="",argument6="",now="";
+    public AID DDid=new AID("D&D",false);
+    public boolean automatic=true;
+    public MessageTemplate pingtemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+            MessageTemplate.MatchOntology("ping"));
 
     protected void setup(){
         LOGGER.entry();
         LOGGER.info("QoS manager started");
         addBehaviour(new QoS() );
         LOGGER.exit();
+
     }
 
     class QoS extends CyclicBehaviour{
@@ -53,49 +66,61 @@ public class QoSManagerAgent extends Agent {
                 if(msg.getPerformative()==ACLMessage.FAILURE){ //Se recibe un posible error
 
                     if(msg.getOntology().equals("acl_error")){ //error de comunicación
-                        String[] msgparts=msg.getContent().split("_____");
+                        String[] msgparts=msg.getContent().split("/div/");
                         String receiver=msgparts[0];
                         String intercepted_msg=msgparts[1];
 
                         LOGGER.warn(msg.getSender().getLocalName()+" reported a failure while trying to communicate with "+ receiver);
-
-                        for(int o=0;o<ErrorList.size();o++){
-                            if (ErrorList.get(o).get(0).equals("communication")) { //comprueba si se ha repetido un error de comunicación entre los dos agentes y en dicho caso confirma el error.
-                                if(ErrorList.get(o).get(1).equals(msg.getSender().getLocalName())&&ErrorList.get(o).get(2).equals(receiver)){
-                                    LOGGER.info("Communication error repeated between this two agents. Sending confirmation.");
-                                    add_communication_error_flag=false;
-                                }
-                            }
-                        }
-                        if(add_communication_error_flag) {
-                            LOGGER.info("Pinging " + receiver + " agent");
-                            pong = PingAgent(receiver);
-
-                            if (pong) {
-                                /***** Dos opciones: Añadir al mensaje toda la info para poder bridgearlo o pedirle reenvío al emisor del mensaje. ***/
-
-                                sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),"retry");
-//                                ACLMessage bridged_msg=new ACLMessage(ACLMessage.REQUEST);
-//                                bridged_msg.addReceiver(msg.getSender());
-//                                bridged_msg.setOntology("control");
-//                                bridged_msg.setContent("setstate idle");
-//                                send(bridged_msg);
-
-                            } else {
-                                sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),receiver+"/confirmed");
-                                if(msg.getSender().getLocalName().contains("machine")&&receiver.contains("ControlGatewayCont")){
-                                    sendACL(ACLMessage.REQUEST,msg.getSender().getLocalName(),"control","setstate idle");
-                                }
-                            }
-
-                            ErrorList.add(l, new ArrayList<>());
-                            ErrorList.get(l).add(0, "communication");
-                            ErrorList.get(l).add(1, msg.getSender().getLocalName());
-                            ErrorList.get(l).add(2, receiver);
-                            ErrorList.get(l).add(3, intercepted_msg);
-                            l++;
-                        }
                         add_communication_error_flag=true;
+                        confirmed_isol=false;
+
+                            for(int o=0;o<ErrorList.size();o++){ //checkea si el error de comunicación se ha repetido
+                                if (ErrorList.get(o).get(0).equals("communication")) { //comprueba si se ha repetido un error de comunicación entre los dos agentes y en dicho caso confirma el error.
+                                    if(ErrorList.get(o).get(2).equals(msg.getSender().getLocalName())&&ErrorList.get(o).get(3).equals(receiver)){
+                                        LOGGER.info("Communication error repeated between this two agents. Confirm isolated agent.");
+                                        sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),receiver+"/confirmed");
+                                        confirmed_isol=true;
+                                        add_to_error_list("communication",msg.getSender().getLocalName(),receiver,intercepted_msg,"");
+                                    }
+                                }
+                            }
+                            if(!confirmed_isol) { //si es la primera vez que se lanza el error de comunicación
+                                LOGGER.info("Checking if " + receiver + " is alive and if the agent received the reported msg.");
+                                String command=CheckMsgFIFO(msg.getSender().getLocalName(),msg.getContent());
+                                System.out.println(command);
+                                n=SearchAgent(receiver);
+                                if (command.equals("msg_lost")&&n==1) {//Receiver alive but msg lost
+
+                                    sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),receiver+"/confirmed");
+                                    pong=PingAgent(msg.getSender().getLocalName());
+                                    n=SearchAgent(msg.getSender().getLocalName());
+                                    if(!pong&&n!=1){ //is posible that the reporting agent is actually isolated. Checking
+                                        LOGGER.error(msg.getSender().getLocalName()+" agent who reported an error is probably isolated");
+                                        LOGGER.warn("Receiver must ignore sender messages. D&D should bridge.");
+                                        //programar respuesta aqui (BRIDGE)
+                                    }else{
+                                        LOGGER.info("Receiver and sender are online, although message is lost. Report error and ask human intervention.");
+
+                                        //programar respuesta aqui(AVISO)
+                                    }
+                                } else if(command.equals("msg_received")&&n==1){
+
+                                    sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),receiver+"/ignore");
+                                    LOGGER.info("Message arrived to agent. Ignore error.");
+
+                                }else { //si no responde el receiver, se trata de un agente aislado
+
+                                    LOGGER.warn("No answer from "+receiver+". Confirming error.");
+                                    sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),receiver+"/confirmed");
+                                    if(msg.getSender().getLocalName().contains("machine")&&receiver.contains("ControlGatewayCont")){
+                                        LOGGER.warn(msg.getSender().getLocalName()+ " agent should idle.");
+                                        sendACL(ACLMessage.REQUEST,msg.getSender().getLocalName(),"control","setstate idle");
+                                    }
+                                }
+                                add_to_error_list("communication",msg.getSender().getLocalName(),receiver,intercepted_msg,"");
+                            }
+
+
                     } else if(msg.getOntology().equals("timeout")){ //Se recibe aviso de que ha habido un timeout
 
                         if(msg.getSender().getLocalName().contains("batch")){ //timeout enviado por un batch
@@ -104,8 +129,8 @@ public class QoSManagerAgent extends Agent {
                             String timeout_item_id=parts[1];
                             for(int m=0; m<ErrorList.size();m++) { //Primero comprueba que el error no esté repetido
                                 if (ErrorList.get(m).get(0).equals("timeout")) {
-                                    if (ErrorList.get(m).get(1).equals(timeout_batch_id)) {
-                                        if(ErrorList.get(m).get(2).equals(timeout_item_id)){
+                                    if (ErrorList.get(m).get(2).equals(timeout_batch_id)) {
+                                        if(ErrorList.get(m).get(3).equals(timeout_item_id)){
                                             LOGGER.error("Timeout repeated on same batch and item, confirming failure this time");
                                             sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),"confirmed_timeout");
                                             add_timeout_error_flag=false;
@@ -123,24 +148,26 @@ public class QoSManagerAgent extends Agent {
                             }
 
                             if(add_timeout_error_flag) {
-                                ErrorList.add(l, new ArrayList<>());  //Añade al listado de errores el timeout
-                                ErrorList.get(l).add(0, "timeout");
+//                                ErrorList.add(l, new ArrayList<>());  //Añade al listado de errores el timeout
+//                                ErrorList.get(l).add(0, "timeout");
+                                argument1="timeout";
                                 LOGGER.warn(timeout_batch_id + " batch has thrown a timeout on item " + timeout_item_id);
                                 if (batch_and_machine.size() > 0) { //buscamos el batch en el listado y conseguimos el ID del machine agent responsable
                                     for (int k = 0; k < batch_and_machine.size(); k++) {
                                         if (batch_and_machine.get(k).get(0).equals(timeout_batch_id)) {
-
                                             String MA = batch_and_machine.get(k).get(1);
+
+                                            argument2=timeout_batch_id;
+                                            argument3=timeout_item_id;
                                             pong = PingAgent(MA); // hacemos ping al agente máquina para comprobar su estado
-//                                        agent_found_qty = SearchAgent(MA); //La funcion search agent devuelve la cantidad de coincidencias con el nombre que le pasemos
-                                            ErrorList.get(l).add(1, timeout_batch_id);
-                                            ErrorList.get(l).add(2, timeout_item_id);
+
                                             if (pong) {  //Si pong es 1 el agente ha contestado
-//                                                System.out.println("The machine agent " + MA + " which was executing batch number " + timeout_batch_id + " is alive");
-                                                ErrorList.get(l).add(3, MA + "->OK");
+//                                                ErrorList.get(l).add(3, MA + "->OK");
+                                                argument4=MA + "->OK";
                                             } else {
-                                                System.out.println("The machine agent " + MA + " which was executing batch number " + timeout_batch_id + " is not alive"); //Si no hay coincidencias el agente máquina no esta activo
-                                                ErrorList.get(l).add(3, MA + "->NO OK");
+//                                                System.out.println("The machine agent " + MA + " which was executing batch number " + timeout_batch_id + " is not alive"); //Si no hay coincidencias el agente máquina no esta activo
+//                                                ErrorList.get(l).add(3, MA + "->NO OK");
+                                                argument4=MA + "->NO OK";
                                             }
                                             try {
                                                 machinenbr = sendCommand(myAgent, "get " + MA + " attrib=id", "name"); //consultamos la id de la estacion al SA para saber que gateway agent le corresponde. Si es 41 seria ControlGatewayCont4.
@@ -150,59 +177,51 @@ public class QoSManagerAgent extends Agent {
                                             char[] ch = new char[machinenbr.getContent().length()];
                                             ch[0] = machinenbr.getContent().charAt(0);
                                             pong=PingAgent("ControlGatewayCont" + ch[0]);
-//                                        gateway_found_qty = SearchAgent("ControlGatewayCont" + ch[0]); //Buscamos a su vez que el agente gateway este vivooolPingAgent()
+//                                        gateway_found_qty = SearchAgent("ControlGatewayCont" + ch[0]); //Buscamos a su vez que el agente gateway este vivo.
                                             if (pong) {
-//                                                System.out.println("Gateway agent of " + MA + " found alive: " + "ControlGatewayCont" + ch[0]);
-                                                ErrorList.get(l).add(4, "ControlGatewayCont" + ch[0] + "->OK");
-                                            } else {
-//                                                System.out.println("No gateway agent found for " + MA + ": ControlGatewayCont" + ch[0]);
-                                                ErrorList.get(l).add(4, "ControlGatewayCont" + ch[0] + "->NO OK");
-                                            }
-                                            if (ErrorList.get(l).get(3).equals(MA + "->OK") && ErrorList.get(l).get(4).equals("ControlGatewayCont" + ch[0] + "->OK")) {
-                                                System.out.println(MA + "->OK");
-                                                System.out.println("ControlGatewayCont" + ch[0] + "->OK");
-                                                System.out.println("All agents online, everything OK theoretically. Lengthening timeout.");
-                                                sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),"reset_timeout");
-//                                                sendACL(ACLMessage.REQUEST,"ControlGatewayCont1","check_asset","How are you feeling PLC?"); //ping a asset, solo para test
 
+                                                argument5="ControlGatewayCont" + ch[0] + "->OK";
+                                            } else {
+
+                                                argument5="ControlGatewayCont" + ch[0] + "->NO OK";
+                                            }
+                                            if (argument4.equals(MA + "->OK") && argument5.equals("ControlGatewayCont" + ch[0] + "->OK")) {
+                                                LOGGER.info("All agents online, asking asset state...");
+                                                sendACL(ACLMessage.REQUEST,"ControlGatewayCont" + ch[0],"check_asset","How are you feeling PLC?");
+                                                ACLMessage state=blockingReceive(MessageTemplate.MatchOntology("asset_state"),500);
+                                                if(state!=null&&!state.getContent().contains("Error")){
+                                                        LOGGER.info(state.getContent());
+                                                        System.out.println("Everything OK theoretically. Lengthening timeout.");
+                                                        sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),"reset_timeout");
+                                                }else{
+                                                    LOGGER.error("Timeout confirmed");
+                                                    sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),"confirmed_timeout");
+                                                }
                                             } else {
                                                 LOGGER.error("Timeout confirmed");
                                                 sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),"confirmed_timeout");
                                             }
-                                            /**
-                                             * Situaciones tras timeout:
-                                             *
-                                             * -> Si machine agent OK y control gateway OK, posible fallo fisico de máquina, atasco, etc o simplemente se a alargado la operación por alguna razón. Pide resetear una única vez el timeout
-                                             *
-                                             * -> Si machine agent NO OK y control gateway OK, posible fallo en software de machine agent, la máquina seguirá trabajando y posiblemente complete el batch
-                                             *    pero no tendremos trazabilidad
-                                             *
-                                             * -> Si machine agent OK y control gateway NO OK, posible fallo de red entre asset y machine agent, es posible que la máquina siga trabajando y complete el batch
-                                             *    pero no tendremos trazabilidad. Es posible también que la máquina se haya caído.
-                                             *
-                                             * -> Si machine agent NO OK y control gateway NO OK, fallo de red o de software
-                                             *
-                                             * **/
+
+                                            add_to_error_list(argument1,argument2,argument3,argument4,argument5);
 
                                         }
                                     }
                                 } else {
                                     LOGGER.warn("No data available to check failure");
-                                    ErrorList.get(l).add(1, timeout_batch_id);
-                                    ErrorList.get(l).add(2, "not known");
-                                    ErrorList.get(l).add(3, "not known");
-                                    ErrorList.get(l).add(4, "not known");
+
+                                    add_to_error_list(argument1,timeout_batch_id,"","","");
+
                                 }
-                                l++;
+
                             }
                             add_timeout_error_flag=true;
 
                             /**
-                             * En caso de lanzar un timeout el ORDER pueden haber 2 casos:
+                             * En caso de lanzar un timeout en el ORDER pueden darse 3 casos:
                              *
-                             * -> Que el batch haya lanzado también timeout, en cuyo caso se confirma timeout y no se hace nada más porque la máquina ya debería estar idle
-                             * -> Que el batch no haya lanzado timeout y agente no responde a ping, en cuyo caso se anota como error genérico
-                             * -> Que el batch no haya lanzado timeout y agente no responde a ping, en cuyo caso se anota como error de timeout
+                             * -> Que el batch ya haya lanzado timeout, en cuyo caso se confirma timeout y no se hace nada más porque la máquina ya debería estar idle
+                             * -> Que el batch no haya lanzado timeout y no responda a ping, en cuyo caso se anota como error genérico
+                             * -> Que el batch no haya lanzado timeout y responda a ping, en cuyo caso se anota como error de timeout
                              * */
 
                         } else if(msg.getSender().getLocalName().contains("order")){ //es un timeout enviado por un order agent.
@@ -211,7 +230,7 @@ public class QoSManagerAgent extends Agent {
                             String timeout_batch_id=parts[1];
                             LOGGER.warn(timeout_order_id+" order has thrown timeout on batch "+timeout_batch_id);
                             for(int k=0;k<ErrorList.size();k++){
-                                if(ErrorList.get(k).get(0).equals("timeout")&&ErrorList.get(k).get(1).equals(timeout_batch_id)){ //checkea si ha habido timeout en
+                                if(ErrorList.get(k).get(0).equals("timeout")&&ErrorList.get(k).get(3).equals(timeout_batch_id)){ //checkea si ha habido timeout en
                                     LOGGER.info("Batch "+timeout_batch_id+" has already reported a timeout. Ignoring error.");
                                     sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),"timeout_confirmed",timeout_batch_id);
                                     add_timeout_error_flag=false; //no se añade porque ya existe
@@ -236,25 +255,26 @@ public class QoSManagerAgent extends Agent {
                                         boolean pong= PingAgent(batch_to_ping);
                                         if (pong) {
                                             LOGGER.info("Batch "+ batch_to_ping+" with reference "+timeout_batch_id+ " found alive. Timeout of order registered.");
-                                            ErrorList.add(l, new ArrayList<>());
-                                            ErrorList.get(l).add(0, "timeout");
-
+//                                            ErrorList.add(l, new ArrayList<>());
+//                                            ErrorList.get(l).add(0, "timeout");
+                                                argument1="timeout";
                                             if (batch_and_machine.size() > 0) { //buscamos el batch en el listado y conseguimos el ID del machine agent responsable
                                                 for (int k = 0; k < batch_and_machine.size(); k++) {
                                                     if (batch_and_machine.get(k).get(0).equals(timeout_batch_id)) {
 
                                                         String MA = batch_and_machine.get(k).get(1);
                                                         pong = PingAgent(MA); // hacemos ping al agente máquina para comprobar su estado
-
-                                                        ErrorList.get(l).add(1, timeout_batch_id);
-                                                        ErrorList.get(l).add(2, "not known");
+                                                        argument2=timeout_batch_id;
+                                                        argument3="not known";
+//                                                        ErrorList.get(l).add(1, timeout_batch_id);
+//                                                        ErrorList.get(l).add(2, "not known");
 
                                                         if (pong) {  //Si pong es 1, el agente ha contestado
-//                                                            System.out.println("The machine agent " + MA + " which was executing batch number " + timeout_batch_id + " is alive");
-                                                            ErrorList.get(l).add(3, MA + "->OK");
+//                                                            ErrorList.get(l).add(3, MA + "->OK");
+                                                            argument4=MA + "->OK";
                                                         } else {
-                                                            System.out.println("The machine agent " + MA + " which was executing batch number " + timeout_batch_id + " is not alive"); //Si no hay coincidencias el agente máquina no esta activo
-                                                            ErrorList.get(l).add(3, MA + "->NO OK");
+//                                                            ErrorList.get(l).add(3, MA + "->NO OK");
+                                                            argument4=MA + "->NO OK";
                                                         }
                                                         try {
                                                             machinenbr = sendCommand(myAgent, "get " + MA + " attrib=id", "name"); //consultamos la id de la estacion al SA para saber que gateway agent le corresponde. Si es 41 seria ControlGatewayCont4.
@@ -266,35 +286,38 @@ public class QoSManagerAgent extends Agent {
                                                         pong = PingAgent("ControlGatewayCont" + ch[0]);
 
                                                         if (pong) {
-                                                            System.out.println("Gateway agent of " + MA + " found alive: " + "ControlGatewayCont" + ch[0]);
-                                                            ErrorList.get(l).add(4, "ControlGatewayCont" + ch[0] + "->OK");
+//                                                            System.out.println("Gateway agent of " + MA + " found alive: " + "ControlGatewayCont" + ch[0]);
+//                                                            ErrorList.get(l).add(4, "ControlGatewayCont" + ch[0] + "->OK");
+                                                            argument5="ControlGatewayCont" + ch[0] + "->OK";
                                                         } else {
-                                                            System.out.println("No gateway agent found for " + MA + ": ControlGatewayCont" + ch[0]);
-                                                            ErrorList.get(l).add(4, "ControlGatewayCont" + ch[0] + "->NO OK");
+//                                                            System.out.println("No gateway agent found for " + MA + ": ControlGatewayCont" + ch[0]);
+//                                                            ErrorList.get(l).add(4, "ControlGatewayCont" + ch[0] + "->NO OK");
+                                                            argument5="ControlGatewayCont" + ch[0] + "->NO OK";
                                                         }
-                                                        if (ErrorList.get(l).get(3).equals(MA + "->OK") && ErrorList.get(l).get(4).equals("ControlGatewayCont" + ch[0] + "->OK")) {
+                                                        if (argument4.equals(MA + "->OK") && argument5.equals("ControlGatewayCont" + ch[0] + "->OK")) {
                                                             System.out.println(MA + "->OK");
                                                             System.out.println("ControlGatewayCont" + ch[0] + "->OK");
-                                                            LOGGER.warn("Batch agent is not throwing timeouts, agent should be killed.");
+                                                            LOGGER.warn("Batch agent is not throwing timeouts. Probably last item.");
 
                                                         } else {
                                                             LOGGER.error("Timeout confirmed");
                                                         }
+
+                                                        add_to_error_list(argument1,argument2,argument3,argument4,argument5);
                                                     }
                                                 }
                                             }
-                                            l++;
-
                                         }else{
-                                            LOGGER.error("Batch agent not responding to pong. Probably dead or isolated.");
+                                            LOGGER.error("Batch agent found by AMS but not responding to pong. Possible zombie agent.");
+                                            add_to_error_list("zombie",batch_to_ping,"","","");
                                         }
                                     }else{
-                                        LOGGER.error("Batch agent not found by AMS. Probably dead or isolated.");
+                                        LOGGER.error("Batch agent not found by AMS. Probably dead or isolated long ago.");
+                                        add_to_error_list("not_found",batch_to_ping,"","","");
                                     }
                                 sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),"timeout_confirmed",timeout_batch_id);
                             }
                         }
-
                     }
                 }
                 if(msg.getPerformative()==ACLMessage.INFORM) { //Se recibe algun tipo de info
@@ -340,7 +363,7 @@ public class QoSManagerAgent extends Agent {
                     }
                     if(msg.getOntology().equals("asset_state")){ //recibe ping de vuelta del asset (solo para testing)
 
-                        System.out.println("Recieved asset state: "+msg.getContent());
+                        LOGGER.info("Recieved asset state out of the timeout: "+msg.getContent());
                     }
                 }
                 if(msg.getPerformative()==ACLMessage.REQUEST) { //Se recibe algun tipo de petición
@@ -372,11 +395,24 @@ public class QoSManagerAgent extends Agent {
                             send(reply);
                             LOGGER.info("Informing batch");
                         }
+                    }else if(msg.getOntology().equals("errorlist")&&msg.getSender().getLocalName().equals("D&D")){
+                        String concatenated_errors="";
+                        for(int q=0;q<ErrorList.size();q++){
+                            if(q!=0){
+                                concatenated_errors = concatenated_errors +"/err/";
+                            }
+                            for(int r=q;r<ErrorList.get(q).size();r++) {
+                                if(r==0){
+                                    concatenated_errors = concatenated_errors +ErrorList.get(q).get(r);
+                                }else {
+                                    concatenated_errors = concatenated_errors + "/inf/" + ErrorList.get(q).get(r);
+                                }
+                            }
+                        }
+                        sendACL(7,msg.getSender().getLocalName(),msg.getOntology(),concatenated_errors);
                     }
                 }
-
             }
-
         }
 
         private ArrayList<String> getDelays(String data){
@@ -410,16 +446,9 @@ public class QoSManagerAgent extends Agent {
             ACLMessage ping=new ACLMessage(ACLMessage.REQUEST);
             ping.setOntology("ping");
             ping.addReceiver(Agent_to_ping_ID);
-            ping.setContent("Alive?");
+            ping.setContent("");
             send(ping);
-            MessageTemplate pingtemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                    MessageTemplate.MatchOntology("ping"));
-            try {
-                Thread.sleep(500);
-            }catch(Exception e){
-                e.printStackTrace();
-            }
-            ACLMessage echo=receive(pingtemplate);
+            ACLMessage echo=blockingReceive(pingtemplate,500);
             if(echo!=null) {
                 LOGGER.info(name+" answered on time.");
                 state=true;
@@ -429,9 +458,28 @@ public class QoSManagerAgent extends Agent {
             }
             return state;
         }
+        private String CheckMsgFIFO(String name,String msg){ //Para el error de ACL. Consulta al receptor si ha recibido el msg.
 
-        private void sendACL(int performative,String receiver,String ontology,String content){ //Funcion estándar de envío de mensajes
-            AID receiverAID=new AID(receiver,false); //pasamos la máquina a estado idle
+            AID Agent_to_ping_ID=new AID(name,false);
+            ACLMessage sping=new ACLMessage(ACLMessage.REQUEST);
+            sping.setOntology("ping");
+            sping.addReceiver(Agent_to_ping_ID);
+            sping.setContent(msg);
+            send(sping);
+            ACLMessage reply=blockingReceive(pingtemplate,500);
+            if(reply!=null){
+                if(reply.getContent().equals("Y")){
+                    return "msg_received";
+                }else{
+                    return "msg_lost";
+                }
+            }else{
+                return "no_answer";
+            }
+        }
+
+        public void sendACL(int performative,String receiver,String ontology,String content){ //Funcion estándar de envío de mensajes
+            AID receiverAID=new AID(receiver,false);
             ACLMessage msg=new ACLMessage(performative);
             msg.addReceiver(receiverAID);
             msg.setOntology(ontology);
@@ -512,6 +560,36 @@ public class QoSManagerAgent extends Agent {
         LOGGER.exit();
     }
 
+    public void add_to_error_list(String type, String arg2, String arg3, String arg4, String arg5){
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        now = dateFormat.format(getactualtime());ErrorList.add(l, new ArrayList<>());
+        ErrorList.get(l).add(0, type);
+        ErrorList.get(l).add(1, now);
+        ErrorList.get(l).add(2, arg2);
+        ErrorList.get(l).add(2, arg3);
+        ErrorList.get(l).add(4, arg4);
+        ErrorList.get(l).add(5, arg5);
+        l++;
 
+    }
+    protected Date getactualtime(){
+        String actualTime;
+        int ano, mes, dia, hora, minutos, segundos;
+        Calendar calendario = Calendar.getInstance();
+        ano = calendario.get(Calendar.YEAR);
+        mes = calendario.get(Calendar.MONTH) + 1;
+        dia = calendario.get(Calendar.DAY_OF_MONTH);
+        hora = calendario.get(Calendar.HOUR_OF_DAY);
+        minutos = calendario.get(Calendar.MINUTE);
+        segundos = calendario.get(Calendar.SECOND);
+        actualTime = ano + "-" + mes + "-" + dia + "T" + hora + ":" + minutos + ":" + segundos;
+        Date actualdate = null;
+        try {
+            actualdate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(actualTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return actualdate;
+    }
 
 }

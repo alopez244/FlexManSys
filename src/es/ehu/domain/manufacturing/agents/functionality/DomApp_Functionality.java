@@ -15,6 +15,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 
 public class DomApp_Functionality extends Dom_Functionality{
@@ -459,5 +462,31 @@ public class DomApp_Functionality extends Dom_Functionality{
         return traceability;
     }
 
+    protected Date getactualtime(){
+        String actualTime;
+        int ano, mes, dia, hora, minutos, segundos;
+        Calendar calendario = Calendar.getInstance();
+        ano = calendario.get(Calendar.YEAR);
+        mes = calendario.get(Calendar.MONTH) + 1;
+        dia = calendario.get(Calendar.DAY_OF_MONTH);
+        hora = calendario.get(Calendar.HOUR_OF_DAY);
+        minutos = calendario.get(Calendar.MINUTE);
+        segundos = calendario.get(Calendar.SECOND);
+        actualTime = ano + "-" + mes + "-" + dia + "T" + hora + ":" + minutos + ":" + segundos;
+        Date actualdate = null;
+        try {
+            actualdate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(actualTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return actualdate;
+    }
+    protected LocalDateTime convertToLocalDateTimeViaSqlTimestamp(Date dateToConvert) {
+        return new java.sql.Timestamp(
+                dateToConvert.getTime()).toLocalDateTime();
+    }
+    protected Date convertToDateViaSqlTimestamp(LocalDateTime dateToConvert) {
+        return java.sql.Timestamp.valueOf(dateToConvert);
+    }
 
 }

@@ -24,15 +24,15 @@ public class IdleBehaviour extends SimpleBehaviour {
     }
     @Override
     public void action(){
-        LOGGER.entry();
-
-
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        LOGGER.debug("********Idling********");
+//        LOGGER.entry();
+//
+//
+//        try {
+//            Thread.sleep(5000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        LOGGER.debug("********Idle********");
 
     }
 

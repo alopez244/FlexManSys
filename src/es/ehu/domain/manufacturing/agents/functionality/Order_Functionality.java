@@ -10,6 +10,7 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.commons.net.nntp.NewGroupsOrNewsQuery;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -21,7 +22,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
     private static final long serialVersionUID = 1L;
     private Agent myAgent;
-
+    public static CircularFifoQueue msgFIFO = new CircularFifoQueue(5);
     private List<String> elementsToCreate = new ArrayList<>();
     private int chatID = 0; // Numero incremental para crear conversationID
 
@@ -173,6 +174,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 orderreference=reference.getContent();
                 sendACLMessage(16, plannerID,"Ftime_order_ask", "finnish_time", reference.getContent(), myAgent ); //pide el finish time de cada item al planner
                 ACLMessage finishtime= myAgent.blockingReceive(templateFT); //recibe los finish times concatenados
+                msgFIFO.add((String) finishtime.getContent());
                 System.out.println(finishtime.getContent());
                 raw_ft=finishtime.getContent();
                 batch_last_items_ft=batch_finish_times(raw_ft);
@@ -219,6 +221,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
         ACLMessage msg = myAgent.receive(template);
         if (msg != null) {
+            msgFIFO.add((String) msg.getContent());
             if (firstTime) {
                 deserializedMessage = deserializeMsg(msg.getContent());
                 batchTraceability = addNewLevel(batchTraceability, deserializedMessage, true); //añade el espacio para la informacion de la orden en primera posicion, sumando un nivel mas a los datos anteriores
@@ -248,6 +251,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         ACLMessage msg2 = myAgent.receive(template2);
         // Recepcion de mensajes para eliminar de la lista de agentes hijo los agentes batch que ya han enviado toda la informacion
         if (msg2 != null) {
+            msgFIFO.add((String) msg2.getContent());
             AID sender = msg2.getSender();
             if (msg2.getContent().equals("Batch completed")){
                 String msgSender = msg2.getOntology();
@@ -274,12 +278,14 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             }
         }
         ACLMessage msg3=myAgent.receive(template3);
-        if(msg3!=null){                                 //confirmación de timeout
+        if(msg3!=null){            //confirmación de timeout
+            msgFIFO.add((String) msg3.getContent());
             QoSresponse_flag=true;
             batch_to_take_down=msg3.getContent();
         }
         ACLMessage msg4=myAgent.receive(template4);
-        if(msg4!=null){                                 //Actualiza el finish time del batch recibido (por petición de reset del QoS)
+        if(msg4!=null){
+            msgFIFO.add((String) msg4.getContent());//Actualiza el finish time del batch recibido (por petición de reset del QoS)
             String[] parts=msg4.getContent().split("/");
             String timeout_batch_id=parts[0];
             String s_difference=parts[1];
@@ -308,6 +314,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
         ACLMessage msg5=myAgent.receive(template5);
         if(msg5!=null){                                 //Genera el timeout al recibir el delay de cada batch
+            msgFIFO.add((String) msg5.getContent());
             String rawdelay=msg5.getContent();
             String[] parts=rawdelay.split("/");
             String batchref=parts[0];
@@ -332,7 +339,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 LocalDateTime new_expected_FT = convertToLocalDateTimeViaSqlTimestamp(getactualtime());
                 new_expected_FT = new_expected_FT.plusSeconds(((expected_FT.getTime() - startime) / 1000));
                 expected_FT = convertToDateViaSqlTimestamp(new_expected_FT);
-                System.out.println(batchref + " batch expected finish time: " + expected_FT);
+//                System.out.println(batchref + " batch expected finish time: " + expected_FT);
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
                 String FT_string = sdf.format(expected_FT);
                 batch_last_items_ft.get(temp).add(FT_string);
@@ -389,33 +396,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         return batchFT;
     }
 
-    protected Date getactualtime(){
-        String actualTime;
-        int ano, mes, dia, hora, minutos, segundos;
-        Calendar calendario = Calendar.getInstance();
-        ano = calendario.get(Calendar.YEAR);
-        mes = calendario.get(Calendar.MONTH) + 1;
-        dia = calendario.get(Calendar.DAY_OF_MONTH);
-        hora = calendario.get(Calendar.HOUR_OF_DAY);
-        minutos = calendario.get(Calendar.MINUTE);
-        segundos = calendario.get(Calendar.SECOND);
-        actualTime = ano + "-" + mes + "-" + dia + "T" + hora + ":" + minutos + ":" + segundos;
-        Date actualdate = null;
-        try {
-            actualdate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(actualTime);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        return actualdate;
-    }
 
-    protected LocalDateTime convertToLocalDateTimeViaSqlTimestamp(Date dateToConvert) {
-        return new java.sql.Timestamp(
-                dateToConvert.getTime()).toLocalDateTime();
-    }
-    protected Date convertToDateViaSqlTimestamp(LocalDateTime dateToConvert) {
-        return java.sql.Timestamp.valueOf(dateToConvert);
-    }
 
 
 
