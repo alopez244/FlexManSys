@@ -89,30 +89,28 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     if(!delay_already_incremented){
                         expected_finish_date=FIUpdateFinishTimes();
 
-                    }else{
-                        System.out.println(batchreference + " batch has thrown a timeout on item number "+itemreference.get(actual_item_number)+" Checking failure with QoS Agent...");
-                        takedown_flag=true;
-                        QoSresponse_flag=false;
-                        sendACLMessage(ACLMessage.FAILURE,QoSID,"timeout","timeout "+batchreference,batchreference+"/"+itemreference.get(actual_item_number),myAgent); //avisa al QoS de fallo por timeout
+                    }else {
+                        System.out.println(getactualtime() + " " + myAgent.getLocalName() + " WARN " + batchreference + " batch has thrown a timeout on item number " + itemreference.get(actual_item_number) + " Checking failure with QoS Agent...");
+                        QoSresponse_flag = false;
+                        sendACLMessage(ACLMessage.FAILURE, QoSID, "timeout", "timeout " + batchreference, batchreference + "/" + itemreference.get(actual_item_number), myAgent); //avisa al QoS de fallo por timeout
                         try {
-                            Thread.sleep(1500);
+                            Thread.sleep(2500);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
 
-                        if(!QoSresponse_flag){
+                        if (!QoSresponse_flag) {
                             System.out.println("I'm probably isolated. Shutting down entire node");
                             System.exit(0);
                         }
-
+                        takedown_flag = true;
                     }
                 }
 
-                while (getactualtime().before(expected_finish_date)&&actual_item_number<items_finish_times.size()) {  //se queda a la espera siempre que no se supere la fecha de finishtime
+                while (getactualtime().before(expected_finish_date)&&actual_item_number<items_finish_times.size()&&!takedown_flag) {  //se queda a la espera siempre que no se supere la fecha de finishtime
 
                     if (update_timeout_flag) {
                         actual_item_number++;
-
                         if(actual_item_number<items_finish_times.size()) {
                             System.out.println("Next item started");
                             expected_finish_date = UpdateFinishTimes(actual_item_number); //actualiza la fecha de finish time

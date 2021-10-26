@@ -69,16 +69,17 @@ public class ResourceAgentTemplate extends MWAgent {
         /** FSM transition **/
         behaviourFSM.registerTransition(ST_BOOT, ControlBehaviour.ST_RUNNING, ControlBehaviour.RUNNING, new String[] { ST_BOOT });
 
-        behaviourFSM.registerTransition(ST_BOOT, ControlBehaviour.ST_STOP, ControlBehaviour.STOP, new String[] { ST_BOOT });
+        behaviourFSM.registerTransition(ControlBehaviour.ST_RUNNING, ControlBehaviour.ST_RUNNING, ControlBehaviour.RUNNING, new String[] { ControlBehaviour.ST_RUNNING });
 
+        behaviourFSM.registerTransition(ST_BOOT, ControlBehaviour.ST_STOP, ControlBehaviour.STOP, new String[] { ST_BOOT });
 
         behaviourFSM.registerTransition(ControlBehaviour.ST_RUNNING, ControlBehaviour.ST_IDLE, ControlBehaviour.IDLE, new String[] { ControlBehaviour.ST_RUNNING });
 
         behaviourFSM.registerTransition(ControlBehaviour.ST_IDLE, ControlBehaviour.ST_RUNNING, ControlBehaviour.RUNNING, new String[] { ControlBehaviour.ST_IDLE });
 
+        behaviourFSM.registerTransition(ControlBehaviour.ST_IDLE, ControlBehaviour.ST_IDLE, ControlBehaviour.IDLE, new String[] { ControlBehaviour.ST_IDLE });
+
         behaviourFSM.registerTransition(ControlBehaviour.ST_IDLE, ControlBehaviour.ST_STOP, ControlBehaviour.STOP, new String[] { ControlBehaviour.ST_IDLE });
-
-
 
         behaviourFSM.registerTransition(ControlBehaviour.ST_RUNNING, ControlBehaviour.ST_STOP, ControlBehaviour.STOP, new String[] { ControlBehaviour.ST_RUNNING });
 

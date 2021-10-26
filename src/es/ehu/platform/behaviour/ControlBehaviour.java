@@ -8,7 +8,7 @@ import static es.ehu.platform.utilities.MWMCommands.CMD_GETCOMPONENTS;
 import static es.ehu.platform.utilities.MWMCommands.CMD_REPORT;
 import static es.ehu.platform.utilities.MWMCommands.CMD_SET;
 import static es.ehu.platform.utilities.MasReconOntologies.ONT_CONTROL;
-
+import es.ehu.domain.manufacturing.agents.functionality.Machine_Functionality;
 import jade.core.AID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,7 +38,6 @@ public class ControlBehaviour extends SimpleBehaviour {
     public static final String ST_WAITINGFORDECISION = "waitingfordecision";
     public static final String ST_RECOVERING = "recovering";
     public static final String ST_NEGOTIATING = "negotiating";
-
     private MWAgent myAgent;
     private FSMBehaviour fsm;
     protected MessageTemplate template;
@@ -86,49 +85,54 @@ public class ControlBehaviour extends SimpleBehaviour {
         LOGGER.debug(myAgent.cmpID+"("+myAgent.getLocalName()+"): SupervisorControl.action()");
         ACLMessage msg = myAgent.receive(template);
 
-        if (msg != null) {
+        if (msg != null||Machine_Functionality.change_state) {
+
+            if(msg!=null){
             if (msg.getContent() == null) {
                 LOGGER.info("message content null!");
                 return;
             }
-            if (msg.getPerformative()==ACLMessage.FAILURE) { // if FAILURE
+            if (msg.getPerformative() == ACLMessage.FAILURE) { // if FAILURE
 
 
-                LOGGER.info("****************ACLMessage.FAILURE (control):"+msg.getContent());
-                String name=msg.getContent().substring(msg.getContent().indexOf(":name ", msg.getContent().indexOf("MTS-error"))+":name ".length());
-                name=name.substring(0, name.indexOf('@'));
-                LOGGER.info("msg.getPerformative()==ACLMessage.FAILURE (sender="+name+")");
+                LOGGER.info("****************ACLMessage.FAILURE (control):" + msg.getContent());
+                String name = msg.getContent().substring(msg.getContent().indexOf(":name ", msg.getContent().indexOf("MTS-error")) + ":name ".length());
+                name = name.substring(0, name.indexOf('@'));
+                LOGGER.info("msg.getPerformative()==ACLMessage.FAILURE (sender=" + name + ")");
 
 
-
-                try { LOGGER.info(myAgent.sendCommand(CMD_REPORT + " (" + CMD_GETCOMPONENTS + " "+name+") type=notFound cmpins="+name));} catch (Exception e) {e.printStackTrace();}
+                try {
+                    LOGGER.info(myAgent.sendCommand(CMD_REPORT + " (" + CMD_GETCOMPONENTS + " " + name + ") type=notFound cmpins=" + name));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
             } else {
-                LOGGER.info("ACLMessage.REQUEST (control):"+msg.getContent());
+                LOGGER.info("ACLMessage.REQUEST (control):" + msg.getContent());
                 String result = "";
-                LOGGER.info("* Received control msg:"+msg.getContent());
-                LOGGER.info(myAgent.cmpID+"("+myAgent.getLocalName()+")" + " < control:"+msg.getContent()+" < "+msg.getSender().getLocalName());
-                String [] cmd = msg.getContent().split(" ");
+                LOGGER.info("* Received control msg:" + msg.getContent());
+                LOGGER.info(myAgent.cmpID + "(" + myAgent.getLocalName() + ")" + " < control:" + msg.getContent() + " < " + msg.getSender().getLocalName());
+                String[] cmd = msg.getContent().split(" ");
                 if (cmd.length <= 1) {
                     return;
                 }
-                boolean sendReply=false;
+                boolean sendReply = false;
 
                 if (cmd[0].equals("set")) {
-                    sendReply=true;
+                    sendReply = true;
 
                     if (cmd[1].equals("period")) {
-                        LOGGER.debug("myAgent.period = "+ Integer.parseInt(cmd[2]));
+                        LOGGER.debug("myAgent.period = " + Integer.parseInt(cmd[2]));
                         myAgent.period = Integer.parseInt(cmd[2]);
-                        myAgent.sendCommand(CMD_SET + " " + myAgent.cmpID + " period="+cmd[2]);
+                        myAgent.sendCommand(CMD_SET + " " + myAgent.cmpID + " period=" + cmd[2]);
 
-                        result="done";
+                        result = "done";
                     } else if (cmd[1].equals("mwmStoresExecutionState")) {
                         myAgent.mwmStoresExecutionState = Boolean.parseBoolean(cmd[2]);
                     }
                 } else if (cmd[0].equals(CMD_SETSTATE)) {
 
-                    sendReply=true;
+                    sendReply = true;
                     LOGGER.info("Set State ---------------");
                     if (cmd[1].equals(ST_RUNNING)) {
                         exitValue = RUNNING;
@@ -140,7 +144,7 @@ public class ControlBehaviour extends SimpleBehaviour {
                         exitValue = RECOVERING;
                     } else if (cmd[1].equals(ST_NEGOTIATING)) {
                         exitValue = NEGOTIATING;
-                    }  else if(cmd[1].equals(ST_IDLE)){
+                    } else if (cmd[1].equals(ST_IDLE)) {
                         exitValue = IDLE;
                     } else {
                         result = CMD_INCORRECTSTATE;
@@ -148,10 +152,10 @@ public class ControlBehaviour extends SimpleBehaviour {
 
                     if (!result.equals(CMD_INCORRECTSTATE)) {
                         exit = true;
-                        result="done";
+                        result = "done";
                     }
                 } else if (cmd[0].equals("move")) {
-                    LOGGER.debug("doMove(new ContainerID("+cmd[1]+", null));"); //TODO comprobar que el nodo args[1] existe
+                    LOGGER.debug("doMove(new ContainerID(" + cmd[1] + ", null));"); //TODO comprobar que el nodo args[1] existe
                     myAgent.doMove(new ContainerID(cmd[1], null));
                 }
 
@@ -160,9 +164,26 @@ public class ControlBehaviour extends SimpleBehaviour {
                     aReply.setOntology(msg.getOntology());
                     aReply.setContent(result.trim());
                     aReply.setPerformative(ACLMessage.INFORM);
-                    LOGGER.info("controlBehaviour().send("+aReply.getContent()+")");
+                    LOGGER.info("controlBehaviour().send(" + aReply.getContent() + ")");
                     myAgent.send(aReply);
                 }
+            }
+        }else if(myAgent.getLocalName().contains("machine")&& Machine_Functionality.change_state){ //autoidle
+
+                String result = "";
+                LOGGER.info("Set State ---------------");
+                switch(Machine_Functionality.state){
+                    case "idle":  exitValue = IDLE;
+                        exit = true;
+//                        result = "done";
+                    break;
+                    case "running":  exitValue = RUNNING; //no usado por ahora
+                        exit = true;
+                    break;
+                    default:  LOGGER.error("Asked a not valid state");
+                    break;
+                }
+                Machine_Functionality.change_state=false;
             }
         } else {
             LOGGER.trace("ControlBehaviour.beh.block()");
@@ -171,6 +192,8 @@ public class ControlBehaviour extends SimpleBehaviour {
 
         LOGGER.exit();
     }
+
+
 
     @Override
     public boolean done() {

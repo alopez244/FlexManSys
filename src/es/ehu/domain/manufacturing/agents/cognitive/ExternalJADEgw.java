@@ -23,13 +23,15 @@ public class ExternalJADEgw {
 //        String host = "127.0.0.1";              //Local host IP)
        // String host = "192.168.187.130";              // host of Iñigo PC
         String host = "192.168.249.1";              // host of Diego PC
+//        String host = "192.168.2.18";  //where is GUI
         //String localHost = "192.168.187.130";              //Local host of PLC
-        String localHost = "192.168.249.1";              //Local host for PLC testing Diego
+        String localHost = "192.168.249.1";              //Local host for PLC Diego
+//        String localHost = "192.168.2.17";   //where the GW is executing
         String port = "1099";                   //Port on which the agent manager is running
 
         Properties pp = new Properties();
         pp.setProperty(Profile.MAIN_HOST, host);
-//        pp.setProperty(Profile.LOCAL_HOST, localHost);
+        pp.setProperty(Profile.LOCAL_HOST, localHost);//comentar para pc unico
         pp.setProperty(Profile.MAIN_PORT, port);
         pp.setProperty(Profile.LOCAL_PORT, port);
 
@@ -51,13 +53,15 @@ public class ExternalJADEgw {
         System.out.println("->Java Send");
         //String host = "192.168.187.130";              // host of Alejandro PC
         String host = "192.168.249.1";              // host of Diego PC
+//        String host = "192.168.2.18";             //host testing PC
         //String localHost = "192.168.2.3";              //Local host of PLC
         String localHost = "192.168.249.1";              //Local host of Diego PLC
+//        String localHost = "192.168.2.17";        //Local host testing PLC
         String port = "1099";                   //Port on which the agent manager is running
 
         Properties pp = new Properties();
         pp.setProperty(Profile.MAIN_HOST, host);
-        //pp.setProperty(Profile.LOCAL_HOST, localHost);
+        pp.setProperty(Profile.LOCAL_HOST, localHost);//comentar para pc unico
         pp.setProperty(Profile.MAIN_PORT, port);
         pp.setProperty(Profile.LOCAL_PORT, port);
 

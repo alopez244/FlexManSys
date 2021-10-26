@@ -85,8 +85,11 @@ public class DomResAgentTemplate extends ResourceAgentTemplate {
 
         behaviourFSM.registerTransition(ControlBehaviour.ST_IDLE, ControlBehaviour.ST_RUNNING, ControlBehaviour.RUNNING, new String[] { ControlBehaviour.ST_IDLE });
 
+        behaviourFSM.registerTransition(ControlBehaviour.ST_RUNNING, ControlBehaviour.ST_RUNNING, ControlBehaviour.RUNNING, new String[] { ControlBehaviour.ST_RUNNING });
+
         behaviourFSM.registerTransition(ControlBehaviour.ST_IDLE, ControlBehaviour.ST_STOP, ControlBehaviour.STOP, new String[] { ControlBehaviour.ST_IDLE });
 
+        behaviourFSM.registerTransition(ControlBehaviour.ST_IDLE, ControlBehaviour.ST_IDLE, ControlBehaviour.IDLE, new String[] { ControlBehaviour.ST_IDLE });
 
         behaviourFSM.registerTransition(ControlBehaviour.ST_RUNNING, ControlBehaviour.ST_STOP, ControlBehaviour.STOP, new String[] { ControlBehaviour.ST_RUNNING });
 

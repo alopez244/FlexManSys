@@ -18,22 +18,20 @@ public class IdleBehaviour extends SimpleBehaviour {
         LOGGER.entry(a);
         LOGGER.debug("*******Idle behaviour started*******");
         this.myAgent = a;
-//        this.template = MessageTemplate.and(MessageTemplate.MatchOntology("recover"),
-//                MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+        this.template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchOntology("negotiation"),
+                MessageTemplate.MatchPerformative(ACLMessage.REQUEST)),MessageTemplate.MatchConversationId("PLCdata"));
         LOGGER.exit();
     }
     @Override
     public void action(){
-//        LOGGER.entry();
-//
-//
-//        try {
-//            Thread.sleep(5000);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//        LOGGER.debug("********Idle********");
+        LOGGER.entry();
 
+        ACLMessage msg= myAgent.receive(template);
+        if(msg!=null){
+            LOGGER.info(msg.getContent());
+        }
+
+        LOGGER.exit();
     }
 
 

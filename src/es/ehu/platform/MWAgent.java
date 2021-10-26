@@ -217,7 +217,7 @@ public class MWAgent extends Agent {
 
             try { Thread.sleep(10); } catch (InterruptedException e) { e.printStackTrace(); }
             reply = receive(mt);
-            LOGGER.debug("reply = receive(mt);");
+//            LOGGER.debug("reply = receive(mt);");
             i++;
 
         }

@@ -16,6 +16,7 @@ public class GWAgent extends GatewayAgent {
     public String msgRecv;
     public AID machineAgentName;
     public static final int bufferSize =6;
+    private String stateasker="";
     CircularFifoQueue msgInFIFO = new CircularFifoQueue(bufferSize);
     CircularFifoQueue msgInFIFO2 = new CircularFifoQueue(bufferSize);
 
@@ -64,12 +65,12 @@ public class GWAgent extends GatewayAgent {
 
         }else if(action.equals("rcv_state")) {
             System.out.println("---Asset answered with his state");
-            AID QoSID=new AID("QoSManagerAgent",false);
-            ACLMessage msgToQoS = new ACLMessage(msgStruct.readPerformative());
-            msgToQoS.addReceiver(QoSID);
-            msgToQoS.setOntology("asset_state");
-            msgToQoS.setContent(msgStruct.readMessage());
-            send(msgToQoS);
+            AID ID=new AID(stateasker,false);
+            ACLMessage msg = new ACLMessage(msgStruct.readPerformative());
+            msg.addReceiver(ID);
+            msg.setOntology("asset_state");
+            msg.setContent(msgStruct.readMessage());
+            send(msg);
 
         }else {
             System.out.println("---GW, recv function");
@@ -109,7 +110,7 @@ public class GWAgent extends GatewayAgent {
                     ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
                     reply.addReceiver(ping.getSender());
                     reply.setOntology(ping.getOntology());
-                    reply.setContent("Yes :)");
+                    reply.setContent("Alive");
                     System.out.println(ping.getSender().getLocalName()+" sent a ping. Answering.");
                     send(reply);
                 }
@@ -119,17 +120,14 @@ public class GWAgent extends GatewayAgent {
                         System.out.println("buffer full, old message lost");
                     }
                     msgInFIFO2.add((String) check_asset_state.getContent()); //adds the message to be send in the buffer (max capacity = 6)
+                    stateasker= check_asset_state.getSender().getLocalName();
                 }
+
 
                 ACLMessage msgToFIFO = receive(template);
 
                if (msgToFIFO != null) {
 
-//                   ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
-//                   reply.addReceiver(msgToFIFO.getSender());
-//                   reply.setOntology("Acknowledge");
-//                   reply.setContent("Received");
-//                   send(reply);
 
                     System.out.println("GWagent, message received from Machine Agent");
                     machineAgentName = msgToFIFO.getSender();//saves the sender ID for a later reply

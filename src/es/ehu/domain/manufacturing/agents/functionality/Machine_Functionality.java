@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import es.ehu.domain.manufacturing.agents.MachineAgent;
 import es.ehu.domain.manufacturing.behaviour.ReceiveTaskBehaviour;
 import es.ehu.platform.MWAgent;
+import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.behaviour.NegotiatingBehaviour;
 import es.ehu.platform.template.interfaces.AssetManagement;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
@@ -22,7 +23,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import jade.core.NotFoundException;
-
+import jade.core.messaging.MessagingService;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -35,7 +36,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     public static CircularFifoQueue msgFIFO = new CircularFifoQueue(5);
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
-    public boolean traceability_flag=false;
     private ArrayList<ArrayList<String>> productInfo;
     private HashMap<String, String> operationsWithBatchAgents = new HashMap<>();
     private HashMap PLCmsgIn = new HashMap(); // Estructura de datos que se envia al PLC
@@ -49,6 +49,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private Boolean requestMaterial = false; // Flag que se activa cuando se necesita hacer una peticion de consumibles
     private Boolean orderQueueFlag = false; // Flag que se activa cuando existen nuevas ordenes en cola para la maquina
     private String gatewayAgentName; // Guarda el nombre del agente pasarela
+    private AID gatewayAgentID =null;
     private MessageTemplate echotemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
             MessageTemplate.MatchOntology("Acknowledge"));
     private MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
@@ -57,6 +58,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
     private String result;
     private AID QoSID = new AID("QoSManagerAgent", false);
+    public static String state ="";
+    public static boolean change_state=false;
 
 
 
@@ -89,7 +92,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         Integer machineNumber = Integer.parseInt(machineName.split("_")[1]);
         gatewayAgentName = "ControlGatewayCont" + machineNumber.toString(); //Se genera el nombre del Gateway Agent con el que se tendra que comunicar
         //First, the Machine Model is read
-
+        gatewayAgentID = new AID(gatewayAgentName, false);
         String [] args = (String[]) myAgent.getArguments();
 
         for (int i=0; i<args.length; i++){
@@ -383,7 +386,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 // Al haber recibido el mensaje desde la maquina, se envia el mensaje de confirmacion
                 HashMap confirmation = new HashMap();
                 confirmation.put("Received", true);
-                AID gatewayAgentID = new AID(gatewayAgentName, false);
+
                 sendACLMessage(7, gatewayAgentID,"", "", new Gson().toJson(confirmation), myAgent); //Send confirmation message to PLC
 
                 for (int i = 0; i < replace.size(); i++) {  //for loop to remove the .0 of the data that contains the keys defined in replace variable
@@ -471,14 +474,17 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         msgFIFO.add((String) reply.getContent());
                         batchAgentName = reply.getContent();
                     }else{
-                        String informQoS="sa"+"/div/"+"get * reference=" + BathcID +", BatchAgentID";
+
+                        String informQoS="16"+"/div/"+"control"+"/div/"+"BatchAgentID"+"/div/"+"sa"+"/div/"+"get * reference=" + BathcID;
                         sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
 
                         ACLMessage QoSR= myAgent.blockingReceive(QoStemplate,1000);
                         if(QoSR==null) {//si tampoco contesta el QoS se asume que esta aislado
-                            System.out.println("I'm probably isolated. Idling");
-                            sendACLMessage(16,myAgent.getAID(),"control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
-//                            System.exit(0);
+                            LOGGER.error("I'm probably isolated.");
+                            state="idle";
+                            change_state=true;
+//                            sendACLMessage(16,myAgent.getAID(),"control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
+                            System.exit(0);
                         }
                     }
                 } catch (Exception e) {
@@ -493,14 +499,15 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         msgFIFO.add((String) reply.getContent());
                         batchAgentName = reply.getContent(); //gets the name of the batch agent to which the message should be sent
                     }else{//si no se recibe respuesta habría que checkear el estado del SA con el QoS
-                        String informQoS="sa"+"/div/"+"get * parent=" + batchAgentName+ ", BatchAgentID";
+                        String informQoS="16"+"/div/"+"control"+"/div/"+"BatchAgentID"+"/div/"+"sa"+"/div/"+"get * parent=" + batchAgentName;
                         sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
 
                         ACLMessage QoSR= myAgent.blockingReceive(QoStemplate,1000);
                         if(QoSR==null) {//si tampoco contesta el QoS se asume ue esta aislado
-                            System.out.println("I'm probably isolated. Idling");
-                            sendACLMessage(16,myAgent.getAID(),"control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
-//                            System.exit(0);
+                            LOGGER.error("I'm probably isolated.");
+//                            sendACLMessage(16,myAgent.getAID(),"control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
+                            state="idle";
+                            change_state=true;
                         }
                     }
                 } catch (Exception e) {
@@ -508,16 +515,29 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 }
                 AID batchAgentID = new AID(batchAgentName, false);
                 sendACLMessage(16, batchAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
-                result=CheckAcknowledge(batchAgentName,MessageContent);
-            if(result.equals("isolated")){
-                System.out.println("I'm probably isolated. Idling");
-                sendACLMessage(16,myAgent.getAID(),"control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
-            }else if(result.equals("confirmed")){
-                System.out.println("Communication error with "+batchAgentName+". Waiting to fix the error.");
+
+//                result=CheckAcknowledge(batchAgentName,MessageContent);
+                ACLMessage acknowledge = myAgent.blockingReceive(echotemplate,250);
+                if(acknowledge==null) {
+                    String informQoS = "16" + "/div/" + "negotiation"+ "/div/" +"PLCdata"+ "/div/" +batchAgentName+ "/div/" +MessageContent;
+                    sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
+                    ACLMessage QoSR = myAgent.blockingReceive(QoStemplate, 1000);
+                    if(QoSR==null) {//si tampoco contesta el QoS se asume que esta aislado
+                        LOGGER.error("I'm probably isolated.");
+                        //********************* test idle
+                        state="idle";
+                        change_state=true;
+//                        sendACLMessage(16, myAgent.getAID(), "control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
+                        LOGGER.error("Passing to idle");
+                        //                        System.exit(0);
+                    }else if(QoSR.getContent().contains("confirmed")){
+                        System.out.println("Batch did not receive the message.");
+                    }else{
+                        System.out.println("Error ignored.");
+                    }
+                }
 
             }
-
-        }
         }
 
     public void sendDataToDevice() {
@@ -581,17 +601,14 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 // Solo se envia la operación si hay material suficiente
                 if (!consumableShortage) {
 
-                    /**************** TRAMO DE ESPERA PLAN PROGRAMADO *************Modificaciones Diego*/
-
-                    for(int j = 0 ; j < myAgent.machinePlan.size()&&firstItemFlag==false;j++){    //Buscamos de todos los plannedStartTime el primero (se asume que estan ordenados)
-                        if(myAgent.machinePlan.get(j).get(0).get(0).equals("operation")){
-                            for(int k = 0 ; k < myAgent.machinePlan.get(j).get(2).size()&&firstItemFlag==false;k++){
-                                if(myAgent.machinePlan.get(j).get(2).get(k).equals("plannedStartTime")){
-                                    String starttime=myAgent.machinePlan.get(j).get(3).get(k);
-//                                    SimpleDateFormat formatter1=new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-                                    SimpleDateFormat formatter=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"); //Se usa el formato XS:DateTime
-                                    SimpleDateFormat formatter2=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS"); //Se usa el formato con milisegundos agregados para mayor precision
-                                    Date date2=getactualtime();
+                    for(int j = 0 ; j < myAgent.machinePlan.size()&&firstItemFlag==false;j++) {    //Buscamos de todos los plannedStartTime el primero (se asume que estan ordenados)
+                        if (myAgent.machinePlan.get(j).get(0).get(0).equals("operation")) {
+                            for (int k = 0; k < myAgent.machinePlan.get(j).get(2).size() && firstItemFlag == false; k++) {
+                                if (myAgent.machinePlan.get(j).get(2).get(k).equals("plannedStartTime")) {
+                                    String starttime = myAgent.machinePlan.get(j).get(3).get(k);
+                                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"); //Se usa el formato XS:DateTime
+                                    SimpleDateFormat formatter2 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS"); //Se usa el formato con milisegundos agregados para mayor precision
+                                    Date date2 = getactualtime();
 //                                    System.out.println("Hora actual: " + hora + ":" + minutos + ":" + segundos);
                                     Date date1 = null;
 
@@ -602,65 +619,59 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                                         System.out.println("ERROR dando formato a una fecha");
                                         e.printStackTrace();
                                     }
-                                        while(date1.after(date2)) { //Se queda actualizando la fecha cada segundo hasta que se alcance la fecha definida en el plan de fabricación
-                                            date2=getactualtime();
+                                    while (date1.after(date2)) { //Se queda actualizando la fecha hasta que se alcance la fecha definida en el plan de fabricación
+                                        date2 = getactualtime();
+                                    }
+//                                        date2 = getactualtime();
 
-//                                            try {
-//                                                Thread.sleep(10000);
-//                                            } catch (InterruptedException e) {
-//                                                e.printStackTrace();
-//                                            }
-                                        }
-                                        date2=getactualtime();
-//                                        if(date1.before(date2)){
-                                            long diferencia=((date2.getTime()-date1.getTime())); //calculamos el retraso en iniciar en milisegundos
-
-                                            AID QoSID = new AID("QoSManagerAgent", false);
-                                            String content=BathcID;
-                                            String delay=String.valueOf(diferencia);
-                                            content=content+"/"+delay;
-//                                            delay.setContent(content);
-                                            sendACLMessage(ACLMessage.INFORM, QoSID, "delay", "batch_delay", content, myAgent);
-//                                        }
-                                    firstItemFlag=true;
+                                        long diferencia = ((date2.getTime() - date1.getTime())); //calculamos el retraso en iniciar en milisegundos
+                                        AID QoSID = new AID("QoSManagerAgent", false);
+                                        String content = BathcID;
+                                        String delay = String.valueOf(diferencia);
+                                        content = content + "/" + delay;
+                                        sendACLMessage(ACLMessage.INFORM, QoSID, "delay", "batch_delay", content, myAgent);
+                                        firstItemFlag = true;
+                                    }
                                 }
                             }
                         }
                     }
-                    firstItemFlag=false;
+                        firstItemFlag = false;
 
-                    /*******************************************FIN Modificaciones Diego*/
-                    PLCmsgOut.remove("Index");
-                    String MessageContent = new Gson().toJson(PLCmsgOut);
-                    AID gatewayAgentID = new AID(gatewayAgentName, false);
-                    sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
-                    MessageTemplate PLCconfirmation=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                            MessageTemplate.MatchOntology("negotiation"));
-                    ACLMessage acknowledge= myAgent.blockingReceive(PLCconfirmation,1000);
 
-                    if(acknowledge!=null){
-                        rcvd = new Gson().fromJson(acknowledge.getContent(), HashMap.class);
-                        if(rcvd.containsKey("Received")) {   //Se asegura que se trate de un mensaje de confirmacion del PLC
-                            LOGGER.info("PLC confirmed reception");
-                        }
-                    }else{
-                        LOGGER.info("Did not receive answer from PLC");
-                        String report_error=gatewayAgentName+"/div/"+MessageContent;
-                        sendACLMessage(6, QoSID, "acl_error", "communication error", report_error, myAgent);
-                        ACLMessage QoScommand= myAgent.blockingReceive(QoStemplate,1000);
-                        if(QoScommand==null){ //si no se recibe respuesta del QoS, se asume que esta aislado
-                            LOGGER.error("I'm probably isolated. Idling");
-                            sendACLMessage(16,myAgent.getAID(),"control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
-                        }else{
-                            LOGGER.info("Received reply from QoS");
-                            if(QoScommand.getContent().contains("confirmed")) {
-                                LOGGER.error("QoS confirmed that GW is down. Waiting until GW is recovered."); //pendiente de wake, por ahora solo manual
+                        PLCmsgOut.remove("Index");
+                        String MessageContent = new Gson().toJson(PLCmsgOut);
+                        AID gatewayAgentID = new AID(gatewayAgentName, false);
+                        sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
+                        MessageTemplate PLCconfirmation = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                                MessageTemplate.MatchOntology("negotiation"));
+                        ACLMessage acknowledge = myAgent.blockingReceive(PLCconfirmation, 1000);
+
+                        if (acknowledge != null) {
+                            rcvd = new Gson().fromJson(acknowledge.getContent(), HashMap.class);
+                            if (rcvd.containsKey("Received")) {   //Se asegura que se trate de un mensaje de confirmacion del PLC
+                                LOGGER.info("PLC confirmed reception");
+                            }
+                        } else {
+                            LOGGER.info("Did not receive answer from PLC");
+                            String report_error = "16" + "/div/" + "negotiation" + "/div/" + "PLCdata" + "/div/" + gatewayAgentName + "/div/" + MessageContent;
+                            sendACLMessage(6, QoSID, "acl_error", "communication error", report_error, myAgent);
+                            ACLMessage QoScommand = myAgent.blockingReceive(QoStemplate, 1000);
+                            if (QoScommand == null) { //si no se recibe respuesta del QoS, se asume que esta aislado
+                                LOGGER.error("I'm probably isolated.");
+//                            sendACLMessage(16,myAgent.getAID(),"control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
+                                state="idle";
+                                change_state=true;
+                            } else {
+                                LOGGER.info("Received reply from QoS");
+                                if (QoScommand.getContent().contains("confirmed")) {
+                                    LOGGER.error("QoS confirmed that GW is down. Waiting until GW is recovered."); //pendiente de wake, por ahora solo manual
+                                }
                             }
                         }
-                    }
 
-                    sendingFlag = false;
-                    machinePlanIndex = 0;
+                        sendingFlag = false;
+                        machinePlanIndex = 0;
 
                 } else { // en caso contrario, se analizan las operaciones en cola para poder ser enviados
                     System.out.println("El lote " + BathcID + " no se puede fabricar por falta de material");
@@ -706,35 +717,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         }
 
     }
-    public String CheckAcknowledge(String receiver, String content){
-        String command="";
-        try {
-            Thread.sleep(250);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        ACLMessage acknowledge = myAgent.receive(echotemplate);
-        if(acknowledge==null){
-
-            String informQoS=receiver+"/div/"+content;
-            sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
-
-            ACLMessage msg= myAgent.blockingReceive(QoStemplate,1000);
-            if(msg!=null) {
-                if (msg.getContent().contains("confirmed")) {
-                    command = "confirmed";
-                } else if(msg.getContent().contains("ignore")){
-                    command = "ok";
-                }
-            }else{
-                command = "isolated";
-            }
-
-        }else{
-            command="ok";
-        }
-        return command;
-    }
 
 
-}
+
