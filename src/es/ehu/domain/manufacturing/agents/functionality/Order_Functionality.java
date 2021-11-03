@@ -25,7 +25,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
     public static CircularFifoQueue msgFIFO = new CircularFifoQueue(5);
     private List<String> elementsToCreate = new ArrayList<>();
     private int chatID = 0; // Numero incremental para crear conversationID
-
+    private ACLMessage orderName=new ACLMessage();
     private String firstState;
     private String redundancy;
     private String parentAgentID, orderNumber;
@@ -45,6 +45,10 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
     private volatile Date new_expected_finish_time=null;
     private volatile boolean QoSresponse_flag=false;
     private volatile String batch_to_update=null;
+    private MessageTemplate echotemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+            MessageTemplate.MatchOntology("Acknowledge"));
+    private MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+            MessageTemplate.MatchOntology("acl_error"));
 
 
     private ArrayList<ArrayList<String>> batch_last_items_ft=new ArrayList<ArrayList<String>>();
@@ -168,7 +172,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             templateFT=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                     MessageTemplate.MatchOntology("Ftime_order_ask"));
             try {
-                ACLMessage orderName = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "name"); //consigue el nombre del order
+                orderName = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "name"); //consigue el nombre del order
                 ACLMessage reference = sendCommand(myAgent, "get " + orderName.getContent() + " attrib=reference", "Reference"); //consigue la referencia del order
                 AID plannerID = new AID("planner", false);
                 orderreference=reference.getContent();
@@ -217,11 +221,12 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
         System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
 
-
-
         ACLMessage msg = myAgent.receive(template);
         if (msg != null) {
             msgFIFO.add((String) msg.getContent());
+            sendACLMessage(7, msg.getSender(), "Acknowledge", msg.getConversationId(),"Received",myAgent);
+            SendToReplicas(myReplicasID,msg);
+
             if (firstTime) {
                 deserializedMessage = deserializeMsg(msg.getContent());
                 batchTraceability = addNewLevel(batchTraceability, deserializedMessage, true); //añade el espacio para la informacion de la orden en primera posicion, sumando un nivel mas a los datos anteriores
@@ -266,10 +271,23 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                     aux = a.toString();
                     msgToMPLan = msgToMPLan.concat(aux);
                 }
+
                 AID Agent = new AID(parentAgentID, false);
                 sendACLMessage(7, Agent, "Information", "OrderInfo", msgToMPLan, myAgent);
+                ACLMessage ack= myAgent.blockingReceive(echotemplate,250);
+
+                if(ack==null){
+                    String informQoS = "7" + "/div/" + "Information"+ "/div/" +"OrderInfo"+ "/div/" +parentAgentID+ "/div/" +msgToMPLan;
+                    sendACLMessage(ACLMessage.FAILURE, QoSID, "acl_error", "msgtoparent", informQoS, myAgent);
+                    ACLMessage QoSR = myAgent.blockingReceive(QoStemplate,2000);
+                    if(QoSR==null){
+                        System.out.println("I'm isolated. Shutting down entire node.");
+                        System.exit(0);
+                    }
+                }
 
                 if (sonAgentID.size() == 0) { // todos los batch agent de los que es padre ya le han enviado la informacion
+                    KillReplicas(myReplicasID);
                     sendACLMessage(7, myAgent.getAID(), "Information", "Shutdown", "Shutdown", myAgent); // autoenvio de mensaje para asegurar que el agente de desregistre y se apague
                     return true;
                 }
@@ -284,8 +302,8 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             batch_to_take_down=msg3.getContent();
         }
         ACLMessage msg4=myAgent.receive(template4);
-        if(msg4!=null){
-            msgFIFO.add((String) msg4.getContent());//Actualiza el finish time del batch recibido (por petición de reset del QoS)
+        if(msg4!=null){ //Actualiza el finish time del batch recibido (por petición de reset del QoS)
+            msgFIFO.add((String) msg4.getContent());
             String[] parts=msg4.getContent().split("/");
             String timeout_batch_id=parts[0];
             String s_difference=parts[1];
@@ -347,9 +365,8 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 Ordertimeout t = new Ordertimeout(expected_FT, batchref);
                 t.start();
             }else{
-                System.out.println("No timeout generated for batch "+ batchref);
+                System.out.println("**ERROR**. No timeout generated for batch "+ batchref);
             }
-
         }
         return false;
     }
@@ -361,9 +378,10 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
         try {
             ACLMessage reply = sendCommand(myAgent, "get * reference=" + orderNumber, "parentAgentID");
-            //returns the names of all the agents that are sons
-            if (reply != null)   // Si no existe el id en el registro devuelve error
+
+            if (reply != null) {   // Si no existe el id en el registro devuelve error
                 parentName = reply.getContent(); //gets the name of the agent´s parent
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -374,10 +392,8 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return null;
     }
-
 
     protected ArrayList<ArrayList<String>> batch_finish_times(String rawdata){
 
@@ -395,10 +411,4 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
         return batchFT;
     }
-
-
-
-
-
-
 }

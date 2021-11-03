@@ -56,7 +56,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             MessageTemplate.MatchOntology("acl_error"));
     private MessageTemplate pingt = MessageTemplate.and(MessageTemplate.MatchOntology("ping"),
             MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
-    private String result;
     private AID QoSID = new AID("QoSManagerAgent", false);
     public static String state ="";
     public static boolean change_state=false;
@@ -363,7 +362,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         String targets = "";
         ArrayList<String> actionList = new ArrayList<String>(); // Lista de acciones que componen el servicio actual
         ArrayList<String> consumableList = new ArrayList<String>(); // Lista de consumibles que se utilizan para el servicio actual
-        String  batchAgentName = "";// Nombre del batch agent al que se le enviara el mensaje
+        String  batchName = "";// Nombre del batch agent al que se le enviara el mensaje
+        ArrayList<String> batchlist= new ArrayList<String>(); //nombres de los batch que deben recibir mensajes, replicas o no
         String neededMaterial = ""; // String que contendra  ID + cantidad de consumibles para hacer la peticion a los transportes
         Integer neededConsumable = 0; // variable que se utiliza para contar los consumibles necesarios (max - current)
         HashMap msgToBatch = new HashMap(); // Estructura de datos que se enviara al agente batch
@@ -472,7 +472,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     //returns the id of the element that matches with the reference of the required batch
                     if (reply != null) {   // If the id does not exist, it returns error
                         msgFIFO.add((String) reply.getContent());
-                        batchAgentName = reply.getContent();
+                        batchName = reply.getContent();
+
                     }else{
 
                         String informQoS="16"+"/div/"+"control"+"/div/"+"BatchAgentID"+"/div/"+"sa"+"/div/"+"get * reference=" + BathcID;
@@ -490,20 +491,38 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
                 try {
-                    reply = sendCommand(myAgent, "get * parent=" + batchAgentName, "BatchAgentID");
+                    reply = sendCommand(myAgent, "get * parent=" + batchName +" state=running", "BatchAgentID");
 
                     //returns the names of all the agents that are sons
                     if (reply != null) {   // Si no existe el id en el registro devuelve error
                         msgFIFO.add((String) reply.getContent());
-                        batchAgentName = reply.getContent(); //gets the name of the batch agent to which the message should be sent
-                    }else{//si no se recibe respuesta habría que checkear el estado del SA con el QoS
-                        String informQoS="16"+"/div/"+"control"+"/div/"+"BatchAgentID"+"/div/"+"sa"+"/div/"+"get * parent=" + batchAgentName;
-                        sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
+                        String batchAgentName = reply.getContent();
 
+                        AID batchAgentID = new AID(batchAgentName, false);
+                        sendACLMessage(16, batchAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
+                        ACLMessage acknowledge = myAgent.blockingReceive(echotemplate,250);
+                        if(acknowledge==null) {
+                            String informQoS = "16" + "/div/" + "negotiation"+ "/div/" +"PLCdata"+ "/div/" +batchAgentName+ "/div/" +MessageContent;
+                            sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
+                            ACLMessage QoSR = myAgent.blockingReceive(QoStemplate, 1000);
+                            if(QoSR==null) {//si tampoco contesta el QoS se asume que esta aislado
+                                LOGGER.error("I'm probably isolated.");
+                                state="idle";
+                                change_state=true; //cambia a estado idle sin usar ACLs
+//                        sendACLMessage(16, myAgent.getAID(), "control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
+                                LOGGER.error("Passing to idle");
+                            }else if(QoSR.getContent().contains("confirmed")){
+                                System.out.println("Batch did not receive the message.");
+                            }else{
+                                System.out.println("Error ignored.");
+                            }
+                        }
+                    }else{     //si no se recibe respuesta denunciar porblema al QoS
+                        String informQoS="16"+"/div/"+"control"+"/div/"+"BatchAgentID"+"/div/"+"sa"+"/div/"+"get * parent=" + batchName;
+                        sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
                         ACLMessage QoSR= myAgent.blockingReceive(QoStemplate,1000);
-                        if(QoSR==null) {//si tampoco contesta el QoS se asume ue esta aislado
+                        if(QoSR==null) { //si tampoco contesta el QoS se asume ue esta aislado
                             LOGGER.error("I'm probably isolated.");
 //                            sendACLMessage(16,myAgent.getAID(),"control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
                             state="idle";
@@ -513,30 +532,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                AID batchAgentID = new AID(batchAgentName, false);
-                sendACLMessage(16, batchAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
-
-//                result=CheckAcknowledge(batchAgentName,MessageContent);
-                ACLMessage acknowledge = myAgent.blockingReceive(echotemplate,250);
-                if(acknowledge==null) {
-                    String informQoS = "16" + "/div/" + "negotiation"+ "/div/" +"PLCdata"+ "/div/" +batchAgentName+ "/div/" +MessageContent;
-                    sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
-                    ACLMessage QoSR = myAgent.blockingReceive(QoStemplate, 1000);
-                    if(QoSR==null) {//si tampoco contesta el QoS se asume que esta aislado
-                        LOGGER.error("I'm probably isolated.");
-                        //********************* test idle
-                        state="idle";
-                        change_state=true;
-//                        sendACLMessage(16, myAgent.getAID(), "control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
-                        LOGGER.error("Passing to idle");
-                        //                        System.exit(0);
-                    }else if(QoSR.getContent().contains("confirmed")){
-                        System.out.println("Batch did not receive the message.");
-                    }else{
-                        System.out.println("Error ignored.");
-                    }
-                }
-
             }
         }
 
@@ -622,8 +617,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                                     while (date1.after(date2)) { //Se queda actualizando la fecha hasta que se alcance la fecha definida en el plan de fabricación
                                         date2 = getactualtime();
                                     }
-//                                        date2 = getactualtime();
-
                                         long diferencia = ((date2.getTime() - date1.getTime())); //calculamos el retraso en iniciar en milisegundos
                                         AID QoSID = new AID("QoSManagerAgent", false);
                                         String content = BathcID;
@@ -637,7 +630,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         }
                     }
                         firstItemFlag = false;
-
 
                         PLCmsgOut.remove("Index");
                         String MessageContent = new Gson().toJson(PLCmsgOut);

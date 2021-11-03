@@ -10,6 +10,8 @@ import jade.core.behaviours.*;
 import jade.lang.acl.*;
 import es.ehu.platform.template.interfaces.*;
 
+import java.util.ArrayList;
+
 /**
  * This behaviour is a simple implementation of a message receiver.
  * It check if a satate is recive and stores it.
@@ -26,7 +28,12 @@ public class TrackingBehaviour extends SimpleBehaviour {
   private MWAgent myAgent;
 	
 	protected MessageTemplate template;
-	
+	protected MessageTemplate traceabilitybatch;
+	protected MessageTemplate traceabilityorder;
+	protected MessageTemplate traceabilitymplan;
+	public ArrayList<String> Traceabilitybatch = new ArrayList<String>();
+	public ArrayList<String> Traceabilityorder = new ArrayList<String>();
+	public ArrayList<String> Traceabilitymplan = new ArrayList<String>();
 	protected long timeout;
 
 	private boolean expired;
@@ -37,7 +44,7 @@ public class TrackingBehaviour extends SimpleBehaviour {
 	 * 
 	 * @param a
 	 *            a reference to the Agent
-	 * @param timeout
+//	 * @param timeout
 	 *            a timeout for waiting until a message arrives. It must
 	 *            be expressed as an absolute time, as it would be returned by <code>System.currentTimeMillisec()</code>
 	 **/
@@ -55,6 +62,12 @@ public class TrackingBehaviour extends SimpleBehaviour {
 
 	public void onStart(){
 		template = MessageTemplate.MatchOntology("state");
+		traceabilitybatch = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+				MessageTemplate.MatchOntology("negotiation")),MessageTemplate.MatchConversationId("PLCdata"));
+		traceabilityorder = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+				MessageTemplate.MatchOntology("Information")),MessageTemplate.MatchConversationId("ItemsInfo"));
+		traceabilitymplan = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+				MessageTemplate.MatchOntology("Information")),MessageTemplate.MatchConversationId("OrderInfo"));
 		timeout = 0;
 		expired = false;
 		transitionFlag = -1;
@@ -65,12 +78,22 @@ public class TrackingBehaviour extends SimpleBehaviour {
 	}
 	public void action() {
 		LOGGER.entry();
-		
-			
 			ACLMessage msg = myAgent.receive(template);
-			
-			if (msg != null) {
-			  if (myAgent.period>0) timeout = System.currentTimeMillis()+(int)(myAgent.period*1.5); // se producirá timeout si se excede de (horaActual + D)
+			ACLMessage msg2 = myAgent.receive(traceabilitybatch);
+			ACLMessage msg3 = myAgent.receive(traceabilityorder);
+			ACLMessage msg4 = myAgent.receive(traceabilitymplan);
+
+		if(msg4!=null) {
+			Traceabilitymplan.add(msg4.getContent());
+			doAcknowledge(msg4.getSender());
+		}else if(msg3!=null) {
+			Traceabilityorder.add(msg3.getContent());
+			doAcknowledge(msg3.getSender());
+		}else if(msg2!=null){
+			Traceabilitybatch.add(msg2.getContent());
+			doAcknowledge(msg2.getSender());
+		}else if (msg != null) {
+			if (myAgent.period>0) timeout = System.currentTimeMillis()+(int)(myAgent.period*1.5); // se producirá timeout si se excede de (horaActual + D)
 				// TODO el deadline sólo se debe calcular para componentes periódicos
 				LOGGER.trace(" trackingBehaviour.onStart() msg != null");
 				try {
@@ -87,8 +110,6 @@ public class TrackingBehaviour extends SimpleBehaviour {
 					LOGGER.warn(e.getLocalizedMessage());
 					e.printStackTrace();
 				}
-				
-				
 			} else {
 				if (timeout > 0) { //he recibido el primer estado y es periódico
 
@@ -152,7 +173,14 @@ public class TrackingBehaviour extends SimpleBehaviour {
 		return expired;
 	}
 
-	
+	public void doAcknowledge(AID name){ //responde al emisor del mensaje instanciado en name
+		ACLMessage ack= new ACLMessage(7);
+		ack.setOntology("Acknowledge");
+		ack.setContent("Received");
+		ack.addReceiver(name);
+		myAgent.send(ack);
+		LOGGER.debug("TRACKING "+myAgent.getLocalName()+" AGENT GOT FEEDBACK CORRECTLY");
+	}
 	
 	public int onEnd() {
 		return transitionFlag;

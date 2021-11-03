@@ -6,8 +6,11 @@ import es.ehu.platform.utilities.XMLReader;
 import jade.Boot;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.domain.AMSService;
 import jade.domain.DFService;
+import jade.domain.FIPAAgentManagement.AMSAgentDescription;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -487,6 +490,66 @@ public class DomApp_Functionality extends Dom_Functionality{
     }
     protected Date convertToDateViaSqlTimestamp(LocalDateTime dateToConvert) {
         return java.sql.Timestamp.valueOf(dateToConvert);
+    }
+    protected void SendToReplicas(ArrayList<String> replicas, ACLMessage msg){
+        MessageTemplate echotemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                MessageTemplate.MatchOntology("Acknowledge"));
+        AID QoSID = new AID("QoSManagerAgent", false);
+        MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                MessageTemplate.MatchOntology("acl_error"));
+        for(int i=0; i<replicas.size();i++){
+            AID orderAgentID = new AID(replicas.get(i), false);
+            sendACLMessage(msg.getPerformative(), orderAgentID, msg.getOntology(), msg.getConversationId(), msg.getContent(), myAgent);
+            ACLMessage ack= myAgent.blockingReceive(echotemplate,250);
+            if(ack==null){
+                String informQoS = "7" + "/div/" + msg.getOntology()+ "/div/" +msg.getConversationId()+ "/div/" +orderAgentID.getLocalName()+ "/div/" +msg.getContent();
+                sendACLMessage(ACLMessage.FAILURE, QoSID, "acl_error", "msgtotracking", informQoS, myAgent);
+                ACLMessage QoSR = myAgent.blockingReceive(QoStemplate,2000);
+                if(QoSR==null){
+                    System.out.println("I'm isolated. Shutting down entire node.");
+                    System.exit(0);
+                }
+            }
+        }
+    }
+    protected void KillReplicas(ArrayList<String> replicas){
+        for(int i=0; i<replicas.size();i++){
+            AID AgentID = new AID(replicas.get(i), false);
+            sendACLMessage(16, AgentID, "control", "Shutdown", "setstate stop", myAgent);
+            int  found =SearchAgent(replicas.get(i));
+            while(found!=0){  //hay que esperar a que los tracking desaparezcan antes de desregistrar el agente parent
+                found =SearchAgent(replicas.get(i));
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+
+    private int SearchAgent (String agent){
+        int found=0;
+        AMSAgentDescription[] agents = null;
+
+        try {
+            SearchConstraints c = new SearchConstraints();
+            c.setMaxResults ( new Long(-1) );
+            agents = AMSService.search(myAgent, new AMSAgentDescription (), c );
+        }
+        catch (Exception e) {
+            System.out.println(e);
+        }
+        for (int i=0; i<agents.length;i++){
+            AID agentID = agents[i].getName();
+            String agent_to_check=agentID.getLocalName();
+//            System.out.println(agent_to_check);
+            if(agent_to_check.contains(agent)){
+                found++;
+            }
+        }
+        return found;
     }
 
 }

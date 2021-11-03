@@ -28,7 +28,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private MessageTemplate templateFT;
     private static final long serialVersionUID = 1L;
     private Agent myAgent;
-    private ACLMessage batchName;
+    private ACLMessage batchName=new ACLMessage();
     private String productID, batchNumber;
     private ArrayList<String> actionList = new ArrayList<>();
     private ArrayList<ArrayList<ArrayList<String>>> productInfo;
@@ -43,7 +43,13 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private String parentAgentID;
     private volatile String finish_times_of_batch=null;
     private String mySeType;
-    private Object myReplicasID  = new HashMap<>();
+    private MessageTemplate echotemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+            MessageTemplate.MatchOntology("Acknowledge"));
+    private MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+            MessageTemplate.MatchOntology("acl_error"));
+//    private Object myReplicasID  = new HashMap<>();
+    private Object[] myReplicasID  = new Object[2];
+    private ArrayList<String> ReplicasAsList=new ArrayList<String>();
     public volatile int wait=0;
     private volatile Date now=null;
     private volatile Date date_when_delay_was_asked=null;
@@ -154,16 +160,16 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             }
 
             myReplicasID = processACLMessages(myAgent, mySeType, new ArrayList<>(), conversationId, redundancy, parentAgentID);
+            ReplicasAsList = (ArrayList) myReplicasID[0];
 
             // TODO esta comentado ya que peta al estar en el init --> La ejecucion sigue adelante antes de recoger todos los mensajes y despues da problemas
             // sendPlan method of interface ITraceability
             createPlan(myAgent, conversationId);
 
-
             templateFT=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                     MessageTemplate.MatchOntology("Ftime_batch_ask"));
             try {
-                ACLMessage batchName=sendCommand(myAgent,"get "+myAgent.getLocalName()+" attrib=parent","name"); //consigue el nombre del batch
+                batchName=sendCommand(myAgent,"get "+myAgent.getLocalName()+" attrib=parent","name"); //consigue el nombre del batch
                 ACLMessage reference=sendCommand(myAgent,"get "+batchName.getContent()+" attrib=reference","Reference"); //consigue la referencia del batch
                 AID plannerID = new AID("planner", false);
                 batchreference=reference.getContent();
@@ -204,8 +210,9 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
         ACLMessage msg = myAgent.receive();
         if (msg != null) {
-            msgFIFO.add((String) msg.getContent());
-            if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("askdelay")&&!delay_already_asked){
+            msgFIFO.add((String) msg.getContent()); //se añade en buffer de listado de mensajes recibidos
+
+            if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("askdelay")&&!delay_already_asked){ //si es un mensaje con info del delay creamos el timeout
                 date_when_delay_was_asked = getactualtime();
                 String delay = msg.getContent();
                 delaynum = Long.parseLong(delay);
@@ -236,10 +243,13 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
             if (msg.getPerformative() == ACLMessage.REQUEST) {
                 sendACLMessage(7,msg.getSender(),"Acknowledge",msg.getConversationId(),"Received",myAgent);
+
                 System.out.println("Mensaje con la informacion del PLC");
                 System.out.println("Quien envia el mensaje: " + msg.getSender());
                 System.out.println("Contenido: " + msg.getContent());
                 System.out.println("ConversationId: " + msg.getConversationId());
+
+                SendToReplicas(ReplicasAsList,msg);//reenvio a réplicas
 
                 infoForTraceability = new Gson().fromJson(msg.getContent(), HashMap.class);  //Data type conversion Json->Hashmap class
                 // Se extraen los datos necesarios del mensaje recibido
@@ -247,7 +257,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 String idItem = String.valueOf(infoForTraceability.get("Id_Item_Number"));
                 batchNumber = String.valueOf(infoForTraceability.get("Id_Batch_Reference"));
                 String ActionTypes = String.valueOf(infoForTraceability.get("Id_Action_Type"));
-
                 update_timeout_flag=true;
 
                 for (int i=0; i < productsTraceability.size(); i++) {
@@ -270,7 +279,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 // Inicialización de las variables donde se guardaran los datos serializados
                 String aux = "";
                 String msgToOrder = "";
-
                 if (infoForTraceability.containsKey("Data_Service_Time_Stamp")) { //El lote ha terminado de fabricarse y se envian los datos al order agent
                     sendACLMessage(7,QoSID,"batch_finish",batchreference+" finish",batchreference,myAgent);
                     for (int k = 0; k < actionList.size(); k++) { // Se eliminan las acciones que ya se han realizado
@@ -295,11 +303,31 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                         msgToOrder = msgToOrder.concat(aux);
                     }
                     System.out.println(msgToOrder);
-                    AID Agent = new AID(parentAgentID, false);
-                    sendACLMessage(7, Agent,"Information", "ItemsInfo", msgToOrder, myAgent );
+                    try {
+                        ACLMessage reply2= sendCommand(myAgent, "get "+parentAgentID+" attrib=parent", "OrderAgentID");
+                        msgFIFO.add((String) reply2.getContent());
+                        ACLMessage reply = sendCommand(myAgent, "get * parent=" + reply2.getContent()+" state=running", "OrderAgentID");
+                        msgFIFO.add((String) reply.getContent());
+                        if (reply != null) {   // Si no existe el id en el registro devuelve error
+                            AID orderAgentID = new AID(reply.getContent(), false);
+                            sendACLMessage(7, orderAgentID,"Information", "ItemsInfo", msgToOrder, myAgent );
+                            ACLMessage ack = myAgent.blockingReceive(echotemplate,250);
+                            if(ack==null){
+                                String informQoS = "7" + "/div/" + "Information"+ "/div/" +"ItemsInfo"+ "/div/" +reply.getContent()+ "/div/" +msgToOrder;
+                                sendACLMessage(ACLMessage.FAILURE, QoSID, "acl_error", "msgtoparent", informQoS, myAgent);
+                                ACLMessage QoSR = myAgent.blockingReceive(QoStemplate,2000);
+                                if(QoSR==null){
+                                    System.out.println("I'm isolated. Shutting down entire node.");
+                                    System.exit(0);
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
-
                 if (actionList.size() == 0){ // cuando todas las acciones se han completado, se elimina el batch agent
+                    KillReplicas(ReplicasAsList);
                     return true; //Batch agent a terminado su funcion y pasa a STOP
                 }
             }
@@ -685,6 +713,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         itemreference=Ireferences.get(index-1);
         return itemreference;
     }
+
 
 }
 

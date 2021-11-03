@@ -62,9 +62,7 @@ public class QoSManagerAgent extends Agent {
             ACLMessage msg = blockingReceive();
 
             if(msg!=null){
-
                 if(msg.getPerformative()==ACLMessage.FAILURE&&!msg.getSender().getLocalName().equals("ams")){ //Se recibe un posible error
-
                     if(msg.getOntology().equals("acl_error")){ //error de tipo comunicación
                         String[] msgparts=msg.getContent().split("/div/");
                         String performative=msgparts[0];
@@ -73,7 +71,6 @@ public class QoSManagerAgent extends Agent {
                         String receiver=msgparts[3];
                         String intercepted_msg=msgparts[4];
                         LOGGER.warn(msg.getSender().getLocalName()+" reported a failure while trying to communicate with "+ receiver);
-
                         if(CheckNotFoundRegistry(receiver)&&CheckNotFoundRegistry(msg.getSender().getLocalName())) { //comprueba que el denunciante y el denunciado no esten en la blacklist de agentes no encontrados
                             LOGGER.info("Checking if " + receiver + " is alive and if the agent received the reported msg.");
                             String command = CheckMsgFIFO(msg.getSender().getLocalName(), intercepted_msg); //checkMsgFIFo se puede usar con order, batch y machine por ahora, el resto responde como un ping
@@ -94,7 +91,7 @@ public class QoSManagerAgent extends Agent {
                                     sendACL(ACLMessage.INFORM, "D&D", "not_found", msgtoDD);
                                 } else {
                                     LOGGER.info("Receiver and sender are online, although message is lost. Bridge by D&D.");
-                                    sendACL(ACLMessage.INFORM, "D&D", "msg_lost", msg.getSender().getLocalName());
+                                    sendACL(ACLMessage.INFORM, "D&D", "msg_lost", msg.getContent());
                                 }
                             } else if (command.equals("msg_received") && n == 1) {
                                 sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), receiver + "/ignore");
@@ -102,9 +99,10 @@ public class QoSManagerAgent extends Agent {
 
                             } else { //si no responde el receiver, se trata de un agente aislado o muerto
                                 LOGGER.warn("No answer from " + receiver + ". Confirming error.");
+
                                 sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), receiver + "/confirmed");
                                 String msgtoDD = receiver;
-                                if (receiver.contains("ControlGatewayCont")) {  //necesitamos saber el agente que ha denunciado GW caido para que pase a idle a traves del D&D
+                                if (receiver.contains("ControlGatewayCont")) {  //en algunos casos necesitamos saber el agente que ha denunciado el fallo para que pase a idle a traves del D&D
                                     msgtoDD = msgtoDD + "/div/" + msg.getSender().getLocalName();
                                 }
                                 add_to_error_list("not_found", receiver, "", "", "");
@@ -126,11 +124,9 @@ public class QoSManagerAgent extends Agent {
                                             LOGGER.error("Timeout repeated on same batch and item, confirming failure.");
                                             sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),"confirmed_timeout");
                                             add_timeout_error_flag=false;
-
                                             for (int p = 0; p < batch_and_machine.size(); p++) {
                                                 if (batch_and_machine.get(p).get(0).equals(timeout_batch_id)) {
                                                     String MA = batch_and_machine.get(p).get(1);
-
                                                     if(CheckNotFoundRegistry(MA)){ //comprueba que el agente maquina no este en la blacklist de agentes no encontrados
                                                         sendACL(ACLMessage.INFORM,"D&D","timeout",MA); //Se informa al D&D para que el agente máquina pase a idle.
                                                     }else{
@@ -204,7 +200,11 @@ public class QoSManagerAgent extends Agent {
                                                         sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "confirmed_timeout");
                                                     }
                                                     add_to_error_list(argument1, argument2, argument3, argument4, argument5);
+                                                }else{
+                                                    sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "confirmed_timeout");
                                                 }
+                                            }else{
+                                                sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "confirmed_timeout");
                                             }
                                         }
                                     }
@@ -229,25 +229,16 @@ public class QoSManagerAgent extends Agent {
                             }
                             if(add_timeout_error_flag){
                                 LOGGER.info("No timeout errors found for batch "+timeout_batch_id+". Pinging batch.");
-                                int found=SearchAgent("batchagent");
-                                String batch_to_ping="";
-                                for(int n=1;n<=found;n++) {
-                                    try {
-                                        ACLMessage t = sendCommand(myAgent, "get " + "batchagent" + n + " attrib=parent", "name");
-                                        ACLMessage b_reference=sendCommand(myAgent, "get " + t.getContent()+ " attrib=reference", "Reference");
-                                        if (b_reference.getContent().equals(timeout_batch_id)) {
-                                            batch_to_ping = "batchagent" + n;
-                                        }
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
-                                }
+                                try {
+                                    ACLMessage reply =sendCommand(myAgent,"get * category=batch reference="+timeout_batch_id,"QoS");
+                                    ACLMessage reply2 =sendCommand(myAgent,"get * category=batchAgent parent="+reply.getContent()+" state=running","QoS");
+                                    String batch_to_ping=reply2.getContent();
                                     if(batch_to_ping!=""){
                                         boolean pong= PingAgent(batch_to_ping);
-                                        if (pong) {
+                                        int found=SearchAgent(reply2.getContent());
+                                        if (pong&&found>0) {
                                             LOGGER.info("Batch "+ batch_to_ping+" with reference "+timeout_batch_id+ " found alive. Timeout of order registered.");
-
-                                                argument1="timeout";
+                                            argument1="timeout";
                                             if (batch_and_machine.size() > 0) { //buscamos el batch en el listado y conseguimos el ID del machine agent responsable
                                                 for (int k = 0; k < batch_and_machine.size(); k++) {
                                                     if (batch_and_machine.get(k).get(0).equals(timeout_batch_id)) {
@@ -296,7 +287,7 @@ public class QoSManagerAgent extends Agent {
                                                 }
                                             }
                                         }else{
-                                            LOGGER.error("Batch agent found by AMS but not responding to pong. ");
+                                            LOGGER.error("Batch agent either not found by AMS or not responding to pong. ");
                                             add_to_error_list("not_found",batch_to_ping,"","","");
                                             //informar a D&D par que ponga  anegociar las replicas
                                         }
@@ -305,6 +296,9 @@ public class QoSManagerAgent extends Agent {
                                         add_to_error_list("not_found",batch_to_ping,"","","");
                                         //informar a D&D par que ponga  anegociar las replicas
                                     }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                                 sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),"timeout_confirmed",timeout_batch_id);
                             }
                         }
@@ -355,7 +349,22 @@ public class QoSManagerAgent extends Agent {
                     }
                 }
                 if(msg.getPerformative()==ACLMessage.REQUEST) { //Se recibe algun tipo de petición
+                    if(msg.getOntology().equals("askrelationship")) {
+                        if(msg.getContent().contains("machine")){
+                            for(int u=0;u<batch_and_machine.size();u++){
+                                if(batch_and_machine.get(u).get(1).equals(msg.getContent())){
+                                    try {
+                                        ACLMessage reply =sendCommand(myAgent,"get * category=batch reference="+batch_and_machine.get(u).get(0),"QoS");
+                                        ACLMessage reply2 =sendCommand(myAgent,"get * category=batchAgent parent="+reply.getContent()+" state=running","QoS");
+                                        sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),reply2.getContent());
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }
+                        }
 
+                    }
                     if (msg.getOntology().equals("askdelay")) { //Se recibe consulta del delay
 
                         ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
@@ -385,13 +394,13 @@ public class QoSManagerAgent extends Agent {
                         }
                     }else if(msg.getOntology().equals("command")){
                         if(msg.getContent().equals("errorlist")){
-                            LOGGER.info(msg.getSender()+" asked to send error list");
+                            LOGGER.info(msg.getSender().getLocalName()+" asked to send error list");
                             String concatenated_errors="";
                             for(int q=0;q<ErrorList.size();q++){
                                 if(q!=0){
                                     concatenated_errors = concatenated_errors +"/err/";
                                 }
-                                for(int r=q;r<ErrorList.get(q).size();r++) {
+                                for(int r=0;r<ErrorList.get(q).size();r++) {
                                     if(r==0){
                                         concatenated_errors = concatenated_errors +ErrorList.get(q).get(r);
                                     }else {
@@ -478,7 +487,6 @@ public class QoSManagerAgent extends Agent {
 
         private int SearchAgent (String agent){
             int found=0;
-
             AMSAgentDescription [] agents = null;
 
             try {
@@ -559,8 +567,8 @@ public class QoSManagerAgent extends Agent {
         ErrorList.get(l).add(4, arg4);
         ErrorList.get(l).add(5, arg5);
         l++;
-
     }
+
     public Date getactualtime(){
         String actualTime;
         int ano, mes, dia, hora, minutos, segundos;

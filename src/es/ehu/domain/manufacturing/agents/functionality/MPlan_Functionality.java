@@ -27,7 +27,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   private List<String> elementsToCreate = new ArrayList<>();
   private HashMap<String, String> elementsClasses;
   private int chatID = 0; // Numero incremental para crear conversationID
-
+  private AID QoSID = new AID("QoSManagerAgent", false);
   private String firstState, redundancy, parentAgentID, planNumber;
   private Boolean newOrder = true, firstTime = true;
   private ArrayList<AID> sonAgentID = new ArrayList<>();
@@ -37,7 +37,10 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> ordersTraceability = new ArrayList<>();
   private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> deserializedMessage = new ArrayList<>();
   private Integer orderIndex = 1;
-
+  private MessageTemplate echotemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+          MessageTemplate.MatchOntology("Acknowledge"));
+  private MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+          MessageTemplate.MatchOntology("acl_error"));
   @Override
   public Object getState() {
     return null;
@@ -128,6 +131,10 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 
     ACLMessage msg = myAgent.receive(template);
     if (msg != null) {
+
+      sendACLMessage(7, msg.getSender(), "Acknowledge", msg.getConversationId(),"Received",myAgent);
+      SendToReplicas(myReplicasID,msg);
+
       if (firstTime) { //solo se quiere añadir el nuevo nivel la primera vez
         deserializedMessage = deserializeMsg(msg.getContent());
         ordersTraceability = addNewLevel(ordersTraceability, deserializedMessage, true); //añade el espacio para la informacion de la orden en primera posicion, sumando un nivel mas a los datos anteriores
@@ -168,8 +175,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
             }
           }
           XMLWriter.writeFile(toXML, planNumber);//se introducen como entrada los datos a convertir y el identificador del MPlan
-
-          AID Agent = new AID(parentAgentID, false);
+          KillReplicas(myReplicasID);
           sendACLMessage(7, myAgent.getAID(), "Information", "Shutdown", "Shutdown", myAgent); // autoenvio de mensaje para asegurar que el agente de desregistre y se apague
           return true;
         }

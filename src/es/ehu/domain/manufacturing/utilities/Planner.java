@@ -131,7 +131,7 @@ public class Planner extends Agent {
                                 MessageTemplate errtemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                                         MessageTemplate.MatchOntology("command"));
                                 sendACL(16, "QoSManagerAgent", "command", "errorlist");
-                                ACLMessage reply = blockingReceive(errtemplate, 2000); //filtrar por template
+                                ACLMessage reply = blockingReceive(errtemplate, 500); //filtrar por template
                                 if(reply!=null) {
                                     if (!reply.getContent().equals("")) {
                                         String args[];
@@ -140,6 +140,7 @@ public class Planner extends Agent {
                                             System.out.println("ERROR " + j);
                                             args = errors[j].split("/inf/");
                                             for (int k = 0; k < args.length; k++) {
+                                                System.out.print("    ");
                                                 System.out.println(args[k]);
                                             }
                                         }
@@ -149,7 +150,31 @@ public class Planner extends Agent {
                                 }else{
                                     System.out.println("QoS Manager did not answer on time.");
                                 }
-                            }else if (cmds[i].equals("idle")) {
+                            }else if(cmds[i].equals("askrelationship")){
+                                MessageTemplate reltemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                                        MessageTemplate.MatchOntology("askrelationship"));
+                                sendACL(16, "QoSManagerAgent", cmds[i], "errorlist");
+                                ACLMessage reply = blockingReceive(reltemplate, 500); //filtrar por template
+                                if(reply!=null) {
+                                    if (!reply.getContent().equals("")) {
+                                        String args[];
+                                        String errors[] = reply.getContent().split("/err/");
+                                        for (int j = 0; j < errors.length; j++) {
+                                            System.out.println("ERROR " + j);
+                                            args = errors[j].split("/inf/");
+                                            for (int k = 0; k < args.length; k++) {
+                                                System.out.print("    ");
+                                                System.out.println(args[k]);
+                                            }
+                                        }
+                                    } else {
+                                        System.out.println("No errors");
+                                    }
+                                }else{
+                                    System.out.println("QoS Manager did not answer on time.");
+                                }
+                            }
+                            else if (cmds[i].equals("idle")) {
                                 if(control.equals("manual")){
                                     makeidle();
                                 }else{
