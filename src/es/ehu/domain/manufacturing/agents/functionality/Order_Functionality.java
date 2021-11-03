@@ -287,7 +287,6 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 }
 
                 if (sonAgentID.size() == 0) { // todos los batch agent de los que es padre ya le han enviado la informacion
-                    KillReplicas(myReplicasID);
                     sendACLMessage(7, myAgent.getAID(), "Information", "Shutdown", "Shutdown", myAgent); // autoenvio de mensaje para asegurar que el agente de desregistre y se apague
                     return true;
                 }
@@ -389,6 +388,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             AID Agent = new AID(parentAgentID, false);
             sendACLMessage(7, Agent, myAgent.getLocalName(), "Shutdown", "Order completed", myAgent); // Informa al Mplan Agent que ya ha finalizado su tarea
             myAgent.deregisterAgent(parentName);
+            KillReplicas(myReplicasID);
         } catch (Exception e) {
             e.printStackTrace();
         }

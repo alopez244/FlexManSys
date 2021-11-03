@@ -175,7 +175,6 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
             }
           }
           XMLWriter.writeFile(toXML, planNumber);//se introducen como entrada los datos a convertir y el identificador del MPlan
-          KillReplicas(myReplicasID);
           sendACLMessage(7, myAgent.getAID(), "Information", "Shutdown", "Shutdown", myAgent); // autoenvio de mensaje para asegurar que el agente de desregistre y se apague
           return true;
         }
@@ -204,6 +203,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
       AID Agent = new AID(parentAgentID, false);
       sendACLMessage(7, Agent, "Information", "Shutdown", "Manufacturing Plan has been completed", myAgent);
       myAgent.deregisterAgent(parentName);
+      KillReplicas(myReplicasID);
     } catch (Exception e) {
       e.printStackTrace();
     }

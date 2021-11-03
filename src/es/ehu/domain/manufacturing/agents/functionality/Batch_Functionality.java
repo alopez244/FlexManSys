@@ -327,7 +327,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     }
                 }
                 if (actionList.size() == 0){ // cuando todas las acciones se han completado, se elimina el batch agent
-                    KillReplicas(ReplicasAsList);
+
                     return true; //Batch agent a terminado su funcion y pasa a STOP
                 }
             }
@@ -359,6 +359,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
         try {
             myAgent.deregisterAgent(parentName);
+            KillReplicas(ReplicasAsList);
         } catch (Exception e) {
             e.printStackTrace();
         }
