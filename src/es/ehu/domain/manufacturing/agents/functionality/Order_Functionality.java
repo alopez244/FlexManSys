@@ -1,18 +1,15 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
-import es.ehu.domain.manufacturing.test.QoSManagerAgent;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
-import es.ehu.platform.template.interfaces.IExecManagement;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
-import org.apache.commons.net.nntp.NewGroupsOrNewsQuery;
-import java.text.DateFormat;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -374,24 +371,27 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
     public Void terminate(MWAgent myAgent) {
         this.myAgent = myAgent;
         String parentName = "";
+        if(orderNumber!=null){ //por si es una replica ejecutando terminate
+            try {
+                ACLMessage reply = sendCommand(myAgent, "get * reference=" + orderNumber, "parentAgentID");
 
-        try {
-            ACLMessage reply = sendCommand(myAgent, "get * reference=" + orderNumber, "parentAgentID");
-
-            if (reply != null) {   // Si no existe el id en el registro devuelve error
-                parentName = reply.getContent(); //gets the name of the agent´s parent
+                if (reply != null) {   // Si no existe el id en el registro devuelve error
+                    parentName = reply.getContent(); //gets the name of the agent´s parent
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            try {
+                AID Agent = new AID(parentAgentID, false);
+                KillReplicas(myReplicasID);
+                sendACLMessage(7, Agent, myAgent.getLocalName(), "Shutdown", "Order completed", myAgent); // Informa al Mplan Agent que ya ha finalizado su tarea
+                myAgent.deregisterAgent(parentName);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-        try {
-            AID Agent = new AID(parentAgentID, false);
-            sendACLMessage(7, Agent, myAgent.getLocalName(), "Shutdown", "Order completed", myAgent); // Informa al Mplan Agent que ya ha finalizado su tarea
-            myAgent.deregisterAgent(parentName);
-            KillReplicas(myReplicasID);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
         return null;
     }
 

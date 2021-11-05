@@ -74,6 +74,7 @@ public class Planner extends Agent {
                         + "checkstate > For a defined GW checks asset state\n"
                         + "idle > Makes the desired resource agent idle (only in manual mode)\n"
                         + "wake > Makes the desired resource agent wake from idle (only in manual mode)\n"
+                        + "relationship > Gives de relationship between batch agent and machine agent given one of them\n"
                         + "help > SystemModelAgent commands summary\n"
                         + "exit > Shut down Planner Agent\n\n";
                 System.out.print(api);
@@ -150,31 +151,31 @@ public class Planner extends Agent {
                                 }else{
                                     System.out.println("QoS Manager did not answer on time.");
                                 }
-                            }else if(cmds[i].equals("askrelationship")){
+                            }else if(cmds[i].equals("relationship")){
                                 MessageTemplate reltemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                                         MessageTemplate.MatchOntology("askrelationship"));
-                                sendACL(16, "QoSManagerAgent", cmds[i], "errorlist");
-                                ACLMessage reply = blockingReceive(reltemplate, 500); //filtrar por template
-                                if(reply!=null) {
-                                    if (!reply.getContent().equals("")) {
-                                        String args[];
-                                        String errors[] = reply.getContent().split("/err/");
-                                        for (int j = 0; j < errors.length; j++) {
-                                            System.out.println("ERROR " + j);
-                                            args = errors[j].split("/inf/");
-                                            for (int k = 0; k < args.length; k++) {
-                                                System.out.print("    ");
-                                                System.out.println(args[k]);
-                                            }
-                                        }
+                                Scanner in2 = new Scanner(System.in);
+                                System.out.println("Define a batch or a machine agent: ");
+                                System.out.print("Agent: ");
+                                String cmd2 = in2.nextLine();
+                                if(cmd2.contains("machine")||cmd2.contains("batchagent")){
+                                    int found = SearchAgent(cmd2);
+                                    if (found != 1) {
+                                        LOGGER.error("Multiple or no resource agents found for provided name "+cmd2);
                                     } else {
-                                        System.out.println("No errors");
+                                        sendACL(16, "QoSManagerAgent","askrelationship" , cmd2);
+                                        ACLMessage reply = blockingReceive(reltemplate, 500);
+                                        if(reply!=null) {
+                                            System.out.print(cmd2 +" is assigned to "+reply.getContent());
+                                        }else{
+                                            System.out.println("QoS Manager did not answer on time.");
+                                        }
                                     }
                                 }else{
-                                    System.out.println("QoS Manager did not answer on time.");
+                                    System.out.println("Error. Not a valid agent.");
                                 }
-                            }
-                            else if (cmds[i].equals("idle")) {
+
+                            }else if (cmds[i].equals("idle")) {
                                 if(control.equals("manual")){
                                     makeidle();
                                 }else{

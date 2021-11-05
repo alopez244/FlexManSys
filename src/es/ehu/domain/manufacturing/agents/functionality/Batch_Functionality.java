@@ -78,6 +78,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     class timeout extends Thread{
     private boolean takedown_flag=false;
         public void run() {
+
             System.out.println("Item timeout initialized");
             while (finish_times_of_batch == null) {} //tramo de espera de seguridad hasta tener los finish times
             items_finish_times = take_finish_times(finish_times_of_batch); //extrae la información útil que se usa en el timeout
@@ -89,6 +90,8 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     e.printStackTrace();
                 }
             }
+
+
             while (actual_item_number < items_finish_times.size() && !takedown_flag) {
 
                 if(getactualtime().after(expected_finish_date)&& !takedown_flag){
@@ -118,7 +121,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     if (update_timeout_flag) {
                         actual_item_number++;
                         if(actual_item_number<items_finish_times.size()) {
-                            System.out.println("Next item started");
+//                            System.out.println("Next item started");
                             expected_finish_date = UpdateFinishTimes(actual_item_number); //actualiza la fecha de finish time
                             update_timeout_flag = false;
                         }
@@ -344,25 +347,26 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     public Void terminate(MWAgent myAgent) {
         this.myAgent = myAgent;
         String parentName = "";
-
-        try {
-            ACLMessage reply = sendCommand(myAgent, "get * reference=" + batchNumber, "parentAgentID");
-            //returns the names of all the agents that are sons
-            if (reply != null)   // Si no existe el id en el registro devuelve error
-                parentName = reply.getContent(); //gets the name of the agent´s parent
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        AID Agent = new AID(parentAgentID, false);
-
-            sendACLMessage(7, Agent, myAgent.getLocalName(), "Shutdown", "Batch completed", myAgent);
-
-        try {
-            myAgent.deregisterAgent(parentName);
+        if(batchNumber!=null){ //por si es una replica ejecutando terminate
+            try {
+                ACLMessage reply = sendCommand(myAgent, "get * reference=" + batchNumber, "parentAgentID");
+                //returns the names of all the agents that are sons
+                if (reply != null)   // Si no existe el id en el registro devuelve error
+                    parentName = reply.getContent(); //gets the name of the agent´s parent
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            AID Agent = new AID(parentAgentID, false);
             KillReplicas(ReplicasAsList);
-        } catch (Exception e) {
-            e.printStackTrace();
+            sendACLMessage(7, Agent, myAgent.getLocalName(), "Shutdown", "Batch completed", myAgent);
+            try {
+                myAgent.deregisterAgent(parentName);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+
 
         return null;
     }

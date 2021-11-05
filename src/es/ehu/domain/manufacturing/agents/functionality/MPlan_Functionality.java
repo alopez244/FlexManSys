@@ -189,7 +189,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   public Void terminate(MWAgent myAgent) {
     this.myAgent = myAgent;
     String parentName = "";
-
+  if(planNumber!=null){ //por si es una replica ejecutando terminate
     try {
       String planName = "MPlan" + planNumber;
       ACLMessage reply = sendCommand(myAgent, "get * name=" + planName, "parentAgentID");
@@ -201,12 +201,15 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     }
     try {
       AID Agent = new AID(parentAgentID, false);
+      KillReplicas(myReplicasID);
       sendACLMessage(7, Agent, "Information", "Shutdown", "Manufacturing Plan has been completed", myAgent);
       myAgent.deregisterAgent(parentName);
-      KillReplicas(myReplicasID);
+
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
 
     return null;
   }
