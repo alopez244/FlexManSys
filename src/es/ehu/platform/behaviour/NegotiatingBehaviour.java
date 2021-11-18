@@ -388,14 +388,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                         String name = msg.getContent().substring(msg.getContent().indexOf(":name ", msg.getContent().indexOf("MTS-error")) + ":name ".length());
                         LOGGER.warn(name.substring(0, name.indexOf('@')) + " FAILURE");
 
-                        /*************************** Modificaciones Diego*/
-//                        AID QoSID = new AID("QoSManagerAgent", false);
-//                        ACLMessage inform_qos=new ACLMessage(ACLMessage.FAILURE);
-//                        inform_qos.setContent(name.substring(0, name.indexOf('@')));
-//                        inform_qos.addReceiver(QoSID);
-//                        inform_qos.setOntology("acl_error");
-//                        myAgent.send(inform_qos);
-                        /************************** Fin Modificaciones Diego*/
+
 
                     } catch (Exception e) {
                     }

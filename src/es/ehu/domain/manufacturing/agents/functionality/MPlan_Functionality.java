@@ -21,7 +21,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   private static final long serialVersionUID = -4078504089052783841L;
   static final Logger LOGGER = LogManager.getLogger(MPlan_Functionality.class.getName()) ;
   
-  private Agent myAgent;
+  private MWAgent myAgent;
 
   private List<String> myElements;
   private List<String> elementsToCreate = new ArrayList<>();
@@ -30,10 +30,12 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   private AID QoSID = new AID("QoSManagerAgent", false);
   private String firstState, redundancy, parentAgentID, planNumber;
   private Boolean newOrder = true, firstTime = true;
-  private ArrayList<AID> sonAgentID = new ArrayList<>();
-  private ArrayList<String> myReplicasID = new ArrayList<>();
+//  private ArrayList<AID> sonAgentID = new ArrayList<>();
+  private ArrayList<String> sonAgentID = new ArrayList<>();
+//  private ArrayList<String> myReplicasID = new ArrayList<>();
+  private ArrayList<ArrayList<String>> finishtimes = new ArrayList<>();
   private String mySeType;
-  private MessageTemplate template;
+  private MessageTemplate template,template2,template3;
   private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> ordersTraceability = new ArrayList<>();
   private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> deserializedMessage = new ArrayList<>();
   private Integer orderIndex = 1;
@@ -41,14 +43,128 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
           MessageTemplate.MatchOntology("Acknowledge"));
   private MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
           MessageTemplate.MatchOntology("acl_error"));
+
+
+
   @Override
-  public Object getState() {
-    return null;
+  public void setState(String state) {
+    ArrayList<ArrayList<ArrayList<ArrayList<String>>>> Traceability=new ArrayList<>();
+    ArrayList<String> remaining=new ArrayList<String>();
+    ArrayList<ArrayList<String>> FT=new ArrayList<>();
+    ArrayList<String> replicas=new ArrayList<String>();
+    String parts1[] =state.split("/div0/"); //el divisor 0 divide los argumentos y el resto se usan para los arraylist
+    String productTraceabilityConc = parts1[0]; //trazabilidad concatenada
+    String remainingConc = null;
+    if (parts1[1] != null&&parts1[1] != "") {
+      remainingConc = parts1[1]; //solo si quedan acciones/SonAgentIDs
+    }
+    String firstimeString = parts1[2]; //primera vez
+
+    String FinishTimesConc=parts1[3]; //finish times concatenados (cada agente de aplicación lleva un formato)
+    parentAgentID=parts1[4]; 					//parent
+    String replicasConc=parts1[5];		//replicas del agente
+
+    String parts2[] = productTraceabilityConc.split("/div1/"); //construye la trazabilidad
+    for (int i = 0; i < parts2.length; i++) {
+      Traceability.add(i, new ArrayList<ArrayList<ArrayList<String>>>());
+      String parts3[] = parts2[i].split("/div2/");
+      for (int j = 0; j < parts3.length; j++) {
+        Traceability.get(i).add(j, new ArrayList<ArrayList<String>>());
+        String parts4[] = parts3[j].split("/div3/");
+        for (int k = 0; k < parts4.length; k++) {
+          Traceability.get(i).get(j).add(k, new ArrayList<String>());
+          String parts5[] = parts4[k].split("/div4/");
+          for (int l = 0; l < parts5.length; l++) {
+            Traceability.get(i).get(j).get(k).add(parts5[l]);
+          }
+        }
+      }
+    }
+    ordersTraceability=Traceability;
+    if (remainingConc != null) {    //construye los sonagentID o actionlist
+      String parts6[] = remainingConc.split("/div1/");
+      for (int i = 0; i < parts6.length; i++) {
+        remaining.add(parts6[i]);
+      }
+    }
+    sonAgentID=remaining;
+
+    firstTime = Boolean.parseBoolean(firstimeString);
+
+    String parts7[]=FinishTimesConc.split("/div1/");
+    for(int i=0;i<parts7.length;i++) {
+      FT.add(i, new ArrayList<String>());
+      String parts8[] = parts7[i].split("/div2/");
+      for (int j = 0; j < parts8.length; j++) {
+        FT.get(i).add(parts8[j]);
+      }
+    }
+    finishtimes=FT;
+
+    String parts9[]=replicasConc.split("/div1/");
+    for(int k=0;k<parts9.length;k++){
+      if(!parts9[k].equals(myAgent.getLocalName())){
+        replicas.add(parts9[k]);
+      }
+    }
+    myAgent.replicas=replicas;
+
   }
-
   @Override
-  public void setState(Object state) {
+  public String getState(){
+    String state="";
+      for(int i=0;i<ordersTraceability.size();i++){
+    if(i!=0){
+      state=state+"/div1/";
+    }
+    for(int j=0;j<ordersTraceability.get(i).size();j++){
+      if(j!=0){
+        state=state+"/div2/";
+      }
+      for(int k=0;k<ordersTraceability.get(i).get(j).size();k++){
+        if(k!=0){
+          state=state+"/div3/";
+        }
+        for(int l=0;l<ordersTraceability.get(i).get(j).get(k).size();l++){
+          if(l!=0){
+            state=state+"/div4/";
+          }
+          state=state+ordersTraceability.get(i).get(j).get(k).get(l);
+        }
+      }
+    }
+  }
+  state=state+"/div0/";
+  for(int i=0;i<sonAgentID.size();i++){
+    if(i!=0){
+      state=state+"/div1/";
+    }
+    state=state+sonAgentID.get(i);
+  }
+  state=state+"/div0/"+String.valueOf(firstTime)+"/div0/";
 
+    for(int i=0;i<finishtimes.size();i++){ //concatena los FT de los item
+      if(i!=0){
+        state=state+"/div1/";
+      }
+      for(int j=0;j<finishtimes.get(i).size();j++){
+        if(j==0){
+          state=state+finishtimes.get(i).get(j);
+        }else{
+          state=state+"/div2/"+finishtimes.get(i).get(j);
+        }
+      }
+    }
+  state=state+"/div0/"+parentAgentID+"/div0/";
+
+  for(int i=0;i<myAgent.replicas.size();i++){ //concatena los replicas del batch
+    if(i==0){
+      state=state+myAgent.replicas.get(i);
+    }else{
+      state=state+"/div1/"+myAgent.replicas.get(i);
+    }
+  }
+    return state;
   }
 
   @Override
@@ -56,6 +172,10 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 
     this.template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
             MessageTemplate.MatchOntology("Information")),MessageTemplate.MatchConversationId("OrderInfo"));
+    this.template2=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+            MessageTemplate.MatchOntology("delete_replica"));
+    this.template3=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+            MessageTemplate.MatchOntology("restore_replica"));
     this.myAgent = myAgent;
 
     // Crear un nuevo conversationID
@@ -89,8 +209,8 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 
       //Aqui cuiado con el myOrders, si utilizamos elementsToCreate en seStart aqui tambien hay que meterlo
       Object[] result = processACLMessages(myAgent, mySeType, elementsToCreate, conversationId, redundancy, parentAgentID);
-      sonAgentID = (ArrayList<AID>) result[1];
-      myReplicasID = (ArrayList<String>) result[0];
+      sonAgentID = (ArrayList<String>) result[1];
+      myAgent.replicas = (ArrayList<String>) result[0];
 
       notifyMachinesToStartOperations(myAgent, conversationId);
 
@@ -133,7 +253,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     if (msg != null) {
 
       sendACLMessage(7, msg.getSender(), "Acknowledge", msg.getConversationId(),"Received",myAgent);
-      SendToReplicas(myReplicasID,msg);
+
 
       if (firstTime) { //solo se quiere añadir el nuevo nivel la primera vez
         deserializedMessage = deserializeMsg(msg.getContent());
@@ -155,14 +275,45 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
       }
       newOrder = false;
     }
-
+    ACLMessage msg2 = myAgent.receive(template2);
+    if(msg2!=null){
+      boolean f=false;
+      for(int i=0;i<myAgent.IgnoredReplicas.size();i++){ //se elimina de la lista de ignorados en caso de que esté
+        if(myAgent.IgnoredReplicas.get(i).equals(msg.getContent())){
+          myAgent.IgnoredReplicas.remove(i);
+          f=true;
+        }
+      }
+      if(f==false){ //en caso de no encontrarlo en la lista de ignorados, es posile que aun se encuentre en la lista de replicas normal
+        for(int i=0;i<myAgent.replicas.size();i++){
+          if(myAgent.replicas.get(i).equals(msg.getContent())){
+            myAgent.replicas.remove(i);
+          }
+        }
+      }
+    }
+    ACLMessage msg3 = myAgent.receive(template3);
+    if(msg3!=null){
+      for(int i=0;i<myAgent.IgnoredReplicas.size();i++) { //se elimina de la lista de ignorados en caso de que esté
+        if (myAgent.IgnoredReplicas.get(i).equals(msg.getContent())) {
+          myAgent.replicas.add(myAgent.IgnoredReplicas.get(i)); //se vuelve a añadir a la lista de replicas
+          for(int j=0; j<myAgent.ReportedAgents.size();j++){
+            if(myAgent.ReportedAgents.get(j).equals(myAgent.IgnoredReplicas.get(i))){
+              myAgent.ReportedAgents.remove(j); // se elimina tambien de la lista de agentes reportados
+            }
+          }
+          myAgent.IgnoredReplicas.remove(i);
+        }
+      }
+    }
     ACLMessage msgEnd = myAgent.receive();
     // Recepcion de mensajes para eliminar de la lista de agentes hijo los agentes order que ya han enviado toda la informacion
     if (msgEnd != null) {
       if (msgEnd.getContent().equals("Order completed")){
         String msgSender = msgEnd.getOntology();
         for (int i = 0; i < sonAgentID.size(); i++) {
-          if (sonAgentID.get(i).getName().split("@")[0].equals(msgSender)) {
+//          if (sonAgentID.get(i).getName().split("@")[0].equals(msgSender)) {
+            if (sonAgentID.get(i).equals(msgSender)) {
             sonAgentID.remove(i);
           }
         }
@@ -181,7 +332,9 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
         orderIndex = ordersTraceability.size() - 1; //se actualiza el valor para borrar en el nuevo rango
         newOrder = true; // aun quedan orders por añadir
       }
+
     }
+
     return false;
   }
 
@@ -189,7 +342,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   public Void terminate(MWAgent myAgent) {
     this.myAgent = myAgent;
     String parentName = "";
-  if(planNumber!=null){ //por si es una replica ejecutando terminate
+  if(myAgent.ActualState=="running"){ //para filtrar las replicas ejecutando terminate
     try {
       String planName = "MPlan" + planNumber;
       ACLMessage reply = sendCommand(myAgent, "get * name=" + planName, "parentAgentID");
@@ -201,7 +354,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     }
     try {
       AID Agent = new AID(parentAgentID, false);
-      KillReplicas(myReplicasID);
+      KillReplicas(myAgent.replicas);
       sendACLMessage(7, Agent, "Information", "Shutdown", "Manufacturing Plan has been completed", myAgent);
       myAgent.deregisterAgent(parentName);
 
@@ -213,7 +366,14 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 
     return null;
   }
+  protected ArrayList<String> get_local_names(ArrayList<AID> SonAIDs){
 
+    ArrayList<String> SonLocalNames= new ArrayList<String>();
+    for(int i=0; i<SonAIDs.size();i++){
+      SonLocalNames.add(SonAIDs.get(i).getLocalName());
+    }
+    return SonLocalNames;
+  }
   private void notifyMachinesToStartOperations(Agent agent, String conversationId) {
 
     // Avisar a todas las maquinas de mi plan que el plan ya esta listo para que emmpiece a hacer las operaciones

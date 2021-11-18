@@ -70,6 +70,12 @@ public class PingBehaviour extends SimpleBehaviour{
                         reply.setContent("N");
                         myAgent.send(reply);
                     }
+                }else{
+                    ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
+                    reply.addReceiver(msg.getSender());
+                    reply.setOntology(msg.getOntology());
+                    reply.setContent("pong");
+                    myAgent.send(reply);
                 }
             }
         }

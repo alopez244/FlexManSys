@@ -18,7 +18,7 @@ import java.util.*;
 public class Order_Functionality extends DomApp_Functionality implements BasicFunctionality, AvailabilityFunctionality {
 
     private static final long serialVersionUID = 1L;
-    private Agent myAgent;
+    private MWAgent myAgent;
     public static CircularFifoQueue msgFIFO = new CircularFifoQueue(5);
     private List<String> elementsToCreate = new ArrayList<>();
     private int chatID = 0; // Numero incremental para crear conversationID
@@ -26,14 +26,15 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
     private String firstState;
     private String redundancy;
     private String parentAgentID, orderNumber;
-    private ArrayList<String> myReplicasID = new ArrayList<>();
-    private ArrayList<AID> sonAgentID = new ArrayList<>(); // lista con los nombres de los agentes de los que es padre
+//    private ArrayList<String> myReplicasID = new ArrayList<>();
+//    private ArrayList<AID> sonAgentID = new ArrayList<>(); // lista con los nombres de los agentes de los que es padre
+    private ArrayList<String> sonAgentID = new ArrayList<>();
     private Integer batchIndex = 1;
     private Boolean newBatch = true, firstTime = true;
     private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> batchTraceability = new ArrayList<>();
     private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> deserializedMessage = new ArrayList<>(); // Mensaje recibido desde el batchAgent deserializado
     private String mySeType;
-    private MessageTemplate template, template2,templateFT,template3,template4,template5;
+    private MessageTemplate template, template2,templateFT,template3,template4,template5, template6,template7;
     private volatile String orderreference=null;
     private volatile String raw_ft=null;
     private volatile AID QoSID = new AID("QoSManagerAgent", false);
@@ -111,13 +112,121 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
 
     @Override
-    public Object getState() {
-        return null;
+    public void setState(String state) {
+        ArrayList<ArrayList<ArrayList<ArrayList<String>>>> Traceability=new ArrayList<>();
+        ArrayList<String> remaining=new ArrayList<String>();
+        ArrayList<ArrayList<String>> FT=new ArrayList<>();
+        ArrayList<String> replicas=new ArrayList<String>();
+        String parts1[] =state.split("/div0/"); //el divisor 0 divide los argumentos y el resto se usan para los arraylist
+        String productTraceabilityConc = parts1[0]; //trazabilidad concatenada
+        String remainingConc = null;
+        if (parts1[1] != null&&parts1[1] != "") {
+            remainingConc = parts1[1]; //solo si quedan acciones/SonAgentIDs
+        }
+        String firstimeString = parts1[2]; //primera vez
+
+        String FinishTimesConc=parts1[3]; //finish times concatenados (cada agente de aplicación lleva un formato)
+        parentAgentID=parts1[4]; 					//parent
+        String replicasConc=parts1[5];		//replicas del agente
+
+        String parts2[] = productTraceabilityConc.split("/div1/"); //construye la trazabilidad
+        for (int i = 0; i < parts2.length; i++) {
+            Traceability.add(i, new ArrayList<ArrayList<ArrayList<String>>>());
+            String parts3[] = parts2[i].split("/div2/");
+            for (int j = 0; j < parts3.length; j++) {
+                Traceability.get(i).add(j, new ArrayList<ArrayList<String>>());
+                String parts4[] = parts3[j].split("/div3/");
+                for (int k = 0; k < parts4.length; k++) {
+                    Traceability.get(i).get(j).add(k, new ArrayList<String>());
+                    String parts5[] = parts4[k].split("/div4/");
+                    for (int l = 0; l < parts5.length; l++) {
+                        Traceability.get(i).get(j).get(k).add(parts5[l]);
+                    }
+                }
+            }
+        }
+        batchTraceability=Traceability;
+        if (remainingConc != null) {    //construye los sonagentID o actionlist
+            String parts6[] = remainingConc.split("/div1/");
+            for (int i = 0; i < parts6.length; i++) {
+                remaining.add(parts6[i]);
+            }
+        }
+        sonAgentID=remaining;
+        firstTime = Boolean.parseBoolean(firstimeString);
+        String parts7[]=FinishTimesConc.split("/div1/");
+        for(int i=0;i<parts7.length;i++) {
+            FT.add(i, new ArrayList<String>());
+            String parts8[] = parts7[i].split("/div2/");
+            for (int j = 0; j < parts8.length; j++) {
+                FT.get(i).add(parts8[j]);
+            }
+        }
+        batch_last_items_ft=FT;
+        String parts9[]=replicasConc.split("/div1/");
+        for(int k=0;k<parts9.length;k++){
+            if(!parts9[k].equals(myAgent.getLocalName())){
+                replicas.add(parts9[k]);
+            }
+        }
+        myAgent.replicas=replicas;
     }
-
     @Override
-    public void setState(Object state) {
+    public String getState(){
+        String state="";
 
+        for(int i=0;i<batchTraceability.size();i++){
+            if(i!=0){
+                state=state+"/div1/";
+            }
+            for(int j=0;j<batchTraceability.get(i).size();j++){
+                if(j!=0){
+                    state=state+"/div2/";
+                }
+                for(int k=0;k<batchTraceability.get(i).get(j).size();k++){
+                    if(k!=0){
+                        state=state+"/div3/";
+                    }
+                    for(int l=0;l<batchTraceability.get(i).get(j).get(k).size();l++){
+                        if(l!=0){
+                            state=state+"/div4/";
+                        }
+                        state=state+batchTraceability.get(i).get(j).get(k).get(l);
+                    }
+                }
+            }
+        }
+        state=state+"/div0/";
+        for(int i=0;i<sonAgentID.size();i++){
+            if(i!=0){
+                state=state+"/div1/";
+            }
+            state=state+sonAgentID.get(i);
+        }
+        state=state+"/div0/"+String.valueOf(firstTime)+"/div0/";
+
+        for(int i=0;i<batch_last_items_ft.size();i++){ //concatena los FT de los item
+            if(i!=0){
+                state=state+"/div1/";
+            }
+            for(int j=0;j<batch_last_items_ft.get(i).size();j++){
+                if(j==0){
+                    state=state+batch_last_items_ft.get(i).get(j);
+                }else{
+                    state=state+"/div2/"+batch_last_items_ft.get(i).get(j);
+                }
+            }
+        }
+        state=state+"/div0/"+parentAgentID+"/div0/";
+
+        for(int i=0;i<myAgent.replicas.size();i++){ //concatena los replicas del batch
+            if(i==0){
+                state=state+myAgent.replicas.get(i);
+            }else{
+                state=state+"/div1/"+myAgent.replicas.get(i);
+            }
+        }
+        return state;
     }
 
     @Override
@@ -133,6 +242,10 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 MessageTemplate.MatchOntology("update_timeout"));
         this.template5=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                 MessageTemplate.MatchOntology("delay"));
+        this.template6=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                MessageTemplate.MatchOntology("delete_replica"));
+        this.template7=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                MessageTemplate.MatchOntology("restore_replica"));
         this.myAgent = myAgent;
 
         // Crear un nuevo conversationID
@@ -163,8 +276,9 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los batch cuando se arranquen correctamente
 
             Object[] result = processACLMessages(myAgent, mySeType, elementsToCreate, conversationId, redundancy, parentAgentID);
-            sonAgentID = (ArrayList<AID>) result[1];
-            myReplicasID = (ArrayList<String>) result[0];
+            sonAgentID = (ArrayList<String>) result[1];
+
+            myAgent.replicas = (ArrayList<String>) result[0];
 
             templateFT=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                     MessageTemplate.MatchOntology("Ftime_order_ask"));
@@ -179,7 +293,6 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 System.out.println(finishtime.getContent());
                 raw_ft=finishtime.getContent();
                 batch_last_items_ft=batch_finish_times(raw_ft);
-
 
             }catch(Exception e) {
                 System.out.println(myAgent.getLocalName()+ " ERROR. Something happened at some point during initialization");
@@ -222,7 +335,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         if (msg != null) {
             msgFIFO.add((String) msg.getContent());
             sendACLMessage(7, msg.getSender(), "Acknowledge", msg.getConversationId(),"Received",myAgent);
-            SendToReplicas(myReplicasID,msg);
+
 
             if (firstTime) {
                 deserializedMessage = deserializeMsg(msg.getContent());
@@ -249,6 +362,8 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 batchTraceability = addNewLevel(batchTraceability, deserializedMessage,false);
             }
             newBatch = false; // hasta que el batch añadido no se complete, cada vez que se reciba un mensaje el dato se sobrescribira
+            getState();
+
         }
         ACLMessage msg2 = myAgent.receive(template2);
         // Recepcion de mensajes para eliminar de la lista de agentes hijo los agentes batch que ya han enviado toda la informacion
@@ -258,8 +373,9 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             if (msg2.getContent().equals("Batch completed")){
                 String msgSender = msg2.getOntology();
                 for (int i = 0; i < sonAgentID.size(); i++) {
-                    if (sonAgentID.get(i).getName().split("@")[0].equals(msgSender)) {
-                        sonAgentID.remove(i);
+//                    if (sonAgentID.get(i).getName().split("@")[0].equals(msgSender)) {
+                    if (sonAgentID.get(i).equals(msgSender)){
+                            sonAgentID.remove(i);
                     }
                 }
                 String aux = "";
@@ -268,7 +384,6 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                     aux = a.toString();
                     msgToMPLan = msgToMPLan.concat(aux);
                 }
-
                 AID Agent = new AID(parentAgentID, false);
                 sendACLMessage(7, Agent, "Information", "OrderInfo", msgToMPLan, myAgent);
                 ACLMessage ack= myAgent.blockingReceive(echotemplate,250);
@@ -290,6 +405,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 batchIndex = batchTraceability.size() - 1;
                 newBatch = true;
             }
+
         }
         ACLMessage msg3=myAgent.receive(template3);
         if(msg3!=null){            //confirmación de timeout
@@ -325,7 +441,37 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 System.out.println("Not my batch, something went wrong");
             }
         }
-
+        ACLMessage msg6=myAgent.receive(template6);
+        if(msg6!=null){
+            boolean f=false;
+            for(int i=0;i<myAgent.IgnoredReplicas.size();i++){ //se elimina de la lista de ignorados en caso de que esté
+                if(myAgent.IgnoredReplicas.get(i).equals(msg.getContent())){
+                    myAgent.IgnoredReplicas.remove(i);
+                    f=true;
+                }
+            }
+            if(f==false){ //en caso de no encontrarlo en la lista de ignorados, es posile que aun se encuentre en la lista de replicas normal
+                for(int i=0;i<myAgent.replicas.size();i++){
+                    if(myAgent.replicas.get(i).equals(msg.getContent())){
+                        myAgent.replicas.remove(i);
+                    }
+                }
+            }
+        }
+        ACLMessage msg7=myAgent.receive(template7);
+        if(msg7!=null){
+            for(int i=0;i<myAgent.IgnoredReplicas.size();i++) { //se elimina de la lista de ignorados en caso de que esté
+                if (myAgent.IgnoredReplicas.get(i).equals(msg.getContent())) {
+                    myAgent.replicas.add(myAgent.IgnoredReplicas.get(i)); //se vuelve a añadir a la lista de replicas
+                    for(int j=0; j<myAgent.ReportedAgents.size();j++){
+                        if(myAgent.ReportedAgents.get(j).equals(myAgent.IgnoredReplicas.get(i))){
+                            myAgent.ReportedAgents.remove(j); // se elimina tambien de la lista de agentes reportados
+                        }
+                    }
+                    myAgent.IgnoredReplicas.remove(i);
+                }
+            }
+        }
         ACLMessage msg5=myAgent.receive(template5);
         if(msg5!=null){                                 //Genera el timeout al recibir el delay de cada batch
             msgFIFO.add((String) msg5.getContent());
@@ -363,7 +509,9 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             }else{
                 System.out.println("**ERROR**. No timeout generated for batch "+ batchref);
             }
+
         }
+
         return false;
     }
 
@@ -371,7 +519,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
     public Void terminate(MWAgent myAgent) {
         this.myAgent = myAgent;
         String parentName = "";
-        if(orderNumber!=null){ //por si es una replica ejecutando terminate
+        if(myAgent.ActualState=="running"){ //para filtrar las replicas ejecutando terminate
             try {
                 ACLMessage reply = sendCommand(myAgent, "get * reference=" + orderNumber, "parentAgentID");
 
@@ -383,7 +531,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             }
             try {
                 AID Agent = new AID(parentAgentID, false);
-                KillReplicas(myReplicasID);
+                KillReplicas(myAgent.replicas);
                 sendACLMessage(7, Agent, myAgent.getLocalName(), "Shutdown", "Order completed", myAgent); // Informa al Mplan Agent que ya ha finalizado su tarea
                 myAgent.deregisterAgent(parentName);
 
@@ -394,6 +542,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
         return null;
     }
+
 
     protected ArrayList<ArrayList<String>> batch_finish_times(String rawdata){
 

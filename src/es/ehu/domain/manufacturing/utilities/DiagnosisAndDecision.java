@@ -43,7 +43,10 @@ public class DiagnosisAndDecision extends Agent{
                                     try {
                                         ACLMessage reply= sendCommand(myAgent, "get "+msg.getContent()+" attrib=state", "ApplicationAgentState");
                                         if(reply.getContent().equals("tracking")){
-                                            LOGGER.warn(msg.getContent()+" is in tracking state. Ignoring error.");
+                                            LOGGER.warn(msg.getContent()+" is in tracking state. Informing running replica.");
+                                            ACLMessage reply2= sendCommand(myAgent, "get "+msg.getContent()+" attrib=parent", "ApplicationAgentParent");
+                                            ACLMessage reply3= sendCommand(myAgent, "get * parent="+reply2.getContent()+" state=running" , "ApplicationAgentRunning");
+                                            sendACL(7, reply3.getContent(), "delete_replica", msg.getContent());
                                         }else{
                                             if(msg.getContent().contains("batchagent")){
                                                 sendACL(16,"QoSManagerAgent" , "askrelationship", msg.getContent());
@@ -72,12 +75,13 @@ public class DiagnosisAndDecision extends Agent{
                                 }
 
                             }else { //agente GW no encontrado
-                                String msgparts[] = msg.getContent().split("/div/");
+                                String msgparts[] = msg.getContent().split("/div/"); //el agente GW siempre se reporta con su machine responsable
                                 String GW = msgparts[0];
                                 LOGGER.error(GW + " is either dead or isolated. Manually reset GW.");
                                 if (msgparts[1] != null) {
-                                    LOGGER.info(msgparts[1] + " is the machine assigned to "+GW);
+//                                    LOGGER.info(msgparts[1] + " is the machine assigned to "+GW);
                                     sendACL(16,msgparts[1] , "control", "setstate idle");
+                                    LOGGER.info(msgparts[1] + " is now idling");
                                 }else{
                                     LOGGER.error("QoS should have sent which machine is assigned to GW.");
                                 }

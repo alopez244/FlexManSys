@@ -123,7 +123,6 @@ public class GWAgent extends GatewayAgent {
                     stateasker= check_asset_state.getSender().getLocalName();
                 }
 
-
                 ACLMessage msgToFIFO = receive(template);
 
                if (msgToFIFO != null) {

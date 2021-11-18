@@ -53,17 +53,17 @@ public class QoSManagerAgent extends Agent {
             ACLMessage msg = blockingReceive();
             if(msg!=null){
                 if(msg.getPerformative()==ACLMessage.FAILURE&&!msg.getSender().getLocalName().equals("ams")){ //Se recibe un posible error no perteneciente al ams
-                    if(msg.getOntology().equals("acl_error")){ //error de tipo comunicación
-                        String[] msgparts=msg.getContent().split("/div/");
-                        String performative=msgparts[0];
-                        String ontology=msgparts[1];
-                        String convID=msgparts[2];
-                        String receiver=msgparts[3];
-                        String intercepted_msg=msgparts[4];
-                        LOGGER.warn(msg.getSender().getLocalName()+" reported a failure while trying to communicate with "+ receiver);
-                        if(CheckNotFoundRegistry(receiver)&&CheckNotFoundRegistry(msg.getSender().getLocalName())) { //comprueba que el denunciante y el denunciado no esten en la blacklist de agentes no encontrados
+                    if(msg.getOntology().equals("acl_error")) { //error de tipo comunicación
+                        String[] msgparts = msg.getContent().split("/div/");
+                        String performative = msgparts[0];
+                        String ontology = msgparts[1];
+                        String convID = msgparts[2];
+                        String receiver = msgparts[3];
+                        String intercepted_msg = msgparts[4];
+                        LOGGER.warn(msg.getSender().getLocalName() + " reported a failure while trying to communicate with " + receiver);
+                        if (CheckNotFoundRegistry(receiver) && CheckNotFoundRegistry(msg.getSender().getLocalName())) { //comprueba que el denunciante y el denunciado no esten en la blacklist de agentes no encontrados
                             LOGGER.info("Checking if " + receiver + " is alive and if the agent received the reported msg.");
-                            String command = CheckMsgFIFO(msg.getSender().getLocalName(), intercepted_msg); //checkMsgFIFo se puede usar con order, batch y machine por ahora, el resto responde como un ping
+                            String command = CheckMsgFIFO(receiver, intercepted_msg); //checkMsgFIFo se puede usar con order, batch y machine por ahora, el resto responde como un ping
                             System.out.println(command);
                             n = SearchAgent(receiver);
                             if (command.equals("msg_lost") && n == 1) {         //Receiver vivo pero mensaje perdido
@@ -99,6 +99,23 @@ public class QoSManagerAgent extends Agent {
                                 sendACL(ACLMessage.INFORM, "D&D", "not_found", msgtoDD);
                             }
                             add_to_error_list("communication", msg.getSender().getLocalName(), receiver, intercepted_msg, "");
+                        }
+                    } else if(msg.getOntology().equals("ctrlbhv_failure")){ //error redundante para casos no contemplados por acknowledge. Aporta menos información
+                        LOGGER.warn(msg.getSender().getLocalName()+ " reported a communication failure with "+msg.getContent());
+                        if(CheckNotFoundRegistry(msg.getContent())){
+                            boolean pong=PingAgent(msg.getContent());
+                            if(!pong){
+                                add_to_error_list("not_found", msg.getContent(), "", "", "");
+                                sendACL(ACLMessage.INFORM, "D&D", "not_found", msg.getContent());
+                            }else{
+                                LOGGER.info(msg.getContent()+ " did answer to ping.");
+                                if(msg.getContent().contains("batchagent")||msg.getContent().contains("orderagent")||msg.getContent().contains("mplanagent")){
+                                    String n[]=msg.getContent().split("agent");
+                                    if(msg.getSender().getLocalName().contains(n[0]+"agent")){ // si llegamos aquí se trata de una replica en modo tracking que habría que restaurar
+                                        sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), "restore_replica", msg.getContent());
+                                    }
+                                }
+                            }
                         }
 
                     } else if(msg.getOntology().equals("timeout")){ //error de tipo timeout
@@ -137,10 +154,9 @@ public class QoSManagerAgent extends Agent {
                                     for (int k = 0; k < batch_and_machine.size(); k++) {
                                         if (batch_and_machine.get(k).get(0).equals(timeout_batch_id)) {
                                             String MA = batch_and_machine.get(k).get(1);
-
+                                            argument2 = timeout_batch_id;
+                                            argument3 = timeout_item_id;
                                             if (CheckNotFoundRegistry(MA)) {
-                                                argument2 = timeout_batch_id;
-                                                argument3 = timeout_item_id;
                                                 pong = PingAgent(MA); // hacemos ping al agente máquina para comprobar su estado
                                                 int found = SearchAgent(MA); //Buscamos a su vez que el agente gateway este vivo.
                                                 if (found == 1 && pong) {  //Si pong es 1 el agente ha contestado
@@ -192,9 +208,14 @@ public class QoSManagerAgent extends Agent {
                                                     }
                                                     add_to_error_list(argument1, argument2, argument3, argument4, argument5);
                                                 }else{
+                                                    argument5 = "ControlGatewayCont" + ch[0] + "->NO OK";
+                                                    add_to_error_list(argument1, argument2, argument3, argument4, argument5);
                                                     sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "confirmed_timeout");
                                                 }
                                             }else{
+                                                argument4 = MA + "->NO OK";
+                                                argument5 = "?";
+                                                add_to_error_list(argument1, argument2, argument3, argument4, argument5);
                                                 sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "confirmed_timeout");
                                             }
                                         }
@@ -315,13 +336,13 @@ public class QoSManagerAgent extends Agent {
                                 j--;
                             }
                         }
-                        System.out.println("Batch "+finishing_batch+" finished.");
+                        LOGGER.info("Batch "+finishing_batch+" finished.");
                     }
                     if (msg.getOntology().equals("delay")) {
                         String[] parts2=msg.getContent().split("/");
                         String batch_id=parts2[0];
                         String ms_of_delay=parts2[1];
-                        LOGGER.info("Batch" +batch_id+" started with "+ms_of_delay+" ms of delay");
+                        LOGGER.info("Batch " +batch_id+" started with "+ms_of_delay+" ms of delay");
                         ActualBatch = getDelays(msg.getContent()); //Añade el batch especificado con su correspondiente delay a la lista de delays
 
                         for (int l = 0; l < delay_asking_queue.size(); l++) {
@@ -574,6 +595,7 @@ public class QoSManagerAgent extends Agent {
         l++;
     }
 
+
     public Date getactualtime(){
         String actualTime;
         int ano, mes, dia, hora, minutos, segundos;
@@ -599,7 +621,7 @@ public class QoSManagerAgent extends Agent {
         for(int t=0;t<ErrorList.size();t++){
             if(ErrorList.get(t).get(0).equals("not_found")){
                 if(ErrorList.get(t).get(2).equals(Agent)){
-                    LOGGER.info(Agent +" has been already reported as not found. Ignoring error.");
+                    LOGGER.info(Agent +" has already been reported as not found.");
                     flag=false;
                 }
             }

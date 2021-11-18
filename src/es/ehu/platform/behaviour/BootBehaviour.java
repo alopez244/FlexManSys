@@ -11,7 +11,8 @@ public class BootBehaviour extends OneShotBehaviour {
   static final Logger LOGGER = LogManager.getLogger(BootBehaviour.class.getName()) ;
   
   MWAgent myAgent;
-  
+
+
   public BootBehaviour(MWAgent a) {
     super(a);
     myAgent = a;
@@ -37,7 +38,7 @@ public class BootBehaviour extends OneShotBehaviour {
 
   public int onEnd() {
     LOGGER.info("devuelvo "+myAgent.initTransition);
-    
+
     return myAgent.initTransition;
   }
 

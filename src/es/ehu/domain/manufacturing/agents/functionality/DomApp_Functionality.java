@@ -43,7 +43,8 @@ public class DomApp_Functionality extends Dom_Functionality{
         this.myAgent = agent;
         ArrayList<String> replicasID = new ArrayList<>();
         String myParentID = null;
-        ArrayList<AID> senderAgentsID = new ArrayList<>();
+//        ArrayList<AID> senderAgentsID = new ArrayList<>();
+        ArrayList<String> senderAgentsID = new ArrayList<>();
         try {
             ACLMessage reply = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", conversationId);
             if (reply != null)
@@ -74,7 +75,7 @@ public class DomApp_Functionality extends Dom_Functionality{
                         // Si los padres son diferentes, se trata de un hijo
                         if (myElements.contains(senderParentID))
                             myElements.remove(senderParentID);
-                        senderAgentsID.add(msg.getSender()); //.getName().split("@")[0])
+                        senderAgentsID.add(msg.getSender().getLocalName()); //.getName().split("@")[0])
                     }
                 }
             }
@@ -517,7 +518,7 @@ public class DomApp_Functionality extends Dom_Functionality{
             AID AgentID = new AID(replicas.get(i), false);
             sendACLMessage(16, AgentID, "control", "Shutdown", "setstate stop", myAgent);
             int  found =SearchAgent(replicas.get(i));
-            while(found!=0){  //hay que esperar a que los tracking desaparezcan antes de desregistrar el agente parent
+            while(found!=0){  //hay que esperar a que los tracking desaparezcan antes de desregistrar el agente running
                 found =SearchAgent(replicas.get(i));
                 try {
                     Thread.sleep(100);
@@ -527,6 +528,8 @@ public class DomApp_Functionality extends Dom_Functionality{
             }
         }
     }
+
+
 
 
     private int SearchAgent (String agent){

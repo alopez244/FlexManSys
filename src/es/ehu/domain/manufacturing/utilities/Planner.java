@@ -69,12 +69,11 @@ public class Planner extends Agent {
                 String api = "Planner Agent local commands:\n"
                         + "register > Register a Manufacturing Plan of your desire\n"
                         + "toggle > Toggles between automatic or manual error management\n"
-                        + "errorlist > Shows registered errors, sorted by type\n"
-                        + "ping > Checks if the desired agent is online\n"
-                        + "checkstate > For a defined GW checks asset state\n"
-                        + "idle > Makes the desired resource agent idle (only in manual mode)\n"
-                        + "wake > Makes the desired resource agent wake from idle (only in manual mode)\n"
-                        + "relationship > Gives de relationship between batch agent and machine agent given one of them\n"
+                        + "errorlist > Lists registered errors\n"
+                        + "ping > Checks if an agent is online\n"
+                        + "checkstate > Checks asset state\n"
+                        + "setstate > Makes an agent change its state\n"
+                        + "relationship > Gives de relationship between batch agent and machine agent\n"
                         + "help > SystemModelAgent commands summary\n"
                         + "exit > Shut down Planner Agent\n\n";
                 System.out.print(api);
@@ -175,15 +174,9 @@ public class Planner extends Agent {
                                     System.out.println("Error. Not a valid agent.");
                                 }
 
-                            }else if (cmds[i].equals("idle")) {
+                            }else if (cmds[i].equals("setstate")) {
                                 if(control.equals("manual")){
-                                    makeidle();
-                                }else{
-                                    LOGGER.error("Invalid command on automatic mode.\n");
-                                }
-                            }else if (cmds[i].equals("wake")) {
-                                if(control.equals("manual")){
-                                    makerun();
+                                    changestate();
                                 }else{
                                     LOGGER.error("Invalid command on automatic mode.\n");
                                 }
@@ -223,25 +216,6 @@ public class Planner extends Agent {
             }
 
         }
-        public void makerun(){
-            Scanner in = new Scanner(System.in);
-            System.out.println("Define which resource agents you want to wake: ");
-            System.out.print("Resource agents: ");
-            String cmd = in.nextLine();
-            String[] cmds = cmd.split(";");
-            for(int l=0;l<cmds.length;l++){
-                if (cmds[l].contains("machine")) {
-                    int found = SearchAgent(cmds[l]);
-                    if (found != 1) {
-                        LOGGER.error("Multiple or no resource agents found for provided name "+cmds[l]);
-                    } else {
-                        sendACL(16, cmds[l], "control", "setstate running");
-                    }
-                } else {
-                    LOGGER.error(cmds[l]+" is not a valid agent.\n");
-                }
-            }
-        }
 
         public void checkasset(){
             Scanner in = new Scanner(System.in);
@@ -271,23 +245,37 @@ public class Planner extends Agent {
             }
 
         }
-
-        public void makeidle(){
+        public void changestate(){
             Scanner in = new Scanner(System.in);
-            System.out.println("Define which resource agents you want to idle: ");
-            System.out.print("Resource agents: ");
+            System.out.println("Define the agent to change his state: ");
+            System.out.print("Agent: ");
             String cmd = in.nextLine();
-            String[] cmds = cmd.split(";");
-            for(int l=0;l<cmds.length;l++){
-                if (cmds[l].contains("machine")) {
-                    int found = SearchAgent(cmds[l]);
-                    if (found != 1) {
-                        LOGGER.error("Multiple or no resource agents found for provided name "+cmds[l]);
-                    } else {
-                        sendACL(16, cmds[l], "control", "setstate idle");
+            int found = SearchAgent(cmd);
+            if (found != 1) {
+                LOGGER.error("Multiple or no agents found for provided name "+cmd);
+            }else{
+                if(cmd.contains("machine")){
+                    Scanner in2 = new Scanner(System.in);
+                    System.out.println("Define the state (idle, running): ");
+                    System.out.print("State: ");
+                    String cmd2 = in2.nextLine();
+                    if(cmd2.equals("idle")||cmd2.equals("running")){
+                        sendACL(16, cmd, "control", "setstate "+cmd2);
+                    }else{
+                        LOGGER.error("User entered an invalid state");
                     }
-                } else {
-                    LOGGER.error(cmds[l]+" is not a valid agent.\n");
+                }else if(cmd.contains("batchagent")||cmd.contains("orderagent")||cmd.contains("mplanagent")){
+                    Scanner in2 = new Scanner(System.in);
+                    System.out.println("Define the state (tracking, running): ");
+                    System.out.print("State: ");
+                    String cmd2 = in2.nextLine();
+                    if(cmd2.equals("tracking")||cmd2.equals("running")){
+                        sendACL(16, cmd, "control", "setstate "+cmd2);
+                    }else{
+                        LOGGER.error("User entered an invalid state");
+                    }
+                }else{
+                    LOGGER.error("User entered an invalid agent");
                 }
             }
         }

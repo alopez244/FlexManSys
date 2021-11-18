@@ -63,6 +63,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 
 	public void onStart() {
 		LOGGER.entry();
+		myAgent.ActualState="running";
 		this.PrevPeriod = myAgent.period;
 		if (myAgent.period < 0) {
 			this.NextActivation = -1;
@@ -83,17 +84,25 @@ public class RunningBehaviour extends SimpleBehaviour {
 		endFlag = Boolean.valueOf(result.toString());
 
 		manageExecutionResult(result);
-
-		Serializable state = null;
-		try {
-			state = (Serializable) ((AvailabilityFunctionality)myAgent.functionalityInstance).getState();
-		} catch (Exception e) {
-			LOGGER.debug("GetState is returning a non-serializable object");
-		}
-		if (state != null) {
+		//****************** Consigue el estado actual de la replica.
+		String currentState = null;
+		currentState= (String) ((AvailabilityFunctionality)myAgent.functionalityInstance).getState();
+		if (currentState != null) {
 			LOGGER.debug("Send state");
-			myAgent.sendState(state);
+			myAgent.sendStateToTracking(currentState);
 		}
+		//***********************************************
+//		Serializable state = null;
+//		try {
+//			state = (Serializable) ((AvailabilityFunctionality)myAgent.functionalityInstance).getState();
+//
+//		} catch (Exception e) {
+//			LOGGER.debug("GetState is returning a non-serializable object");
+//		}
+//		if (state != null) {
+//			LOGGER.debug("Send state");
+//			myAgent.sendState(state);
+//		}
 
 		long t = manageBlockingTimes();
 
@@ -109,6 +118,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 	}
 
 	public int onEnd() {
+		myAgent.previousState="running";
 		return 0;
 	}
 
@@ -154,7 +164,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 					}
 				}
 			} else {
-				LOGGER.debug("Received message in an agent withou sourceComponentIDs");
+				LOGGER.debug("Received message in an agent without sourceComponentIDs");
 				return LOGGER.exit(new Object[] {msg});
 			}
 		}

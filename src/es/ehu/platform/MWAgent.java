@@ -16,6 +16,7 @@ import jade.lang.acl.MessageTemplate;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -45,7 +46,11 @@ public class MWAgent extends Agent {
     public BasicFunctionality functionalityInstance;
     public String[] targetComponentIDs, sourceComponentIDs;
     public int period = -1;
-
+    public String previousState=null;
+    public String ActualState=null;
+    public ArrayList<String> replicas=new ArrayList<String>();
+    public static ArrayList<String> ReportedAgents=new ArrayList<String>();
+    public ArrayList<String> IgnoredReplicas=new ArrayList<String>();
     public String cmpID = null;
 
     public int initTransition;
@@ -365,9 +370,9 @@ public class MWAgent extends Agent {
         return LOGGER.exit(response);
     }
 
-    public String sendState(Serializable msg, final String sTargets) {
+    public String sendStateToReplicas(String msg, final String sTargets){ //en uso
         LOGGER.entry(msg, sTargets);
-        String [] cmpinss = sTargets.split(",");
+        String [] cmpinss = sTargets.split("/div1/");
         if (cmpinss == null) return null;
         if (msg==null) msg = "null";
 
@@ -377,7 +382,7 @@ public class MWAgent extends Agent {
             ACLMessage aMsg = new ACLMessage(ACLMessage.INFORM);
 
             aMsg.setOntology(ONT_STATE);
-            aMsg.setContentObject(msg);
+            aMsg.setContent(msg);
             for (String cmpins: cmpinss) aMsg.addReceiver(new AID(cmpins, AID.ISLOCALNAME));
 
             send(aMsg);
@@ -392,6 +397,33 @@ public class MWAgent extends Agent {
         return LOGGER.exit(response);
     }
 
+//    public String sendState(Serializable msg, final String sTargets) { //anulado
+//        LOGGER.entry(msg, sTargets);
+//        String [] cmpinss = sTargets.split(",");
+//        if (cmpinss == null) return null;
+//        if (msg==null) msg = "null";
+//
+//        String response = "";
+//        try {
+//
+//            ACLMessage aMsg = new ACLMessage(ACLMessage.INFORM);
+//
+//            aMsg.setOntology(ONT_STATE);
+//            aMsg.setContentObject(msg);
+//            for (String cmpins: cmpinss) aMsg.addReceiver(new AID(cmpins, AID.ISLOCALNAME));
+//
+//            send(aMsg);
+//
+//            LOGGER.debug("sendState().send("+sTargets+"):"+aMsg);
+//
+//            LOGGER.info(cmpID+"("+getLocalName() + "):state("+ ((msg.getClass()==null)?"null":msg.getClass().getSimpleName())+ ") > "+cmpID+"("+sTargets+")" );
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return LOGGER.exit(response);
+//    }
+
     public void triggerEvent(final String eventId){
         LOGGER.entry(eventId);
         sendCommand("start "+eventId);
@@ -403,24 +435,46 @@ public class MWAgent extends Agent {
      * If there are not any tracking, the state is only sent to the MWM.
      * @param msg State information
      */
-    public void sendState(final Serializable msg){
-        LOGGER.entry(msg);
-        String sTracking = this.getInstances(this.cmpID, "tracking");
-        LOGGER.info("Tracking: " + sTracking);
-        if ((sTracking != null) && (sTracking.length() > 0) && (!sTracking.equals("type not found"))) {
-            sTracking += "," + runningMwm.get("tmwm");
-        } else {
-            sTracking = runningMwm.get("tmwm");
-        }
 
-        if (sTracking.length() > 0) {
+    public void sendStateToTracking(String msg){ //en uso
+        LOGGER.entry(msg);
+        String parts1[] = msg.split("/div0/");
+
+        String sTracking = parts1[5];
+        LOGGER.info("Tracking: " + sTracking);
+
+
+        if ((sTracking != null) && sTracking.length() > 0) {
             LOGGER.info("Refresh state to tracking instances:"+ sTracking);
-            this.sendState(msg, sTracking);
+            this.sendStateToReplicas(msg, sTracking);
         } else {
             LOGGER.info("No tracking instances:");
         }
         LOGGER.exit();
+
+
     }
+
+
+
+//    public void sendState(final Serializable msg){
+//        LOGGER.entry(msg);
+//        String sTracking = this.getInstances(this.cmpID, "tracking");
+//        LOGGER.info("Tracking: " + sTracking);
+//        if ((sTracking != null) && (sTracking.length() > 0) && (!sTracking.equals("type not found"))) {
+//            sTracking += "," + runningMwm.get("tmwm");
+//        } else {
+//            sTracking = runningMwm.get("tmwm");
+//        }
+//
+//        if (sTracking.length() > 0) {
+//            LOGGER.info("Refresh state to tracking instances:"+ sTracking);
+//            this.sendState(msg, sTracking);
+//        } else {
+//            LOGGER.info("No tracking instances:");
+//        }
+//        LOGGER.exit();
+//    }
 
     /**
      * Informa al middleware manager que la instancia de componente ha cambiado

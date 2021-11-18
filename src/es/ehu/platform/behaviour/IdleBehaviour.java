@@ -13,6 +13,12 @@ public class IdleBehaviour extends SimpleBehaviour {
     private MWAgent myAgent;
     static final Logger LOGGER = LogManager.getLogger(IdleBehaviour.class.getName());
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        myAgent.ActualState="idle";
+    }
+
     public IdleBehaviour(MWAgent a){
         super(a);
         LOGGER.entry(a);
