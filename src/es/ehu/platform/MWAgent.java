@@ -49,9 +49,12 @@ public class MWAgent extends Agent {
     public String previousState=null;
     public String ActualState=null;
     public ArrayList<String> replicas=new ArrayList<String>();
-    public static ArrayList<String> ReportedAgents=new ArrayList<String>();
+    public static ArrayList<String> ReportedAgents=new ArrayList<String>(); //agentes
     public ArrayList<String> IgnoredReplicas=new ArrayList<String>();
     public String cmpID = null;
+
+    public String state ="";
+    public boolean change_state=false;
 
     public int initTransition;
     public String conversationId;

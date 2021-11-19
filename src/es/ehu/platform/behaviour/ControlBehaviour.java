@@ -86,7 +86,7 @@ public class ControlBehaviour extends SimpleBehaviour {
         LOGGER.debug(myAgent.cmpID+"("+myAgent.getLocalName()+"): SupervisorControl.action()");
         ACLMessage msg = myAgent.receive(template);
 
-        if (msg != null||Machine_Functionality.change_state) {
+        if (msg != null|| myAgent.change_state) {
 
             if(msg!=null){
             if (msg.getContent() == null) {
@@ -115,7 +115,7 @@ public class ControlBehaviour extends SimpleBehaviour {
                     LOGGER.info(name+" has already been reported");
                 }
                 if(myAgent.getLocalName().contains("batchagent")||myAgent.getLocalName().contains("orderagent")||myAgent.getLocalName().contains("mplanagent")){
-                    String n[]=myAgent.getLocalName().split("agent"); //se checkea si los agentes son del mismo tipo para borrarlo de la lista de replicas (agentes de aplicación)
+                    String n[]=myAgent.getLocalName().split("agent"); //se checkea si los agentes son del mismo tipo para borrarlo de la lista de replicas
                     if(n[0]!=null){
                         if(name.contains(n[0]+"agent")){
                             LOGGER.warn("Error in communication with a replica. Ignore this replica by the moment");
@@ -128,7 +128,6 @@ public class ControlBehaviour extends SimpleBehaviour {
                         }
                     }
                 }
-
 
                 try {
                     LOGGER.info(myAgent.sendCommand(CMD_REPORT + " (" + CMD_GETCOMPONENTS + " " + name + ") type=notFound cmpins=" + name));
@@ -197,11 +196,11 @@ public class ControlBehaviour extends SimpleBehaviour {
                     myAgent.send(aReply);
                 }
             }
-        }else if(myAgent.getLocalName().contains("machine")&& Machine_Functionality.change_state){ //autoidle
+        }else if(myAgent.getLocalName().contains("machine")&&  myAgent.change_state){ //autoidle del machine agent, para cuando se queda aislado
 
                 String result = "";
                 LOGGER.info("Set State ---------------");
-                switch(Machine_Functionality.state){
+                switch( myAgent.state){
                     case "idle":  exitValue = IDLE;
                         exit = true;
 //                        result = "done";
@@ -212,7 +211,7 @@ public class ControlBehaviour extends SimpleBehaviour {
                     default:  LOGGER.error("Asked a not valid state");
                     break;
                 }
-                Machine_Functionality.change_state=false;
+                myAgent.change_state=false;
             }
         } else {
             LOGGER.trace("ControlBehaviour.beh.block()");

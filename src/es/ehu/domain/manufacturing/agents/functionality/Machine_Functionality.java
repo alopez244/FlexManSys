@@ -57,8 +57,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private MessageTemplate pingt = MessageTemplate.and(MessageTemplate.MatchOntology("ping"),
             MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
     private AID QoSID = new AID("QoSManagerAgent", false);
-    public static String state ="";
-    public static boolean change_state=false;
+//    public static String state ="";
+//    public static boolean change_state=false;
 
 
 
@@ -66,6 +66,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
     /** Identifier of the agent. */
     private MachineAgent myAgent;
+
 
     /** Class name to switch on the agent */
     private String className;
@@ -482,10 +483,16 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         ACLMessage QoSR= myAgent.blockingReceive(QoStemplate,1000);
                         if(QoSR==null) {//si tampoco contesta el QoS se asume que esta aislado
                             LOGGER.error("I'm probably isolated.");
-                            state="idle";
-                            change_state=true;
-//                            sendACLMessage(16,myAgent.getAID(),"control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
-                            System.exit(0);
+                            myAgent.state="idle";
+                            myAgent.change_state=true;
+                        }
+                        boolean f=false;
+                        for(int i=0;i<myAgent.ReportedAgents.size();i++){
+                            myAgent.ReportedAgents.get(i).equals("sa");
+                            f=true;
+                        }
+                        if(!f){
+                            myAgent.ReportedAgents.add("sa");//si no se ha denunciado el agente añadirlo a la lista
                         }
                     }
                 } catch (Exception e) {
@@ -508,12 +515,20 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                             ACLMessage QoSR = myAgent.blockingReceive(QoStemplate, 1000);
                             if(QoSR==null) {//si tampoco contesta el QoS se asume que esta aislado
                                 LOGGER.error("I'm probably isolated.");
-                                state="idle";
-                                change_state=true; //cambia a estado idle sin usar ACLs
+                                myAgent.state="idle";
+                                myAgent.change_state=true; //cambia a estado idle sin usar ACLs
 //                        sendACLMessage(16, myAgent.getAID(), "control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
                                 LOGGER.error("Passing to idle");
                             }else if(QoSR.getContent().contains("confirmed")){
                                 System.out.println("Batch did not receive the message.");
+                                boolean f=false;
+                                for(int i=0;i<myAgent.ReportedAgents.size();i++){
+                                    myAgent.ReportedAgents.get(i).equals(batchAgentName);
+                                    f=true;
+                                }
+                                if(!f){
+                                    myAgent.ReportedAgents.add(batchAgentName);//si no se ha denunciado el agente añadirlo a la lista
+                                }
                             }else{
                                 System.out.println("Error ignored.");
                             }
@@ -524,9 +539,16 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         ACLMessage QoSR= myAgent.blockingReceive(QoStemplate,1000);
                         if(QoSR==null) { //si tampoco contesta el QoS se asume ue esta aislado
                             LOGGER.error("I'm probably isolated.");
-//                            sendACLMessage(16,myAgent.getAID(),"control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
-                            state="idle";
-                            change_state=true;
+                            myAgent.state="idle";
+                            myAgent.change_state=true;
+                        }
+                        boolean f=false;
+                        for(int i=0;i<myAgent.ReportedAgents.size();i++){
+                            myAgent.ReportedAgents.get(i).equals("sa");
+                            f=true;
+                        }
+                        if(!f){
+                            myAgent.ReportedAgents.add("sa");//si no se ha denunciado el agente añadirlo a la lista
                         }
                     }
                 } catch (Exception e) {
@@ -651,14 +673,21 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                             ACLMessage QoScommand = myAgent.blockingReceive(QoStemplate, 1000);
                             if (QoScommand == null) { //si no se recibe respuesta del QoS, se asume que esta aislado
                                 LOGGER.error("I'm probably isolated.");
-//                            sendACLMessage(16,myAgent.getAID(),"control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
-                                state="idle";
-                                change_state=true;
+                                myAgent.state="idle";
+                                myAgent.change_state=true;
                             } else {
                                 LOGGER.info("Received reply from QoS");
                                 if (QoScommand.getContent().contains("confirmed")) {
                                     LOGGER.error("QoS confirmed that GW is down. Waiting until GW is recovered."); //pendiente de wake, por ahora solo manual
                                 }
+                            }
+                            boolean f=false;
+                            for(int i=0;i<myAgent.ReportedAgents.size();i++){
+                                myAgent.ReportedAgents.get(i).equals(gatewayAgentName);
+                                f=true;
+                            }
+                            if(!f){
+                                myAgent.ReportedAgents.add(gatewayAgentName);//si no se ha denunciado el agente añadirlo a la lista
                             }
                         }
 

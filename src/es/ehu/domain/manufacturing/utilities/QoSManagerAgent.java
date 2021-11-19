@@ -100,7 +100,7 @@ public class QoSManagerAgent extends Agent {
                             }
                             add_to_error_list("communication", msg.getSender().getLocalName(), receiver, intercepted_msg, "");
                         }
-                    } else if(msg.getOntology().equals("ctrlbhv_failure")){ //error redundante para casos no contemplados por acknowledge. Aporta menos información
+                    } else if(msg.getOntology().equals("ctrlbhv_failure")){ //error redundante para casos no contemplados por acknowledge. Se envía en control behaviour. Aporta menos información
                         LOGGER.warn(msg.getSender().getLocalName()+ " reported a communication failure with "+msg.getContent());
                         if(CheckNotFoundRegistry(msg.getContent())){
                             boolean pong=PingAgent(msg.getContent());
@@ -117,7 +117,6 @@ public class QoSManagerAgent extends Agent {
                                 }
                             }
                         }
-
                     } else if(msg.getOntology().equals("timeout")){ //error de tipo timeout
 
                         if(msg.getSender().getLocalName().contains("batch")){ //timeout enviado por un batch
@@ -131,6 +130,11 @@ public class QoSManagerAgent extends Agent {
                                         if(ErrorList.get(m).get(3).equals(timeout_item_id)){
                                             LOGGER.error("Timeout repeated on same batch and item, confirming failure.");
                                             sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),"confirmed_timeout");
+                                            for (int k = 0; k < batch_and_machine.size(); k++) {
+                                                if(batch_and_machine.get(k).get(0).equals(timeout_batch_id)){
+                                                    sendACL(ACLMessage.INFORM,"D&D","timeout",batch_and_machine.get(k).get(1));
+                                                }
+                                            }
                                             add_timeout_error_flag=false;
                                             for (int p = 0; p < batch_and_machine.size(); p++) {
                                                 if (batch_and_machine.get(p).get(0).equals(timeout_batch_id)) {
@@ -200,11 +204,13 @@ public class QoSManagerAgent extends Agent {
                                                             } else {
                                                                 LOGGER.error("Timeout confirmed");
                                                                 sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "confirmed_timeout");
+                                                                sendACL(ACLMessage.INFORM,"D&D","timeout",MA);
                                                             }
                                                         }
                                                     } else {
                                                         LOGGER.error("Timeout confirmed");
                                                         sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "confirmed_timeout");
+
                                                     }
                                                     add_to_error_list(argument1, argument2, argument3, argument4, argument5);
                                                 }else{
@@ -241,8 +247,7 @@ public class QoSManagerAgent extends Agent {
                                     LOGGER.info("Batch "+timeout_batch_id+" has already reported a timeout. Ignoring error.");
                                     sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),"timeout_confirmed",timeout_batch_id);
                                     add_timeout_error_flag=false; //no se añade el error porque ya existe por parte de batch
-                                }
-                                if(ErrorList.get(k).get(0).equals("not_found")&&ErrorList.get(k).get(1).equals(reply2.getContent())){
+                                }else if(ErrorList.get(k).get(0).equals("not_found")&&ErrorList.get(k).get(1).equals(reply2.getContent())){
                                     LOGGER.info("Batch "+timeout_batch_id+" already reported as not found. Ignoring error.");
                                     sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),"timeout_confirmed",timeout_batch_id);
                                     add_timeout_error_flag=false;
@@ -295,8 +300,10 @@ public class QoSManagerAgent extends Agent {
                                                                     System.out.println(MA + "->OK");
                                                                     System.out.println("ControlGatewayCont" + ch[0] + "->OK");
                                                                     LOGGER.warn("Batch agent is not throwing timeouts.");
+                                                                    //TODO reset a timeout de order
                                                                 } else {
                                                                     LOGGER.error("Timeout confirmed");
+
                                                                 }
                                                                 add_to_error_list(argument1, argument2, argument3, argument4, argument5);
                                                             }

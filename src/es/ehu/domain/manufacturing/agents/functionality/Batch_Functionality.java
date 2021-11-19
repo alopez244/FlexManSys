@@ -223,7 +223,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
                         if (!QoSresponse_flag) {
                             System.out.println("I'm probably isolated. Shutting down entire node");
-                            System.exit(0);
+                            System.exit(0); //Mata el nodo y los agentes que se encuentran en el
                         }
                         takedown_flag = true;
                     }
@@ -476,7 +476,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                             if(ack==null){
                                 String informQoS = "7" + "/div/" + "Information"+ "/div/" +"ItemsInfo"+ "/div/" +reply.getContent()+ "/div/" +msgToOrder;
                                 sendACLMessage(ACLMessage.FAILURE, QoSID, "acl_error", "msgtoparent", informQoS, myAgent); //es necesario enviar el mensaje para segurar que no esta aislado
-
                                 ACLMessage QoSR = myAgent.blockingReceive(QoStemplate,2000);
                                 if(QoSR==null){
                                     System.out.println("I'm isolated. Shutting down entire node.");

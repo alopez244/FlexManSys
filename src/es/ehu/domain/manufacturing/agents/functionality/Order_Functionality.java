@@ -396,6 +396,14 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                         System.out.println("I'm isolated. Shutting down entire node.");
                         System.exit(0);
                     }
+                    boolean f=false;
+                    for(int i=0;i<myAgent.ReportedAgents.size();i++){
+                        myAgent.ReportedAgents.get(i).equals(parentAgentID);
+                        f=true;
+                    }
+                    if(!f){
+                        myAgent.ReportedAgents.add(parentAgentID);//si no se ha denunciado el agente añadirlo a la lista
+                    }
                 }
 
                 if (sonAgentID.size() == 0) { // todos los batch agent de los que es padre ya le han enviado la informacion
