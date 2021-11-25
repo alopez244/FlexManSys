@@ -86,10 +86,15 @@ public class RunningBehaviour extends SimpleBehaviour {
 		manageExecutionResult(result);
 		//****************** Consigue el estado actual de la replica.
 		String currentState = null;
-		currentState= (String) ((AvailabilityFunctionality)myAgent.functionalityInstance).getState();
-		if (currentState != null) {
-			LOGGER.debug("Send state");
-			myAgent.sendStateToTracking(currentState);
+
+		if(!myAgent.antiloopflag) {
+			currentState = (String) ((AvailabilityFunctionality) myAgent.functionalityInstance).getState();
+			if (currentState != null) {
+				LOGGER.debug("Send state");
+				myAgent.sendStateToTracking(currentState);
+			}
+		}else{
+			myAgent.antiloopflag=false;
 		}
 		//***********************************************
 //		Serializable state = null;
@@ -118,7 +123,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 	}
 
 	public int onEnd() {
-		myAgent.previousState="running";
+
 		return 0;
 	}
 

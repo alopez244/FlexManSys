@@ -127,10 +127,11 @@ public class DomApp_Functionality extends Dom_Functionality{
 
             reply = sendCommand(myAgent, "get * parent=" + parentID + " category=" + seCategory + " state=bootToRunning", conversationId);
             if (reply != null) {
-                runningAgentID = reply.getContent();
-                sendElementCreatedMessage(myAgent, runningAgentID, seType, true);
+                if(!reply.getContent().equals("")){ //si una replica en tracking es creada a posteriori de la ejecucion del plan no es necesario avisar a la replica en running
+                    runningAgentID = reply.getContent();
+                    sendElementCreatedMessage(myAgent, runningAgentID, seType, true);
+                }
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }

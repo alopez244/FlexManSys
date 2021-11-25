@@ -3,6 +3,8 @@ package es.ehu.domain.manufacturing.utilities;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.domain.introspection.*;
+import jade.domain.introspection.Event;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import java.text.ParseException;
@@ -12,12 +14,16 @@ import java.util.Calendar;
 import java.util.Date;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.*;
+import jade.core.ContainerID;
+import  jade.util.*;
 import jade.domain.AMSService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import java.text.DateFormat;
+import java.util.Map;
 
 public class QoSManagerAgent extends Agent {
+
 
     private Agent myAgent=this;
     private int agent_found_qty=0;
@@ -38,9 +44,12 @@ public class QoSManagerAgent extends Agent {
     public MessageTemplate pingtemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
             MessageTemplate.MatchOntology("ping"));
 
+
     protected void setup(){
         LOGGER.entry();
         LOGGER.info("QoS manager started");
+
+
         addBehaviour(new QoS() );
         LOGGER.exit();
     }
@@ -196,6 +205,7 @@ public class QoSManagerAgent extends Agent {
 
                                                         if (state == null) {
                                                             LOGGER.error("Asset did not answer on time.");
+                                                            sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "confirmed_timeout");
                                                         } else {
                                                             LOGGER.info("Asset retrieved his state: " + state.getContent());
                                                             if (state.getContent().equals("Working")) {
@@ -300,7 +310,7 @@ public class QoSManagerAgent extends Agent {
                                                                     System.out.println(MA + "->OK");
                                                                     System.out.println("ControlGatewayCont" + ch[0] + "->OK");
                                                                     LOGGER.warn("Batch agent is not throwing timeouts.");
-                                                                    //TODO reset a timeout de order
+                                                                    //TODO checkear batch agent
                                                                 } else {
                                                                     LOGGER.error("Timeout confirmed");
 
@@ -373,7 +383,32 @@ public class QoSManagerAgent extends Agent {
                     }
                 }
                 if(msg.getPerformative()==ACLMessage.REQUEST) { //Se recibe algun tipo de petición
-                    if(msg.getOntology().equals("askrelationship")) {
+                    if(msg.getOntology().equals("pnode_check")){
+
+                        String NodesToCheck=msg.getContent();
+                        if(NodesToCheck.contains(",")){
+                            String parts[]=NodesToCheck.split(",");
+                            for(int i=0; i< parts.length;i++){
+                                int found=SearchAgent(parts[i]);
+                                if(found>0){
+                                    boolean pong=PingAgent(parts[i]);
+                                    if(pong){
+                                        LOGGER.info(parts[i]+" found alive. Informing D&D.");
+                                        sendACL(7,msg.getSender().getLocalName(),msg.getOntology(),parts[i]+"/found");
+                                    }else {
+                                        LOGGER.info(parts[i]+" not found. Informing D&D.");
+                                        sendACL(7,msg.getSender().getLocalName(),"not_found",parts[i]);
+                                    }
+                                }else{
+
+                                }
+
+                            }
+                        }else{
+
+                        }
+
+                    }else if(msg.getOntology().equals("askrelationship")) {
                         if(msg.getContent().contains("machine")){
                             for(int u=0;u<batch_and_machine.size();u++){
                                 if(batch_and_machine.get(u).get(1).equals(msg.getContent())){
@@ -623,17 +658,17 @@ public class QoSManagerAgent extends Agent {
         return actualdate;
     }
 
-    public boolean CheckNotFoundRegistry(String Agent){
-        boolean flag=true;
+    public boolean CheckNotFoundRegistry(String Agent){  //comprueba que el agente indicado no ha sido haya reportado como no encontrado.
+//        boolean flag=true;
         for(int t=0;t<ErrorList.size();t++){
             if(ErrorList.get(t).get(0).equals("not_found")){
                 if(ErrorList.get(t).get(2).equals(Agent)){
                     LOGGER.info(Agent +" has already been reported as not found.");
-                    flag=false;
+                    return false;
                 }
             }
         }
-        return flag;
+        return true;
     }
 
 }

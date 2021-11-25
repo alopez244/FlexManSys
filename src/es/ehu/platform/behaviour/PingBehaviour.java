@@ -44,13 +44,7 @@ public class PingBehaviour extends SimpleBehaviour{
                 reply.setContent("Alive");
                 myAgent.send(reply);
             }else{
-                if(myAgent.getLocalName().contains("machine")){
-                    msgFIFO = Machine_Functionality.msgFIFO;
-                }else if(myAgent.getLocalName().contains("batch")){
-                    msgFIFO = Batch_Functionality.msgFIFO;
-                }else if(myAgent.getLocalName().contains("order")){
-                    msgFIFO = Order_Functionality.msgFIFO;
-                }
+                msgFIFO = myAgent.msgFIFO;
                 boolean found=false;
                 if(msgFIFO!=null) {
                     for (int i = 0; i < msgFIFO.size(); i++) {

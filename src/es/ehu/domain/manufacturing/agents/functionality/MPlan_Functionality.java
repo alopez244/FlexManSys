@@ -251,7 +251,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 
     ACLMessage msg = myAgent.receive(template);
     if (msg != null) {
-
+      myAgent.msgFIFO.add((String) msg.getContent());
       sendACLMessage(7, msg.getSender(), "Acknowledge", msg.getConversationId(),"Received",myAgent);
 
 
@@ -277,6 +277,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     }
     ACLMessage msg2 = myAgent.receive(template2);
     if(msg2!=null){
+      myAgent.msgFIFO.add((String) msg2.getContent());
       boolean f=false;
       for(int i=0;i<myAgent.IgnoredReplicas.size();i++){ //se elimina de la lista de ignorados en caso de que esté
         if(myAgent.IgnoredReplicas.get(i).equals(msg.getContent())){
@@ -294,6 +295,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     }
     ACLMessage msg3 = myAgent.receive(template3);
     if(msg3!=null){
+      myAgent.msgFIFO.add((String) msg3.getContent());
       for(int i=0;i<myAgent.IgnoredReplicas.size();i++) { //se elimina de la lista de ignorados en caso de que esté
         if (myAgent.IgnoredReplicas.get(i).equals(msg.getContent())) {
           myAgent.replicas.add(myAgent.IgnoredReplicas.get(i)); //se vuelve a añadir a la lista de replicas
@@ -309,6 +311,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     ACLMessage msgEnd = myAgent.receive();
     // Recepcion de mensajes para eliminar de la lista de agentes hijo los agentes order que ya han enviado toda la informacion
     if (msgEnd != null) {
+      myAgent.msgFIFO.add((String) msgEnd.getContent());
       if (msgEnd.getContent().equals("Order completed")){
         String msgSender = msgEnd.getOntology();
         for (int i = 0; i < sonAgentID.size(); i++) {

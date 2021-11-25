@@ -203,7 +203,6 @@ public class ControlBehaviour extends SimpleBehaviour {
                 switch( myAgent.state){
                     case "idle":  exitValue = IDLE;
                         exit = true;
-//                        result = "done";
                     break;
                     case "running":  exitValue = RUNNING; //no usado por ahora
                         exit = true;

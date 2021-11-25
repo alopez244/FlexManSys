@@ -19,7 +19,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
     private static final long serialVersionUID = 1L;
     private MWAgent myAgent;
-    public static CircularFifoQueue msgFIFO = new CircularFifoQueue(5);
+
     private List<String> elementsToCreate = new ArrayList<>();
     private int chatID = 0; // Numero incremental para crear conversationID
     private ACLMessage orderName=new ACLMessage();
@@ -47,8 +47,6 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             MessageTemplate.MatchOntology("Acknowledge"));
     private MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
             MessageTemplate.MatchOntology("acl_error"));
-
-
     private ArrayList<ArrayList<String>> batch_last_items_ft=new ArrayList<ArrayList<String>>();
 
 
@@ -289,7 +287,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 orderreference=reference.getContent();
                 sendACLMessage(16, plannerID,"Ftime_order_ask", "finnish_time", reference.getContent(), myAgent ); //pide el finish time de cada item al planner
                 ACLMessage finishtime= myAgent.blockingReceive(templateFT); //recibe los finish times concatenados
-                msgFIFO.add((String) finishtime.getContent());
+                myAgent.msgFIFO.add((String) finishtime.getContent());
                 System.out.println(finishtime.getContent());
                 raw_ft=finishtime.getContent();
                 batch_last_items_ft=batch_finish_times(raw_ft);
@@ -333,7 +331,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
         ACLMessage msg = myAgent.receive(template);
         if (msg != null) {
-            msgFIFO.add((String) msg.getContent());
+            myAgent.msgFIFO.add((String) msg.getContent());
             sendACLMessage(7, msg.getSender(), "Acknowledge", msg.getConversationId(),"Received",myAgent);
 
 
@@ -368,7 +366,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         ACLMessage msg2 = myAgent.receive(template2);
         // Recepcion de mensajes para eliminar de la lista de agentes hijo los agentes batch que ya han enviado toda la informacion
         if (msg2 != null) {
-            msgFIFO.add((String) msg2.getContent());
+            myAgent.msgFIFO.add((String) msg2.getContent());
             AID sender = msg2.getSender();
             if (msg2.getContent().equals("Batch completed")){
                 String msgSender = msg2.getOntology();
@@ -417,13 +415,13 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         }
         ACLMessage msg3=myAgent.receive(template3);
         if(msg3!=null){            //confirmación de timeout
-            msgFIFO.add((String) msg3.getContent());
+            myAgent.msgFIFO.add((String) msg3.getContent());
             QoSresponse_flag=true;
             batch_to_take_down=msg3.getContent();
         }
         ACLMessage msg4=myAgent.receive(template4);
         if(msg4!=null){ //Actualiza el finish time del batch recibido (por petición de reset del QoS)
-            msgFIFO.add((String) msg4.getContent());
+            myAgent.msgFIFO.add((String) msg4.getContent());
             String[] parts=msg4.getContent().split("/");
             String timeout_batch_id=parts[0];
             String s_difference=parts[1];
@@ -482,7 +480,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         }
         ACLMessage msg5=myAgent.receive(template5);
         if(msg5!=null){                                 //Genera el timeout al recibir el delay de cada batch
-            msgFIFO.add((String) msg5.getContent());
+            myAgent.msgFIFO.add((String) msg5.getContent());
             String rawdelay=msg5.getContent();
             String[] parts=rawdelay.split("/");
             String batchref=parts[0];

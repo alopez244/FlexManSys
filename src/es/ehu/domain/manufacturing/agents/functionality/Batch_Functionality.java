@@ -65,7 +65,8 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private volatile AID QoSID = new AID("QoSManagerAgent", false);
     private volatile boolean reset_flag=false;
     private volatile boolean delay_already_incremented=false,QoSresponse_flag=false;
-    public static CircularFifoQueue msgFIFO = new CircularFifoQueue(5);
+
+
 
 
     @Override
@@ -130,7 +131,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     }
     @Override
     public String getState(){
-
+    myAgent.antiloopflag=true;
         String state="";
 
         ArrayList<String> Finishtimes=take_finish_times(finish_times_of_batch);
@@ -174,13 +175,28 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         }
         state=state+"/div0/"+parentAgentID+"/div0/";
 
-        for(int i=0;i<myAgent.replicas.size();i++){ //concatena los replicas del batch
-            if(i==0){
-                state=state+myAgent.replicas.get(i);
-            }else{
-                state=state+"/div1/"+myAgent.replicas.get(i);
+        try {   //realiza la consulta al sa para tener la lista de replicas actualizada.
+            ACLMessage reply1= sendCommand(myAgent, "get "+myAgent.getLocalName()+ " attrib=parent", "GetUpdatedReplicas");
+            ACLMessage reply2= sendCommand(myAgent, "get * state=tracking parent="+reply1.getContent(), "GetUpdatedReplicas");
+            String replicas[]=reply2.getContent().split(",");
+            for(int i=0; i<replicas.length;i++){
+                if(i==0){
+                    state=state+replicas[i];
+                }else{
+                    state=state+"/div1/"+replicas[i];
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
+//        for(int i=0;i<myAgent.replicas.size();i++){ //concatena los replicas del batch
+//            if(i==0){
+//                state=state+myAgent.replicas.get(i);
+//            }else{
+//                state=state+"/div1/"+myAgent.replicas.get(i);
+//            }
+//        }
 //        state=state+"/div0/"+finish_times_of_batch+"/div0/";   //para simular fallo, de esta manera muere el agente tracking al hacer setstate
         state=state+"/div0/"+finish_times_of_batch;
         state=state+"/div0/"+String.valueOf(actual_item_number);
@@ -291,7 +307,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 batchreference=reference.getContent();
                 sendACLMessage(16, plannerID,"Ftime_batch_ask", "finnish_time", reference.getContent(), myAgent ); //pide el finish time de cada item al planner
                 ACLMessage finishtime= myAgent.blockingReceive(templateFT); //recibe los finish times concatenados
-                msgFIFO.add((String) finishtime.getContent());
+                myAgent.msgFIFO.add((String) finishtime.getContent());
                 System.out.println(finishtime.getContent());
                 finish_times_of_batch=finishtime.getContent();
 
@@ -327,7 +343,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
         ACLMessage msg = myAgent.receive();
         if (msg != null) {
-            msgFIFO.add((String) msg.getContent()); //se añade en buffer de listado de mensajes recibidos
+            myAgent.msgFIFO.add((String) msg.getContent()); //se añade en buffer de listado de mensajes recibidos
 
             if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("askdelay")){ //si es un mensaje con info del delay creamos el timeout
                 date_when_delay_was_asked = getactualtime();
@@ -466,9 +482,9 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     System.out.println(msgToOrder);
                     try {
                         ACLMessage reply2= sendCommand(myAgent, "get "+parentAgentID+" attrib=parent", "OrderAgentID");
-                        msgFIFO.add((String) reply2.getContent());
+                        myAgent.msgFIFO.add((String) reply2.getContent());
                         ACLMessage reply = sendCommand(myAgent, "get * parent=" + reply2.getContent()+" state=running", "OrderAgentID");
-                        msgFIFO.add((String) reply.getContent());
+                        myAgent.msgFIFO.add((String) reply.getContent());
                         if (reply != null) {   // Si no existe el id en el registro devuelve error
                             AID orderAgentID = new AID(reply.getContent(), false);
                             sendACLMessage(7, orderAgentID,"Information", "ItemsInfo", msgToOrder, myAgent );
@@ -637,7 +653,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         while (!machinesForOperations.isEmpty()) {
             ACLMessage msg = myAgent.receive();
             if (msg != null) {
-                msgFIFO.add((String) msg.getContent());
+                myAgent.msgFIFO.add((String) msg.getContent());
                 // TODO COMPROBAR TAMBIEN LOS TRACKING si esta bien programado (sin probar)
                 if ((msg.getPerformative() == ACLMessage.INFORM) && (msg.getContent().contains("I am the winner"))) {
 

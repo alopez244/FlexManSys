@@ -2,14 +2,19 @@ package es.ehu.domain.manufacturing.utilities;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.domain.AMSService;
 import jade.domain.DFService;
+import jade.domain.FIPAAgentManagement.AMSAgentDescription;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 
 import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.ArrayList;
 
 
 public class DiagnosisAndDecision extends Agent{
@@ -18,6 +23,7 @@ public class DiagnosisAndDecision extends Agent{
     static final Logger LOGGER = LogManager.getLogger(DiagnosisAndDecision.class.getName());
     private Agent myAgent=this;
     public String control="automatic";
+
 
     protected void setup(){
         LOGGER.entry();
@@ -43,10 +49,60 @@ public class DiagnosisAndDecision extends Agent{
                                     try {
                                         ACLMessage reply= sendCommand(myAgent, "get "+msg.getContent()+" attrib=state", "ApplicationAgentState");
                                         if(reply.getContent().equals("tracking")){
-                                            LOGGER.warn(msg.getContent()+" is in tracking state. Informing running replica.");
+                                            LOGGER.warn(msg.getContent()+" was in tracking state. Informing running replica.");
                                             ACLMessage reply2= sendCommand(myAgent, "get "+msg.getContent()+" attrib=parent", "ApplicationAgentParent");
                                             ACLMessage reply3= sendCommand(myAgent, "get * parent="+reply2.getContent()+" state=running" , "ApplicationAgentRunning");
-                                            sendACL(7, reply3.getContent(), "delete_replica", msg.getContent());
+                                            sendACL(7, reply3.getContent(), "delete_replica", msg.getContent()); //TODO innecesario con el nuevo sistema porque centralizado en e SA. ELIMINAR
+                                            sendCommand(myAgent, "del "+msg.getContent(),"UnregisterTrackingReplica");
+
+                                            ACLMessage reply7  = sendCommand(myAgent, "get * category=pNodeAgent refServID="+reply2.getContent(),"CheckNodeState");
+                                            if(!reply7.getContent().equals("")){
+                                                sendACL(16, "QoSManagerAgent", "pnode_check", reply7.getContent());
+                                            }
+
+                                            ACLMessage reply4  = sendCommand(myAgent, "get * category=pNodeAgent","RestoreTrackingReplica"); //todas los pnode.
+                                            ArrayList<String> NegotiatingPnodes = new ArrayList<>();
+                                            if (reply4 != null) {
+                                                String All =reply4.getContent();
+                                                String[] AllPnode=null;
+                                                if(All.contains(",")){
+                                                    AllPnode=All.split(",");
+                                                }else{
+                                                    AllPnode[0]=All;
+                                                }
+                                                for(int i=0;i<AllPnode.length;i++){
+                                                    NegotiatingPnodes.add(AllPnode[i]);
+                                                }
+                                                for(int i=0;i<NegotiatingPnodes.size();i++){
+                                                    ACLMessage reply5  = sendCommand(myAgent, "get "+NegotiatingPnodes.get(i)+ " attrib=refServID","CheckIfValidNode"); //todas los pnode.
+                                                    if(reply5.getContent().contains(reply2.getContent())){
+                                                        NegotiatingPnodes.remove(i);
+                                                    }
+                                                }
+                                                String ToNegotiate="";
+                                                for(int i=0; i<NegotiatingPnodes.size();i++){
+                                                    if(i==0){
+                                                        ToNegotiate=NegotiatingPnodes.get(i);
+                                                    }else{
+                                                        ToNegotiate=ToNegotiate+","+NegotiatingPnodes.get(i);
+                                                    }
+                                                }
+                                                if(ToNegotiate.equals("")){
+                                                    LOGGER.warn("There is no node available to store a replica");
+                                                }else{
+                                                    ACLMessage reply6 = sendCommand(myAgent, "get " + reply2.getContent() + " attrib=category","RestoreTrackingReplica");
+                                                        String seClass="";
+                                                        if(msg.getContent().contains("batch")){
+                                                            seClass="es.ehu.domain.manufacturing.agents.BatchAgent";
+                                                        }else if(msg.getContent().contains("order")){
+                                                            seClass="es.ehu.domain.manufacturing.agents.OrderAgent";
+                                                        }else{
+                                                            seClass="es.ehu.domain.manufacturing.agents.MPlanAgent";
+                                                        }
+                                                        String negotationdata="localneg "+ToNegotiate+ " criterion=max mem action=start externaldata=" + reply2.getContent() + "," + reply6.getContent() + "," + seClass + "," + "tracking" + "," + "1" + "," + myAgent.getLocalName();
+                                                        ACLMessage ack = sendCommand(myAgent,negotationdata , "RestoreTrackingReplica");
+                                                }
+                                            }
                                         }else{
                                             if(msg.getContent().contains("batchagent")){
                                                 sendACL(16,"QoSManagerAgent" , "askrelationship", msg.getContent());
@@ -178,6 +234,28 @@ public class DiagnosisAndDecision extends Agent{
                 , 1000);
 
         return LOGGER.exit(reply);
+    }
+    private int SearchAgent (String agent){
+        int found=0;
+        AMSAgentDescription[] agents = null;
+
+        try {
+            SearchConstraints c = new SearchConstraints();
+            c.setMaxResults ( new Long(-1) );
+            agents = AMSService.search(myAgent, new AMSAgentDescription (), c );
+        }
+        catch (Exception e) {
+            System.out.println(e);
+        }
+        for (int i=0; i<agents.length;i++){
+            AID agentID = agents[i].getName();
+            String agent_to_check=agentID.getLocalName();
+//            System.out.println(agent_to_check);
+            if(agent_to_check.contains(agent)){
+                found++;
+            }
+        }
+        return found;
     }
 
 

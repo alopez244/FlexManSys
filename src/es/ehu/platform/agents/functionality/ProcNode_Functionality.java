@@ -22,6 +22,8 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
     private static final long serialVersionUID = 1L;
     private Agent myAgent;
     private String ID, className;
+    private String ListAttrib="";
+    private boolean firstime=true;
 
     @Override
     public Void init(MWAgent myAgent) {
@@ -108,8 +110,18 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
                 // Registro el agente id>appagn101. seTypeAgent ASA, APA
                 String agnID = sendCommand("reg "+seType+"Agent parent="+seID).getContent();
                 // Instancio nuevo agente
-                AgentController ac = ((AgentController) myAgent.getContainerController().createNewAgent(agnID, seClass, new Object[] { "firstState="+seFirstTransition , "redundancy="+redundancy , "parentAgent=" + parentAgentID }));
+                AgentController ac = ((AgentController) myAgent.getContainerController().createNewAgent(agnID, seClass, new Object[] { "firstState="+seFirstTransition , "redundancy="+redundancy , "parentAgent=" + parentAgentID}));
                 ac.start();
+                if(!sendCommand("get "+myAgent.getLocalName()+" attrib=refServID").getContent().contains(seID)){
+                    if(firstime){
+                        ListAttrib=seID;
+                    }else{
+                        ListAttrib=ListAttrib+","+seID;
+                    }
+                    sendCommand("set "+myAgent.getLocalName()+" refServID="+ListAttrib);
+                    firstime=false;
+                }
+
             }catch (Exception e) {e.printStackTrace();}
         }
 

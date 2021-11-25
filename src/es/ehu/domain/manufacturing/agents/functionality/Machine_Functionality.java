@@ -33,7 +33,7 @@ import java.util.spi.CalendarDataProvider;
 
 public class Machine_Functionality extends DomRes_Functionality implements BasicFunctionality, NegFunctionality, AssetManagement, Traceability {
     private boolean firstItemFlag=false;
-    public static CircularFifoQueue msgFIFO = new CircularFifoQueue(5);
+//    public static CircularFifoQueue msgFIFO = new CircularFifoQueue(5);
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
     private ArrayList<ArrayList<String>> productInfo;
@@ -313,7 +313,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
     public void rcvDataFromDevice(ACLMessage msg2) {
 
-        msgFIFO.add((String) msg2.getContent());
+        myAgent.msgFIFO.add((String) msg2.getContent());
         this.PLCmsgIn = new Gson().fromJson(msg2.getContent(), HashMap.class);   //Data type conversion Json->Hashmap class
         if(PLCmsgIn.containsKey("Received")){   //Checks if it is a confirmation message
 //            if(PLCmsgIn.get("Received").equals(true)){
@@ -358,7 +358,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     // El metodo recvBatchInfo se encarga de enviar al agente batch la informacion con la trazabilidad de cada item fabricado
     @Override
     public void recvBatchInfo(ACLMessage msg) {
-        msgFIFO.add((String) msg.getContent());
+        myAgent.msgFIFO.add((String) msg.getContent());
         ACLMessage reply = null;
         String targets = "";
         ArrayList<String> actionList = new ArrayList<String>(); // Lista de acciones que componen el servicio actual
@@ -472,7 +472,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     reply = sendCommand(myAgent, "get * reference=" + BathcID, "BatchAgentID");
                     //returns the id of the element that matches with the reference of the required batch
                     if (reply != null) {   // If the id does not exist, it returns error
-                        msgFIFO.add((String) reply.getContent());
+                        myAgent.msgFIFO.add((String) reply.getContent());
                         batchName = reply.getContent();
 
                     }else{
@@ -503,7 +503,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
                     //returns the names of all the agents that are sons
                     if (reply != null) {   // Si no existe el id en el registro devuelve error
-                        msgFIFO.add((String) reply.getContent());
+                        myAgent.msgFIFO.add((String) reply.getContent());
                         String batchAgentName = reply.getContent();
 
                         AID batchAgentID = new AID(batchAgentName, false);
@@ -564,7 +564,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         // El codigo implementado dentro de la condicion IF se encarga de añadir al contador de consumibles los nuevos consumibles que han sido repuestos
         ACLMessage msg = myAgent.receive(template);
         if (msg != null) {
-            msgFIFO.add((String) msg.getContent());
+            myAgent.msgFIFO.add((String) msg.getContent());
             ArrayList<ArrayList<String>> newConsumables = new ArrayList<>();
             newConsumables.add(new ArrayList<>()); newConsumables.add(new ArrayList<>());
             String content = msg.getContent();

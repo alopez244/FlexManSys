@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -46,16 +47,19 @@ public class MWAgent extends Agent {
     public BasicFunctionality functionalityInstance;
     public String[] targetComponentIDs, sourceComponentIDs;
     public int period = -1;
-    public String previousState=null;
     public String ActualState=null;
     public ArrayList<String> replicas=new ArrayList<String>();
-    public static ArrayList<String> ReportedAgents=new ArrayList<String>(); //agentes
+    public static ArrayList<String> ReportedAgents=new ArrayList<String>(); //agentes reportados
     public ArrayList<String> IgnoredReplicas=new ArrayList<String>();
     public String cmpID = null;
+    public boolean antiloopflag=false;
 
+    //para uuso en autoidle
     public String state ="";
     public boolean change_state=false;
 
+    //variable de almacenamiento de ACL
+    public CircularFifoQueue msgFIFO = new CircularFifoQueue(5);
     public int initTransition;
     public String conversationId;
     public Object initialExecutionState = null;

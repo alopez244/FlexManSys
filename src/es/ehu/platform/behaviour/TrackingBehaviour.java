@@ -33,7 +33,7 @@ public class TrackingBehaviour extends SimpleBehaviour {
 	public ArrayList<String> Replicas=new ArrayList<String>();
   	public String parent;
 	public boolean firstime;
-	protected MessageTemplate template,template2;
+	protected MessageTemplate template;
 
 
 	protected long timeout;
@@ -64,7 +64,6 @@ public class TrackingBehaviour extends SimpleBehaviour {
 
 	public void onStart(){
 		template = MessageTemplate.MatchOntology("state");
-		template2=MessageTemplate.MatchOntology("info_to_tracking");
 		myAgent.ActualState="tracking";
 		timeout = 0;
 		expired = false;
@@ -77,79 +76,9 @@ public class TrackingBehaviour extends SimpleBehaviour {
 	public void action() {
 		LOGGER.entry();
 			ACLMessage msg = myAgent.receive(template);
-			ACLMessage msg2 = myAgent.receive(template2);
-
-		if(msg2!=null){
-			sendACL(7,msg2.getSender().getLocalName(),"Acknowledge","received");
-			if(msg2.getOntology().equals("static_info")){
-				String parts1[]= msg2.getContent().split("/div0/");
-				String FinishTimesConc=parts1[0];
-				parent=parts1[1];
-				String replicasConc=parts1[2];
-				String parts3[]=FinishTimesConc.split("/div1/");
-				for(int i=0;i<parts3.length;i++){
-					FinishTimes.add(parts3[i]);
-				}
-				String parts4[]=replicasConc.split("/div1/");
-				for(int i=0;i<parts4.length;i++){
-					if(!parts4[i].equals(myAgent.getLocalName())){
-						Replicas.add(parts4[i]);
-					}
-				}
-				LOGGER.debug(myAgent.getLocalName()+ " replica finished constructing static data");
-
-			}else if(msg2.getOntology().equals("info_to_tracking")) {
-				String parts1[] = msg2.getContent().split("/div0/"); //el divisor 0 divide los argumentos y el resto se usan para los arraylist
-				String productTraceabilityConc = parts1[0]; //trazabilidad concatenada
-				String remainingConc = null;
-				if (parts1[1] != null) {
-					remainingConc = parts1[1]; //solo si quedan acciones/SonAgentIDs
-				}
-				String firstimeString = parts1[2]; //primera vez
-
-				String FinishTimesConc=parts1[3]; //finish times concatenados (cada agente de aplicación lleva un formato)
-				parent=parts1[4]; 					//parent
-				String replicasConc=parts1[5];		//replicas del agente
-
-				String parts2[] = productTraceabilityConc.split("/div1/"); //construye la trazabilidad
-				for (int i = 0; i < parts2.length; i++) {
-					Traceability.add(i, new ArrayList<ArrayList<ArrayList<String>>>());
-					String parts3[] = parts2[i].split("/div2/");
-					for (int j = 0; j < parts3.length; j++) {
-						Traceability.get(i).add(j, new ArrayList<ArrayList<String>>());
-						String parts4[] = parts3[j].split("/div3/");
-						for (int k = 0; k < parts4.length; k++) {
-							Traceability.get(i).get(j).add(k, new ArrayList<String>());
-							String parts5[] = parts4[k].split("/div4/");
-							for (int l = 0; l < parts5.length; l++) {
-								Traceability.get(i).get(j).get(k).add(parts5[l]);
-							}
-						}
-					}
-				}
-				if (remainingConc != null) {    //construye bien los sonagentID o actionlist
-					String parts6[] = remainingConc.split("/div1/");
-					for (int i = 0; i < parts6.length; i++) {
-						remaining.add(parts6[i]);
-					}
-				}
-				firstime = Boolean.parseBoolean(firstimeString);
-				String parts7[]=FinishTimesConc.split("/div1/");
-				for(int i=0;i<parts7.length;i++){
-					FinishTimes.add(parts7[i]);
-				}
-
-				String parts8[]=replicasConc.split("/div1/");
-				for(int i=0;i<parts8.length;i++){
-					if(!parts8[i].equals(myAgent.getLocalName())){
-						Replicas.add(parts8[i]);
-					}
-				}
-				LOGGER.debug(myAgent.getLocalName() + " replica finished constructing state");
-			}
 
 
-		}else if (msg != null) {
+		if (msg != null) {
 			if (myAgent.period>0) timeout = System.currentTimeMillis()+(int)(myAgent.period*1.5); // se producirá timeout si se excede de (horaActual + D)
 				// TODO el deadline sólo se debe calcular para componentes periódicos
 				LOGGER.trace(" trackingBehaviour.onStart() msg != null");
@@ -238,16 +167,8 @@ public class TrackingBehaviour extends SimpleBehaviour {
 	}
 
 	public boolean done() {
-		return expired;
-	}
 
-	public void doAcknowledge(AID name){ //responde al emisor del mensaje instanciado en name
-		ACLMessage ack= new ACLMessage(7);
-		ack.setOntology("Acknowledge");
-		ack.setContent("Received");
-		ack.addReceiver(name);
-		myAgent.send(ack);
-		LOGGER.debug("TRACKING "+myAgent.getLocalName()+" AGENT GOT FEEDBACK CORRECTLY");
+		return expired;
 	}
 
 	public void setState(ACLMessage msg){
@@ -268,12 +189,5 @@ public class TrackingBehaviour extends SimpleBehaviour {
 //		this.deadline = period + System.currentTimeMillis();
 //		this.timeout = period;
 //	}
-	public void sendACL(int performative,String receiver,String ontology,String content){ //Funcion estándar de envío de mensajes
-		AID receiverAID=new AID(receiver,false);
-		ACLMessage msg=new ACLMessage(performative);
-		msg.addReceiver(receiverAID);
-		msg.setOntology(ontology);
-		msg.setContent(content);
-		myAgent.send(msg);
-	}
+
 }
