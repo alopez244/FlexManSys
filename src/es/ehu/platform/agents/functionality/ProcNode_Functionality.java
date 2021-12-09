@@ -78,12 +78,18 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
     @Override
     public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData) {
         // approximation to the total amount of memory currently available for future allocated objects, measured in bytes
-        return Runtime.getRuntime().freeMemory();
+        if(ListAttrib.contains((String)negExternalData[0])){
+            long used_node=0;
+            return used_node;
+        }else{
+            return Runtime.getRuntime().freeMemory();
+        }
     }
 
     @Override
-    public int checkNegotiation(String conversationId, String sAction, double negReceivedValue, long negScalarValue, boolean tieBreak,
-                                boolean checkReplies, Object... negExternalData) {
+    public int checkNegotiation(String conversationId, String sAction, double negReceivedValue, long negScalarValue,
+                                boolean tieBreak, boolean checkReplies,  boolean isPartialWinner, Object... negExternalData) {
+
         LOGGER.entry(conversationId, sAction, negReceivedValue, negScalarValue);
 
         String seID = (String)negExternalData[0];
@@ -96,8 +102,16 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
         if (negReceivedValue>negScalarValue) return NegotiatingBehaviour.NEG_LOST; //pierde negociación
         if ((negReceivedValue==negScalarValue) && !tieBreak ) return NegotiatingBehaviour.NEG_LOST; //empata negocicación pero no es quien fija desempate
 
-        LOGGER.info("es el ganador ("+negScalarValue+")");
+        LOGGER.info("negotiation(id:"+conversationId+") partial winner "+myAgent.getLocalName()+"(value:"+negScalarValue+")");
         if (!checkReplies) return NegotiatingBehaviour.NEG_PARTIAL_WON; // es ganador parcial, faltan negociaciones por finalizar
+
+        // estamos en la ?ltima comparaci?n y adem?s la hemos ganado---
+        // para ser los ganadores verdaderos tendremos que ser ganadores parciales en cada momento
+        if (!isPartialWinner) return NegotiatingBehaviour.NEG_LOST;
+
+        //TODO: si este agente ha ganado algo posterior al timestamp del cfp.
+        // si es que no actualizar este tiempo y ok
+        // si ha ganado hay que pedir que se repita la actual> return NegotiatingBehaviour.NEG_NULL
 
         LOGGER.info("ejecutar "+sAction);
 
@@ -105,26 +119,45 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
 
         if (action.cmd.equals("start")) {
             LOGGER.info("id="+action.who);
+//            ACLMessage hosted_elements =null;
+            try {
+//                hosted_elements = sendCommand("get "+myAgent.getLocalName()+" attrib=refServID");
+                    if(!ListAttrib.contains(seID)) {
+                        if (firstime) {
+                            ListAttrib = seID;
+                            firstime = false;
+                        } else {
+                            ListAttrib = ListAttrib + "," + seID;
+                        }
+                        LOGGER.debug("ACTUAL ATRIBUTES: " + ListAttrib);
+                        sendCommand("set " + myAgent.getLocalName() + " refServID=" + ListAttrib);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
             try{
                 // Registro el agente id>appagn101. seTypeAgent ASA, APA
                 String agnID = sendCommand("reg "+seType+"Agent parent="+seID).getContent();
                 // Instancio nuevo agente
+
                 AgentController ac = ((AgentController) myAgent.getContainerController().createNewAgent(agnID, seClass, new Object[] { "firstState="+seFirstTransition , "redundancy="+redundancy , "parentAgent=" + parentAgentID}));
                 ac.start();
-                if(!sendCommand("get "+myAgent.getLocalName()+" attrib=refServID").getContent().contains(seID)){
-                    if(firstime){
-                        ListAttrib=seID;
-                    }else{
-                        ListAttrib=ListAttrib+","+seID;
-                    }
-                    sendCommand("set "+myAgent.getLocalName()+" refServID="+ListAttrib);
-                    firstime=false;
-                }
+                String parts[]=myAgent.getLocalName().split("pnodeagent");
+                sendCommand("set "+agnID+" node="+parts[1]);
+//                if(seID.contains("mplan")){
+//                    sendACL(7,"sa","Negotiation_winner", "",myAgent.getLocalName()+"_"+seID);
+//                }else
+//                    if(seID.contains("order")){
+//                    ACLMessage running_replica= sendCommand("get * category=mPlanAgent state=bootToRunning");
+//                    sendACL(7,running_replica.getContent(),"Negotiation_winner", "",myAgent.getLocalName()+"_"+seID);
+//                }else if(seID.contains("batch")) {
+//                    ACLMessage running_replica = sendCommand("get * category=orderAgent state=bootToRunning");
+//                    sendACL(7, running_replica.getContent(), "Negotiation_winner", "",myAgent.getLocalName()+"_"+seID);
+//                }
 
             }catch (Exception e) {e.printStackTrace();}
         }
-
         return NegotiatingBehaviour.NEG_WON;
     }
 
@@ -165,13 +198,26 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
         msg.setContent(cmd);
         msg.setReplyWith(cmd);
         myAgent.send(msg);
+//        ACLMessage reply = myAgent.blockingReceive(
+//                MessageTemplate.and(
+//                        MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
+//                        MessageTemplate.MatchPerformative(ACLMessage.INFORM))
+//                , 1000);
         ACLMessage reply = myAgent.blockingReceive(
                 MessageTemplate.and(
                         MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
                         MessageTemplate.MatchPerformative(ACLMessage.INFORM))
-                , 1000);
+                );
 
         return LOGGER.exit(reply);
     }
-
+    public void sendACL(int performative,String receiver,String ontology,String content,String ConvID){ //Funcion estándar de envío de mensajes
+        AID receiverAID=new AID(receiver,false);
+        ACLMessage msg=new ACLMessage(performative);
+        msg.addReceiver(receiverAID);
+        msg.setOntology(ontology);
+        msg.setContent(content);
+        msg.setConversationId(ConvID);
+        myAgent.send(msg);
+    }
 }

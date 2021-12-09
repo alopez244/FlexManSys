@@ -56,7 +56,7 @@ public class ManResource_Functionality implements BasicFunctionality, NegFunctio
     }
 
     @Override
-    public int checkNegotiation(String negId, String winnerAction, double negReceivedValue, long negScalarValue, boolean tieBreaker, boolean checkReplies, Object... negExternalData) {
+    public int checkNegotiation(String negId, String winnerAction, double negReceivedValue, long negScalarValue, boolean tieBreaker, boolean checkReplies, boolean isPartialWinner, Object... negExternalData) {
         return 0;
     }
 }

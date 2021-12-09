@@ -147,7 +147,7 @@ public class Transport_Functionality extends DomApp_Functionality implements Bas
     }
 
     @Override  //cambiar//
-    public int checkNegotiation(String conversationId, String sAction, double negReceivedValue, long negScalarValue, boolean tieBreak, boolean checkReplies, Object... negExternalData) {
+    public int checkNegotiation(String conversationId, String sAction, double negReceivedValue, long negScalarValue, boolean tieBreak, boolean checkReplies, boolean isPartialWinner, Object... negExternalData) {
 
         LOGGER.entry(conversationId, sAction, negReceivedValue, negScalarValue);
 

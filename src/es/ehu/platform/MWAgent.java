@@ -450,16 +450,15 @@ public class MWAgent extends Agent {
         String sTracking = parts1[5];
         LOGGER.info("Tracking: " + sTracking);
 
-
-        if ((sTracking != null) && sTracking.length() > 0) {
-            LOGGER.info("Refresh state to tracking instances:"+ sTracking);
-            this.sendStateToReplicas(msg, sTracking);
-        } else {
+        if(sTracking.equals(" ")){
+            if ((sTracking != null) && sTracking.length() > 0) {
+                LOGGER.info("Refresh state to tracking instances:"+ sTracking);
+                this.sendStateToReplicas(msg, sTracking);
+            }
+        }else {
             LOGGER.info("No tracking instances:");
         }
         LOGGER.exit();
-
-
     }
 
 

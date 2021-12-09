@@ -20,6 +20,7 @@ import jade.wrapper.StaleProxyException;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.appender.db.jpa.converter.ThrowableAttributeConverter;
 import org.w3c.dom.*;
 import org.xml.sax.InputSource;
 
@@ -1104,10 +1105,13 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         // leer del registro para este "seID" la lista entera de procNodes cada uno con sus refServId. - leo del registro los serviceid que requiere el seID
         // buscar procnodes que tengan estas refServId > lista de los procNodes negociadores
         // si no hay negociarres return "-4"; //TODO
+//        String targets ="";
+
         String refServID=processCmd("get (get * parent=(get * parent="+seID+" category=restrictionList)) attrib=attribValue", conversationId);
         //si hay restricción la añado al filtro, en caso contrario solo busco procNode
-        String targets = processCmd("get * category=pNodeAgent"+((refServID.length()>0)?" refServID="+refServID:""), conversationId);
-        if (targets.length()<=0) return "-4";
+        String Alltargets = processCmd("get * category=pNodeAgent"+((refServID.length()>0)?" refServID="+refServID:""), conversationId);
+
+        if (Alltargets.length()<=0) return "-4";
 
         String seCategory = processCmd("get "+seID+" attrib=category", conversationId);
         String seClass = "";
@@ -1123,22 +1127,74 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         String command = "set " + seID + " execution_phase=starting";
         set(command.split(" ")[1], processAttribs(2, command.split(" ")), conversationId);
 
-
+//        if (targets.length()<=0) return "-4";
+        String UpdatedTargets=Alltargets;
         //mando negociar a todos
         for (int i=0; i<Integer.parseInt(redundancy); i++) {
-
             // Cada peticion de negociacion necesita un ID distinto
             conversationId = getLocalName() + "_" + cmdId++;
-
-            String neg = processCmd("localneg "+targets+" action=start criterion=max mem externaldata="+seID+","+seCategory+","+seClass+","+((i==0)?"running":"tracking")+","+redundancy+","+getLocalName(), conversationId);
-
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            processCmd("localneg "+UpdatedTargets+" action=start criterion=max mem externaldata="+seID+","+seCategory+","+seClass+","+((i==0)?"running":"tracking")+","+redundancy+","+getLocalName(), conversationId);
+//            ACLMessage winner=blockingReceive(MessageTemplate.MatchOntology("Negotiation_winner"));
+////            ACLMessage winner=null;
+//            if(winner!=null){
+//                String target_to_remove=winner.getSender().getLocalName();
+//                UpdatedTargets=UpdateTargets(UpdatedTargets,target_to_remove);
+//                if(UpdatedTargets.equals("")){
+//                    UpdatedTargets=Alltargets; //usa todos los nodos para negociar si ya no caben más
+//                }
+//            }else{
+//                UpdatedTargets=Alltargets;
+//            }
 
             LOGGER.exit();
         }
 
+//        blockingReceive(MessageTemplate.MatchOntology("rdy")); //espera a que el agente mplan en running esté listo
+//        ACLMessage start_orders=new ACLMessage(ACLMessage.INFORM);
+//        String running_replica=processCmd("get * state=bootToRunning category=mPlanAgent", conversationId);
+//        start_orders.setOntology("trigger_negotiation");
+//        start_orders.addReceiver(new AID(running_replica, AID.ISLOCALNAME));
+//        send(start_orders);
         return "";
-
     }
+    private String UpdateTargets(String targets, String target_to_remove) {
+
+        String TargetsToReturn="";
+        ArrayList<String> UpdatedTargets = new ArrayList<>();
+        if (targets != null) {
+            String parts[] = new String[1];
+            if (targets.contains(",")) {
+                parts = targets.split(",");
+            } else {
+                parts[0] = targets;
+            }
+            for (int i = 0; i < parts.length; i++) {
+                UpdatedTargets.add(parts[i]);
+            }
+                for (int i = 0; i < UpdatedTargets.size(); i++) {
+                    if (UpdatedTargets.get(i).equals(target_to_remove)) {
+                        UpdatedTargets.remove(i);
+                    }
+                }
+                if(UpdatedTargets.size()==0){
+                    LOGGER.error("Not enought process nodes found");
+                    return "";
+                }
+            }
+            for (int i = 0; i < UpdatedTargets.size(); i++) {
+                if (i == 0) {
+                    TargetsToReturn = UpdatedTargets.get(i);
+                } else {
+                    TargetsToReturn = TargetsToReturn + "," + UpdatedTargets.get(i);
+                }
+            }
+            return TargetsToReturn;
+        }
 
     public String seStart(String seID, Hashtable<String, String> attribs, String conversationId) {
 

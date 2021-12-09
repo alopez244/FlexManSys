@@ -321,7 +321,7 @@ public class Planner extends Agent {
             ArrayList<String> batchlist =new ArrayList<String>();
             ArrayList<String> orderlist =new ArrayList<String>();
             ArrayList<String> mplanlist =new ArrayList<String>();
-            String finnish_time=null;
+
             try {
                 xmlelements = fileReader.readFile(uri);
             } catch (Exception e) {
@@ -441,7 +441,6 @@ public class Planner extends Agent {
                 LOGGER.error("ERROR IN start METHOD OF PLANNER: Sending command to systemModelAgent");
                 e.printStackTrace();
             }
-/*******************************Modificaciones Diego*/
 
             template = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
                     MessageTemplate.MatchOntology("Ftime_batch_ask"));
@@ -503,8 +502,6 @@ public class Planner extends Agent {
                     }
                 }
             }
-/*******************************************************/
-
 
         }
 
@@ -581,7 +578,7 @@ public class Planner extends Agent {
                 MessageTemplate.and(
                         MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
                         MessageTemplate.MatchPerformative(ACLMessage.INFORM))
-                , 1000);
+                , 15000);
 
         LOGGER.info((cmd.startsWith("validate"))?"xsd: "+reply.getContent(): cmd+" > "+reply.getContent());
 

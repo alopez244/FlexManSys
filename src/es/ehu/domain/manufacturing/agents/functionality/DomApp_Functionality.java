@@ -238,32 +238,62 @@ public class DomApp_Functionality extends Dom_Functionality{
         for (String elementID : allElementsID) {
             // Creamos los agentes para cada elemento
             try {
-                reply = sendCommand(myAgent, "get (get * parent=(get * parent=" + elementID + " category=restrictionList)) attrib=attribValue", conversationId);
-                String refServID = null;
-                if (reply != null)
-                    refServID = reply.getContent();
 
-                reply = sendCommand(myAgent, "get * category=pNodeAgent" + ((refServID.length() > 0) ? " refServID=" + refServID : ""), conversationId);
-                String targets = null;
-                if (reply != null) {
-                    targets = reply.getContent();
-                }
+//                    reply = sendCommand(myAgent, "get (get * parent=(get * parent=" + elementID + " category=restrictionList)) attrib=attribValue", conversationId);
+//                    String refServID = null;
+//                    if (reply != null)
+//                        refServID = reply.getContent();
+//                    reply = sendCommand(myAgent, "get * category=pNodeAgent" + ((refServID.length() > 0) ? " refServID=" + refServID : ""), conversationId);
+//
+//                    if (reply != null) {
+//                        targets = reply.getContent();
+//                    }
+//                if(myAgent.getLocalName().contains("mplan")){
+//                    AID sa=new AID("sa",AID.ISLOCALNAME);
+//                    sendACLMessage(7,sa,"rdy",conversationId,"ready",myAgent); //avisa al SA de que el agente esta a la espera del trigger de la negociación
+//                }else if(myAgent.getLocalName().contains("order")){
+//                    ACLMessage running_replica= sendCommand(myAgent, "get * state=bootToRunning category=mPlanAgent", conversationId);
+//                    AID RR=new AID(running_replica.getContent(),AID.ISLOCALNAME);
+//                    sendACLMessage(7,RR,"rdy",conversationId,"ready",myAgent); //avisa al SA de que el agente esta a la espera del trigger de la negociación
+//                }
+//                myAgent.blockingReceive(MessageTemplate.MatchOntology("trigger_negotiation"));
 
-                reply = sendCommand(myAgent, "get " + elementID + " attrib=category", conversationId);
-                String seCategory = null;
-                if (reply != null)
-                    seCategory = reply.getContent();
-                String seClass = attribs.get("seClass");
-
-                // Orden de negociacion a todos los nodos
+                    reply = sendCommand(myAgent, "get " + elementID + " attrib=category", conversationId);
+                    String seCategory = null;
+                    if (reply != null)
+                        seCategory = reply.getContent();
+                    String seClass = attribs.get("seClass");
+                ACLMessage All_process_nodes = sendCommand(myAgent, "get * category=pNodeAgent", "GetAllNodes");
+                String targets=All_process_nodes.getContent();
                 for (int i = 0; i < Integer.parseInt(redundancy); i++) {
+                // Orden de negociacion a todos los nodos
+                //***********for antiguo
 
+//                    =getTargets(elementID);
                     conversationId = myAgent.getLocalName() + "_" + chatID++;
-
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     //negotiate(myAgent, targets, "max mem", "start", elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy+","+myAgent.getLocalName(), conversationId);
                     String negotiationQuery = "localneg " + targets + " criterion=max mem action=start externaldata=" + elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking") + "," + redundancy + "," + myAgent.getLocalName();
-                    reply = sendCommand(myAgent, negotiationQuery, conversationId);
+                    sendCommand(myAgent, negotiationQuery, conversationId);
+//                    myAgent.blockingReceive(MessageTemplate.MatchOntology("Negotiation_winner"));
                 }
+
+//                if(myAgent.getLocalName().contains("mplan")){
+//                    ACLMessage running_replica=sendCommand(myAgent,"get * state=bootToRunning category=orderAgent" ,conversationId);
+//                    if(running_replica!=null){
+//                        AID ReplicaRunning=new AID(running_replica.getContent(), AID.ISLOCALNAME);
+//                        myAgent.blockingReceive(MessageTemplate.MatchOntology("rdy"));
+//                        sendACLMessage(7,ReplicaRunning,"trigger_negotiation",conversationId,"",myAgent);
+//                    }else{
+//                        LOGGER.error("Son agent did not receive negotiation trigger");
+//                    }
+//                }
+
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -493,27 +523,7 @@ public class DomApp_Functionality extends Dom_Functionality{
     protected Date convertToDateViaSqlTimestamp(LocalDateTime dateToConvert) {
         return java.sql.Timestamp.valueOf(dateToConvert);
     }
-    protected void SendToReplicas(ArrayList<String> replicas, ACLMessage msg){
-        MessageTemplate echotemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                MessageTemplate.MatchOntology("Acknowledge"));
-        AID QoSID = new AID("QoSManagerAgent", false);
-        MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                MessageTemplate.MatchOntology("acl_error"));
-        for(int i=0; i<replicas.size();i++){
-            AID orderAgentID = new AID(replicas.get(i), false);
-            sendACLMessage(msg.getPerformative(), orderAgentID, msg.getOntology(), msg.getConversationId(), msg.getContent(), myAgent);
-            ACLMessage ack= myAgent.blockingReceive(echotemplate,250);
-            if(ack==null){
-                String informQoS = "7" + "/div/" + msg.getOntology()+ "/div/" +msg.getConversationId()+ "/div/" +orderAgentID.getLocalName()+ "/div/" +msg.getContent();
-                sendACLMessage(ACLMessage.FAILURE, QoSID, "acl_error", "msgtotracking", informQoS, myAgent);
-                ACLMessage QoSR = myAgent.blockingReceive(QoStemplate,2000);
-                if(QoSR==null){
-                    System.out.println("I'm isolated. Shutting down entire node.");
-                    System.exit(0);
-                }
-            }
-        }
-    }
+
     protected void KillReplicas(ArrayList<String> replicas){
         for(int i=0; i<replicas.size();i++){
             AID AgentID = new AID(replicas.get(i), false);
@@ -530,8 +540,48 @@ public class DomApp_Functionality extends Dom_Functionality{
         }
     }
 
+    private String getTargets(String refServID) {
+        String targets = "";
+        ACLMessage All_process_nodes = null;
+        try {
+            All_process_nodes = sendCommand(myAgent, "get * category=pNodeAgent", "GetAllNodes");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        ArrayList<String> ParticipatingPnodes = new ArrayList<>();
+        if (All_process_nodes != null) {
+            String[] ListOfAllPnodes = new String[1];
+            if (All_process_nodes.getContent().contains(",")) {
+                ListOfAllPnodes = All_process_nodes.getContent().split(",");
+            } else {
+                ListOfAllPnodes[0] = All_process_nodes.getContent();
+            }
+            try{
 
+            for (int i = 0; i < ListOfAllPnodes.length; i++) {
+                ACLMessage UsedPNodes = sendCommand(myAgent, "get " + ListOfAllPnodes[i] + " attrib=refServID", "CheckIfValidNode"); //todas los pnode.
+                if (!UsedPNodes.getContent().contains(refServID)) {
+                    ParticipatingPnodes.add(ListOfAllPnodes[i]);
+                }
+            }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            if(ParticipatingPnodes.size()==0){
+                LOGGER.warn("There is no node available to host a replica. Some nodes may host multiple replicas.");
+                return All_process_nodes.getContent(); //si no hay nodos disponibles que permita que se repita alguna replica en algun nodo
+            }
+            for (int i = 0; i < ParticipatingPnodes.size(); i++) {
+                if (i == 0) {
+                    targets = ParticipatingPnodes.get(i);
+                } else {
+                    targets = targets + "," + ParticipatingPnodes.get(i);
+                }
+            }
+        }
 
+            return targets;
+    }
 
     private int SearchAgent (String agent){
         int found=0;

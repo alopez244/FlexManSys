@@ -112,6 +112,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   }
   @Override
   public String getState(){
+    myAgent.antiloopflag=true;
     String state="";
       for(int i=0;i<ordersTraceability.size();i++){
     if(i!=0){
@@ -157,13 +158,41 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     }
   state=state+"/div0/"+parentAgentID+"/div0/";
 
-  for(int i=0;i<myAgent.replicas.size();i++){ //concatena los replicas del batch
-    if(i==0){
-      state=state+myAgent.replicas.get(i);
-    }else{
-      state=state+"/div1/"+myAgent.replicas.get(i);
+    try {   //realiza la consulta al sa para tener la lista de replicas actualizada.
+      ACLMessage reply1 = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "GetUpdatedReplicas");
+      ACLMessage reply2 = sendCommand(myAgent, "get * state=tracking parent=" + reply1.getContent(), "GetUpdatedReplicas");
+      if(!reply2.getContent().equals("")){
+
+      }
+      String[] replicas=new String[1];
+      if(!reply2.getContent().equals("")){
+        if(reply2.getContent().contains(",")){
+          replicas= reply2.getContent().split(",");
+        }else{
+          replicas[0] = reply2.getContent();
+        }
+      }else{
+        replicas[0] =" ";
+      }
+      for(int i=0; i<replicas.length;i++){
+        if(i==0){
+          state=state+replicas[i];
+        }else{
+          state=state+"/div1/"+replicas[i];
+        }
+      }
+    }catch  (Exception e) {
+      e.printStackTrace();
     }
-  }
+
+
+//  for(int i=0;i<myAgent.replicas.size();i++){ //concatena los replicas del batch
+//    if(i==0){
+//      state=state+myAgent.replicas.get(i);
+//    }else{
+//      state=state+"/div1/"+myAgent.replicas.get(i);
+//    }
+//  }
     return state;
   }
 
