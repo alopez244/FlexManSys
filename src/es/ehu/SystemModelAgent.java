@@ -1134,11 +1134,11 @@ public class SystemModelAgent extends Agent implements IExecManagement {
             // Cada peticion de negociacion necesita un ID distinto
             conversationId = getLocalName() + "_" + cmdId++;
             try {
-                Thread.sleep(1000);
+                Thread.sleep(200); ///
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            processCmd("localneg "+UpdatedTargets+" action=start criterion=max mem externaldata="+seID+","+seCategory+","+seClass+","+((i==0)?"running":"tracking")+","+redundancy+","+getLocalName(), conversationId);
+            processCmd("localneg "+UpdatedTargets+" action=start criterion=max mem externaldata="+seID+","+seCategory+","+seClass+","+((i==Integer.parseInt(redundancy)-1)?"running":"tracking")+","+redundancy+","+getLocalName(), conversationId);
 //            ACLMessage winner=blockingReceive(MessageTemplate.MatchOntology("Negotiation_winner"));
 ////            ACLMessage winner=null;
 //            if(winner!=null){
