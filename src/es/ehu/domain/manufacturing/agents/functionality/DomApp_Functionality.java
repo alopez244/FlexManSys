@@ -271,11 +271,7 @@ public class DomApp_Functionality extends Dom_Functionality{
 
 //                    =getTargets(elementID);
                     conversationId = myAgent.getLocalName() + "_" + chatID++;
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+
                     //negotiate(myAgent, targets, "max mem", "start", elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy+","+myAgent.getLocalName(), conversationId);
                     String negotiationQuery = "localneg " + targets + " criterion=max mem action=start externaldata=" + elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking") + "," + redundancy + "," + myAgent.getLocalName();
                     sendCommand(myAgent, negotiationQuery, conversationId);

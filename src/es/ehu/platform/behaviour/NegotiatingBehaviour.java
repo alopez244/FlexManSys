@@ -10,6 +10,7 @@ import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
+import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -126,7 +127,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
     private static final long serialVersionUID = 5211311085804151394L;
     static final Logger LOGGER = LogManager.getLogger(NegotiatingBehaviour.class.getName());
     private static final String CMD_REFUSE = "Refuse";
-
+    private boolean busy=false;
     private MWAgent myAgent;
     private NegFunctionality aNegFunctionality;
 
@@ -146,6 +147,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
      * </ul>
      */
     private ConcurrentHashMap<String, NegotiationData> negotiationRuntime = new ConcurrentHashMap<String, NegotiationData>();
+    private CircularFifoQueue CFP_FIFO = new CircularFifoQueue(1000); //fifo para anotar los CFP recibidos hasta poder leerlos
 
     private static String actionValue = null;
 
@@ -157,8 +159,9 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
         this.aNegFunctionality = (NegFunctionality) a.functionalityInstance;
         template = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_NEGOTIATE), //es negociación Y (
                 MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.CFP), //o es cfp
-                        MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.PROPOSE), // o es proposal
-                                MessageTemplate.MatchPerformative(ACLMessage.FAILURE)))); // o es failure)
+                        MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.PROPOSE),// o es proposal
+                                MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.FAILURE),// o es failure
+                                        MessageTemplate.MatchPerformative(ACLMessage.INFORM))))); //o es inform
         LOGGER.exit();
     }
 
@@ -253,10 +256,11 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                         }
                     }
                 }
-
-                initNegotiation(conversationId, msg.getSender(), negMsg);
-
-            } else {
+                regNegotiation(conversationId, msg.getSender(), negMsg);
+                initNegotiation();
+            } else if (msg.getPerformative() == ACLMessage.INFORM){
+                busy=false;
+            } else{
                 // Recibo propuestas
                 if ((msg.getPerformative() == ACLMessage.PROPOSE) && (actionValue.equals("start"))) {
                     if (negotiationRuntime.containsKey(conversationId)) {
@@ -268,7 +272,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                             LOGGER.debug("Received value is not a number");
                         }
 
-                        LOGGER.info("message " + msg.getConversationId() + " from agent "+ msg.getSender().getLocalName() + "(" + receivedVal + ") ");
+                        LOGGER.info("message " + msg.getConversationId() + " from agent " + msg.getSender().getLocalName() + "(" + receivedVal + ") ");
                         negotiationRuntime.get(conversationId).cntReplies();
                         boolean tieBreak = msg.getSender().getLocalName().compareTo(myAgent.getLocalName()) > 0;
 
@@ -284,7 +288,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                 seID, seType, seClass, seFirstTransition, redundancy, parentAgentID)) {
 
                             case NEG_LOST: //he perdido la negociación
-                                LOGGER.info("Negotiation (id: "+conversationId+") loser " +myAgent.getLocalName()+" (value:"+negotiationRuntime.get(conversationId).getScalarValue()+") dropped");//                                negotiationRuntime.remove(conversationId); //salgo de esta negociación
+                                LOGGER.info("Negotiation (id: " + conversationId + ") loser " + myAgent.getLocalName() + " (value:" + negotiationRuntime.get(conversationId).getScalarValue() + ") dropped");//                                negotiationRuntime.remove(conversationId); //salgo de esta negociación
                                 negotiationRuntime.get(conversationId).isNotPartialWinner();
                                 break;
 
@@ -293,7 +297,21 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                 break;
 
                             case NEG_WON: //he ganado la negociación y termina correctamente
-                                LOGGER.info(myAgent.getLocalName()+" WON negotiation(id:"+conversationId+")!");
+                                LOGGER.info(myAgent.getLocalName() + " WON negotiation(id:" + conversationId + ")!");
+
+
+                                ACLMessage inform_winner = new ACLMessage(ACLMessage.INFORM);
+                                inform_winner.setOntology(ONT_NEGOTIATE);
+                                inform_winner.setConversationId(conversationId);
+                                LOGGER.debug("Targets lenght: " + negotiationRuntime.get(conversationId).getTargets().length);
+                                for (AID id : negotiationRuntime.get(conversationId).getTargets()) {
+                                    // Removes the own agent from the list
+                                    if (!id.getLocalName().equals(myAgent.getLocalName())) {
+                                        inform_winner.addReceiver(id);
+                                    }
+                                }
+                                myAgent.send(inform_winner);
+                                busy=false;
 //                                negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
 
                             case NEG_FAIL:
@@ -308,6 +326,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 
                         // todavía no he entrado a esa negociación o ¿la he perdido?
 //                        myAgent.putBack(msg);
+                        initNegotiation();
                         myAgent.postMessage(msg);
                         LOGGER.debug("negotiation " + msg.getConversationId() + "is not for me");
                     }
@@ -335,7 +354,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                 seID, seNumOfItems, seOperationID)) {
 
                             case NEG_LOST: //he perdido la negociación
-                                LOGGER.info("Negotiation (id: "+conversationId+") loser " +myAgent.getLocalName()+" (value:"+negotiationRuntime.get(conversationId).getScalarValue()+") dropped");
+                                LOGGER.info("Negotiation (id: " + conversationId + ") loser " + myAgent.getLocalName() + " (value:" + negotiationRuntime.get(conversationId).getScalarValue() + ") dropped");
 //                                negotiationRuntime.remove(conversationId); //salgo de esta negociación
                                 negotiationRuntime.get(conversationId).isNotPartialWinner();
                                 break;
@@ -345,7 +364,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                 break;
 
                             case NEG_WON: //he ganado la negociación y termina correctamente
-                                LOGGER.info(myAgent.getLocalName()+" WON negotiation(id:"+conversationId+")!");
+                                LOGGER.info(myAgent.getLocalName() + " WON negotiation(id:" + conversationId + ")!");
                                 negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
 
                             case NEG_FAIL:
@@ -384,7 +403,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                 externalData, machineAgentName)) {
 
                             case NEG_LOST: //he perdido la negociación
-                                LOGGER.info("Negotiation (id: "+conversationId+") loser " +myAgent.getLocalName()+" (value:"+negotiationRuntime.get(conversationId).getScalarValue()+") dropped");
+                                LOGGER.info("Negotiation (id: " + conversationId + ") loser " + myAgent.getLocalName() + " (value:" + negotiationRuntime.get(conversationId).getScalarValue() + ") dropped");
 //                                negotiationRuntime.remove(conversationId); //salgo de esta negociación
                                 negotiationRuntime.get(conversationId).isNotPartialWinner();
                                 break;
@@ -394,21 +413,19 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                 break;
 
                             case NEG_WON: //he ganado la negociación y termina correctamente
-                                LOGGER.info(myAgent.getLocalName()+" WON negotiation(id:"+conversationId+")!");
+                                LOGGER.info(myAgent.getLocalName() + " WON negotiation(id:" + conversationId + ")!");
                                 negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
 
                             case NEG_FAIL:
                                 negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
                                 break;
                         }
-//
-
                     } else {// !negotiationRuntime.containsKey(conversationId)
 
                         // todavía no he entrado a esa negociación o ¿la he perdido?
 //                        myAgent.putBack(msg);
                         myAgent.postMessage(msg);
-                        LOGGER.debug("negotiation " + msg.getConversationId() + "is not for me");
+                        LOGGER.debug("negotiation " + msg.getConversationId() + " is not for me by now");
                     }
                 }else if (msg.getPerformative() == ACLMessage.FAILURE) {
                     LOGGER.info("Received FAILURE message with convID:" + conversationId);
@@ -419,13 +436,12 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                         String name = msg.getContent().substring(msg.getContent().indexOf(":name ", msg.getContent().indexOf("MTS-error")) + ":name ".length());
                         LOGGER.warn(name.substring(0, name.indexOf('@')) + " FAILURE");
 
-
-
                     } catch (Exception e) {
                     }
                 }
             }
         } else {
+            initNegotiation();
             block();
         }
         LOGGER.exit();
@@ -436,9 +452,9 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
      * NewData in the negotiationRuntime Create the Propose msg with the calculated
      * scalarValue and send it to other targets.
      *
-     * @param negId     ConversationId (negotiationID)
-     * @param requester AID of the requester agent
-     * @param negMsg    necessary information to start the negotiation
+//     * @param negId     ConversationId (negotiationID)
+//     * @param requester AID of the requester agent
+//     * @param negMsg    necessary information to start the negotiation
      */
 //    private void initNegotiation(String negId, AID requester, MsgNegotiation negMsg) {
 //        LOGGER.entry();
@@ -469,35 +485,57 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 //        negotiationRuntime.put(negId, newNegotiation);
 //        LOGGER.exit();
 //    }
-    private void initNegotiation(String negId, AID requester, MsgNegotiation negMsg) {
+
+
+//    String negId, AID requester, MsgNegotiation negMsg
+    private void initNegotiation() {
         LOGGER.entry();
-
         //En la primera parte del método tengo que calcular el valor, y registrar la negociación
-        long value = aNegFunctionality.calculateNegotiationValue(negMsg.getNegAction(), negMsg.getCriterion(), negMsg.getExternalData());
-        NegotiationData newNegotiation = new NegotiationData(requester, negMsg);
-        newNegotiation.setScalarValue(value);
-        negotiationRuntime.put(negId, newNegotiation);
+        if(!CFP_FIFO.isEmpty()&&!busy){ //si el agente se encuentra ocupado en una negociación o no ha recibido CFPs se ignora
+            Object data[] = (Object[]) CFP_FIFO.poll();
+            String negId=(String) data[0];
+            AID requester=(AID) data[1];
+            MsgNegotiation negMsg=(MsgNegotiation) data[2];
 
-        //Segundo, enviar un mensaje al resto de agentes con mi valor de negociación
-        ACLMessage cfp = new ACLMessage(ACLMessage.PROPOSE);
-        cfp.setOntology(ONT_NEGOTIATE);
-        cfp.setConversationId(negId);
-        LOGGER.debug("Targets lenght: " + negMsg.getTargets().length);
-        for (AID id : negMsg.getTargets()) {
-            // Removes the own agent from the list
-            if (!id.getLocalName().equals(myAgent.getLocalName())) {
-                cfp.addReceiver(id);
+            long value = aNegFunctionality.calculateNegotiationValue(negMsg.getNegAction(), negMsg.getCriterion(), negMsg.getExternalData());
+            NegotiationData newNegotiation = new NegotiationData(requester, negMsg);
+            newNegotiation.setScalarValue(value);
+            negotiationRuntime.put(negId, newNegotiation);
+//            negotiationRuntime.put(negId, newNegotiation);
+            //Segundo, enviar un mensaje al resto de agentes con mi valor de negociación
+            ACLMessage cfp = new ACLMessage(ACLMessage.PROPOSE);
+            cfp.setOntology(ONT_NEGOTIATE);
+            cfp.setConversationId(negId);
+            LOGGER.debug("Targets lenght: " + negMsg.getTargets().length);
+            for (AID id : negMsg.getTargets()) {
+                // Removes the own agent from the list
+                if (!id.getLocalName().equals(myAgent.getLocalName())) {
+                    cfp.addReceiver(id);
+                }
             }
+            try {
+                cfp.setContentObject(new Long(value));//TODO cambiar a sistema FIPACompliant String
+            } catch (Exception e) {
+                LOGGER.error("Negotiation content in " + myAgent.getLocalName() + " could not be sent!! - " + negId);
+            }
+            myAgent.send(cfp);
+            LOGGER.debug("Sent Negotiation Propose msg");
+            busy=true;
         }
 
-        try {
-            cfp.setContentObject(new Long(value));
-        } catch (Exception e) {
-            LOGGER.error("Negotiation content in " + myAgent.getLocalName() + " could not be sent!! - " + negId);
-        }
-        myAgent.send(cfp);
-
-        LOGGER.debug("Sent Negotiation Propose msg");
+        LOGGER.exit();
+    }
+    private void regNegotiation(String negId, AID requester, MsgNegotiation negMsg){
+        Object data[]= new Object[3];
+        LOGGER.entry();
+        data[0]=negId;
+        data[1]=requester;
+        data[2]=negMsg;
+//        long value = aNegFunctionality.calculateNegotiationValue(negMsg.getNegAction(), negMsg.getCriterion(), negMsg.getExternalData());
+//        NegotiationData newNegotiation = new NegotiationData(requester, negMsg);        //mantener
+//        newNegotiation.setScalarValue(value);
+//        negotiationRuntime.put(negId, newNegotiation);       //mantener
+        CFP_FIFO.add((Object[]) data);
         LOGGER.exit();
     }
 

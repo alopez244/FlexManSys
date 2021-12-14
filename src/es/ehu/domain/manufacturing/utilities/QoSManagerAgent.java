@@ -316,6 +316,8 @@ public class QoSManagerAgent extends Agent {
 
                                                                 }
                                                                 add_to_error_list(argument1, argument2, argument3, argument4, argument5);
+                                                            }else{
+                                                                sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "confirmed_timeout");
                                                             }
                                                         }
                                                     }
