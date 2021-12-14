@@ -161,7 +161,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                 MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.CFP), //o es cfp
                         MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.PROPOSE),// o es proposal
                                 MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.FAILURE),// o es failure
-                                        MessageTemplate.MatchPerformative(ACLMessage.INFORM))))); //o es inform
+                                        MessageTemplate.MatchPerformative(ACLMessage.INFORM))))); //o es inform.
         LOGGER.exit();
     }
 

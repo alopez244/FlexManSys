@@ -345,7 +345,7 @@ public class DomApp_Functionality extends Dom_Functionality{
 
         List<String> allElements = getAllElements(myAgent, seID, conversationId);
 
-        for (String elem : allElements) {
+        for (String elem : allElements) {//
             try {
                 ACLMessage reply = sendCommand(myAgent, "get " + elem + " attrib=category", conversationId);
                 if (reply != null)

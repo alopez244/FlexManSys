@@ -1135,27 +1135,11 @@ public class SystemModelAgent extends Agent implements IExecManagement {
             conversationId = getLocalName() + "_" + cmdId++;
 
             processCmd("localneg "+UpdatedTargets+" action=start criterion=max mem externaldata="+seID+","+seCategory+","+seClass+","+((i==0)?"running":"tracking")+","+redundancy+","+getLocalName(), conversationId);
-//            ACLMessage winner=blockingReceive(MessageTemplate.MatchOntology("Negotiation_winner"));
-////            ACLMessage winner=null;
-//            if(winner!=null){
-//                String target_to_remove=winner.getSender().getLocalName();
-//                UpdatedTargets=UpdateTargets(UpdatedTargets,target_to_remove);
-//                if(UpdatedTargets.equals("")){
-//                    UpdatedTargets=Alltargets; //usa todos los nodos para negociar si ya no caben más
-//                }
-//            }else{
-//                UpdatedTargets=Alltargets;
-//            }
+
 
             LOGGER.exit();
         }
 
-//        blockingReceive(MessageTemplate.MatchOntology("rdy")); //espera a que el agente mplan en running esté listo
-//        ACLMessage start_orders=new ACLMessage(ACLMessage.INFORM);
-//        String running_replica=processCmd("get * state=bootToRunning category=mPlanAgent", conversationId);
-//        start_orders.setOntology("trigger_negotiation");
-//        start_orders.addReceiver(new AID(running_replica, AID.ISLOCALNAME));
-//        send(start_orders);
         return "";
     }
     private String UpdateTargets(String targets, String target_to_remove) {

@@ -145,16 +145,7 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
                 ac.start();
                 String parts[]=myAgent.getLocalName().split("pnodeagent");
                 sendCommand("set "+agnID+" node="+parts[1]);
-//                if(seID.contains("mplan")){
-//                    sendACL(7,"sa","Negotiation_winner", "",myAgent.getLocalName()+"_"+seID);
-//                }else
-//                    if(seID.contains("order")){
-//                    ACLMessage running_replica= sendCommand("get * category=mPlanAgent state=bootToRunning");
-//                    sendACL(7,running_replica.getContent(),"Negotiation_winner", "",myAgent.getLocalName()+"_"+seID);
-//                }else if(seID.contains("batch")) {
-//                    ACLMessage running_replica = sendCommand("get * category=orderAgent state=bootToRunning");
-//                    sendACL(7, running_replica.getContent(), "Negotiation_winner", "",myAgent.getLocalName()+"_"+seID);
-//                }
+
 
             }catch (Exception e) {e.printStackTrace();}
         }

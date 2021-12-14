@@ -263,7 +263,7 @@ public class QoSManagerAgent extends Agent {
                                     add_timeout_error_flag=false;
                                 }
                             }
-                            if(add_timeout_error_flag){
+                            if(add_timeout_error_flag){//
                                 LOGGER.info("No timeout errors found for batch "+timeout_batch_id+". Pinging batch.");
                                     String batch_to_ping=reply2.getContent();
                                     if(batch_to_ping!=""){
