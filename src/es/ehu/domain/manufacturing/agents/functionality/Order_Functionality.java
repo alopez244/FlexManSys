@@ -220,18 +220,20 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         state=state+"/div0/"+parentAgentID+"/div0/";
 
         try {   //realiza la consulta al sa para tener la lista de replicas actualizada.
-            ACLMessage reply1 = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "GetUpdatedReplicas");
-            ACLMessage reply2 = sendCommand(myAgent, "get * state=tracking parent=" + reply1.getContent(), "GetUpdatedReplicas");
+
             String[] replicas=new String[1];
-            if(!reply2.getContent().equals("")){
-                if(reply2.getContent().contains(",")){
-                    replicas= reply2.getContent().split(",");
-                }else{
-                    replicas[0] = reply2.getContent();
-                }
-            }else{
+            if(redundancy.equals("1")){
                 replicas[0] =" ";
+            }else{
+                ACLMessage parent = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "GetOrderParent");
+                ACLMessage replicasACL = sendCommand(myAgent, "get * state=tracking parent=" + parent.getContent(), "GetOrderUpdatedReplicas");
+                if(replicasACL.getContent().contains(",")){
+                    replicas= replicasACL.getContent().split(",");
+                }else{
+                    replicas[0] = replicasACL.getContent();
+                }
             }
+
             for(int i=0; i<replicas.length;i++){
                 if(i==0){
                     state=state+replicas[i];
@@ -385,7 +387,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 batchTraceability = addNewLevel(batchTraceability, deserializedMessage,false);
             }
             newBatch = false; // hasta que el batch añadido no se complete, cada vez que se reciba un mensaje el dato se sobrescribira
-            getState();
+//            getState();
 
         }
         ACLMessage msg2 = myAgent.receive(template2);

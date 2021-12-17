@@ -99,35 +99,14 @@ public class ControlBehaviour extends SimpleBehaviour {
                 String name = msg.getContent().substring(msg.getContent().indexOf(":name ", msg.getContent().indexOf("MTS-error")) + ":name ".length());
                 name = name.substring(0, name.indexOf('@'));
                 LOGGER.info("msg.getPerformative()==ACLMessage.FAILURE (sender=" + name + ")");
-                boolean f=false;
-                for(int i=0;i<myAgent.ReportedAgents.size();i++){
-                    myAgent.ReportedAgents.get(i).equals(name); //si ya se ha denunciado el agente no hacer nada
-                    f=true;
-                }
-                if(!f){
+
+
                     ACLMessage report= new ACLMessage(ACLMessage.FAILURE);
                     report.setOntology("ctrlbhv_failure");
                     report.setContent(name);
                     report.addReceiver(QoSID);
                     myAgent.send(report);
-                    myAgent.ReportedAgents.add(name);
-                }else{
-                    LOGGER.info(name+" has already been reported");
-                }
-                if(myAgent.getLocalName().contains("batchagent")||myAgent.getLocalName().contains("orderagent")||myAgent.getLocalName().contains("mplanagent")){
-                    String n[]=myAgent.getLocalName().split("agent"); //se checkea si los agentes son del mismo tipo para borrarlo de la lista de replicas
-                    if(n[0]!=null){
-                        if(name.contains(n[0]+"agent")){
-                            LOGGER.warn("Error in communication with a replica. Ignore this replica by the moment");
-                            for(int i=0; i<myAgent.replicas.size();i++){
-                                if(myAgent.replicas.get(i).equals(name)){
-                                    myAgent.IgnoredReplicas.add(myAgent.replicas.get(i));
-                                    myAgent.replicas.remove(i);
-                                }
-                            }
-                        }
-                    }
-                }
+
 
                 try {
                     LOGGER.info(myAgent.sendCommand(CMD_REPORT + " (" + CMD_GETCOMPONENTS + " " + name + ") type=notFound cmpins=" + name));

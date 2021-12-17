@@ -1,58 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- editado con XMLSpy v2020 sp1 (x64) (http://www.altova.com) por  (University of the Basque Country) -->
-<mPlan xmlns="ManufacturingPlan" name="MPlan2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="ManufacturingPlan file:///C:/Users/dgarcia129/Desktop/Version%20actualizada/AppInstances/ManufacturingPlan.xsd">
+<mPlan xmlns="ManufacturingPlan" name="MPlan2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="ManufacturingPlan ./ManufacturingPlan.xsd">
 	<order reference="21">
 		<batch reference="211" numberOfItems="5" refProductID="1">
 			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="21" batch_ID="211" item_ID="2111">
-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-09-03T08:00:00" plannedFinishTime="2021-09-03T08:01:00">
-					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-09-03T08:00:00" plannedFinishTime="2021-09-03T08:01:00"/>
-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-09-03T08:00:00" plannedFinishTime="2021-09-03T08:01:00"/>
-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-09-03T08:00:00" plannedFinishTime="2021-09-03T08:01:00"/>
-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-09-03T08:00:00" plannedFinishTime="2021-09-03T08:01:00"/>
+				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00">
+					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
 				</simpleOperation>
 				<product productType="BB" description="Base (big product)" state="Planned">
 					<rawMaterial id="BB" description="Base (big product)"/>
 				</product>			
 			</PlannedItem>
 			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="21" batch_ID="211" item_ID="2112">
-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-09-03T08:01:00" plannedFinishTime="2021-09-03T08:02:00">
-					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-09-03T08:01:00" plannedFinishTime="2021-09-03T08:02:00"/>
-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-09-03T08:01:00" plannedFinishTime="2021-09-03T08:02:00"/>
-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-09-03T08:01:00" plannedFinishTime="2021-09-03T08:02:00"/>
-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-09-03T08:01:00" plannedFinishTime="2021-09-03T08:02:00"/>
+				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00">
+					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
 				</simpleOperation>
 				<product productType="BB" description="Base (big product)" state="Planned">
 					<rawMaterial id="BB" description="Base (big product)"/>
 				</product>			
 			</PlannedItem>
 			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="21" batch_ID="211" item_ID="2113">
-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-09-03T08:02:00" plannedFinishTime="2021-09-03T08:03:00">
-					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-09-03T08:02:00" plannedFinishTime="2021-09-03T08:03:00"/>
-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-09-03T08:02:00" plannedFinishTime="2021-09-03T08:03:00"/>
-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-09-03T08:02:00" plannedFinishTime="2021-09-03T08:03:00"/>
-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-09-03T08:02:00" plannedFinishTime="2021-09-03T08:03:00"/>
+				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00">
+					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
 				</simpleOperation>
 				<product productType="BB" description="Base (big product)" state="Planned">
 					<rawMaterial id="BB" description="Base (big product)"/>
 				</product>			
 			</PlannedItem>
 			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="21" batch_ID="211" item_ID="2114">
-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-09-03T08:03:00" plannedFinishTime="2021-09-03T08:04:00">
-					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-09-03T08:03:00" plannedFinishTime="2021-09-03T08:04:00"/>
-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-09-03T08:03:00" plannedFinishTime="2021-09-03T08:04:00"/>
-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-09-03T08:03:00" plannedFinishTime="2021-09-03T08:04:00"/>
-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-09-03T08:03:00" plannedFinishTime="2021-09-03T08:04:00"/>
+				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-12-16T08:03:00" plannedFinishTime="2021-12-16T08:04:00">
+					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:03:00" plannedFinishTime="2021-12-16T08:04:00"/>
+					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:03:00" plannedFinishTime="2021-12-16T08:04:00"/>
+					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:03:00" plannedFinishTime="2021-12-16T08:04:00"/>
+					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:03:00" plannedFinishTime="2021-12-16T08:04:00"/>
 				</simpleOperation>
 				<product productType="BB" description="Base (big product)" state="Planned">
 					<rawMaterial id="BB" description="Base (big product)"/>
 				</product>			
 			</PlannedItem>
 			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="21" batch_ID="211" item_ID="2115">
-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-09-03T08:04:00" plannedFinishTime="2021-09-03T08:05:00">
-					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-09-03T08:04:00" plannedFinishTime="2021-09-03T08:05:00"/>
-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-09-03T08:04:00" plannedFinishTime="2021-09-03T08:05:00"/>
-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-09-03T08:04:00" plannedFinishTime="2021-09-03T08:05:00"/>
-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-09-03T08:04:00" plannedFinishTime="2021-09-03T08:05:00"/>
+				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-12-16T08:04:00" plannedFinishTime="2021-12-16T08:05:00">
+					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:04:00" plannedFinishTime="2021-12-16T08:05:00"/>
+					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:04:00" plannedFinishTime="2021-12-16T08:05:00"/>
+					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:04:00" plannedFinishTime="2021-12-16T08:05:00"/>
+					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:04:00" plannedFinishTime="2021-12-16T08:05:00"/>
 				</simpleOperation>
 				<product productType="BB" description="Base (big product)" state="Planned">
 					<rawMaterial id="BB" description="Base (big product)"/>
@@ -63,36 +63,36 @@
 	<order reference="22">
 		<batch reference="221" numberOfItems="3" refProductID="1">
 			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="22" batch_ID="221" item_ID="2211">
-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="4" plannedStationId="41" plannedStartTime="2021-09-03T08:00:00"
-			plannedFinishTime="2021-09-03T08:01:00">
-				<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-09-03T08:00:00" plannedFinishTime="2021-09-03T08:01:00"/>
-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-09-03T08:00:00" plannedFinishTime="2021-09-03T08:01:00"/>
-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-09-03T08:00:00" plannedFinishTime="2021-09-03T08:01:00"/>
-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-09-03T08:00:00" plannedFinishTime="2021-09-03T08:01:00"/>
+				<simpleOperation id="4" description="insert_and_place" plannedMachineId="4" plannedStationId="41" plannedStartTime="2021-12-16T08:00:00"
+			plannedFinishTime="2021-12-16T08:01:00">
+				<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
 			</simpleOperation>
 				<product productType="BB" description="Base (big product)" state="Planned">
 					<rawMaterial id="BB" description="Base (big product)"/>
 				</product>
 			</PlannedItem>
 			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="22" batch_ID="221" item_ID="2212">
-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="4" plannedStationId="41" plannedStartTime="2021-09-03T08:01:00"
-			plannedFinishTime="2021-09-03T08:02:00">
-				<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-09-03T08:01:00" plannedFinishTime="2021-09-03T08:02:00"/>
-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-09-03T08:01:00" plannedFinishTime="2021-09-03T08:02:00"/>
-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-09-03T08:01:00" plannedFinishTime="2021-09-03T08:02:00"/>
-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-09-03T08:01:00" plannedFinishTime="2021-09-03T08:02:00"/>
+				<simpleOperation id="4" description="insert_and_place" plannedMachineId="4" plannedStationId="41" plannedStartTime="2021-12-16T08:01:00"
+			plannedFinishTime="2021-12-16T08:02:00">
+				<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
 			</simpleOperation>
 				<product productType="BB" description="Base (big product)" state="Planned">
 					<rawMaterial id="BB" description="Base (big product)"/>
 				</product>
 			</PlannedItem>
 			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="22" batch_ID="221" item_ID="2213">
-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="4" plannedStationId="41" plannedStartTime="2021-09-03T08:02:00"
-			plannedFinishTime="2021-09-03T08:03:00">
-				<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-09-03T08:02:00" plannedFinishTime="2021-09-03T08:03:00"/>
-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-09-03T08:02:00" plannedFinishTime="2021-09-03T08:03:00"/>
-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-09-03T08:02:00" plannedFinishTime="2021-09-03T08:03:00"/>
-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-09-03T08:02:00" plannedFinishTime="2021-09-03T08:03:00"/>
+				<simpleOperation id="4" description="insert_and_place" plannedMachineId="4" plannedStationId="41" plannedStartTime="2021-12-16T08:02:00"
+			plannedFinishTime="2021-12-16T08:03:00">
+				<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
 			</simpleOperation>
 				<product productType="BB" description="Base (big product)" state="Planned">
 					<rawMaterial id="BB" description="Base (big product)"/>

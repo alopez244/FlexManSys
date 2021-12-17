@@ -59,21 +59,15 @@ public class Dom_Functionality{
         msg.setContent(cmd);
         msg.setReplyWith(cmd);
         myAgent.send(msg);
-        if(cmd.contains("localneg")){
+
             ACLMessage reply = myAgent.blockingReceive(
                 MessageTemplate.and(
                         MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
                         MessageTemplate.MatchPerformative(ACLMessage.INFORM))
-                , 100);
+                , 2000);
             return LOGGER.exit(reply);
-        }else{
-            ACLMessage reply = myAgent.blockingReceive(
-                    MessageTemplate.and(
-                            MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
-                            MessageTemplate.MatchPerformative(ACLMessage.INFORM))
-            );
-            return LOGGER.exit(reply);
-        }
+
+
     }
 
 

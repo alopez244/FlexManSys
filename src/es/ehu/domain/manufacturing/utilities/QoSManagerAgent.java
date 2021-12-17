@@ -121,7 +121,7 @@ public class QoSManagerAgent extends Agent {
                                 if(msg.getContent().contains("batchagent")||msg.getContent().contains("orderagent")||msg.getContent().contains("mplanagent")){
                                     String n[]=msg.getContent().split("agent");
                                     if(msg.getSender().getLocalName().contains(n[0]+"agent")){ // si llegamos aquí se trata de una replica en modo tracking que habría que restaurar
-                                        sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), "restore_replica", msg.getContent());
+//                                        sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), "restore_replica", msg.getContent());
                                     }
                                 }
                             }
@@ -385,32 +385,7 @@ public class QoSManagerAgent extends Agent {
                     }
                 }
                 if(msg.getPerformative()==ACLMessage.REQUEST) { //Se recibe algun tipo de petición
-                    if(msg.getOntology().equals("pnode_check")){
-
-                        String NodesToCheck=msg.getContent();
-                        if(NodesToCheck.contains(",")){
-                            String parts[]=NodesToCheck.split(",");
-                            for(int i=0; i< parts.length;i++){
-                                int found=SearchAgent(parts[i]);
-                                if(found>0){
-                                    boolean pong=PingAgent(parts[i]);
-                                    if(pong){
-                                        LOGGER.info(parts[i]+" found alive. Informing D&D.");
-                                        sendACL(7,msg.getSender().getLocalName(),msg.getOntology(),parts[i]+"/found");
-                                    }else {
-                                        LOGGER.info(parts[i]+" not found. Informing D&D.");
-                                        sendACL(7,msg.getSender().getLocalName(),"not_found",parts[i]);
-                                    }
-                                }else{
-
-                                }
-
-                            }
-                        }else{
-
-                        }
-
-                    }else if(msg.getOntology().equals("askrelationship")) {
+                    if(msg.getOntology().equals("askrelationship")) {
                         if(msg.getContent().contains("machine")){
                             for(int u=0;u<batch_and_machine.size();u++){
                                 if(batch_and_machine.get(u).get(1).equals(msg.getContent())){

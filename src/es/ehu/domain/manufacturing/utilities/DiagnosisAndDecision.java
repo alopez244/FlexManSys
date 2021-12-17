@@ -39,95 +39,68 @@ public class DiagnosisAndDecision extends Agent{
         public void action() {
                 ACLMessage msg=receive();
                 if(msg!=null) {
-                    if (msg.getOntology().equals("not_found")&&msg.getSender().getLocalName().equals("QoSManagerAgent")) {
-                        if(control.equals("automatic")){
-                            if(!msg.getContent().contains("ControlGatewayCont")){
+                    if (msg.getOntology().equals("not_found")&&msg.getSender().getLocalName().equals("QoSManagerAgent")) { //Se reporta un agente aislado o muerto
+                        if(control.equals("automatic")){ //solo toma decisiones si está en modo automatico
+                            if(!msg.getContent().contains("ControlGatewayCont")){ //no es un agente GW
                                 LOGGER.error(msg.getContent()+" is either dead or isolated.");
-                                MessageTemplate t=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                                        MessageTemplate.MatchOntology("askrelationship"));
-                                if(msg.getContent().contains("batchagent")||msg.getContent().contains("orderagent")||msg.getContent().contains("mplanagent")){
+
+                                if(msg.getContent().contains("batchagent")||msg.getContent().contains("orderagent")||msg.getContent().contains("mplanagent")){ //si es agente de aplicacion
                                     try {
-                                        ACLMessage reply= sendCommand(myAgent, "get "+msg.getContent()+" attrib=state", "ApplicationAgentState");
-                                        if(reply.getContent().equals("tracking")){
-                                            LOGGER.warn(msg.getContent()+" was in tracking state. Informing running replica.");
-                                            ACLMessage reply2= sendCommand(myAgent, "get "+msg.getContent()+" attrib=parent", "ApplicationAgentParent");
-                                            ACLMessage reply3= sendCommand(myAgent, "get * parent="+reply2.getContent()+" state=running" , "ApplicationAgentRunning");
-                                            sendACL(7, reply3.getContent(), "delete_replica", msg.getContent()); //TODO innecesario con el nuevo sistema porque centralizado en e SA. ELIMINAR
-                                            sendCommand(myAgent, "del "+msg.getContent(),"UnregisterTrackingReplica");
-
-                                            ACLMessage reply7  = sendCommand(myAgent, "get * category=pNodeAgent refServID="+reply2.getContent(),"CheckNodeState");
-                                            if(!reply7.getContent().equals("")){
-                                                sendACL(16, "QoSManagerAgent", "pnode_check", reply7.getContent());
+                                        ACLMessage state= sendCommand(myAgent, "get "+msg.getContent()+" attrib=state", "ApplicationAgentState"); //consigue el estado de la replcia caida
+                                        LOGGER.warn(msg.getContent()+" was in "+state.getContent()+" state.");
+                                        if(!state.getContent().equals("tracking")){ //si no estaba en tracking estaría en running o bootToRunning y requiere una acción
+                                            if (msg.getContent().contains("batchagent")) { //en caso de ser batch habría que hibernar el agente máquina hasta recuperar la replica
+                                                String machine = get_relationship(msg.getContent());
+                                                LOGGER.info(machine + " is changing to idle state");
+                                                sendACL(16, machine, "control", "setstate idle");
                                             }
-
-                                            ACLMessage reply4  = sendCommand(myAgent, "get * category=pNodeAgent","RestoreTrackingReplica"); //todas los pnode.
-                                            ArrayList<String> NegotiatingPnodes = new ArrayList<>();
-                                            if (reply4 != null) {
-                                                String All =reply4.getContent();
-                                                String[] AllPnode=null;
-                                                if(All.contains(",")){
-                                                    AllPnode=All.split(",");
-                                                }else{
-                                                    AllPnode[0]=All;
-                                                }
-                                                for(int i=0;i<AllPnode.length;i++){
-                                                    NegotiatingPnodes.add(AllPnode[i]);
-                                                }
-                                                for(int i=0;i<NegotiatingPnodes.size();i++){
-                                                    ACLMessage reply5  = sendCommand(myAgent, "get "+NegotiatingPnodes.get(i)+ " attrib=refServID","CheckIfValidNode"); //todas los pnode.
-                                                    if(reply5.getContent().contains(reply2.getContent())){
-                                                        NegotiatingPnodes.remove(i);
-                                                    }
-                                                }
-                                                String ToNegotiate="";
-                                                for(int i=0; i<NegotiatingPnodes.size();i++){
-                                                    if(i==0){
-                                                        ToNegotiate=NegotiatingPnodes.get(i);
-                                                    }else{
-                                                        ToNegotiate=ToNegotiate+","+NegotiatingPnodes.get(i);
-                                                    }
-                                                }
-                                                if(ToNegotiate.equals("")){
-                                                    LOGGER.warn("There is no node available to store a replica");
-                                                }else{
-                                                    ACLMessage reply6 = sendCommand(myAgent, "get " + reply2.getContent() + " attrib=category","RestoreTrackingReplica");
-                                                        String seClass="";
-                                                        if(msg.getContent().contains("batch")){
-                                                            seClass="es.ehu.domain.manufacturing.agents.BatchAgent";
-                                                        }else if(msg.getContent().contains("order")){
-                                                            seClass="es.ehu.domain.manufacturing.agents.OrderAgent";
-                                                        }else{
-                                                            seClass="es.ehu.domain.manufacturing.agents.MPlanAgent";
-                                                        }
-                                                        String negotationdata="localneg "+ToNegotiate+ " criterion=max mem action=start externaldata=" + reply2.getContent() + "," + reply6.getContent() + "," + seClass + "," + "tracking" + "," + "1" + "," + myAgent.getLocalName();
-                                                        ACLMessage ack = sendCommand(myAgent,negotationdata , "RestoreTrackingReplica");
-                                                }
-                                            }
-                                        }else{
-                                            if(msg.getContent().contains("batchagent")){
-                                                sendACL(16,"QoSManagerAgent" , "askrelationship", msg.getContent());
-                                                ACLMessage machineofbatch= blockingReceive(t, 2000);
-                                                if(machineofbatch!=null){
-                                                    LOGGER.info(machineofbatch.getContent()+" is assigned to "+ msg.getContent());
-                                                    LOGGER.info(machineofbatch.getContent()+" is changing to idle state");
-                                                    sendACL(16,machineofbatch.getContent() , "control", "setstate idle");
-                                                }else{
-                                                    LOGGER.error("QoSManagerAgent did not answer on time");
-                                                }
-                                            }
-                                            //TODO casos de order y mplan aislados
                                         }
+                                            ACLMessage parent= sendCommand(myAgent, "get "+msg.getContent()+" attrib=parent", "ApplicationAgentParent");
+                                            ACLMessage hosting_node=sendCommand(myAgent, "get "+msg.getContent()+" attrib=node", "ApplicationAgentPNode");
+//                                            ACLMessage reply3= sendCommand(myAgent, "get * parent="+reply2.getContent()+" state=running" , "ApplicationAgentRunning");
+//                                            sendACL(7, reply3.getContent(), "delete_replica", msg.getContent()); //TODO innecesario con el nuevo sistema porque esta centralizado en el SA. ELIMINAR de los agentes
+                                            sendCommand(myAgent, "del "+msg.getContent(),"UnregisterReplica");
+                                            if(!PingAgent("pnodeagent"+hosting_node.getContent())){
+                                                sendCommand(myAgent, "del pnodeagent"+hosting_node,"UnregisterProcessNode"); //nodo caido, se desregistra del SA
+                                            }else{
+                                                ACLMessage hosted_elements=sendCommand(myAgent, "get "+hosting_node+" attrib=refServID", "ApplicationAgentPNode");
+                                                String[] HE=new String[1];
+                                                if(hosted_elements.getContent().contains(",")){
+                                                    HE=hosted_elements.getContent().split(",");
+                                                }else{
+                                                    HE[0]=hosted_elements.getContent();
+                                                }
+                                                String new_HE="";
+                                                ArrayList<String> updated_hosted_elements=new ArrayList<String>();
+                                                for(int i=0;i<HE.length;i++){
+                                                    updated_hosted_elements.add(HE[i]);
+                                                }
+                                                for(int i=0;i< updated_hosted_elements.size();i++){
+                                                    if(updated_hosted_elements.get(i).contains(parent.getContent())){
+                                                        updated_hosted_elements.remove(i);
+                                                    }else{
+                                                        if(i==0){
+                                                            new_HE=updated_hosted_elements.get(i);
+                                                        }else{
+                                                            new_HE=new_HE+","+updated_hosted_elements.get(i);
+                                                        }
+
+                                                    }
+                                                }
+                                                sendCommand(myAgent, "set "+hosting_node+" refServID="+new_HE, "ApplicationAgentPNode");
+                                            }
+                                            boolean done=restart_replica(parent.getContent(),state.getContent());
+                                            if(done){
+                                                //TODO si estaba en running hay que despertar al machine agent
+                                            }
+
+
                                     } catch (Exception e) {
                                         e.printStackTrace();
                                     }
                                 }else if(msg.getContent().contains("machine")){
-                                    sendACL(16,"QoSManagerAgent" , "askrelationship", msg.getContent());
-                                    ACLMessage batchofmachine= blockingReceive(t, 500);
-                                    if(batchofmachine!=null){
-                                        LOGGER.info(batchofmachine.getContent());
-                                    }else{
-                                        LOGGER.error("QoSManagerAgent did not answer on time");
-                                    }
+                                    String batch=get_relationship(msg.getContent());
+                                    //TODO machine agent  aislado
                                 }
 
                             }else { //agente GW no encontrado
@@ -184,6 +157,7 @@ public class DiagnosisAndDecision extends Agent{
                         sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),"ack");
                     }
                 }
+
             }
         }
 
@@ -257,6 +231,97 @@ public class DiagnosisAndDecision extends Agent{
         }
         return found;
     }
+    private String get_relationship(String agent){
+        MessageTemplate t=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                MessageTemplate.MatchOntology("askrelationship"));
+        sendACL(16,"QoSManagerAgent" , "askrelationship", agent);
+        ACLMessage received_agent= blockingReceive(t, 2000);
+        if(received_agent!=null){
+            LOGGER.info(received_agent.getContent()+" is assigned to "+ agent);
+            return received_agent.getContent();
+        }else{
+            LOGGER.error("QoSManagerAgent did not answer on time");
+            return "error";
+        }
+    }
+    private boolean restart_replica(String parent, String state){
 
+        try {
+            ACLMessage process_nodes = sendCommand(myAgent, "get * category=pNodeAgent","GetPNodes");
+
+        ArrayList<String> NegotiatingPnodes = new ArrayList<>();
+        if (process_nodes != null) {
+            String[] AllPnode=new String[1];
+            if(process_nodes.getContent().contains(",")){
+                AllPnode=process_nodes.getContent().split(",");
+            }else{
+                AllPnode[0]=process_nodes.getContent();
+            }
+            for(int i=0;i<AllPnode.length;i++){
+                NegotiatingPnodes.add(AllPnode[i]);
+            }
+            for(int i=0;i<NegotiatingPnodes.size();i++){
+                ACLMessage valid_nodes  = sendCommand(myAgent, "get "+NegotiatingPnodes.get(i)+ " attrib=refServID","CheckIfValidNode"); //obtiene los nodos validos
+                if(valid_nodes.getContent().contains(parent)){
+                    NegotiatingPnodes.remove(i);
+                }
+            }
+            String ToNegotiate="";
+            for(int i=0; i<NegotiatingPnodes.size();i++){
+                if(i==0){
+                    ToNegotiate=NegotiatingPnodes.get(i);
+                }else{
+                    ToNegotiate=ToNegotiate+","+NegotiatingPnodes.get(i);
+                }
+            }
+            if(ToNegotiate.equals("")){
+                LOGGER.warn("There is no node available to store a replica");
+                return false;
+            }else{
+                ACLMessage category = sendCommand(myAgent, "get " + parent + " attrib=category","GetReplicaCategory");
+                String seClass="";
+                if(parent.contains("batch")){
+                    seClass="es.ehu.domain.manufacturing.agents.BatchAgent";
+                }else if(parent.contains("order")){
+                    seClass="es.ehu.domain.manufacturing.agents.OrderAgent";
+                }else{
+                    seClass="es.ehu.domain.manufacturing.agents.MPlanAgent";
+                }
+                String criteria="";
+                if(state.equals("tracking")){
+                    criteria="max mem"; //si la replica esta en tracking interesa negociar con la memoria de los nodos
+                }else{
+                    criteria="cpu use"; //si la replica esta en running interesa negociar con el uso del CPU de los nodos
+                }
+                String negotationdata="localneg "+ToNegotiate+ " criterion="+criteria+" action=start externaldata=" + parent + "," + category.getContent() + "," + seClass + "," + state + "," + "1" + "," + myAgent.getLocalName();
+                sendCommand(myAgent,negotationdata , "Restore_"+state+"_Replica");
+                return true;
+            }
+        }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    private boolean PingAgent (String name){  //checkea el estado de los agentes de aplicación, recurso y gateway
+        MessageTemplate pingtemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                MessageTemplate.MatchOntology("ping"));
+        boolean state;
+        AID Agent_to_ping_ID=new AID(name,false);
+        ACLMessage ping=new ACLMessage(ACLMessage.REQUEST);
+        ping.setOntology("ping");
+        ping.addReceiver(Agent_to_ping_ID);
+        ping.setContent("");
+        send(ping);
+        ACLMessage echo=blockingReceive(pingtemplate,500);
+        if(echo!=null) {
+            LOGGER.info(name+" answered on time.");
+            state=true;
+        }else{
+            LOGGER.error(name+" did not answer on time. Confirming failure.");
+            state=false;
+        }
+        return state;
+    }
 
 }

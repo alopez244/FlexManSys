@@ -53,11 +53,9 @@ public class MWAgent extends Agent {
     public ArrayList<String> IgnoredReplicas=new ArrayList<String>();
     public String cmpID = null;
     public boolean antiloopflag=false;
-
     //para uuso en autoidle
     public String state ="";
-    public boolean change_state=false;
-
+    public boolean change_state=false; //para cambiar el estado de una máquina a si misma
     //variable de almacenamiento de ACL
     public CircularFifoQueue msgFIFO = new CircularFifoQueue(5);
     public int initTransition;
@@ -450,8 +448,8 @@ public class MWAgent extends Agent {
         String sTracking = parts1[5];
         LOGGER.info("Tracking: " + sTracking);
 
-        if(sTracking.equals(" ")){
-            if ((sTracking != null) && sTracking.length() > 0) {
+        if(sTracking != null&&(!sTracking.equals(" "))){
+            if (sTracking.length() > 0) {
                 LOGGER.info("Refresh state to tracking instances:"+ sTracking);
                 this.sendStateToReplicas(msg, sTracking);
             }

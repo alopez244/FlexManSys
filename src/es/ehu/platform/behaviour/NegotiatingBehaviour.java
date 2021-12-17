@@ -266,8 +266,8 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                     if (negotiationRuntime.containsKey(conversationId)) {
                         Long receivedVal = new Long(0);
                         try {
-                            receivedVal = (Long) msg.getContentObject();
-//                            LOGGER.debug("Proposal content: " + receivedVal);
+//                            receivedVal = (Long) msg.getContentObject();
+                            receivedVal = Long.parseLong(msg.getContent());
                         } catch (Exception e) {
                             LOGGER.debug("Received value is not a number");
                         }
@@ -334,8 +334,8 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                     if (negotiationRuntime.containsKey(conversationId)) {
                         Long receivedVal = new Long(0);
                         try {
-                            receivedVal = (Long) msg.getContentObject();
-                            LOGGER.debug("Proposal content: " + receivedVal);
+//                            receivedVal = (Long) msg.getContentObject();
+                            receivedVal = Long.parseLong(msg.getContent());
                         } catch (Exception e) {
                             LOGGER.debug("Received value is not a number");
                         }
@@ -376,6 +376,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 
                         // todavía no he entrado a esa negociación o ¿la he perdido?
 //                        myAgent.putBack(msg);
+                        initNegotiation();
                         myAgent.postMessage(msg);
                         LOGGER.debug("negotiation " + msg.getConversationId() + "is not for me");
                     }
@@ -384,8 +385,8 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                     if (negotiationRuntime.containsKey(conversationId)) {
                         Long receivedVal = new Long(0);
                         try {
-                            receivedVal = (Long) msg.getContentObject();
-                            LOGGER.debug("Proposal content: " + receivedVal);
+//                            receivedVal = (Long) msg.getContentObject();
+                            receivedVal = Long.parseLong(msg.getContent());
                         } catch (Exception e) {
                             LOGGER.debug("Received value is not a number");
                         }
@@ -424,6 +425,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 
                         // todavía no he entrado a esa negociación o ¿la he perdido?
 //                        myAgent.putBack(msg);
+                        initNegotiation();
                         myAgent.postMessage(msg);
                         LOGGER.debug("negotiation " + msg.getConversationId() + " is not for me by now");
                     }
@@ -514,7 +516,8 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                 }
             }
             try {
-                cfp.setContentObject(new Long(value));//TODO cambiar a sistema FIPACompliant String
+//                cfp.setContentObject(new Long(value));
+                cfp.setContent(String.valueOf(value));
             } catch (Exception e) {
                 LOGGER.error("Negotiation content in " + myAgent.getLocalName() + " could not be sent!! - " + negId);
             }

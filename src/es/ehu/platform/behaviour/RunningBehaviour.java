@@ -74,6 +74,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 	}
 
 	public void action() {
+
 		LOGGER.entry();
 		Object[] receivedMsgs = null;
 
@@ -93,10 +94,11 @@ public class RunningBehaviour extends SimpleBehaviour {
 				LOGGER.debug("Send state");
 				myAgent.sendStateToTracking(currentState);
 			}
-		}else{
+		}
+		else{
 			myAgent.antiloopflag=false;
 		}
-		//***********************************************
+
 //		Serializable state = null;
 //		try {
 //			state = (Serializable) ((AvailabilityFunctionality)myAgent.functionalityInstance).getState();

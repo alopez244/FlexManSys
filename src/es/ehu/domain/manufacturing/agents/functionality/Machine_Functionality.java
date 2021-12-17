@@ -54,8 +54,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             MessageTemplate.MatchOntology("Acknowledge"));
     private MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
             MessageTemplate.MatchOntology("acl_error"));
-    private MessageTemplate pingt = MessageTemplate.and(MessageTemplate.MatchOntology("ping"),
-            MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+
     private AID QoSID = new AID("QoSManagerAgent", false);
 //    public static String state ="";
 //    public static boolean change_state=false;
@@ -508,7 +507,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
                         AID batchAgentID = new AID(batchAgentName, false);
                         sendACLMessage(16, batchAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
-                        ACLMessage acknowledge = myAgent.blockingReceive(echotemplate,250);
+                        ACLMessage acknowledge = myAgent.blockingReceive(echotemplate,1000);
                         if(acknowledge==null) {
                             String informQoS = "16" + "/div/" + "negotiation"+ "/div/" +"PLCdata"+ "/div/" +batchAgentName+ "/div/" +MessageContent;
                             sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);

@@ -176,9 +176,18 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         state=state+"/div0/"+parentAgentID+"/div0/";
 
         try {   //realiza la consulta al sa para tener la lista de replicas actualizada.
-            ACLMessage reply1= sendCommand(myAgent, "get "+myAgent.getLocalName()+ " attrib=parent", "GetUpdatedReplicas");
-            ACLMessage reply2= sendCommand(myAgent, "get * state=tracking parent="+reply1.getContent(), "GetUpdatedReplicas");
-            String replicas[]=reply2.getContent().split(",");
+            String[] replicas=new String[1];
+            if(redundancy.equals("1")){
+                replicas[0] =" ";
+            }else{
+                ACLMessage parent = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "GetBatchParent");
+                ACLMessage replicasACL = sendCommand(myAgent, "get * state=tracking parent=" + parent.getContent(), "GetBatchUpdatedReplicas");
+                if(replicasACL.getContent().contains(",")){
+                    replicas= replicasACL.getContent().split(",");
+                }else{
+                    replicas[0] = replicasACL.getContent();
+                }
+            }
             for(int i=0; i<replicas.length;i++){
                 if(i==0){
                     state=state+replicas[i];
@@ -200,7 +209,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 //        state=state+"/div0/"+finish_times_of_batch+"/div0/";   //para simular fallo, de esta manera muere el agente tracking al hacer setstate
         state=state+"/div0/"+finish_times_of_batch;
         state=state+"/div0/"+String.valueOf(actual_item_number);
-
+//    myAgent.antiloopflag=false;
         return state;
 
     }
@@ -231,6 +240,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                         System.out.println(getactualtime() + " " + myAgent.getLocalName() + " WARN " + batchreference + " batch has thrown a timeout on item number " + itemreference.get(actual_item_number) + " Checking failure with QoS Agent...");
                         QoSresponse_flag = false;
                         sendACLMessage(ACLMessage.FAILURE, QoSID, "timeout", "timeout " + batchreference, batchreference + "/" + itemreference.get(actual_item_number), myAgent); //avisa al QoS de fallo por timeout
+
                         try {
                             Thread.sleep(2500);
                         } catch (InterruptedException e) {
@@ -332,6 +342,8 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     @Override
     public Object execute(Object[] input) {
 
+
+
         HashMap infoForTraceability = new HashMap();
 
         System.out.println(input);
@@ -391,35 +403,37 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             }else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getContent().equals("confirmed_timeout")){
                 QoSresponse_flag=true;
                 System.out.println("Timeout confirmed.");
-            } else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("delete_replica")) {
-
-                boolean f=false;
-                for(int i=0;i<myAgent.IgnoredReplicas.size();i++){ //se elimina de la lista de ignorados en caso de que esté
-                    if(myAgent.IgnoredReplicas.get(i).equals(msg.getContent())){
-                        myAgent.IgnoredReplicas.remove(i);
-                        f=true;
-                    }
-                }
-                if(f==false){ //en caso de no encontrarlo en la lista de ignorados, es posile que aun se encuentre en la lista de replicas normal
-                    for(int i=0;i<myAgent.replicas.size();i++){
-                        if(myAgent.replicas.get(i).equals(msg.getContent())){
-                            myAgent.replicas.remove(i);
-                        }
-                    }
-                }
-            } else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("restore_replica")) {
-                for(int i=0;i<myAgent.IgnoredReplicas.size();i++) { //se elimina de la lista de ignorados en caso de que esté
-                    if (myAgent.IgnoredReplicas.get(i).equals(msg.getContent())) {
-                        myAgent.replicas.add(myAgent.IgnoredReplicas.get(i)); //se vuelve a añadir a la lista de replicas
-                        for(int j=0; j<myAgent.ReportedAgents.size();j++){
-                            if(myAgent.ReportedAgents.get(j).equals(myAgent.IgnoredReplicas.get(i))){
-                                myAgent.ReportedAgents.remove(j); // se elimina tambien de la lista de agentes reportados
-                            }
-                        }
-                        myAgent.IgnoredReplicas.remove(i);
-                    }
-                }
-            } else if (msg.getPerformative() == ACLMessage.REQUEST) {
+            } //TODO eliminar tras demostración día 21/12/2021
+//            else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("delete_replica")) {
+//
+//                boolean f=false;
+//                for(int i=0;i<myAgent.IgnoredReplicas.size();i++){ //se elimina de la lista de ignorados en caso de que esté
+//                    if(myAgent.IgnoredReplicas.get(i).equals(msg.getContent())){
+//                        myAgent.IgnoredReplicas.remove(i);
+//                        f=true;
+//                    }
+//                }
+//                if(f==false){ //en caso de no encontrarlo en la lista de ignorados, es posile que aun se encuentre en la lista de replicas normal
+//                    for(int i=0;i<myAgent.replicas.size();i++){
+//                        if(myAgent.replicas.get(i).equals(msg.getContent())){
+//                            myAgent.replicas.remove(i);
+//                        }
+//                    }
+//                }
+//            } else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("restore_replica")) {
+//                for(int i=0;i<myAgent.IgnoredReplicas.size();i++) { //se elimina de la lista de ignorados en caso de que esté
+//                    if (myAgent.IgnoredReplicas.get(i).equals(msg.getContent())) {
+//                        myAgent.replicas.add(myAgent.IgnoredReplicas.get(i)); //se vuelve a añadir a la lista de replicas
+//                        for(int j=0; j<myAgent.ReportedAgents.size();j++){
+//                            if(myAgent.ReportedAgents.get(j).equals(myAgent.IgnoredReplicas.get(i))){
+//                                myAgent.ReportedAgents.remove(j); // se elimina tambien de la lista de agentes reportados
+//                            }
+//                        }
+//                        myAgent.IgnoredReplicas.remove(i);
+//                    }
+//                }
+//            }
+            else if (msg.getPerformative() == ACLMessage.REQUEST) {
                 sendACLMessage(7,msg.getSender(),"Acknowledge",msg.getConversationId(),"Received",myAgent);
 
                 System.out.println("Mensaje con la informacion del PLC");
@@ -586,7 +600,42 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
     //====================================================================
 
+    private void unregister_from_node(){ //desregistra del nodo el parent del agente
 
+        try {
+            ACLMessage parent= sendCommand(myAgent, "get "+myAgent.getLocalName()+" attrib=parent", myAgent.getLocalName()+"_Parent");
+            ACLMessage myAgent_node=sendCommand(myAgent, "get "+myAgent.getLocalName()+" attrib=node", myAgent.getLocalName()+"_PNodeNumber");
+            String hosting_node="pnodeagent"+myAgent_node.getContent();
+            ACLMessage hosted_elements=sendCommand(myAgent, "get "+hosting_node+" attrib=refServID", myAgent.getLocalName()+"_HENode");
+            String[] HE=new String[1];
+        if(hosted_elements.getContent().contains(",")){
+            HE=hosted_elements.getContent().split(",");
+        }else{
+            HE[0]=hosted_elements.getContent();
+        }
+        String new_HE="";
+        ArrayList<String> updated_hosted_elements=new ArrayList<String>();
+        for(int i=0;i<HE.length;i++){
+            updated_hosted_elements.add(HE[i]);
+        }
+        for(int i=0;i< updated_hosted_elements.size();i++){
+            if(updated_hosted_elements.get(i).contains(parent.getContent())){
+                updated_hosted_elements.remove(i);
+            }else{
+                if(i==0){
+                    new_HE=updated_hosted_elements.get(i);
+                }else{
+                    new_HE=new_HE+","+updated_hosted_elements.get(i);
+                }
+
+            }
+        }
+        sendCommand(myAgent, "set "+hosting_node+" refServID="+new_HE, myAgent.getLocalName()+"_EraseHostedElements");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
     private String getProductID(String seID, String conversationId) {
         String productID = null;
         String query = "get " + seID + " attrib=parent";

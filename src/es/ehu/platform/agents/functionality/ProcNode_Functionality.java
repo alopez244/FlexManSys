@@ -79,7 +79,7 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
     public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData) {
         // approximation to the total amount of memory currently available for future allocated objects, measured in bytes
         if(ListAttrib.contains((String)negExternalData[0])){
-            long used_node=0;
+            long used_node=0; //Si en la lista de atributos ya existe el parent se devuelve un valor no competente para perder automáticamente.
             return used_node;
         }else{
             return Runtime.getRuntime().freeMemory();
@@ -144,7 +144,7 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
                 AgentController ac = ((AgentController) myAgent.getContainerController().createNewAgent(agnID, seClass, new Object[] { "firstState="+seFirstTransition , "redundancy="+redundancy , "parentAgent=" + parentAgentID}));
                 ac.start();
                 String parts[]=myAgent.getLocalName().split("pnodeagent");
-                sendCommand("set "+agnID+" node="+parts[1]);
+                sendCommand("set "+agnID+" node="+parts[1]); //Añade en que nodo se va a encontrar el agente
 
 
             }catch (Exception e) {e.printStackTrace();}
