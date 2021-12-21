@@ -84,7 +84,6 @@ public class DiagnosisAndDecision extends Agent{
                                                         }else{
                                                             new_HE=new_HE+","+updated_hosted_elements.get(i);
                                                         }
-
                                                     }
                                                 }
                                                 sendCommand(myAgent, "set "+hosting_node+" refServID="+new_HE, "ApplicationAgentPNode");

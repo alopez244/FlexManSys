@@ -244,13 +244,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         }catch  (Exception e) {
             e.printStackTrace();
         }
-//        for(int i=0;i<myAgent.replicas.size();i++){ //concatena los replicas del batch
-//            if(i==0){
-//                state=state+myAgent.replicas.get(i);
-//            }else{
-//                state=state+"/div1/"+myAgent.replicas.get(i);
-//            }
-//        }
+
         return state;
     }
 
@@ -387,7 +381,6 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 batchTraceability = addNewLevel(batchTraceability, deserializedMessage,false);
             }
             newBatch = false; // hasta que el batch añadido no se complete, cada vez que se reciba un mensaje el dato se sobrescribira
-//            getState();
 
         }
         ACLMessage msg2 = myAgent.receive(template2);
@@ -398,7 +391,6 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             if (msg2.getContent().equals("Batch completed")){
                 String msgSender = msg2.getOntology();
                 for (int i = 0; i < sonAgentID.size(); i++) {
-//                    if (sonAgentID.get(i).getName().split("@")[0].equals(msgSender)) {
                     if (sonAgentID.get(i).equals(msgSender)){
                             sonAgentID.remove(i);
                     }
@@ -552,6 +544,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
     public Void terminate(MWAgent myAgent) {
         this.myAgent = myAgent;
         String parentName = "";
+        unregister_from_node();
         if(myAgent.ActualState=="running"){ //para filtrar las replicas ejecutando terminate
             try {
                 ACLMessage reply = sendCommand(myAgent, "get * reference=" + orderNumber, "parentAgentID");

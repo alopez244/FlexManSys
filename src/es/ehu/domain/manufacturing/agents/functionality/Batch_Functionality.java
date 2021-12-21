@@ -53,7 +53,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             MessageTemplate.MatchOntology("acl_error"));
 //    private Object myReplicasID  = new HashMap<>();
     private Object[] myReplicasID  = new Object[2];
-//    private ArrayList<String> ReplicasAsList=new ArrayList<String>();
     public volatile int wait=0;
     private volatile Date now=null;
     private volatile Date date_when_delay_was_asked=null;
@@ -199,17 +198,10 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             e.printStackTrace();
         }
 
-//        for(int i=0;i<myAgent.replicas.size();i++){ //concatena los replicas del batch
-//            if(i==0){
-//                state=state+myAgent.replicas.get(i);
-//            }else{
-//                state=state+"/div1/"+myAgent.replicas.get(i);
-//            }
-//        }
 //        state=state+"/div0/"+finish_times_of_batch+"/div0/";   //para simular fallo, de esta manera muere el agente tracking al hacer setstate
         state=state+"/div0/"+finish_times_of_batch;
         state=state+"/div0/"+String.valueOf(actual_item_number);
-//    myAgent.antiloopflag=false;
+
         return state;
 
     }
@@ -525,14 +517,12 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                         e.printStackTrace();
                     }
                 }
-//                getState();
 
                 if (actionList.size() == 0){ // cuando todas las acciones se han completado, se elimina el batch agent
 
                     return true; //Batch agent a terminado su funcion y pasa a STOP
                 }
 
-//                SendToReplicas(ReplicasAsList,msg);//reenvio a réplicas
             }
         }
 
@@ -547,7 +537,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     public Void terminate(MWAgent myAgent) {
         this.myAgent = myAgent;
         String parentName = "";
-
+        unregister_from_node();
 
         if(myAgent.ActualState=="running"){ //para filtrar las replicas ejecutando terminate
             try {
@@ -600,42 +590,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
     //====================================================================
 
-    private void unregister_from_node(){ //desregistra del nodo el parent del agente
 
-        try {
-            ACLMessage parent= sendCommand(myAgent, "get "+myAgent.getLocalName()+" attrib=parent", myAgent.getLocalName()+"_Parent");
-            ACLMessage myAgent_node=sendCommand(myAgent, "get "+myAgent.getLocalName()+" attrib=node", myAgent.getLocalName()+"_PNodeNumber");
-            String hosting_node="pnodeagent"+myAgent_node.getContent();
-            ACLMessage hosted_elements=sendCommand(myAgent, "get "+hosting_node+" attrib=refServID", myAgent.getLocalName()+"_HENode");
-            String[] HE=new String[1];
-        if(hosted_elements.getContent().contains(",")){
-            HE=hosted_elements.getContent().split(",");
-        }else{
-            HE[0]=hosted_elements.getContent();
-        }
-        String new_HE="";
-        ArrayList<String> updated_hosted_elements=new ArrayList<String>();
-        for(int i=0;i<HE.length;i++){
-            updated_hosted_elements.add(HE[i]);
-        }
-        for(int i=0;i< updated_hosted_elements.size();i++){
-            if(updated_hosted_elements.get(i).contains(parent.getContent())){
-                updated_hosted_elements.remove(i);
-            }else{
-                if(i==0){
-                    new_HE=updated_hosted_elements.get(i);
-                }else{
-                    new_HE=new_HE+","+updated_hosted_elements.get(i);
-                }
-
-            }
-        }
-        sendCommand(myAgent, "set "+hosting_node+" refServID="+new_HE, myAgent.getLocalName()+"_EraseHostedElements");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
     private String getProductID(String seID, String conversationId) {
         String productID = null;
         String query = "get " + seID + " attrib=parent";

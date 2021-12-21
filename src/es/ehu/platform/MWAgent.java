@@ -53,11 +53,9 @@ public class MWAgent extends Agent {
     public ArrayList<String> IgnoredReplicas=new ArrayList<String>();
     public String cmpID = null;
     public boolean antiloopflag=false;
-    //para uuso en autoidle
-    public String state ="";
+    public String state ="";    //para uso en autoidle
     public boolean change_state=false; //para cambiar el estado de una máquina a si misma
-    //variable de almacenamiento de ACL
-    public CircularFifoQueue msgFIFO = new CircularFifoQueue(5);
+    public CircularFifoQueue msgFIFO = new CircularFifoQueue(5);    //variable de almacenamiento de ACL
     public int initTransition;
     public String conversationId;
     public Object initialExecutionState = null;

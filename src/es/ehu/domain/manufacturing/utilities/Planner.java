@@ -281,7 +281,7 @@ public class Planner extends Agent {
         }
 
         public void registerPredefined(String cmd){
-
+            String conversationId = myAgent.getLocalName() + "_" + chatID++;
             //Definition of the HashMaps
             ConcurrentHashMap<String, String> attributes = new ConcurrentHashMap<String, String>();
             ConcurrentHashMap<String, String> restrictionList = new ConcurrentHashMap<String, String>();
@@ -305,6 +305,38 @@ public class Planner extends Agent {
                 LOGGER.error("ERROR GETTING REDUNDANCY NUMBER IN PLANNER");
                 System.out.println("\nSorry, but you have not introduce a number, repeat the action please.\n");
                 return;
+            }
+            try {
+                String command="get * category=pNodeAgent";
+                ACLMessage available_pnodes = sendCommand(command, conversationId);
+                String[] pnodes=new String[1];
+                if(available_pnodes!=null){
+                    if(available_pnodes.getContent().contains(",")){
+                        pnodes=available_pnodes.getContent().split(",");
+                    }else{
+                        pnodes[0]=available_pnodes.getContent();
+                    }
+                    if(pnodes.length<Integer.parseInt(redundancy)){
+                        Scanner in2 = new Scanner(System.in);
+                        LOGGER.warn("The indicated redundancy is superior to node availability. Use maximum redundancy possible?");
+                        System.out.print("Y/N: ");
+                        String confirmation = in2.nextLine();
+                        if(confirmation.equals("Y")){
+                            redundancy= String.valueOf(pnodes.length);
+                        }else if(confirmation.equals("N")){
+                            System.out.println("Repeat action please");
+                            return;
+                        }else{
+                            System.out.println("Not valid command. Repeat action please");
+                            return;
+                        }
+                    }
+                }
+
+            } catch (FIPAException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
             if(!redundancy.equals(""))
                 agentAttributes.put("redundancy", redundancy);
@@ -343,7 +375,7 @@ public class Planner extends Agent {
             String parentId = "";
             String seId = "";
 
-            String conversationId = myAgent.getLocalName() + "_" + chatID++;
+
 
             // TODO mas adelante mirar lo de las restricciones --> Si no hay que escribirlas en el SystemModelAgent buscar una solucion
             //restrictionList.put("refServID", "id55");
@@ -578,9 +610,11 @@ public class Planner extends Agent {
                 MessageTemplate.and(
                         MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
                         MessageTemplate.MatchPerformative(ACLMessage.INFORM))
-                , 15000);
+                , 3000);
+        if(!cmd.contains("get *")){
+            LOGGER.info((cmd.startsWith("validate"))?"xsd: "+reply.getContent(): cmd+" > "+reply.getContent());
+        }
 
-        LOGGER.info((cmd.startsWith("validate"))?"xsd: "+reply.getContent(): cmd+" > "+reply.getContent());
 
 
         return LOGGER.exit(reply);

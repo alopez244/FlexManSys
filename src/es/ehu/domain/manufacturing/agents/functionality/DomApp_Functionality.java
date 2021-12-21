@@ -601,5 +601,38 @@ public class DomApp_Functionality extends Dom_Functionality{
         }
         return found;
     }
+    public void unregister_from_node(){ //desregistra del nodo el parent del agente
 
+        try {
+            ACLMessage parent= sendCommand(myAgent, "get "+myAgent.getLocalName()+" attrib=parent", myAgent.getLocalName()+"_Parent");
+            ACLMessage myAgent_node=sendCommand(myAgent, "get "+myAgent.getLocalName()+" attrib=node", myAgent.getLocalName()+"_PNodeNumber");
+            String hosting_node="pnodeagent"+myAgent_node.getContent();
+            ACLMessage hosted_elements=sendCommand(myAgent, "get "+hosting_node+" attrib=refServID", myAgent.getLocalName()+"_HENode");
+            String[] HE=new String[1];
+            if(hosted_elements.getContent().contains(",")){
+                HE=hosted_elements.getContent().split(",");
+            }else{
+                HE[0]=hosted_elements.getContent();
+            }
+            String new_HE="";
+            ArrayList<String> updated_hosted_elements=new ArrayList<String>();
+            for(int i=0;i<HE.length;i++){
+                updated_hosted_elements.add(HE[i]);
+            }
+            for(int i=0;i< updated_hosted_elements.size();i++){
+                if(updated_hosted_elements.get(i).contains(parent.getContent())){
+                    updated_hosted_elements.remove(i);
+                }else{
+                    if(i==0){
+                        new_HE=updated_hosted_elements.get(i);
+                    }else{
+                        new_HE=new_HE+","+updated_hosted_elements.get(i);
+                    }
+                }
+            }
+            sendCommand(myAgent, "set "+hosting_node+" refServID="+new_HE, myAgent.getLocalName()+"_EraseHostedElements");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

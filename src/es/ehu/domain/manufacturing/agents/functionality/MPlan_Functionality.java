@@ -185,14 +185,6 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
       e.printStackTrace();
     }
 
-
-//  for(int i=0;i<myAgent.replicas.size();i++){ //concatena los replicas del batch
-//    if(i==0){
-//      state=state+myAgent.replicas.get(i);
-//    }else{
-//      state=state+"/div1/"+myAgent.replicas.get(i);
-//    }
-//  }
     return state;
   }
 
@@ -374,6 +366,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   public Void terminate(MWAgent myAgent) {
     this.myAgent = myAgent;
     String parentName = "";
+    unregister_from_node();
   if(myAgent.ActualState=="running"){ //para filtrar las replicas ejecutando terminate
     try {
       String planName = "MPlan" + planNumber;
