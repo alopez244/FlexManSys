@@ -318,7 +318,7 @@ public class Planner extends Agent {
                     }
                     if(pnodes.length<Integer.parseInt(redundancy)){
                         Scanner in2 = new Scanner(System.in);
-                        LOGGER.warn("The indicated redundancy is superior to node availability. Use maximum redundancy possible?");
+                        LOGGER.warn("The indicated redundancy is superior to node availability: "+redundancy+">"+pnodes.length+". Use maximum redundancy possible instead?");
                         System.out.print("Y/N: ");
                         String confirmation = in2.nextLine();
                         if(confirmation.equals("Y")){

@@ -19,6 +19,7 @@ public class GWAgent extends GatewayAgent {
     private String stateasker="";
     CircularFifoQueue msgInFIFO = new CircularFifoQueue(bufferSize);
     CircularFifoQueue msgInFIFO2 = new CircularFifoQueue(bufferSize);
+    public AID MAID = new AID("machine1", false);
 
 
     protected void processCommand(java.lang.Object command) {   //this method will be executed when the externalJAde class executes the command JadeGateway.execute
@@ -127,9 +128,14 @@ public class GWAgent extends GatewayAgent {
 
                if (msgToFIFO != null) {
 
-
                     System.out.println("GWagent, message received from Machine Agent");
                     machineAgentName = msgToFIFO.getSender();//saves the sender ID for a later reply
+                    ACLMessage ack=new ACLMessage(7);
+                    ack.setOntology(msgToFIFO.getOntology());
+                    ack.setConversationId(msgToFIFO.getConversationId());
+                    ack.setContent(msgToFIFO.getContent());
+                    ack.addReceiver(msgToFIFO.getSender());
+                    send(ack);
                     System.out.println("MachineAgentName :"+machineAgentName);
 
                     if(msgInFIFO.isAtFullCapacity()) {

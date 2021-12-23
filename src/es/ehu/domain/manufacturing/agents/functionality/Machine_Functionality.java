@@ -321,7 +321,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 //            }else{
 //                System.out.println("<--Problem receiving the message");
 //            }
-            LOGGER.debug("Received a confirmation message out of the timeout. Timeout duration might be increased.");
+            LOGGER.debug("Received a confirmation message out of the timeout. Timeout might be increased.");
         }else{
             recvBatchInfo(msg2);   // sends item information to batch agent
             if(PLCmsgIn.containsKey("Control_Flag_Service_Completed")) {    //At least the first field is checked
@@ -476,23 +476,23 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
                     }else{
 
-                        String informQoS="16"+"/div/"+"control"+"/div/"+"BatchAgentID"+"/div/"+"sa"+"/div/"+"get * reference=" + BathcID;
-                        sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
-
-                        ACLMessage QoSR= myAgent.blockingReceive(QoStemplate,1000);
-                        if(QoSR==null) {//si tampoco contesta el QoS se asume que esta aislado
-                            LOGGER.error("I'm probably isolated.");
-                            myAgent.state="idle";
-                            myAgent.change_state=true;
-                        }
-                        boolean f=false;
-                        for(int i=0;i<myAgent.ReportedAgents.size();i++){
-                            myAgent.ReportedAgents.get(i).equals("sa");
-                            f=true;
-                        }
-                        if(!f){
-                            myAgent.ReportedAgents.add("sa");//si no se ha denunciado el agente añadirlo a la lista
-                        }
+//                        String informQoS="16"+"/div/"+"control"+"/div/"+"BatchAgentID"+"/div/"+"sa"+"/div/"+"get * reference=" + BathcID;
+//                        sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
+//
+//                        ACLMessage QoSR= myAgent.blockingReceive(QoStemplate,1000);
+//                        if(QoSR==null) {//si tampoco contesta el QoS se asume que esta aislado
+//                            LOGGER.error("I'm probably isolated.");
+//                            myAgent.state="idle";
+//                            myAgent.change_state=true;
+//                        }
+//                        boolean f=false;
+//                        for(int i=0;i<myAgent.ReportedAgents.size();i++){
+//                            myAgent.ReportedAgents.get(i).equals("sa");
+//                            f=true;
+//                        }
+//                        if(!f){
+//                            myAgent.ReportedAgents.add("sa");//si no se ha denunciado el agente añadirlo a la lista
+//                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -507,48 +507,50 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
                         AID batchAgentID = new AID(batchAgentName, false);
                         sendACLMessage(16, batchAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
-                        ACLMessage acknowledge = myAgent.blockingReceive(echotemplate,1000);
-                        if(acknowledge==null) {
-                            String informQoS = "16" + "/div/" + "negotiation"+ "/div/" +"PLCdata"+ "/div/" +batchAgentName+ "/div/" +MessageContent;
-                            sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
-                            ACLMessage QoSR = myAgent.blockingReceive(QoStemplate, 1000);
-                            if(QoSR==null) {//si tampoco contesta el QoS se asume que esta aislado
-                                LOGGER.error("I'm probably isolated.");
-                                myAgent.state="idle";
-                                myAgent.change_state=true; //cambia a estado idle sin usar ACLs
-//                        sendACLMessage(16, myAgent.getAID(), "control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
-                                LOGGER.error("Passing to idle");
-                            }else if(QoSR.getContent().contains("confirmed")){
-                                System.out.println("Batch did not receive the message.");
-                                boolean f=false;
-                                for(int i=0;i<myAgent.ReportedAgents.size();i++){
-                                    myAgent.ReportedAgents.get(i).equals(batchAgentName);
-                                    f=true;
-                                }
-                                if(!f){
-                                    myAgent.ReportedAgents.add(batchAgentName);//si no se ha denunciado el agente añadirlo a la lista
-                                }
-                            }else{
-                                System.out.println("Error ignored.");
-                            }
-                        }
+//                        ACLMessage acknowledge = myAgent.blockingReceive(echotemplate,1000);
+                        AddToExpectedMsgs(batchAgentName,"PLCdata",MessageContent);
+
+//                        if(acknowledge==null) {
+//                            String informQoS = "16" + "/div/" + "negotiation"+ "/div/" +"PLCdata"+ "/div/" +batchAgentName+ "/div/" +MessageContent;
+//                            sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
+//                            ACLMessage QoSR = myAgent.blockingReceive(QoStemplate, 1000);
+//                            if(QoSR==null) {//si tampoco contesta el QoS se asume que esta aislado
+//                                LOGGER.error("I'm probably isolated.");
+//                                myAgent.state="idle";
+//                                myAgent.change_state=true; //cambia a estado idle sin usar ACLs
+////                        sendACLMessage(16, myAgent.getAID(), "control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
+//                                LOGGER.error("Passing to idle");
+//                            }else if(QoSR.getContent().contains("confirmed")){
+//                                System.out.println("Batch did not receive the message.");
+//                                boolean f=false;
+//                                for(int i=0;i<myAgent.ReportedAgents.size();i++){
+//                                    myAgent.ReportedAgents.get(i).equals(batchAgentName);
+//                                    f=true;
+//                                }
+//                                if(!f){
+//                                    myAgent.ReportedAgents.add(batchAgentName);//si no se ha denunciado el agente añadirlo a la lista
+//                                }
+//                            }else{
+//                                System.out.println("Error ignored.");
+//                            }
+//                        }
                     }else{     //si no se recibe respuesta denunciar porblema al QoS
-                        String informQoS="16"+"/div/"+"control"+"/div/"+"BatchAgentID"+"/div/"+"sa"+"/div/"+"get * parent=" + batchName;
-                        sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
-                        ACLMessage QoSR= myAgent.blockingReceive(QoStemplate,1000);
-                        if(QoSR==null) { //si tampoco contesta el QoS se asume ue esta aislado
-                            LOGGER.error("I'm probably isolated.");
-                            myAgent.state="idle";
-                            myAgent.change_state=true;
-                        }
-                        boolean f=false;
-                        for(int i=0;i<myAgent.ReportedAgents.size();i++){
-                            myAgent.ReportedAgents.get(i).equals("sa");
-                            f=true;
-                        }
-                        if(!f){
-                            myAgent.ReportedAgents.add("sa");//si no se ha denunciado el agente añadirlo a la lista
-                        }
+//                        String informQoS="16"+"/div/"+"control"+"/div/"+"BatchAgentID"+"/div/"+"sa"+"/div/"+"get * parent=" + batchName;
+//                        sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
+//                        ACLMessage QoSR= myAgent.blockingReceive(QoStemplate,1000);
+//                        if(QoSR==null) { //si tampoco contesta el QoS se asume ue esta aislado
+//                            LOGGER.error("I'm probably isolated.");
+//                            myAgent.state="idle";
+//                            myAgent.change_state=true;
+//                        }
+//                        boolean f=false;
+//                        for(int i=0;i<myAgent.ReportedAgents.size();i++){
+//                            myAgent.ReportedAgents.get(i).equals("sa");
+//                            f=true;
+//                        }
+//                        if(!f){
+//                            myAgent.ReportedAgents.add("sa");//si no se ha denunciado el agente añadirlo a la lista
+//                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -656,39 +658,40 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         String MessageContent = new Gson().toJson(PLCmsgOut);
                         AID gatewayAgentID = new AID(gatewayAgentName, false);
                         sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
-                        MessageTemplate PLCconfirmation = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                                MessageTemplate.MatchOntology("negotiation"));
-                        ACLMessage acknowledge = myAgent.blockingReceive(PLCconfirmation, 1000);
-
-                        if (acknowledge != null) {
-                            rcvd = new Gson().fromJson(acknowledge.getContent(), HashMap.class);
-                            if (rcvd.containsKey("Received")) {   //Se asegura que se trate de un mensaje de confirmacion del PLC
-                                LOGGER.info("PLC confirmed reception");
-                            }
-                        } else {
-                            LOGGER.info("Did not receive answer from PLC");
-                            String report_error = "16" + "/div/" + "negotiation" + "/div/" + "PLCdata" + "/div/" + gatewayAgentName + "/div/" + MessageContent;
-                            sendACLMessage(6, QoSID, "acl_error", "communication error", report_error, myAgent);
-                            ACLMessage QoScommand = myAgent.blockingReceive(QoStemplate, 1000);
-                            if (QoScommand == null) { //si no se recibe respuesta del QoS, se asume que esta aislado
-                                LOGGER.error("I'm probably isolated.");
-                                myAgent.state="idle";
-                                myAgent.change_state=true;
-                            } else {
-                                LOGGER.info("Received reply from QoS");
-                                if (QoScommand.getContent().contains("confirmed")) {
-                                    LOGGER.error("QoS confirmed that GW is down. Waiting until GW is recovered."); //pendiente de wake, por ahora solo manual
-                                }
-                            }
-                            boolean f=false;
-                            for(int i=0;i<myAgent.ReportedAgents.size();i++){
-                                myAgent.ReportedAgents.get(i).equals(gatewayAgentName);
-                                f=true;
-                            }
-                            if(!f){
-                                myAgent.ReportedAgents.add(gatewayAgentName);//si no se ha denunciado el agente añadirlo a la lista
-                            }
-                        }
+//                        MessageTemplate PLCconfirmation = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+//                                MessageTemplate.MatchOntology("negotiation"));
+                        AddToExpectedMsgs(gatewayAgentName,"PLCdata",MessageContent);
+                        System.out.println("added expected message");
+//                        ACLMessage acknowledge = myAgent.blockingReceive(PLCconfirmation, 1000);
+//                        if (acknowledge != null) {
+////                            rcvd = new Gson().fromJson(acknowledge.getContent(), HashMap.class);
+////                            if (rcvd.containsKey("Received")) {   //Se asegura que se trate de un mensaje de confirmacion del PLC
+//                                LOGGER.info("GW confirmed reception");
+////                            }
+//                        } else {
+//                            LOGGER.info("Did not receive answer from GW");
+//                            String report_error = "16" + "/div/" + "negotiation" + "/div/" + "PLCdata" + "/div/" + gatewayAgentName + "/div/" + MessageContent;
+//                            sendACLMessage(6, QoSID, "acl_error", "communication error", report_error, myAgent);
+//                            ACLMessage QoScommand = myAgent.blockingReceive(QoStemplate, 1000);
+//                            if (QoScommand == null) { //si no se recibe respuesta del QoS, se asume que esta aislado
+//                                LOGGER.error("I'm probably isolated.");
+//                                myAgent.state="idle";
+//                                myAgent.change_state=true;
+//                            } else {
+//                                LOGGER.info("Received reply from QoS");
+//                                if (QoScommand.getContent().contains("confirmed")) {
+//                                    LOGGER.error("QoS confirmed that GW is down. Waiting until GW is recovered."); //pendiente de wake, por ahora solo manual
+//                                }
+//                            }
+//                            boolean f=false;
+//                            for(int i=0;i<myAgent.ReportedAgents.size();i++){
+//                                myAgent.ReportedAgents.get(i).equals(gatewayAgentName);
+//                                f=true;
+//                            }
+//                            if(!f){
+//                                myAgent.ReportedAgents.add(gatewayAgentName);//si no se ha denunciado el agente añadirlo a la lista
+//                            }
+//                        }
 
                         sendingFlag = false;
                         machinePlanIndex = 0;
@@ -735,8 +738,19 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             }
 
         }
+        public void AddToExpectedMsgs(String sender, String convID, String content){
+            Object[] ExpMsg=new Object[4];
+            ExpMsg[0]=sender;
+            ExpMsg[1]=convID;
+            ExpMsg[2]=content;
+            Date date = new Date();
+            long instant = date.getTime();
+            instant=instant+1000; //añade una espera de 1 seg
+            ExpMsg[3]=instant;
+            myAgent.expected_msgs.add(ExpMsg);
+        }
 
-    }
+}
 
 
 

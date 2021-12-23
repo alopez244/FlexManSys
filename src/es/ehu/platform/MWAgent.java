@@ -59,6 +59,7 @@ public class MWAgent extends Agent {
     public int initTransition;
     public String conversationId;
     public Object initialExecutionState = null;
+    public ArrayList<Object[]> expected_msgs= new ArrayList<Object[]>();
 
     // Parámetros de configuración
     public boolean mwmStoresExecutionState = true;

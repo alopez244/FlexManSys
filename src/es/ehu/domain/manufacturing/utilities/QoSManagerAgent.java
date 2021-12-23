@@ -64,11 +64,11 @@ public class QoSManagerAgent extends Agent {
                 if(msg.getPerformative()==ACLMessage.FAILURE&&!msg.getSender().getLocalName().equals("ams")){ //Se recibe un posible error no perteneciente al ams
                     if(msg.getOntology().equals("acl_error")) { //error de tipo comunicación
                         String[] msgparts = msg.getContent().split("/div/");
-                        String performative = msgparts[0];
-                        String ontology = msgparts[1];
-                        String convID = msgparts[2];
-                        String receiver = msgparts[3];
-                        String intercepted_msg = msgparts[4];
+//                        String performative = msgparts[0];
+//                        String ontology = msgparts[1];
+//                        String convID = msgparts[2];
+                        String receiver = msgparts[0];
+                        String intercepted_msg = msgparts[1];
                         LOGGER.warn(msg.getSender().getLocalName() + " reported a failure while trying to communicate with " + receiver);
                         if (CheckNotFoundRegistry(receiver) && CheckNotFoundRegistry(msg.getSender().getLocalName())) { //comprueba que el denunciante y el denunciado no esten en la blacklist de agentes no encontrados
                             LOGGER.info("Checking if " + receiver + " is alive and if the agent received the reported msg.");
@@ -76,7 +76,8 @@ public class QoSManagerAgent extends Agent {
                             System.out.println(command);
                             n = SearchAgent(receiver);
                             if (command.equals("msg_lost") && n == 1) {         //Receiver vivo pero mensaje perdido
-                                sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), receiver + "/confirmed");
+//                                sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), receiver + "/confirmed");
+                                report_back(msg); //confirma fallo de comunicacion
                                 pong = PingAgent(msg.getSender().getLocalName());
                                 n = SearchAgent(msg.getSender().getLocalName());
                                 if (!pong || n != 1) { //checks if the reporting agent is actually isolated.
@@ -108,7 +109,10 @@ public class QoSManagerAgent extends Agent {
                                 sendACL(ACLMessage.INFORM, "D&D", "not_found", msgtoDD);
                             }
                             add_to_error_list("communication", msg.getSender().getLocalName(), receiver, intercepted_msg, "");
+                        }else{
+                            report_back(msg);
                         }
+
                     } else if(msg.getOntology().equals("ctrlbhv_failure")){ //error redundante para casos no contemplados por acknowledge. Se envía en control behaviour. Aporta menos información
                         LOGGER.warn(msg.getSender().getLocalName()+ " reported a communication failure with "+msg.getContent());
                         if(CheckNotFoundRegistry(msg.getContent())){
@@ -520,7 +524,14 @@ public class QoSManagerAgent extends Agent {
                 return "no_answer";
             }
         }
-
+        public void report_back(ACLMessage msg){ //Funcion especial de respuesta confirmando error de comunicacion
+            msg.setPerformative(7);
+            msg.addReceiver(msg.getSender());
+            msg.setOntology("error_confirmation");
+            msg.setContent(msg.getContent());
+            msg.setConversationId(msg.getConversationId());
+            send(msg);
+        }
         public void sendACL(int performative,String receiver,String ontology,String content){ //Funcion estándar de envío de mensajes
             AID receiverAID=new AID(receiver,false);
             ACLMessage msg=new ACLMessage(performative);

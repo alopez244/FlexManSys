@@ -426,7 +426,8 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 //                }
 //            }
             else if (msg.getPerformative() == ACLMessage.REQUEST) {
-                sendACLMessage(7,msg.getSender(),"Acknowledge",msg.getConversationId(),"Received",myAgent);
+//                sendACLMessage(7,msg.getSender(),"Acknowledge",msg.getConversationId(),"Received",myAgent);
+                Acknowledge(msg);
 
                 System.out.println("Mensaje con la informacion del PLC");
                 System.out.println("Quien envia el mensaje: " + msg.getSender());
@@ -494,24 +495,26 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                         if (reply != null) {   // Si no existe el id en el registro devuelve error
                             AID orderAgentID = new AID(reply.getContent(), false);
                             sendACLMessage(7, orderAgentID,"Information", "ItemsInfo", msgToOrder, myAgent );
-                            ACLMessage ack = myAgent.blockingReceive(echotemplate,250);
-                            if(ack==null){
-                                String informQoS = "7" + "/div/" + "Information"+ "/div/" +"ItemsInfo"+ "/div/" +reply.getContent()+ "/div/" +msgToOrder;
-                                sendACLMessage(ACLMessage.FAILURE, QoSID, "acl_error", "msgtoparent", informQoS, myAgent); //es necesario enviar el mensaje para segurar que no esta aislado
-                                ACLMessage QoSR = myAgent.blockingReceive(QoStemplate,2000);
-                                if(QoSR==null){
-                                    System.out.println("I'm isolated. Shutting down entire node.");
-                                    System.exit(0);
-                                }
-                                boolean f=false;
-                                for(int i=0;i<myAgent.ReportedAgents.size();i++){
-                                    myAgent.ReportedAgents.get(i).equals(reply.getContent());
-                                    f=true;
-                                }
-                                if(!f){
-                                    myAgent.ReportedAgents.add(reply.getContent());//si no se ha denunciado el agente añadirlo a la lista
-                                }
-                            }
+                            Object[] ExpMsg=AddToExpectedMsgs(reply.getContent(),"ItemsInfo",msgToOrder);
+                            myAgent.expected_msgs.add(ExpMsg);
+//                            ACLMessage ack = myAgent.blockingReceive(echotemplate,250);
+//                            if(ack==null){
+//                                String informQoS = "7" + "/div/" + "Information"+ "/div/" +"ItemsInfo"+ "/div/" +reply.getContent()+ "/div/" +msgToOrder;
+//                                sendACLMessage(ACLMessage.FAILURE, QoSID, "acl_error", "msgtoparent", informQoS, myAgent); //es necesario enviar el mensaje para segurar que no esta aislado
+//                                ACLMessage QoSR = myAgent.blockingReceive(QoStemplate,2000);
+//                                if(QoSR==null){
+//                                    System.out.println("I'm isolated. Shutting down entire node.");
+//                                    System.exit(0);
+//                                }
+//                                boolean f=false;
+//                                for(int i=0;i<myAgent.ReportedAgents.size();i++){
+//                                    myAgent.ReportedAgents.get(i).equals(reply.getContent());
+//                                    f=true;
+//                                }
+//                                if(!f){
+//                                    myAgent.ReportedAgents.add(reply.getContent());//si no se ha denunciado el agente añadirlo a la lista
+//                                }
+//                            }
                         }
                     } catch (Exception e) {
                         e.printStackTrace();

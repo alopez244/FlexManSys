@@ -105,7 +105,7 @@ public class ControlBehaviour extends SimpleBehaviour {
                     report.setOntology("ctrlbhv_failure");
                     report.setContent(name);
                     report.addReceiver(QoSID);
-                    myAgent.send(report);
+//                    myAgent.send(report);
 
 
                 try {

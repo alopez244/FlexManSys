@@ -110,6 +110,22 @@ public class DomApp_Functionality extends Dom_Functionality{
         return result;
     }
 
+    public void Acknowledge(ACLMessage msg){
+        sendACLMessage(7,msg.getSender(),msg.getOntology(),msg.getConversationId(),msg.getContent(),myAgent);
+    }
+    public Object[] AddToExpectedMsgs(String sender, String convID, String content){
+        Object[] ExpMsg=new Object[4];
+        ExpMsg[0]=sender;
+        ExpMsg[1]=convID;
+        ExpMsg[2]=content;
+        Date date = new Date();
+        long instant = date.getTime();
+        instant=instant+1000; //añade una espera de 1 seg
+        ExpMsg[3]=instant;
+        return ExpMsg;
+
+    }
+
     public void trackingOnBoot(MWAgent agent, String seType, String conversationId) {
 
         this.myAgent = agent;
