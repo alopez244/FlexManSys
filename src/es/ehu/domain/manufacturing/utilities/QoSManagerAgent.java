@@ -94,13 +94,14 @@ public class QoSManagerAgent extends Agent {
                                     sendACL(ACLMessage.INFORM, "D&D", "msg_lost", msg.getContent());
                                 }
                             } else if (command.equals("msg_received") && n == 1) {
-                                sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), receiver + "/ignore");
+                                report_back(msg);
+//                                sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), receiver + "/ignore");
                                 LOGGER.info("Message arrived to agent. Ignore error.");
 
                             } else { //si no responde el receiver, se trata de un agente aislado o muerto
                                 LOGGER.warn("No answer from " + receiver + ". Confirming error.");
-
-                                sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), receiver + "/confirmed");
+                                report_back(msg);
+//                                sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), receiver + "/confirmed");
                                 String msgtoDD = receiver;
                                 if (receiver.contains("ControlGatewayCont")) {  //en algunos casos necesitamos saber el agente que ha denunciado el fallo para que pase a idle a traves del D&D
                                     msgtoDD = msgtoDD + "/div/" + msg.getSender().getLocalName();

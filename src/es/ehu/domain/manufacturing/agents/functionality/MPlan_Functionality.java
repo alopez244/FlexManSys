@@ -184,7 +184,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     }catch  (Exception e) {
       e.printStackTrace();
     }
-
+    myAgent.antiloopflag=false;
     return state;
   }
 

@@ -58,6 +58,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
 
     public void onStart() {
         LOGGER.entry();
+        myAgent.ActualState="running";
         this.PrevPeriod = myAgent.period;
         if (myAgent.period < 0) {
             this.NextActivation = -1;
@@ -86,22 +87,21 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
             ACLMessage ack= myAgent.receive(ack_template);
             if(ack==null){
                 if(instant>timeout){
-                    myAgent.expected_msgs.remove(i);
-                    if(exp_msg_sender.equals(QoSID.getLocalName())){
+                    if(exp_msg_sender.getLocalName().equals(QoSID.getLocalName())){
                         LOGGER.info("QoS did not answer on time. THIS AGENT MIGHT BE ISOLATED.");
                         if(myAgent.getLocalName().contains("machine")){
                             myAgent.state="idle";	//es un agente máquina por lo que transiciona a idle
                             myAgent.change_state=true;
-                        }else if(myAgent.getLocalName().contains("batchagent")||myAgent.getLocalName().contains("orderagent")||myAgent.getLocalName().contains("mplanagent")){
-                            System.exit(0); //es un agente de aplicacion, por lo que se "suicida" si esta aislado
                         }else{ //TODO añadir aquí agentes no contemplados cuando proceda
                             LOGGER.debug("Condición no programada ");
                         }
+                        myAgent.expected_msgs.remove(i);
                     }else{
                         LOGGER.info("Expected answer did not arrive on time.");
                         String report=sender+"/div/"+content;
                         sendACLMessage(6, QoSID, "acl_error", convID, report, myAgent);
                         AddToExpectedMsgs(QoSID.getLocalName(),convID,report);
+                        myAgent.expected_msgs.remove(i);
                     }
                 }
             }else{
@@ -123,12 +123,12 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         }
 
 
-//        long t = manageBlockingTimes();
-//
-//        if (msg == null) {
-//            LOGGER.debug("Block time: " + t);
-//            block(t); // cada cierto tiempo comprobar recursos/alarmas
-//        }
+        long t = manageBlockingTimes();
+
+        if (msg == null&&myAgent.expected_msgs.size()==0) {
+            LOGGER.debug("Block time: " + t);
+            block(t); // cada cierto tiempo comprobar recursos/alarmas
+        }
         LOGGER.exit();
     }
 
@@ -216,7 +216,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         ExpMsg[2]=content;
         Date date = new Date();
         long instant = date.getTime();
-        instant=instant+1000; //añade una espera de 1 seg
+        instant=instant+2000; //añade una espera de 2 seg
         ExpMsg[3]=instant;
         myAgent.expected_msgs.add(ExpMsg);
     }

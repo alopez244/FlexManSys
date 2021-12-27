@@ -201,7 +201,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 //        state=state+"/div0/"+finish_times_of_batch+"/div0/";   //para simular fallo, de esta manera muere el agente tracking al hacer setstate
         state=state+"/div0/"+finish_times_of_batch;
         state=state+"/div0/"+String.valueOf(actual_item_number);
-
+        myAgent.antiloopflag=false;
         return state;
 
     }
@@ -395,37 +395,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             }else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getContent().equals("confirmed_timeout")){
                 QoSresponse_flag=true;
                 System.out.println("Timeout confirmed.");
-            } //TODO eliminar tras demostración día 21/12/2021
-//            else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("delete_replica")) {
-//
-//                boolean f=false;
-//                for(int i=0;i<myAgent.IgnoredReplicas.size();i++){ //se elimina de la lista de ignorados en caso de que esté
-//                    if(myAgent.IgnoredReplicas.get(i).equals(msg.getContent())){
-//                        myAgent.IgnoredReplicas.remove(i);
-//                        f=true;
-//                    }
-//                }
-//                if(f==false){ //en caso de no encontrarlo en la lista de ignorados, es posile que aun se encuentre en la lista de replicas normal
-//                    for(int i=0;i<myAgent.replicas.size();i++){
-//                        if(myAgent.replicas.get(i).equals(msg.getContent())){
-//                            myAgent.replicas.remove(i);
-//                        }
-//                    }
-//                }
-//            } else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("restore_replica")) {
-//                for(int i=0;i<myAgent.IgnoredReplicas.size();i++) { //se elimina de la lista de ignorados en caso de que esté
-//                    if (myAgent.IgnoredReplicas.get(i).equals(msg.getContent())) {
-//                        myAgent.replicas.add(myAgent.IgnoredReplicas.get(i)); //se vuelve a añadir a la lista de replicas
-//                        for(int j=0; j<myAgent.ReportedAgents.size();j++){
-//                            if(myAgent.ReportedAgents.get(j).equals(myAgent.IgnoredReplicas.get(i))){
-//                                myAgent.ReportedAgents.remove(j); // se elimina tambien de la lista de agentes reportados
-//                            }
-//                        }
-//                        myAgent.IgnoredReplicas.remove(i);
-//                    }
-//                }
-//            }
-            else if (msg.getPerformative() == ACLMessage.REQUEST) {
+            } else if (msg.getPerformative() == ACLMessage.REQUEST) {
 //                sendACLMessage(7,msg.getSender(),"Acknowledge",msg.getConversationId(),"Received",myAgent);
                 Acknowledge(msg);
 

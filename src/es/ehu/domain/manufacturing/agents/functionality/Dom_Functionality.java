@@ -64,7 +64,7 @@ public class Dom_Functionality{
                 MessageTemplate.and(
                         MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
                         MessageTemplate.MatchPerformative(ACLMessage.INFORM))
-                , 2000);
+                , 5000);
             return LOGGER.exit(reply);
 
 
