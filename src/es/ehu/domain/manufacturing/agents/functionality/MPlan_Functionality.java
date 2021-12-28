@@ -273,8 +273,8 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     ACLMessage msg = myAgent.receive(template);
     if (msg != null) {
       myAgent.msgFIFO.add((String) msg.getContent());
-      sendACLMessage(7, msg.getSender(), "Acknowledge", msg.getConversationId(),"Received",myAgent);
-
+      Acknowledge(msg);
+//      sendACLMessage(7, msg.getSender(), "Acknowledge", msg.getConversationId(),"Received",myAgent);
 
       if (firstTime) { //solo se quiere añadir el nuevo nivel la primera vez
         deserializedMessage = deserializeMsg(msg.getContent());
@@ -390,6 +390,9 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 
 
     return null;
+  }
+  public void Acknowledge(ACLMessage msg){
+    sendACLMessage(ACLMessage.CONFIRM,msg.getSender(),msg.getOntology(),msg.getConversationId(),msg.getContent(),myAgent);
   }
   protected ArrayList<String> get_local_names(ArrayList<AID> SonAIDs){
 

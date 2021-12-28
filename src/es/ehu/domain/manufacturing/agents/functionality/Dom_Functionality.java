@@ -81,10 +81,7 @@ public class Dom_Functionality{
                 msg.setOntology(ontology);
                 msg.setConversationId(conversationId);
                 msg.setContent(content);
-
                     myAgent.send(msg);
-
-
         }
 
     }

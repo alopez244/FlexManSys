@@ -406,7 +406,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
                 infoForTraceability = new Gson().fromJson(msg.getContent(), HashMap.class);  //Data type conversion Json->Hashmap class
                 // Se extraen los datos necesarios del mensaje recibido
-                // Cada mensaje contiene informacion del item fabricado
+                // Cada mensaje contiene informacion del  fabricado
                 String idItem = String.valueOf(infoForTraceability.get("Id_Item_Number"));
                 batchNumber = String.valueOf(infoForTraceability.get("Id_Batch_Reference"));
                 String ActionTypes = String.valueOf(infoForTraceability.get("Id_Action_Type"));
@@ -467,24 +467,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                             sendACLMessage(7, orderAgentID,"Information", "ItemsInfo", msgToOrder, myAgent );
                             Object[] ExpMsg=AddToExpectedMsgs(reply.getContent(),"ItemsInfo",msgToOrder);
                             myAgent.expected_msgs.add(ExpMsg);
-//                            ACLMessage ack = myAgent.blockingReceive(echotemplate,250);
-//                            if(ack==null){
-//                                String informQoS = "7" + "/div/" + "Information"+ "/div/" +"ItemsInfo"+ "/div/" +reply.getContent()+ "/div/" +msgToOrder;
-//                                sendACLMessage(ACLMessage.FAILURE, QoSID, "acl_error", "msgtoparent", informQoS, myAgent); //es necesario enviar el mensaje para segurar que no esta aislado
-//                                ACLMessage QoSR = myAgent.blockingReceive(QoStemplate,2000);
-//                                if(QoSR==null){
-//                                    System.out.println("I'm isolated. Shutting down entire node.");
-//                                    System.exit(0);
-//                                }
-//                                boolean f=false;
-//                                for(int i=0;i<myAgent.ReportedAgents.size();i++){
-//                                    myAgent.ReportedAgents.get(i).equals(reply.getContent());
-//                                    f=true;
-//                                }
-//                                if(!f){
-//                                    myAgent.ReportedAgents.add(reply.getContent());//si no se ha denunciado el agente añadirlo a la lista
-//                                }
-//                            }
                         }
                     } catch (Exception e) {
                         e.printStackTrace();

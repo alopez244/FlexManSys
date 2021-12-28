@@ -17,6 +17,7 @@ import jade.lang.acl.MessageTemplate;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -60,6 +61,7 @@ public class MWAgent extends Agent {
     public String conversationId;
     public Object initialExecutionState = null;
     public ArrayList<Object[]> expected_msgs= new ArrayList<Object[]>();
+    private int convIDCounter=1;
 
     // Parámetros de configuración
     public boolean mwmStoresExecutionState = true;
@@ -384,15 +386,18 @@ public class MWAgent extends Agent {
         try {
 
             ACLMessage aMsg = new ACLMessage(ACLMessage.INFORM);
-
+            aMsg.setConversationId("state_refresh_"+String.valueOf(convIDCounter));
             aMsg.setOntology(ONT_STATE);
             aMsg.setContent(msg);
-            for (String cmpins: cmpinss) aMsg.addReceiver(new AID(cmpins, AID.ISLOCALNAME));
-
+            for (String cmpins: cmpinss){
+                aMsg.addReceiver(new AID(cmpins, AID.ISLOCALNAME));
+                Object[] ExpMsg=AddToExpectedMsgs(cmpins,"state_refresh_"+String.valueOf(convIDCounter),msg); //un mensaje esperado por cada replica
+                expected_msgs.add(ExpMsg);
+                LOGGER.debug("ADDED EXPECTED MESSAGE: "+cmpins+" "+String.valueOf(convIDCounter));
+            }
             send(aMsg);
-
+            convIDCounter++;
             LOGGER.debug("sendState().send("+sTargets+"):"+aMsg);
-
             LOGGER.info(cmpID+"("+getLocalName() + "):state("+ ((msg.getClass()==null)?"null":msg.getClass().getSimpleName())+ ") > "+cmpID+"("+sTargets+")" );
 
         } catch (Exception e) {
@@ -478,7 +483,17 @@ public class MWAgent extends Agent {
 //        }
 //        LOGGER.exit();
 //    }
-
+    public Object[] AddToExpectedMsgs(String sender, String convID, String content){
+        Object[] ExpMsg=new Object[4];
+        ExpMsg[0]=sender;
+        ExpMsg[1]=convID;
+        ExpMsg[2]=content;
+        Date date = new Date();
+        long instant = date.getTime();
+        instant=instant+2000; //añade una espera de 2 seg
+        ExpMsg[3]=instant;
+        return ExpMsg;
+    }
     /**
      * Informa al middleware manager que la instancia de componente ha cambiado
      * de estado
@@ -488,6 +503,7 @@ public class MWAgent extends Agent {
      * @param state
      *            : Nombre del estado al que se ha cambiado.
      */
+
     public void setState(String cmpIns, String state) throws Exception {
         LOGGER.entry(cmpIns, state);
 

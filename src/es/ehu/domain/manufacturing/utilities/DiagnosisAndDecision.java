@@ -23,10 +23,12 @@ public class DiagnosisAndDecision extends Agent{
     static final Logger LOGGER = LogManager.getLogger(DiagnosisAndDecision.class.getName());
     private Agent myAgent=this;
     public String control="automatic";
-
+    public MessageTemplate expected_senders=MessageTemplate.or(MessageTemplate.MatchSender(new AID("planner",AID.ISLOCALNAME)),
+                                            MessageTemplate.MatchSender(new AID("QoSManagerAgent",AID.ISLOCALNAME)));
 
     protected void setup(){
         LOGGER.entry();
+
         LOGGER.info("Diagnosis and Decision Agent started");
         addBehaviour(new DDEventManager() );
         LOGGER.exit();
@@ -37,7 +39,7 @@ public class DiagnosisAndDecision extends Agent{
         private String control="automatic";
 
         public void action() {
-                ACLMessage msg=receive();
+                ACLMessage msg=receive(expected_senders);  //solo lee mensajes de los agentes indicados en el template
                 if(msg!=null) {
                     if (msg.getOntology().equals("not_found")&&msg.getSender().getLocalName().equals("QoSManagerAgent")) { //Se reporta un agente aislado o muerto
                         if(control.equals("automatic")){ //solo toma decisiones si está en modo automatico
@@ -120,21 +122,21 @@ public class DiagnosisAndDecision extends Agent{
                         }
 
                     } else if (msg.getOntology().equals("msg_lost")&&msg.getSender().getLocalName().equals("QoSManagerAgent")) {
-                        LOGGER.warn("Message lost. Bridge message");
+                        LOGGER.warn("Message lost.");
                         String[] msgparts=msg.getContent().split("/div/");
-                        String performative=msgparts[0];
-                        String ontology=msgparts[1];
-                        String convID=msgparts[2];
-                        String receiver=msgparts[3];
-                        String intercepted_msg=msgparts[4];
+//                        String performative=msgparts[0];
+//                        String ontology=msgparts[1];
+//                        String convID=msgparts[2];
+//                        String receiver=msgparts[3];
+//                        String intercepted_msg=msgparts[4];
                         if(control.equals("automatic")){
-                            ACLMessage bridgedmsg=new ACLMessage(Integer.parseInt(performative));
-                            bridgedmsg.setOntology(ontology);
-                            AID receiverID = new AID(receiver, false);
-                            bridgedmsg.addReceiver(receiverID);
-                            bridgedmsg.setConversationId(convID);
-                            bridgedmsg.setContent(intercepted_msg);
-                            send(bridgedmsg);
+//                            ACLMessage bridgedmsg=new ACLMessage(Integer.parseInt(performative));
+//                            bridgedmsg.setOntology(ontology);
+//                            AID receiverID = new AID(receiver, false);
+//                            bridgedmsg.addReceiver(receiverID);
+//                            bridgedmsg.setConversationId(convID);
+//                            bridgedmsg.setContent(intercepted_msg);
+//                            send(bridgedmsg);
                         }else{
                             LOGGER.warn("MANUAL MODE: User must take a decision to solve the issue");
                         }

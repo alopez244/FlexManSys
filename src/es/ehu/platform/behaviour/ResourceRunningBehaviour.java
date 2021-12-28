@@ -81,9 +81,9 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
             long timeout=(long) exp_msg[3];
             Date date = new Date();
             long instant = date.getTime();
-            MessageTemplate ack_template=MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchConversationId(convID),
+            MessageTemplate ack_template=MessageTemplate.and(MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchConversationId(convID),
                     MessageTemplate.MatchSender(exp_msg_sender)),
-                    MessageTemplate.MatchContent(content));
+                    MessageTemplate.MatchContent(content)),MessageTemplate.MatchPerformative(ACLMessage.CONFIRM));
             ACLMessage ack= myAgent.receive(ack_template);
             if(ack==null){
                 if(instant>timeout){
@@ -95,14 +95,13 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
                         }else{ //TODO añadir aquí agentes no contemplados cuando proceda
                             LOGGER.debug("Condición no programada ");
                         }
-                        myAgent.expected_msgs.remove(i);
                     }else{
                         LOGGER.info("Expected answer did not arrive on time.");
                         String report=sender+"/div/"+content;
                         sendACLMessage(6, QoSID, "acl_error", convID, report, myAgent);
                         AddToExpectedMsgs(QoSID.getLocalName(),convID,report);
-                        myAgent.expected_msgs.remove(i);
                     }
+                    myAgent.expected_msgs.remove(i);
                 }
             }else{
                 myAgent.expected_msgs.remove(i);

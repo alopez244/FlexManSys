@@ -100,13 +100,13 @@ public class ControlBehaviour extends SimpleBehaviour {
                 name = name.substring(0, name.indexOf('@'));
                 LOGGER.info("msg.getPerformative()==ACLMessage.FAILURE (sender=" + name + ")");
 
-
                     ACLMessage report= new ACLMessage(ACLMessage.FAILURE);
                     report.setOntology("ctrlbhv_failure");
                     report.setContent(name);
                     report.addReceiver(QoSID);
+                if(myAgent.getLocalName().contains("batchagent")||myAgent.getLocalName().contains("orderagent")||myAgent.getLocalName().contains("mplanagent")){
 //                    myAgent.send(report);
-
+                }
 
                 try {
                     LOGGER.info(myAgent.sendCommand(CMD_REPORT + " (" + CMD_GETCOMPONENTS + " " + name + ") type=notFound cmpins=" + name));

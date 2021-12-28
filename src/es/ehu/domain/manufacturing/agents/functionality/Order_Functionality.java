@@ -353,7 +353,8 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         ACLMessage msg = myAgent.receive(template);
         if (msg != null) {
             myAgent.msgFIFO.add((String) msg.getContent());
-            sendACLMessage(7, msg.getSender(), "Acknowledge", msg.getConversationId(),"Received",myAgent);
+            Acknowledge(msg);
+//            sendACLMessage(7, msg.getSender(), "Acknowledge", msg.getConversationId(),"Received",myAgent);
 
 
             if (firstTime) {
@@ -405,25 +406,6 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 sendACLMessage(7, Agent, "Information", "OrderInfo", msgToMPLan, myAgent);
                 Object[] ExpMsg=AddToExpectedMsgs(parentAgentID,"OrderInfo",msgToMPLan);
                 myAgent.expected_msgs.add(ExpMsg);
-//                ACLMessage ack= myAgent.blockingReceive(echotemplate,250);
-//
-//                if(ack==null){
-//                    String informQoS = "7" + "/div/" + "Information"+ "/div/" +"OrderInfo"+ "/div/" +parentAgentID+ "/div/" +msgToMPLan;
-//                    sendACLMessage(ACLMessage.FAILURE, QoSID, "acl_error", "msgtoparent", informQoS, myAgent);
-//                    ACLMessage QoSR = myAgent.blockingReceive(QoStemplate,2000);
-//                    if(QoSR==null){
-//                        System.out.println("I'm isolated. Shutting down entire node.");
-//                        System.exit(0);
-//                    }
-//                    boolean f=false;
-//                    for(int i=0;i<myAgent.ReportedAgents.size();i++){
-//                        myAgent.ReportedAgents.get(i).equals(parentAgentID);
-//                        f=true;
-//                    }
-//                    if(!f){
-//                        myAgent.ReportedAgents.add(parentAgentID);//si no se ha denunciado el agente añadirlo a la lista
-//                    }
-//                }
 
                 if (sonAgentID.size() == 0) { // todos los batch agent de los que es padre ya le han enviado la informacion
                     sendACLMessage(7, myAgent.getAID(), "Information", "Shutdown", "Shutdown", myAgent); // autoenvio de mensaje para asegurar que el agente de desregistre y se apague
@@ -571,7 +553,9 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         return null;
     }
 
-
+    public void Acknowledge(ACLMessage msg){
+        sendACLMessage(ACLMessage.CONFIRM,msg.getSender(),msg.getOntology(),msg.getConversationId(),msg.getContent(),myAgent);
+    }
     protected ArrayList<ArrayList<String>> batch_finish_times(String rawdata){
 
         ArrayList<ArrayList<String>> batchFT= new ArrayList<ArrayList<String>>();

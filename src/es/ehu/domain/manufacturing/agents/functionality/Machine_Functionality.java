@@ -510,47 +510,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 //                        ACLMessage acknowledge = myAgent.blockingReceive(echotemplate,1000);
                         AddToExpectedMsgs(batchAgentName,"PLCdata",MessageContent);
 
-//                        if(acknowledge==null) {
-//                            String informQoS = "16" + "/div/" + "negotiation"+ "/div/" +"PLCdata"+ "/div/" +batchAgentName+ "/div/" +MessageContent;
-//                            sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
-//                            ACLMessage QoSR = myAgent.blockingReceive(QoStemplate, 1000);
-//                            if(QoSR==null) {//si tampoco contesta el QoS se asume que esta aislado
-//                                LOGGER.error("I'm probably isolated.");
-//                                myAgent.state="idle";
-//                                myAgent.change_state=true; //cambia a estado idle sin usar ACLs
-////                        sendACLMessage(16, myAgent.getAID(), "control","control of "+myAgent.getLocalName(),"setstate idle",myAgent);
-//                                LOGGER.error("Passing to idle");
-//                            }else if(QoSR.getContent().contains("confirmed")){
-//                                System.out.println("Batch did not receive the message.");
-//                                boolean f=false;
-//                                for(int i=0;i<myAgent.ReportedAgents.size();i++){
-//                                    myAgent.ReportedAgents.get(i).equals(batchAgentName);
-//                                    f=true;
-//                                }
-//                                if(!f){
-//                                    myAgent.ReportedAgents.add(batchAgentName);//si no se ha denunciado el agente añadirlo a la lista
-//                                }
-//                            }else{
-//                                System.out.println("Error ignored.");
-//                            }
-//                        }
-                    }else{     //si no se recibe respuesta denunciar porblema al QoS
-//                        String informQoS="16"+"/div/"+"control"+"/div/"+"BatchAgentID"+"/div/"+"sa"+"/div/"+"get * parent=" + batchName;
-//                        sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
-//                        ACLMessage QoSR= myAgent.blockingReceive(QoStemplate,1000);
-//                        if(QoSR==null) { //si tampoco contesta el QoS se asume ue esta aislado
-//                            LOGGER.error("I'm probably isolated.");
-//                            myAgent.state="idle";
-//                            myAgent.change_state=true;
-//                        }
-//                        boolean f=false;
-//                        for(int i=0;i<myAgent.ReportedAgents.size();i++){
-//                            myAgent.ReportedAgents.get(i).equals("sa");
-//                            f=true;
-//                        }
-//                        if(!f){
-//                            myAgent.ReportedAgents.add("sa");//si no se ha denunciado el agente añadirlo a la lista
-//                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -745,7 +704,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             ExpMsg[2]=content;
             Date date = new Date();
             long instant = date.getTime();
-            instant=instant+1000; //añade una espera de 1 seg
+            instant=instant+2000; //añade una espera de 2 seg
             ExpMsg[3]=instant;
             myAgent.expected_msgs.add(ExpMsg);
         }

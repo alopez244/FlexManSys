@@ -90,7 +90,7 @@ public class QoSManagerAgent extends Agent {
                                     add_to_error_list("not_found", msg.getSender().getLocalName(), "", "", "");
                                     sendACL(ACLMessage.INFORM, "D&D", "not_found", msgtoDD);
                                 } else {
-                                    LOGGER.info("Receiver and sender are online, although message is lost. Bridge by D&D.");
+                                    LOGGER.info("Receiver and sender are online, although message is lost.");
                                     sendACL(ACLMessage.INFORM, "D&D", "msg_lost", msg.getContent());
                                 }
                             } else if (command.equals("msg_received") && n == 1) {
@@ -525,13 +525,13 @@ public class QoSManagerAgent extends Agent {
                 return "no_answer";
             }
         }
-        public void report_back(ACLMessage msg){ //Funcion especial de respuesta confirmando error de comunicacion
-            msg.setPerformative(7);
-            msg.addReceiver(msg.getSender());
-            msg.setOntology("error_confirmation");
-            msg.setContent(msg.getContent());
-            msg.setConversationId(msg.getConversationId());
-            send(msg);
+        public void report_back(ACLMessage msg){ //Funcion especial de respuesta confirmando error de comunicacion habilitado para acknowledge nuevo
+            ACLMessage confirm=new ACLMessage(ACLMessage.CONFIRM);
+            confirm.addReceiver(msg.getSender());
+            confirm.setOntology(msg.getOntology());
+            confirm.setContent(msg.getContent());
+            confirm.setConversationId(msg.getConversationId());
+            send(confirm);
         }
         public void sendACL(int performative,String receiver,String ontology,String content){ //Funcion estándar de envío de mensajes
             AID receiverAID=new AID(receiver,false);

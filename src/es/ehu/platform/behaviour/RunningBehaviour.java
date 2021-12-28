@@ -51,8 +51,6 @@ public class RunningBehaviour extends SimpleBehaviour {
 	private long NextActivation;
 	private Boolean endFlag;
 	private AID QoSID = new AID("QoSManagerAgent", false);
-	private MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-			MessageTemplate.MatchOntology("acl_error"));
 	// Constructor. Create a default template for the entry messages
 	public RunningBehaviour(MWAgent a) {
 		super(a);
@@ -60,6 +58,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 		this.myAgent = a;
 		this.template = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_DATA),
 				MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+
 	}
 
 	// Constructor. Use the template received as parameter
@@ -87,6 +86,8 @@ public class RunningBehaviour extends SimpleBehaviour {
 		LOGGER.entry();
 		Object[] receivedMsgs = null;
 
+
+		//****************** Etapa de checkeo de mensajes de acknowledge
 		for(int i=0;i<myAgent.expected_msgs.size();i++){
 			Object[] exp_msg;
 			exp_msg=myAgent.expected_msgs.get(i);
@@ -97,9 +98,9 @@ public class RunningBehaviour extends SimpleBehaviour {
 			long timeout=(long) exp_msg[3];
 			Date date = new Date();
 			long instant = date.getTime();
-			MessageTemplate ack_template=MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchConversationId(convID),
+			MessageTemplate ack_template=MessageTemplate.and(MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchConversationId(convID),
 					MessageTemplate.MatchSender(exp_msg_sender)),
-					MessageTemplate.MatchContent(content));
+					MessageTemplate.MatchContent(content)),MessageTemplate.MatchPerformative(ACLMessage.CONFIRM));
 			ACLMessage ack= myAgent.receive(ack_template);
 			if(ack==null){
 				if(instant>timeout){
@@ -121,32 +122,33 @@ public class RunningBehaviour extends SimpleBehaviour {
 			}else{
 				myAgent.expected_msgs.remove(i);
 			}
-
 		}
+		//****************** Fin de etapa de checkeo de mensajes de acknowledge
 
-		ACLMessage msg = myAgent.receive(template);
-		receivedMsgs = manageReceivedMsg(msg);
-
-		Object result = myAgent.functionalityInstance.execute(receivedMsgs);
-		endFlag = Boolean.valueOf(result.toString());
-
-		manageExecutionResult(result);
-		//****************** Consigue el estado actual de la replica.
+		//****************** Etapa de actualización de replicas
+		// Consigue el estado actual de la replica cuando se recibe cualquier mensaje. A través de un template se pueden filtrar.
 		String currentState = null;
-
-		if(!myAgent.antiloopflag&&msg!=null) {
-			if(msg.getPerformative()!=6){
+		ACLMessage any_msg = myAgent.receive();
+		if(any_msg!=null){
+			myAgent.putBack(any_msg);
+			if(!myAgent.antiloopflag) { //el flag de antiloop evita bucles infinitos acotando un tramo de código
 				currentState = (String) ((AvailabilityFunctionality) myAgent.functionalityInstance).getState();
 				if (currentState != null) {
 					LOGGER.debug("Send state");
 					myAgent.sendStateToTracking(currentState);
 				}
 			}
-
 		}
-//		else{
-//			myAgent.antiloopflag=false;
-//		}
+		//****************** Fin de etapa de actualización de replicas
+
+
+		//***************** Etapa de ejecución de funtionality
+		ACLMessage msg = myAgent.receive(template);
+		receivedMsgs = manageReceivedMsg(msg);
+		Object result = myAgent.functionalityInstance.execute(receivedMsgs);
+		endFlag = Boolean.valueOf(result.toString());
+		manageExecutionResult(result);
+		//***************** Fin de etapa de ejecución de funtionality
 
 //		Serializable state = null;
 //		try {
@@ -306,7 +308,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 		ExpMsg[2]=content;
 		Date date = new Date();
 		long instant = date.getTime();
-		instant=instant+2000; //añade una espera de 1 seg
+		instant=instant+2000; //añade una espera de 2 seg
 		ExpMsg[3]=instant;
 		myAgent.expected_msgs.add(ExpMsg);
 	}

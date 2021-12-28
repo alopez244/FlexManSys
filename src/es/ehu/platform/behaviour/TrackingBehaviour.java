@@ -99,7 +99,7 @@ public class TrackingBehaviour extends SimpleBehaviour {
 							((msg.getContent()==null)));
 					
 //					((AvailabilityFunctionality)myAgent.functionalityInstance).setState(msg.getContentObject());  //anterior
-
+					Acknowledge(msg);
 					((AvailabilityFunctionality)myAgent.functionalityInstance).setState(msg.getContent());
 					LOGGER.debug(myAgent.cmpID+"("+((MWAgent) myAgent).getLocalName()+") < " + myAgent.cmpID+"("+msg.getSender().getLocalName()+"):"
 							+ "state("+stateClassName+")");
@@ -175,8 +175,18 @@ public class TrackingBehaviour extends SimpleBehaviour {
 
 
 	}
+	public void Acknowledge(ACLMessage msg){
+		sendACLMessage(ACLMessage.CONFIRM,msg.getSender(),msg.getOntology(),msg.getConversationId(),msg.getContent());
+	}
+	public void sendACLMessage(int performative, AID reciever, String ontology, String conversationId, String content) {
+		ACLMessage msg = new ACLMessage(performative); //envio del mensaje
+		msg.addReceiver(reciever);
+		msg.setOntology(ontology);
+		msg.setConversationId(conversationId);
+		msg.setContent(content);
+		myAgent.send(msg);
+	}
 
-	
 	public int onEnd() {
 
 		return transitionFlag;
