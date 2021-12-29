@@ -1102,14 +1102,14 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         if (conversationId==null) conversationId=String.valueOf(cmdId++);
 
         //Calcular quiénes negocian:
-        // leer del registro para este "seID" la lista entera de procNodes cada uno con sus refServId. - leo del registro los serviceid que requiere el seID
-        // buscar procnodes que tengan estas refServId > lista de los procNodes negociadores
+        // leer del registro para este "seID" la lista entera de procNodes cada uno con sus HostedElements. - leo del registro los serviceid que requiere el seID
+        // buscar procnodes que tengan estas HostedElements > lista de los procNodes negociadores
         // si no hay negociarres return "-4"; //TODO
 //        String targets ="";
 
-        String refServID=processCmd("get (get * parent=(get * parent="+seID+" category=restrictionList)) attrib=attribValue", conversationId);
+        String HostedElements=processCmd("get (get * parent=(get * parent="+seID+" category=restrictionList)) attrib=attribValue", conversationId);
         //si hay restricción la añado al filtro, en caso contrario solo busco procNode
-        String Alltargets = processCmd("get * category=pNodeAgent"+((refServID.length()>0)?" refServID="+refServID:""), conversationId);
+        String Alltargets = processCmd("get * category=pNodeAgent"+((HostedElements.length()>0)?" HostedElements="+HostedElements:""), conversationId);
 
         if (Alltargets.length()<=0) return "-4";
 

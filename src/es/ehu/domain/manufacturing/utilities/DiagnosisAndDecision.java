@@ -19,7 +19,7 @@ import java.util.ArrayList;
 
 public class DiagnosisAndDecision extends Agent{
 //    private volatile AID QoSID = new AID("QoSManagerAgent", false);
-
+    private int convIDCounter=1;
     static final Logger LOGGER = LogManager.getLogger(DiagnosisAndDecision.class.getName());
     private Agent myAgent=this;
     public String control="automatic";
@@ -48,7 +48,7 @@ public class DiagnosisAndDecision extends Agent{
 
                                 if(msg.getContent().contains("batchagent")||msg.getContent().contains("orderagent")||msg.getContent().contains("mplanagent")){ //si es agente de aplicacion
                                     try {
-                                        ACLMessage state= sendCommand(myAgent, "get "+msg.getContent()+" attrib=state", "ApplicationAgentState"); //consigue el estado de la replcia caida
+                                        ACLMessage state= sendCommand(myAgent, "get "+msg.getContent()+" attrib=state", msg.getContent()+"_State_"+convIDCounter); //consigue el estado de la replcia caida
                                         LOGGER.warn(msg.getContent()+" was in "+state.getContent()+" state.");
                                         if(!state.getContent().equals("tracking")){ //si no estaba en tracking estaría en running o bootToRunning y requiere una acción
                                             if (msg.getContent().contains("batchagent")) { //en caso de ser batch habría que hibernar el agente máquina hasta recuperar la replica
@@ -57,15 +57,15 @@ public class DiagnosisAndDecision extends Agent{
                                                 sendACL(16, machine, "control", "setstate idle");
                                             }
                                         }
-                                            ACLMessage parent= sendCommand(myAgent, "get "+msg.getContent()+" attrib=parent", "ApplicationAgentParent");
-                                            ACLMessage hosting_node=sendCommand(myAgent, "get "+msg.getContent()+" attrib=node", "ApplicationAgentPNode");
-//                                            ACLMessage reply3= sendCommand(myAgent, "get * parent="+reply2.getContent()+" state=running" , "ApplicationAgentRunning");
-//                                            sendACL(7, reply3.getContent(), "delete_replica", msg.getContent()); //TODO innecesario con el nuevo sistema porque esta centralizado en el SA. ELIMINAR de los agentes
-                                            sendCommand(myAgent, "del "+msg.getContent(),"UnregisterReplica");
+                                            ACLMessage parent= sendCommand(myAgent, "get "+msg.getContent()+" attrib=parent", msg.getContent()+"_parent_"+convIDCounter);
+                                            ACLMessage hosting_node=sendCommand(myAgent, "get "+msg.getContent()+" attrib=node", msg.getContent()+"_Hosting_PNode_"+convIDCounter);
+//                                            sendACL(7, reply3.getContent(), "delete_replica", msg.getContent()); //TODO innecesario con el nuevo sistema porque esta centralizado en el SA. ELIMINAR esta parte de los agentes de aplicación
+                                            sendCommand(myAgent, "del "+msg.getContent(),"Unregister_"+msg.getContent()+"_"+convIDCounter);
                                             if(!PingAgent("pnodeagent"+hosting_node.getContent())){
-                                                sendCommand(myAgent, "del pnodeagent"+hosting_node,"UnregisterProcessNode"); //nodo caido, se desregistra del SA
-                                            }else{
-                                                ACLMessage hosted_elements=sendCommand(myAgent, "get "+hosting_node+" attrib=refServID", "ApplicationAgentPNode");
+                                                //TODO reiniciar todas las replicas de este nodo
+                                                sendCommand(myAgent, "del pnodeagent"+hosting_node.getContent(),"Unregister_pnodeagent"+hosting_node.getContent()+convIDCounter); //nodo caido, se desregistra del SA
+                                            }else{  //nodo no caido, pero replica sí
+                                                ACLMessage hosted_elements=sendCommand(myAgent, "get "+"pnodeagent"+hosting_node.getContent()+" attrib=HostedElements", "pnodeagent"+hosting_node.getContent()+"_HE_"+convIDCounter);
                                                 String[] HE=new String[1];
                                                 if(hosted_elements.getContent().contains(",")){
                                                     HE=hosted_elements.getContent().split(",");
@@ -88,7 +88,7 @@ public class DiagnosisAndDecision extends Agent{
                                                         }
                                                     }
                                                 }
-                                                sendCommand(myAgent, "set "+hosting_node+" refServID="+new_HE, "ApplicationAgentPNode");
+                                                ACLMessage set= sendCommand(myAgent, "set pnodeagent"+hosting_node.getContent()+" HostedElements="+new_HE, "pnodeagent"+hosting_node.getContent()+"_set_hosting_elements_"+convIDCounter);
                                             }
                                             boolean done=restart_replica(parent.getContent(),state.getContent());
                                             if(done){
@@ -120,10 +120,15 @@ public class DiagnosisAndDecision extends Agent{
                             LOGGER.error(msg.getContent()+" is either dead or isolated.");
                             LOGGER.warn("MANUAL MODE: User must take a decision to solve the issue");
                         }
-
+                        convIDCounter++;
                     } else if (msg.getOntology().equals("msg_lost")&&msg.getSender().getLocalName().equals("QoSManagerAgent")) {
-                        LOGGER.warn("Message lost.");
+                        LOGGER.warn("Inform operator: Message lost."+"\n"); //si se pierde un mensaje no se puede hacer nada. Se avisa al operador para que actue en consecuencia.
+
                         String[] msgparts=msg.getContent().split("/div/");
+                        String msgreceiver = msgparts[0];
+                        String intercepted_msg = msgparts[1];
+                        System.out.println("Receiver: "+msgreceiver+"\n");
+                        System.out.println("Content: "+intercepted_msg+"\n");
 //                        String performative=msgparts[0];
 //                        String ontology=msgparts[1];
 //                        String convID=msgparts[2];
@@ -140,13 +145,11 @@ public class DiagnosisAndDecision extends Agent{
                         }else{
                             LOGGER.warn("MANUAL MODE: User must take a decision to solve the issue");
                         }
-
-                        //TODO añadir aquí bridge de msg
-
+                        LOGGER.warn("Consider taking actions to solve the issue if needed");
                     } else if (msg.getOntology().equals("timeout")&&msg.getSender().getLocalName().equals("QoSManagerAgent")) {
                         //idle aqui
                         if(control.equals("automatic")){
-                            LOGGER.error("Timeout thrown. Machine agent "+msg.getContent()+" idling");
+                            LOGGER.error("Double timeout thrown. Machine agent "+msg.getContent()+" idling");
                             sendACL(16,msg.getContent(),"control","setstate idle");
                         }else{
                             LOGGER.error("Timeout thrown. Machine agent "+msg.getContent()+" should idle");
@@ -262,11 +265,17 @@ public class DiagnosisAndDecision extends Agent{
                 NegotiatingPnodes.add(AllPnode[i]);
             }
             for(int i=0;i<NegotiatingPnodes.size();i++){
-                ACLMessage valid_nodes  = sendCommand(myAgent, "get "+NegotiatingPnodes.get(i)+ " attrib=refServID","CheckIfValidNode"); //obtiene los nodos validos
+                ACLMessage valid_nodes  = sendCommand(myAgent, "get "+NegotiatingPnodes.get(i)+ " attrib=HostedElements","CheckIfValidNode");
+                LOGGER.info(NegotiatingPnodes.get(i)+" hosts "+valid_nodes.getContent());
                 if(valid_nodes.getContent().contains(parent)){
+                    LOGGER.info(NegotiatingPnodes.get(i)+" is not valid because it already hosts "+parent);
                     NegotiatingPnodes.remove(i);
+                    i--;
+                }else{
+                    LOGGER.info(NegotiatingPnodes.get(i)+" could host "+parent);
                 }
             }
+
             String ToNegotiate="";
             for(int i=0; i<NegotiatingPnodes.size();i++){
                 if(i==0){
@@ -275,6 +284,7 @@ public class DiagnosisAndDecision extends Agent{
                     ToNegotiate=ToNegotiate+","+NegotiatingPnodes.get(i);
                 }
             }
+            LOGGER.debug("Participating nodes: "+ToNegotiate);
             if(ToNegotiate.equals("")){
                 LOGGER.warn("There is no node available to store a replica");
                 return false;
@@ -298,8 +308,11 @@ public class DiagnosisAndDecision extends Agent{
                 sendCommand(myAgent,negotationdata , "Restore_"+state+"_Replica");
                 return true;
             }
+        }else{
+            LOGGER.error("Something went wrong restarting a replica");
         }
         } catch (Exception e) {
+            LOGGER.error("Something went wrong restarting a replica");
             e.printStackTrace();
         }
         return false;

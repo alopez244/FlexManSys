@@ -132,7 +132,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     public String getState(){
     myAgent.antiloopflag=true;
         String state="";
-
+        ArrayList<String> updated_replicas=new ArrayList<String>();
         ArrayList<String> Finishtimes=take_finish_times(finish_times_of_batch);
 
         for(int i=0;i<productsTraceability.size();i++){
@@ -181,6 +181,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             }else{
                 ACLMessage parent = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "GetBatchParent");
                 ACLMessage replicasACL = sendCommand(myAgent, "get * state=tracking parent=" + parent.getContent(), "GetBatchUpdatedReplicas");
+
                 if(replicasACL.getContent().contains(",")){
                     replicas= replicasACL.getContent().split(",");
                 }else{
@@ -194,6 +195,10 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     state=state+"/div1/"+replicas[i];
                 }
             }
+            for(int i=0;i<replicas.length;i++){ //actualiza las replicas de este agente
+                updated_replicas.add(replicas[i]);
+            }
+            myAgent.replicas=updated_replicas;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -395,7 +400,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             }else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getContent().equals("confirmed_timeout")){
                 QoSresponse_flag=true;
                 System.out.println("Timeout confirmed.");
-            } else if (msg.getPerformative() == ACLMessage.REQUEST) {
+            } else if (msg.getPerformative() == ACLMessage.REQUEST&&msg.getOntology().equals("negotiation")) {
 //                sendACLMessage(7,msg.getSender(),"Acknowledge",msg.getConversationId(),"Received",myAgent);
                 Acknowledge(msg);
 

@@ -118,9 +118,11 @@ public class RunningBehaviour extends SimpleBehaviour {
 						AddToExpectedMsgs(QoSID.getLocalName(),convID,report);
 					}
 					myAgent.expected_msgs.remove(i);
+					i--;
 				}
 			}else{
 				myAgent.expected_msgs.remove(i);
+				i--;
 			}
 		}
 		//****************** Fin de etapa de checkeo de mensajes de acknowledge

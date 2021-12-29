@@ -378,7 +378,7 @@ public class Planner extends Agent {
 
 
             // TODO mas adelante mirar lo de las restricciones --> Si no hay que escribirlas en el SystemModelAgent buscar una solucion
-            //restrictionList.put("refServID", "id55");
+            //restrictionList.put("HostedElements", "id55");
             //restrictionLists.put("pNodeAgent", restrictionList);
 
             //For structure is used to register all the elements

@@ -121,16 +121,19 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
             LOGGER.info("id="+action.who);
 //            ACLMessage hosted_elements =null;
             try {
-//                hosted_elements = sendCommand("get "+myAgent.getLocalName()+" attrib=refServID");
+//                hosted_elements = sendCommand("get "+myAgent.getLocalName()+" attrib=HostedElements");
                     if(!ListAttrib.contains(seID)) {
-                        if (firstime) {
+                        ACLMessage Actual_Attrib= sendCommand("get " + myAgent.getLocalName() + " attrib=HostedElements");
+                        ListAttrib=Actual_Attrib.getContent(); //primero actualizamos la variable (para ejecucion de planes de manera consecutiva sin reinicializar el sistema).
+
+                        if (ListAttrib.equals("")) {
                             ListAttrib = seID;
-                            firstime = false;
+//                            firstime = false;
                         } else {
                             ListAttrib = ListAttrib + "," + seID;
                         }
                         LOGGER.debug("ACTUAL ATRIBUTES: " + ListAttrib);
-                        sendCommand("set " + myAgent.getLocalName() + " refServID=" + ListAttrib);
+                        sendCommand("set " + myAgent.getLocalName() + " HostedElements=" + ListAttrib);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

@@ -255,10 +255,10 @@ public class DomApp_Functionality extends Dom_Functionality{
             try {
 
 //                    reply = sendCommand(myAgent, "get (get * parent=(get * parent=" + elementID + " category=restrictionList)) attrib=attribValue", conversationId);
-//                    String refServID = null;
+//                    String HostedElements = null;
 //                    if (reply != null)
-//                        refServID = reply.getContent();
-//                    reply = sendCommand(myAgent, "get * category=pNodeAgent" + ((refServID.length() > 0) ? " refServID=" + refServID : ""), conversationId);
+//                        HostedElements = reply.getContent();
+//                    reply = sendCommand(myAgent, "get * category=pNodeAgent" + ((HostedElements.length() > 0) ? " HostedElements=" + HostedElements : ""), conversationId);
 //
 //                    if (reply != null) {
 //                        targets = reply.getContent();
@@ -551,7 +551,7 @@ public class DomApp_Functionality extends Dom_Functionality{
         }
     }
 
-    private String getTargets(String refServID) {
+    private String getTargets(String HostedElements) {
         String targets = "";
         ACLMessage All_process_nodes = null;
         try {
@@ -570,8 +570,8 @@ public class DomApp_Functionality extends Dom_Functionality{
             try{
 
             for (int i = 0; i < ListOfAllPnodes.length; i++) {
-                ACLMessage UsedPNodes = sendCommand(myAgent, "get " + ListOfAllPnodes[i] + " attrib=refServID", "CheckIfValidNode"); //todas los pnode.
-                if (!UsedPNodes.getContent().contains(refServID)) {
+                ACLMessage UsedPNodes = sendCommand(myAgent, "get " + ListOfAllPnodes[i] + " attrib=HostedElements", "CheckIfValidNode"); //todas los pnode.
+                if (!UsedPNodes.getContent().contains(HostedElements)) {
                     ParticipatingPnodes.add(ListOfAllPnodes[i]);
                 }
             }
@@ -622,7 +622,7 @@ public class DomApp_Functionality extends Dom_Functionality{
             ACLMessage parent= sendCommand(myAgent, "get "+myAgent.getLocalName()+" attrib=parent", myAgent.getLocalName()+"_Parent");
             ACLMessage myAgent_node=sendCommand(myAgent, "get "+myAgent.getLocalName()+" attrib=node", myAgent.getLocalName()+"_PNodeNumber");
             String hosting_node="pnodeagent"+myAgent_node.getContent();
-            ACLMessage hosted_elements=sendCommand(myAgent, "get "+hosting_node+" attrib=refServID", myAgent.getLocalName()+"_HENode");
+            ACLMessage hosted_elements=sendCommand(myAgent, "get "+hosting_node+" attrib=HostedElements", myAgent.getLocalName()+"_HENode");
             String[] HE=new String[1];
             if(hosted_elements.getContent().contains(",")){
                 HE=hosted_elements.getContent().split(",");
@@ -637,6 +637,7 @@ public class DomApp_Functionality extends Dom_Functionality{
             for(int i=0;i< updated_hosted_elements.size();i++){
                 if(updated_hosted_elements.get(i).contains(parent.getContent())){
                     updated_hosted_elements.remove(i);
+                    i--;
                 }else{
                     if(i==0){
                         new_HE=updated_hosted_elements.get(i);
@@ -645,7 +646,7 @@ public class DomApp_Functionality extends Dom_Functionality{
                     }
                 }
             }
-            sendCommand(myAgent, "set "+hosting_node+" refServID="+new_HE, myAgent.getLocalName()+"_EraseHostedElements");
+            sendCommand(myAgent, "set "+hosting_node+" HostedElements="+new_HE, myAgent.getLocalName()+"_EraseHostedElements");
         } catch (Exception e) {
             e.printStackTrace();
         }
