@@ -50,8 +50,8 @@ public class MWAgent extends Agent {
     public int period = -1;
     public String ActualState=null;
     public ArrayList<String> replicas=new ArrayList<String>();
-    public static ArrayList<String> ReportedAgents=new ArrayList<String>(); //agentes reportados
-    public ArrayList<String> IgnoredReplicas=new ArrayList<String>();
+//    public static ArrayList<String> ReportedAgents=new ArrayList<String>(); //agentes reportados
+//    public ArrayList<String> IgnoredReplicas=new ArrayList<String>();
     public String cmpID = null;
     public boolean antiloopflag=false;
     public String state ="";    //para uso en autoidle
@@ -62,6 +62,7 @@ public class MWAgent extends Agent {
     public Object initialExecutionState = null;
     public ArrayList<Object[]> expected_msgs= new ArrayList<Object[]>();
     private int convIDCounter=1;
+    public ArrayList<ACLMessage> MsgsWhileIdling=new ArrayList<ACLMessage>(); //Lista de mensajes recibidos mientras machine está en idle
 
     // Parámetros de configuración
     public boolean mwmStoresExecutionState = true;

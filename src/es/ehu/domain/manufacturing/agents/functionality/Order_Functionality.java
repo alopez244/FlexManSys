@@ -62,7 +62,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         }
 
         public void run() {
-            System.out.println(batch+" batch expected finish time: "+expected_finish_time);
+            System.out.println("***********************************"+batch+" batch expected finish time: "+expected_finish_time+"***********************************");
             while (!exit_timeout) {
                 while (expected_finish_time.after(getactualtime()) && !exit_timeout) {
 
@@ -73,7 +73,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                         if(batch_to_update.equals(batch)) {
                             expected_finish_time = new_expected_finish_time;
                             System.out.println("BATCH FINISH-TIME UPDATED");
-                            System.out.println(batch+" batch expected finish time: "+expected_finish_time);
+                            System.out.println("***********************************"+batch+" batch expected finish time: "+expected_finish_time+"***********************************");
                             //System.out.println("Batch " + batch + " finish time updated to: " + expected_finish_time);
                             new_expected_finish_time = null;
                             batch_to_update=null;
@@ -82,19 +82,21 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 }
                 if (!expected_finish_time.after(getactualtime()) && !exit_timeout&&!QoSreported) {
                     System.out.println("Order has thrown a timeout on batch " + batch + ". Checking with QoS.");
-                    sendACLMessage(ACLMessage.FAILURE, QoSID, "timeout", "order_timeout", batch.substring(0, 2) + "/" + batch, myAgent); //avisa al QoS de fallo por timeout
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                    if (!QoSresponse_flag) { //En caso de no recibir respuesta del QoS a tiempo el order agent se detecta asi mismo aislado
-                        System.out.println("I'm probably isolated. Shutting down entire node");
-                        System.exit(0);  //mata a su nodo
-                    } else {
-                        QoSresponse_flag = false;
-                    }
+                    sendACLMessage(ACLMessage.FAILURE, QoSID, "timeout", "order_timeout_"+batch, batch.substring(0, 2) + "/" + batch, myAgent); //avisa al QoS de fallo por timeout
+                    Object[] ExpMsg=AddToExpectedMsgs(QoSID.getLocalName(),"order_timeout_"+batch,batch.substring(0, 2) + "/" + batch);
+                    myAgent.expected_msgs.add(ExpMsg);
+//                    try {
+//                        Thread.sleep(2000);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//
+//                    if (!QoSresponse_flag) { //En caso de no recibir respuesta del QoS a tiempo el order agent se detecta asi mismo aislado
+//                        System.out.println("I'm probably isolated. Shutting down entire node");
+//                        System.exit(0);  //mata a su nodo
+//                    } else {
+//                        QoSresponse_flag = false;
+//                    }
                     QoSreported=true;
                 }
                 if (batch_to_take_down.equals(batch)) { //cuando la variable volatil batch_to_take_down coincide con el batch del timeout el timeout finaliza porque el batch ha terminado
@@ -261,10 +263,10 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 MessageTemplate.MatchOntology("update_timeout"));
         this.template5=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                 MessageTemplate.MatchOntology("delay"));
-        this.template6=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                MessageTemplate.MatchOntology("delete_replica"));
-        this.template7=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                MessageTemplate.MatchOntology("restore_replica"));
+//        this.template6=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+//                MessageTemplate.MatchOntology("delete_replica"));
+//        this.template7=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+//                MessageTemplate.MatchOntology("restore_replica"));
         this.myAgent = myAgent;
 
         // Crear un nuevo conversationID
@@ -377,7 +379,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 }
                 deserializedMessage = deserializeMsg(msg.getContent());
                 String batchNumber =deserializedMessage.get(0).get(0).get(3).get(0);
-                while(!batch_to_take_down.equals("")){} //espera al reseteo de la variable para escribir el batch (evita bugs)
+                while(!batch_to_take_down.equals("")){} //espera al reseteo de la variable para escribir el batch (evita algunos bugs)
                 batch_to_take_down=batchNumber;
                 batchTraceability = addNewLevel(batchTraceability, deserializedMessage,false);
             }
@@ -419,7 +421,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         ACLMessage msg3=myAgent.receive(template3);
         if(msg3!=null){            //confirmación de timeout
             myAgent.msgFIFO.add((String) msg3.getContent());
-            QoSresponse_flag=true;
+//            QoSresponse_flag=true;
             batch_to_take_down=msg3.getContent();
         }
         ACLMessage msg4=myAgent.receive(template4);
@@ -450,37 +452,37 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 System.out.println("Not my batch, something went wrong");
             }
         }
-        ACLMessage msg6=myAgent.receive(template6);
-        if(msg6!=null){
-            boolean f=false;
-            for(int i=0;i<myAgent.IgnoredReplicas.size();i++){ //se elimina de la lista de ignorados en caso de que esté
-                if(myAgent.IgnoredReplicas.get(i).equals(msg.getContent())){
-                    myAgent.IgnoredReplicas.remove(i);
-                    f=true;
-                }
-            }
-            if(f==false){ //en caso de no encontrarlo en la lista de ignorados, es posile que aun se encuentre en la lista de replicas normal
-                for(int i=0;i<myAgent.replicas.size();i++){
-                    if(myAgent.replicas.get(i).equals(msg.getContent())){
-                        myAgent.replicas.remove(i);
-                    }
-                }
-            }
-        }
-        ACLMessage msg7=myAgent.receive(template7);
-        if(msg7!=null){
-            for(int i=0;i<myAgent.IgnoredReplicas.size();i++) { //se elimina de la lista de ignorados en caso de que esté
-                if (myAgent.IgnoredReplicas.get(i).equals(msg.getContent())) {
-                    myAgent.replicas.add(myAgent.IgnoredReplicas.get(i)); //se vuelve a añadir a la lista de replicas
-                    for(int j=0; j<myAgent.ReportedAgents.size();j++){
-                        if(myAgent.ReportedAgents.get(j).equals(myAgent.IgnoredReplicas.get(i))){
-                            myAgent.ReportedAgents.remove(j); // se elimina tambien de la lista de agentes reportados
-                        }
-                    }
-                    myAgent.IgnoredReplicas.remove(i);
-                }
-            }
-        }
+//        ACLMessage msg6=myAgent.receive(template6);
+//        if(msg6!=null){
+//            boolean f=false;
+//            for(int i=0;i<myAgent.IgnoredReplicas.size();i++){ //se elimina de la lista de ignorados en caso de que esté
+//                if(myAgent.IgnoredReplicas.get(i).equals(msg.getContent())){
+//                    myAgent.IgnoredReplicas.remove(i);
+//                    f=true;
+//                }
+//            }
+//            if(f==false){ //en caso de no encontrarlo en la lista de ignorados, es posile que aun se encuentre en la lista de replicas normal
+//                for(int i=0;i<myAgent.replicas.size();i++){
+//                    if(myAgent.replicas.get(i).equals(msg.getContent())){
+//                        myAgent.replicas.remove(i);
+//                    }
+//                }
+//            }
+//        }
+//        ACLMessage msg7=myAgent.receive(template7);
+//        if(msg7!=null){
+//            for(int i=0;i<myAgent.IgnoredReplicas.size();i++) { //se elimina de la lista de ignorados en caso de que esté
+//                if (myAgent.IgnoredReplicas.get(i).equals(msg.getContent())) {
+//                    myAgent.replicas.add(myAgent.IgnoredReplicas.get(i)); //se vuelve a añadir a la lista de replicas
+//                    for(int j=0; j<myAgent.ReportedAgents.size();j++){
+//                        if(myAgent.ReportedAgents.get(j).equals(myAgent.IgnoredReplicas.get(i))){
+//                            myAgent.ReportedAgents.remove(j); // se elimina tambien de la lista de agentes reportados
+//                        }
+//                    }
+//                    myAgent.IgnoredReplicas.remove(i);
+//                }
+//            }
+//        }
         ACLMessage msg5=myAgent.receive(template5);
         if(msg5!=null){                                 //Genera el timeout al recibir el delay de cada batch
             myAgent.msgFIFO.add((String) msg5.getContent());
@@ -512,7 +514,6 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
                 String FT_string = sdf.format(expected_FT);
                 batch_last_items_ft.get(temp).add(FT_string);
-
                 Ordertimeout t = new Ordertimeout(expected_FT, batchref);
                 t.start();
             }else{

@@ -2,6 +2,8 @@ package es.ehu.domain.manufacturing.agents.functionality;
 
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.ControlBehaviour;
+import es.ehu.platform.behaviour.NegotiatingBehaviour;
+import es.ehu.platform.utilities.Cmd;
 import es.ehu.platform.utilities.XMLReader;
 import jade.Boot;
 import jade.core.AID;
@@ -14,10 +16,13 @@ import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import org.apache.commons.lang.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -245,6 +250,84 @@ public class DomApp_Functionality extends Dom_Functionality{
 
     }
 
+    public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData) {
+        // TODO
+
+        if(SystemUtils.IS_OS_WINDOWS){
+            String result=null;
+            try {
+                Process proc = Runtime.getRuntime().exec("wmic cpu get LoadPercentage");
+                BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+
+                String s = null;
+                while((s = stdInput.readLine()) != null) {
+                    if (!s.equals("")){
+                        String s_trim=s.trim();
+                        try {
+                            int i =Integer.parseInt(s_trim);
+                            result=s;
+                        } catch (NumberFormatException nfe) {
+//                                System.out.println(s + " is not a number");
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+            System.out.println(result);
+            return Long.parseLong(result);
+
+        }else {  //el SO es linux
+            String cpu_usage="100";
+            try {
+                Process proc = Runtime.getRuntime().exec("sar -p 1 2");
+                BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+
+                String s = null;
+                String s1 = null;
+                while((s = stdInput.readLine()) != null) {
+                    s1=s;
+//                    if(s.contains("Media")) { //o average segun que idioma tenga ubuntu
+//
+//                    }
+                }
+                String[] parts = s1.split( //coge el ultimo valor no nulo
+                        " ");
+                System.out.println(parts[parts.length - 1]);
+                cpu_usage=parts[parts.length - 1];
+
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+            return Long.parseLong(cpu_usage);
+        }
+    }
+
+    public int checkNegotiation(String conversationId, String sAction, double negReceivedValue, long negScalarValue, boolean tieBreak, boolean checkReplies, boolean isPartialWinner, Object... negExternalData) {
+
+        LOGGER.entry(conversationId, sAction, negReceivedValue, negScalarValue);
+
+//        String seID = (String)negExternalData[0];
+//        String seNumOfItems = (String)negExternalData[1];
+//        String seOperationID = (String)negExternalData[2];
+
+        if (negReceivedValue<negScalarValue) return NegotiatingBehaviour.NEG_LOST; //pierde negociación
+        if ((negReceivedValue==negScalarValue) && !tieBreak ) return NegotiatingBehaviour.NEG_LOST; //empata negocicación pero no es quien fija desempate
+
+        LOGGER.info("es el ganador ("+negScalarValue+")");
+        if (!checkReplies) return NegotiatingBehaviour.NEG_PARTIAL_WON; // es ganador parcial, faltan negociaciones por finalizar
+
+        LOGGER.info("ejecutar "+sAction);
+
+        Cmd action = new Cmd(sAction);
+
+        if (action.cmd.equals("restore")) {
+            sendACLMessage(ACLMessage.REQUEST,myAgent.getAID(),"control",myAgent.getLocalName()+"_transition_to_running","setstate running",myAgent);
+        }
+
+        return NegotiatingBehaviour.NEG_WON;
+    }
+
     public int createAllElementsAgents(Agent seAgent, List<String> allElementsID, Hashtable<String, String> attribs, String conversationId, String redundancy, int chatID) {
 
         this.myAgent = seAgent;
@@ -253,25 +336,6 @@ public class DomApp_Functionality extends Dom_Functionality{
         for (String elementID : allElementsID) {
             // Creamos los agentes para cada elemento
             try {
-
-//                    reply = sendCommand(myAgent, "get (get * parent=(get * parent=" + elementID + " category=restrictionList)) attrib=attribValue", conversationId);
-//                    String HostedElements = null;
-//                    if (reply != null)
-//                        HostedElements = reply.getContent();
-//                    reply = sendCommand(myAgent, "get * category=pNodeAgent" + ((HostedElements.length() > 0) ? " HostedElements=" + HostedElements : ""), conversationId);
-//
-//                    if (reply != null) {
-//                        targets = reply.getContent();
-//                    }
-//                if(myAgent.getLocalName().contains("mplan")){
-//                    AID sa=new AID("sa",AID.ISLOCALNAME);
-//                    sendACLMessage(7,sa,"rdy",conversationId,"ready",myAgent); //avisa al SA de que el agente esta a la espera del trigger de la negociación
-//                }else if(myAgent.getLocalName().contains("order")){
-//                    ACLMessage running_replica= sendCommand(myAgent, "get * state=bootToRunning category=mPlanAgent", conversationId);
-//                    AID RR=new AID(running_replica.getContent(),AID.ISLOCALNAME);
-//                    sendACLMessage(7,RR,"rdy",conversationId,"ready",myAgent); //avisa al SA de que el agente esta a la espera del trigger de la negociación
-//                }
-//                myAgent.blockingReceive(MessageTemplate.MatchOntology("trigger_negotiation"));
 
                     reply = sendCommand(myAgent, "get " + elementID + " attrib=category", conversationId);
                     String seCategory = null;
@@ -290,19 +354,8 @@ public class DomApp_Functionality extends Dom_Functionality{
                     //negotiate(myAgent, targets, "max mem", "start", elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy+","+myAgent.getLocalName(), conversationId);
                     String negotiationQuery = "localneg " + targets + " criterion=max mem action=start externaldata=" + elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking") + "," + redundancy + "," + myAgent.getLocalName();
                     sendCommand(myAgent, negotiationQuery, conversationId);
-//                    myAgent.blockingReceive(MessageTemplate.MatchOntology("Negotiation_winner"));
                 }
 
-//                if(myAgent.getLocalName().contains("mplan")){
-//                    ACLMessage running_replica=sendCommand(myAgent,"get * state=bootToRunning category=orderAgent" ,conversationId);
-//                    if(running_replica!=null){
-//                        AID ReplicaRunning=new AID(running_replica.getContent(), AID.ISLOCALNAME);
-//                        myAgent.blockingReceive(MessageTemplate.MatchOntology("rdy"));
-//                        sendACLMessage(7,ReplicaRunning,"trigger_negotiation",conversationId,"",myAgent);
-//                    }else{
-//                        LOGGER.error("Son agent did not receive negotiation trigger");
-//                    }
-//                }
 
 
             } catch (Exception e) {

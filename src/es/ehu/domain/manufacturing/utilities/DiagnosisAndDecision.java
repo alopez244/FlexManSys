@@ -90,10 +90,12 @@ public class DiagnosisAndDecision extends Agent{
                                                 }
                                                 ACLMessage set= sendCommand(myAgent, "set pnodeagent"+hosting_node.getContent()+" HostedElements="+new_HE, "pnodeagent"+hosting_node.getContent()+"_set_hosting_elements_"+convIDCounter);
                                             }
-                                            boolean done=restart_replica(parent.getContent(),state.getContent());
-                                            if(done){
-                                                //TODO si estaba en running hay que despertar al machine agent
+                                            if(state.getContent().equals("tracking")){
+                                                boolean done=restart_replica(parent.getContent(),state.getContent());
+                                            }else{
+
                                             }
+
 
 
                                     } catch (Exception e) {

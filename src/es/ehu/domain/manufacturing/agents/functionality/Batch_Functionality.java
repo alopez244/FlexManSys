@@ -3,10 +3,12 @@ package es.ehu.domain.manufacturing.agents.functionality;
 import com.google.gson.Gson;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.ControlBehaviour;
+import es.ehu.platform.behaviour.NegotiatingBehaviour;
 import es.ehu.platform.behaviour.TrackingBehaviour;
 import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.Traceability;
+import es.ehu.platform.utilities.Cmd;
 import es.ehu.platform.utilities.XMLReader;
 import jade.core.AID;
 import jade.core.Agent;
@@ -237,17 +239,18 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                         System.out.println(getactualtime() + " " + myAgent.getLocalName() + " WARN " + batchreference + " batch has thrown a timeout on item number " + itemreference.get(actual_item_number) + " Checking failure with QoS Agent...");
                         QoSresponse_flag = false;
                         sendACLMessage(ACLMessage.FAILURE, QoSID, "timeout", "timeout " + batchreference, batchreference + "/" + itemreference.get(actual_item_number), myAgent); //avisa al QoS de fallo por timeout
-
-                        try {
-                            Thread.sleep(2500);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-
-                        if (!QoSresponse_flag) {
-                            System.out.println("I'm probably isolated. Shutting down entire node");
-                            System.exit(0); //Mata el nodo y los agentes que se encuentran en el
-                        }
+                        Object[] ExpMsg=AddToExpectedMsgs(QoSID.getLocalName(),"timeout " + batchreference,batchreference + "/" + itemreference.get(actual_item_number));
+                        myAgent.expected_msgs.add(ExpMsg);
+                        //                        try {
+//                            Thread.sleep(2500);
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
+//
+//                        if (!QoSresponse_flag) {
+//                            System.out.println("I'm probably isolated. Shutting down entire node");
+//                            System.exit(0); //Mata el nodo y los agentes que se encuentran en el
+//                        }
                         takedown_flag = true;
                     }
                 }
@@ -375,7 +378,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 timeout thread=new timeout();
                 thread.start(); //se inicia el timeout tras recibir delay
             }else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getContent().equals("reset_timeout")){
-                QoSresponse_flag=true;
+//                QoSresponse_flag=true;
                 reset_flag=true;
                 System.out.println("QoS has asked to reset timeout");
                 Date last_expected_finish_time=expected_finish_date;
@@ -398,12 +401,11 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 timeout thread=new timeout(); //reinicio de timeout
                 thread.start();
             }else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getContent().equals("confirmed_timeout")){
-                QoSresponse_flag=true;
-                System.out.println("Timeout confirmed.");
+//                QoSresponse_flag=true;
+                System.out.println("Timeout confirmed. Qos received report.");
             } else if (msg.getPerformative() == ACLMessage.REQUEST&&msg.getOntology().equals("negotiation")) {
-//                sendACLMessage(7,msg.getSender(),"Acknowledge",msg.getConversationId(),"Received",myAgent);
-                Acknowledge(msg);
 
+                Acknowledge(msg);
                 System.out.println("Mensaje con la informacion del PLC");
                 System.out.println("Quien envia el mensaje: " + msg.getSender());
                 System.out.println("Contenido: " + msg.getContent());
@@ -841,7 +843,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         expected_FT = convertToDateViaSqlTimestamp(new_expected_finish_time);   //el finish time se calcula segun el tiempo de operacion y la fecha actual
         delay_already_incremented = true;
         System.out.println("ITEM FINISH-TIME UPDATED");
-        System.out.println(itemreference.get(actual_item_number)+" item expected finish time: "+expected_FT);
+        System.out.println("***********************************"+itemreference.get(actual_item_number)+" item expected finish time: "+expected_FT+"***********************************");
         return expected_FT;
     }
 
@@ -855,7 +857,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             LocalDateTime new_expected_finish_time = convertToLocalDateTimeViaSqlTimestamp(now);
             new_expected_finish_time = new_expected_finish_time.plusSeconds(((expected_finish_date.getTime() - finish_date_last_item.getTime()) / 1000));
             expected_finish_date = convertToDateViaSqlTimestamp(new_expected_finish_time);
-            System.out.println("New expected finish time on item "+itemreference.get(actual_item_number)+": "+expected_finish_date);
+            System.out.println("***********************************"+"New expected finish time on item "+itemreference.get(actual_item_number)+": "+expected_finish_date+"***********************************");
 
         } catch (ParseException e) {
             e.printStackTrace();
@@ -870,6 +872,9 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         itemreference=Ireferences.get(index-1);
         return itemreference;
     }
+
+
+
 
 }
 

@@ -255,6 +255,28 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                 break;
                         }
                     }
+
+                }else if(actionValue.equals("restore")){                    //replica que quiere pasar a running
+                    negMsg = new MsgNegotiation((Iterator<AID>) msg.getAllReceiver(), conversationId, cmd.attribs.get("action"), cmd.attribs.get("criterion"),
+                            externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString());
+                    if(negMsg.getTargets().length<=1){
+                        switch (aNegFunctionality.checkNegotiation(conversationId, cmd.attribs.get("action"), 100,
+                                1, true, true, true)) {
+
+                            case NEG_LOST: //he perdido la negociación
+                                LOGGER.info("> " + myAgent.getLocalName() + " lost nego" + conversationId);
+                                break;
+
+                            case NEG_RETRY: //he ganado la negociación pero había ganado otra por lo que pido al que la ha iniciado que repita
+                                break;
+
+                            case NEG_WON: //he ganado la negociación y termina correctamente
+                                System.out.println("WON!");
+
+                            case NEG_FAIL:
+                                break;
+                        }
+                    }
                 }
                 regNegotiation(conversationId, msg.getSender(), negMsg);
                 initNegotiation();
@@ -429,7 +451,90 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                         myAgent.postMessage(msg);
                         LOGGER.debug("negotiation " + msg.getConversationId() + " is not for me by now");
                     }
-                }else if (msg.getPerformative() == ACLMessage.FAILURE) {
+                }else if ((msg.getPerformative() == ACLMessage.PROPOSE) && (actionValue.equals("restore"))) {
+                    if (negotiationRuntime.containsKey(conversationId)) {
+                        Long receivedVal = new Long(0);
+                        try {
+//                            receivedVal = (Long) msg.getContentObject();
+                            receivedVal = Long.parseLong(msg.getContent());
+                        } catch (Exception e) {
+                            LOGGER.debug("Received value is not a number");
+                        }
+
+                        LOGGER.info("message " + msg.getConversationId() + " from agent " + msg.getSender().getLocalName() + "(" + receivedVal + ") ");
+                        negotiationRuntime.get(conversationId).cntReplies();
+                        boolean tieBreak = msg.getSender().getLocalName().compareTo(myAgent.getLocalName()) > 0;
+
+//                        String seID = (String) negotiationRuntime.get(conversationId).getExternalData()[0];
+//                        String seType = (String) negotiationRuntime.get(conversationId).getExternalData()[1];
+//                        String seClass = (String) negotiationRuntime.get(conversationId).getExternalData()[2];
+//                        String seFirstTransition = (String) negotiationRuntime.get(conversationId).getExternalData()[3];
+//                        String redundancy = (String) negotiationRuntime.get(conversationId).getExternalData()[4];
+//                        String parentAgentID = (String) negotiationRuntime.get(conversationId).getExternalData()[5];
+
+                        switch (aNegFunctionality.checkNegotiation(conversationId, negotiationRuntime.get(conversationId).getAction(), receivedVal,
+                                negotiationRuntime.get(conversationId).getScalarValue(), tieBreak, negotiationRuntime.get(conversationId).checkReplies(), negotiationRuntime.get(conversationId).isPartialWinner()
+                                )) {
+
+                            case NEG_LOST: //he perdido la negociación
+                                LOGGER.info("Negotiation (id: " + conversationId + ") loser " + myAgent.getLocalName() + " (value:" + negotiationRuntime.get(conversationId).getScalarValue() + ") dropped");//                                negotiationRuntime.remove(conversationId); //salgo de esta negociación
+                                negotiationRuntime.get(conversationId).isNotPartialWinner();
+                                break;
+
+                            case NEG_RETRY: //he ganado la negociación pero había ganado otra por lo que pido al que la ha iniciado que repita
+//                                negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
+                                break;
+
+                            case NEG_WON: //he ganado la negociación y termina correctamente
+                                LOGGER.info(myAgent.getLocalName() + " WON negotiation(id:" + conversationId + ")!");
+
+                                ACLMessage inform_winner = new ACLMessage(ACLMessage.INFORM);
+                                inform_winner.setOntology(ONT_NEGOTIATE);
+                                inform_winner.setConversationId(conversationId);
+                                LOGGER.debug("Targets lenght: " + negotiationRuntime.get(conversationId).getTargets().length);
+                                for (AID id : negotiationRuntime.get(conversationId).getTargets()) {
+                                    // Removes the own agent from the list
+                                    if (!id.getLocalName().equals(myAgent.getLocalName())) {
+                                        inform_winner.addReceiver(id);
+                                    }
+                                }
+                                myAgent.send(inform_winner);
+
+                                ACLMessage recover_tracking_state = new ACLMessage(ACLMessage.REQUEST); //devuelve las replicas que han perdido a estado de tracking
+                                recover_tracking_state.setOntology("control");
+                                recover_tracking_state.setContent("setstate tracking");
+                                recover_tracking_state.setConversationId(conversationId);
+                                LOGGER.debug("Targets back to tracking state: " + negotiationRuntime.get(conversationId).getTargets().length);
+                                for (AID id : negotiationRuntime.get(conversationId).getTargets()) {
+                                    // Removes the own agent from the list
+                                    if (!id.getLocalName().equals(myAgent.getLocalName())) {
+                                        recover_tracking_state.addReceiver(id);
+                                    }
+                                }
+                                myAgent.send(recover_tracking_state);
+
+                                busy = false;
+//                                negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
+
+                            case NEG_FAIL:
+//                                negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
+                                break;
+                        }
+                        if (negotiationRuntime.get(conversationId).checkReplies()) { //si he pasado por todos las pujas y sea ganador o perdedor
+                            negotiationRuntime.remove(conversationId);
+                        }
+
+                    } else {// !negotiationRuntime.containsKey(conversationId)
+
+                        // todavía no he entrado a esa negociación o ¿la he perdido?
+//                        myAgent.putBack(msg);
+                        initNegotiation();
+                        myAgent.postMessage(msg);
+                        LOGGER.debug("negotiation " + msg.getConversationId() + "is not for me");
+                    }
+
+
+                } else if (msg.getPerformative() == ACLMessage.FAILURE) {
                     LOGGER.info("Received FAILURE message with convID:" + conversationId);
                     if (negotiationRuntime.get(conversationId) != null) {
                         negotiationRuntime.get(conversationId).cntReplies();

@@ -296,39 +296,39 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
       }
       newOrder = false;
     }
-    ACLMessage msg2 = myAgent.receive(template2);
-    if(msg2!=null){
-      myAgent.msgFIFO.add((String) msg2.getContent());
-      boolean f=false;
-      for(int i=0;i<myAgent.IgnoredReplicas.size();i++){ //se elimina de la lista de ignorados en caso de que esté
-        if(myAgent.IgnoredReplicas.get(i).equals(msg.getContent())){
-          myAgent.IgnoredReplicas.remove(i);
-          f=true;
-        }
-      }
-      if(f==false){ //en caso de no encontrarlo en la lista de ignorados, es posile que aun se encuentre en la lista de replicas normal
-        for(int i=0;i<myAgent.replicas.size();i++){
-          if(myAgent.replicas.get(i).equals(msg.getContent())){
-            myAgent.replicas.remove(i);
-          }
-        }
-      }
-    }
-    ACLMessage msg3 = myAgent.receive(template3);
-    if(msg3!=null){
-      myAgent.msgFIFO.add((String) msg3.getContent());
-      for(int i=0;i<myAgent.IgnoredReplicas.size();i++) { //se elimina de la lista de ignorados en caso de que esté
-        if (myAgent.IgnoredReplicas.get(i).equals(msg.getContent())) {
-          myAgent.replicas.add(myAgent.IgnoredReplicas.get(i)); //se vuelve a añadir a la lista de replicas
-          for(int j=0; j<myAgent.ReportedAgents.size();j++){
-            if(myAgent.ReportedAgents.get(j).equals(myAgent.IgnoredReplicas.get(i))){
-              myAgent.ReportedAgents.remove(j); // se elimina tambien de la lista de agentes reportados
-            }
-          }
-          myAgent.IgnoredReplicas.remove(i);
-        }
-      }
-    }
+//    ACLMessage msg2 = myAgent.receive(template2);
+//    if(msg2!=null){
+//      myAgent.msgFIFO.add((String) msg2.getContent());
+//      boolean f=false;
+//      for(int i=0;i<myAgent.IgnoredReplicas.size();i++){ //se elimina de la lista de ignorados en caso de que esté
+//        if(myAgent.IgnoredReplicas.get(i).equals(msg.getContent())){
+//          myAgent.IgnoredReplicas.remove(i);
+//          f=true;
+//        }
+//      }
+//      if(f==false){ //en caso de no encontrarlo en la lista de ignorados, es posile que aun se encuentre en la lista de replicas normal
+//        for(int i=0;i<myAgent.replicas.size();i++){
+//          if(myAgent.replicas.get(i).equals(msg.getContent())){
+//            myAgent.replicas.remove(i);
+//          }
+//        }
+//      }
+//    }
+//    ACLMessage msg3 = myAgent.receive(template3);
+//    if(msg3!=null){
+//      myAgent.msgFIFO.add((String) msg3.getContent());
+//      for(int i=0;i<myAgent.IgnoredReplicas.size();i++) { //se elimina de la lista de ignorados en caso de que esté
+//        if (myAgent.IgnoredReplicas.get(i).equals(msg.getContent())) {
+//          myAgent.replicas.add(myAgent.IgnoredReplicas.get(i)); //se vuelve a añadir a la lista de replicas
+//          for(int j=0; j<myAgent.ReportedAgents.size();j++){
+//            if(myAgent.ReportedAgents.get(j).equals(myAgent.IgnoredReplicas.get(i))){
+//              myAgent.ReportedAgents.remove(j); // se elimina tambien de la lista de agentes reportados
+//            }
+//          }
+//          myAgent.IgnoredReplicas.remove(i);
+//        }
+//      }
+//    }
     ACLMessage msgEnd = myAgent.receive();
     // Recepcion de mensajes para eliminar de la lista de agentes hijo los agentes order que ya han enviado toda la informacion
     if (msgEnd != null) {

@@ -134,6 +134,7 @@ public class QoSManagerAgent extends Agent {
                     } else if(msg.getOntology().equals("timeout")){ //error de tipo timeout
 
                         if(msg.getSender().getLocalName().contains("batch")){ //timeout enviado por un batch
+                            report_back(msg);
                             add_timeout_error_flag=true;
                             String[] parts=msg.getContent().split("/");
                             String timeout_batch_id=parts[0];
@@ -144,11 +145,11 @@ public class QoSManagerAgent extends Agent {
                                         if(ErrorList.get(m).get(3).equals(timeout_item_id)){
                                             LOGGER.error("Timeout repeated on same batch and item, confirming failure.");
                                             sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),"confirmed_timeout");
-                                            for (int k = 0; k < batch_and_machine.size(); k++) {
-                                                if(batch_and_machine.get(k).get(0).equals(timeout_batch_id)){
-                                                    sendACL(ACLMessage.INFORM,"D&D","timeout",batch_and_machine.get(k).get(1));
-                                                }
-                                            }
+//                                            for (int k = 0; k < batch_and_machine.size(); k++) {
+//                                                if(batch_and_machine.get(k).get(0).equals(timeout_batch_id)){
+//                                                    sendACL(ACLMessage.INFORM,"D&D","timeout",batch_and_machine.get(k).get(1));
+//                                                }
+//                                            }
                                             add_timeout_error_flag=false;
                                             for (int p = 0; p < batch_and_machine.size(); p++) {
                                                 if (batch_and_machine.get(p).get(0).equals(timeout_batch_id)) {
@@ -214,7 +215,7 @@ public class QoSManagerAgent extends Agent {
                                                         } else {
                                                             LOGGER.info("Asset retrieved his state: " + state.getContent());
                                                             if (state.getContent().equals("Working")) {
-                                                                LOGGER.info("Everything OK theoretically. Lengthening timeout.");
+                                                                LOGGER.info("Everything OK theoretically. Reset timeout.");
                                                                 sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "reset_timeout");
                                                             } else {
                                                                 LOGGER.error("Timeout confirmed");
@@ -248,6 +249,7 @@ public class QoSManagerAgent extends Agent {
                             }
 
                         } else if(msg.getSender().getLocalName().contains("order")){ //es un timeout enviado por un order agent.
+                            report_back(msg);
                             add_timeout_error_flag=true;
                             String[] parts=msg.getContent().split("/");
                             String timeout_order_id=parts[0];

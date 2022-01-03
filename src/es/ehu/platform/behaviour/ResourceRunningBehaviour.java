@@ -45,8 +45,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
     private int PrevPeriod;
     private long NextActivation;
     private AID QoSID = new AID("QoSManagerAgent", false);
-    private MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-            MessageTemplate.MatchOntology("acl_error"));
+
     // Constructor. Create a default template for the entry messages
     public ResourceRunningBehaviour(MWAgent a) {
         super(a);
@@ -106,9 +105,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
             }else{
                 myAgent.expected_msgs.remove(i);
             }
-
         }
-
 
         ACLMessage msg = myAgent.receive(template);
 

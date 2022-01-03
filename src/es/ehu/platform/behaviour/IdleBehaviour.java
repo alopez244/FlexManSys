@@ -31,11 +31,12 @@ public class IdleBehaviour extends SimpleBehaviour {
     @Override
     public void action(){
         LOGGER.entry();
-
-        ACLMessage msg= myAgent.receive(template);
-        if(msg!=null){
-            LOGGER.info(msg.getContent());
-        }
+//
+//        ACLMessage msg= myAgent.receive(template);
+//        if(msg!=null){
+//            myAgent.MsgsWhileIdling.add()
+//            LOGGER.info(msg.getContent());
+//        }
 
         LOGGER.exit();
     }
