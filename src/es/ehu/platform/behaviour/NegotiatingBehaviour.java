@@ -315,12 +315,18 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                 break;
 
                             case NEG_RETRY: //he ganado la negociación pero había ganado otra por lo que pido al que la ha iniciado que repita
+                                LOGGER.info("Retry negotiation");
 //                                negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
                                 break;
 
                             case NEG_WON: //he ganado la negociación y termina correctamente
                                 LOGGER.info(myAgent.getLocalName() + " WON negotiation(id:" + conversationId + ")!");
 
+                                try {
+                                    Thread.sleep(100);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
 
                                 ACLMessage inform_winner = new ACLMessage(ACLMessage.INFORM);
                                 inform_winner.setOntology(ONT_NEGOTIATE);
@@ -465,12 +471,6 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                         negotiationRuntime.get(conversationId).cntReplies();
                         boolean tieBreak = msg.getSender().getLocalName().compareTo(myAgent.getLocalName()) > 0;
 
-//                        String seID = (String) negotiationRuntime.get(conversationId).getExternalData()[0];
-//                        String seType = (String) negotiationRuntime.get(conversationId).getExternalData()[1];
-//                        String seClass = (String) negotiationRuntime.get(conversationId).getExternalData()[2];
-//                        String seFirstTransition = (String) negotiationRuntime.get(conversationId).getExternalData()[3];
-//                        String redundancy = (String) negotiationRuntime.get(conversationId).getExternalData()[4];
-//                        String parentAgentID = (String) negotiationRuntime.get(conversationId).getExternalData()[5];
 
                         switch (aNegFunctionality.checkNegotiation(conversationId, negotiationRuntime.get(conversationId).getAction(), receivedVal,
                                 negotiationRuntime.get(conversationId).getScalarValue(), tieBreak, negotiationRuntime.get(conversationId).checkReplies(), negotiationRuntime.get(conversationId).isPartialWinner()

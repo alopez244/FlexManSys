@@ -504,10 +504,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     if (reply != null) {   // Si no existe el id en el registro devuelve error
                         myAgent.msgFIFO.add((String) reply.getContent());
                         String batchAgentName = reply.getContent();
-
                         AID batchAgentID = new AID(batchAgentName, false);
                         sendACLMessage(16, batchAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
-//                        ACLMessage acknowledge = myAgent.blockingReceive(echotemplate,1000);
                         AddToExpectedMsgs(batchAgentName,"PLCdata",MessageContent);
 
                     }

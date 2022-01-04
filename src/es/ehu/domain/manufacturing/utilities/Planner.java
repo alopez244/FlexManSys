@@ -317,12 +317,13 @@ public class Planner extends Agent {
                         pnodes[0]=available_pnodes.getContent();
                     }
                     if(pnodes.length<Integer.parseInt(redundancy)){
-                        Scanner in2 = new Scanner(System.in);
+//                        Scanner in2 = new Scanner(System.in);
                         LOGGER.warn("The indicated redundancy is superior to node availability: "+redundancy+">"+pnodes.length+". Use maximum redundancy possible instead?");
                         System.out.print("Y/N: ");
-                        String confirmation = in2.nextLine();
+                        String confirmation = in.nextLine();
                         if(confirmation.equals("Y")){
-                            redundancy= String.valueOf(pnodes.length);
+                            String new_redundancy= String.valueOf(pnodes.length);
+                            redundancy= new_redundancy;
                         }else if(confirmation.equals("N")){
                             System.out.println("Repeat action please");
                             return;

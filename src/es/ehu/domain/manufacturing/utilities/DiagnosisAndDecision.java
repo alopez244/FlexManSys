@@ -50,14 +50,8 @@ public class DiagnosisAndDecision extends Agent{
                                     try {
                                         ACLMessage state= sendCommand(myAgent, "get "+msg.getContent()+" attrib=state", msg.getContent()+"_State_"+convIDCounter); //consigue el estado de la replcia caida
                                         LOGGER.warn(msg.getContent()+" was in "+state.getContent()+" state.");
-                                        if(!state.getContent().equals("tracking")){ //si no estaba en tracking estaría en running o bootToRunning y requiere una acción
-                                            if (msg.getContent().contains("batchagent")) { //en caso de ser batch habría que hibernar el agente máquina hasta recuperar la replica
-                                                String machine = get_relationship(msg.getContent());
-                                                LOGGER.info(machine + " is changing to idle state");
-                                                sendACL(16, machine, "control", "setstate idle");
-                                            }
-                                        }
-                                            ACLMessage parent= sendCommand(myAgent, "get "+msg.getContent()+" attrib=parent", msg.getContent()+"_parent_"+convIDCounter);
+                                        ACLMessage parent= sendCommand(myAgent, "get "+msg.getContent()+" attrib=parent", msg.getContent()+"_parent_"+convIDCounter);
+
                                             ACLMessage hosting_node=sendCommand(myAgent, "get "+msg.getContent()+" attrib=node", msg.getContent()+"_Hosting_PNode_"+convIDCounter);
 //                                            sendACL(7, reply3.getContent(), "delete_replica", msg.getContent()); //TODO innecesario con el nuevo sistema porque esta centralizado en el SA. ELIMINAR esta parte de los agentes de aplicación
                                             sendCommand(myAgent, "del "+msg.getContent(),"Unregister_"+msg.getContent()+"_"+convIDCounter);
@@ -90,13 +84,35 @@ public class DiagnosisAndDecision extends Agent{
                                                 }
                                                 ACLMessage set= sendCommand(myAgent, "set pnodeagent"+hosting_node.getContent()+" HostedElements="+new_HE, "pnodeagent"+hosting_node.getContent()+"_set_hosting_elements_"+convIDCounter);
                                             }
-                                            if(state.getContent().equals("tracking")){
-                                                boolean done=restart_replica(parent.getContent(),state.getContent());
-                                            }else{
-
+                                        if(!state.getContent().equals("tracking")){ //si no estaba en tracking estaría en running o bootToRunning y requiere una acción
+                                            if (msg.getContent().contains("batchagent")) { //en caso de ser batch habría que hibernar el agente máquina hasta recuperar la replica
+                                                String machine = get_relationship(msg.getContent());
+                                                LOGGER.info(machine + " is changing to idle state");
+                                                sendACL(16, machine, "control", "setstate idle");
                                             }
+                                            ACLMessage tracking_instances= sendCommand(myAgent, "get * state=tracking parent="+parent.getContent(), parent.getContent()+"_tracking_instances_"+convIDCounter);
+                                            String[] TrackingReplicas=new String[1];
+                                            ACLMessage SetReplicasWFD=new ACLMessage(ACLMessage.REQUEST);
+                                            SetReplicasWFD.setContent("setstate waitingfordecision");   //debemos poner en waiting for decision a las replicas en tracking primero
+                                            SetReplicasWFD.setOntology("control");
+                                            if(tracking_instances.getContent().contains(",")){
+                                                TrackingReplicas=tracking_instances.getContent().split(",");
+                                            }else{
+                                                TrackingReplicas[0]=tracking_instances.getContent();
+                                            }
+                                            for(int i=0;i<TrackingReplicas.length;i++) {
+                                                AID Replica=new AID(TrackingReplicas[i],false);
+                                                SetReplicasWFD.addReceiver(Replica);
+                                            }
+                                            SetReplicasWFD.setConversationId("Restore_running_replica_"+convIDCounter);
+                                            myAgent.send(SetReplicasWFD);
 
+                                            String negotationdata="localneg "+tracking_instances.getContent()+ " criterion=CPU_usage action=restore externaldata=" + parent;
+                                            sendCommand(myAgent,negotationdata , "Restore_"+state+"_Replica_"+convIDCounter);
 
+                                        }else{
+                                            boolean done=restart_replica(parent.getContent(),state.getContent());
+                                        }
 
                                     } catch (Exception e) {
                                         e.printStackTrace();

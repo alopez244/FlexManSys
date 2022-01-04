@@ -352,11 +352,17 @@ public class DomApp_Functionality extends Dom_Functionality{
                     conversationId = myAgent.getLocalName() + "_" + chatID++;
 
                     //negotiate(myAgent, targets, "max mem", "start", elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy+","+myAgent.getLocalName(), conversationId);
-                    String negotiationQuery = "localneg " + targets + " criterion=max mem action=start externaldata=" + elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking") + "," + redundancy + "," + myAgent.getLocalName();
-                    sendCommand(myAgent, negotiationQuery, conversationId);
+//                    String negotiationQuery = "localneg " + targets + " criterion=max mem action=start externaldata=" + elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking") + "," + redundancy + "," + myAgent.getLocalName();
+
+
+                    ACLMessage negotiation= new ACLMessage(ACLMessage.CFP);
+                    negotiation.setConversationId(conversationId);
+                    negotiation.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE );
+                    negotiation.setContent("negotiate "+targets+" criterion=max mem action=start externaldata="+ elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking") + "," + redundancy + "," + myAgent.getLocalName());
+                    for (String target: targets.split(",")) negotiation.addReceiver(new AID(target, AID.ISLOCALNAME));
+                    myAgent.send(negotiation);
+//                    sendCommand(myAgent, negotiationQuery, conversationId);
                 }
-
-
 
             } catch (Exception e) {
                 e.printStackTrace();
