@@ -10,6 +10,10 @@ import static es.ehu.platform.utilities.MWMCommands.CMD_SET;
 import static es.ehu.platform.utilities.MasReconOntologies.ONT_CONTROL;
 import es.ehu.domain.manufacturing.agents.functionality.Machine_Functionality;
 import jade.core.AID;
+import jade.core.Agent;
+import jade.domain.DFService;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -30,14 +34,13 @@ public class ControlBehaviour extends SimpleBehaviour {
     static final Logger LOGGER = LogManager.getLogger(ControlBehaviour.class.getName()) ;
     private static final String CMD_INCORRECTSTATE = "incorrect state";
     public static final String CMD_SETSTATE = "setstate";
-    public static final int STOP=0, RUNNING=1, TRACKING=2,  WAITINGFORDECISION=3, RECOVERING=4, NEGOTIATING=5, IDLE=6;
+    public static final int STOP=0, RUNNING=1, TRACKING=2,  WAITINGFORDECISION=3, RECOVERING=4, IDLE=6;
     public static final String ST_STOP = "stop";
     public static final String ST_RUNNING = "running";
     public static final String ST_IDLE= "idle"; //idle behaviour
     public static final String ST_TRACKING = "tracking";
     public static final String ST_WAITINGFORDECISION = "waitingfordecision";
     public static final String ST_RECOVERING = "recovering";
-    public static final String ST_NEGOTIATING = "negotiating";
     private MWAgent myAgent;
     private FSMBehaviour fsm;
     protected MessageTemplate template;
@@ -142,18 +145,37 @@ public class ControlBehaviour extends SimpleBehaviour {
                     sendReply = true;
                     LOGGER.info("Set State ---------------");
                     if (cmd[1].equals(ST_RUNNING)) {
+                        if(myAgent.getLocalName().contains("batchagent")||myAgent.getLocalName().contains("orderagent")||myAgent.getLocalName().contains("mplanagent")){
+                            try {
+                                sendCommand(myAgent,"set "+myAgent.getLocalName()+" state=running", msg.getConversationId());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
                         exitValue = RUNNING;
                     } else if (cmd[1].equals(ST_TRACKING)) {
+                        if(myAgent.getLocalName().contains("batchagent")||myAgent.getLocalName().contains("orderagent")||myAgent.getLocalName().contains("mplanagent")){
+                            try {
+                                sendCommand(myAgent,"set "+myAgent.getLocalName()+" state=tracking", msg.getConversationId());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
                         exitValue = TRACKING;
                     }  else if (cmd[1].equals(ST_WAITINGFORDECISION)) {
+                        if(myAgent.getLocalName().contains("batchagent")||myAgent.getLocalName().contains("orderagent")||myAgent.getLocalName().contains("mplanagent")){
+                            try {
+                                sendCommand(myAgent,"set "+myAgent.getLocalName()+" state=waitingfordecision", msg.getConversationId());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
                         exitValue = WAITINGFORDECISION;
                     } else if (cmd[1].equals(ST_STOP)) {
                         exitValue = STOP;
                     } else if (cmd[1].equals(ST_RECOVERING)) {
                         exitValue = RECOVERING;
-                    } else if (cmd[1].equals(ST_NEGOTIATING)) {
-                        exitValue = NEGOTIATING;
-                    } else if (cmd[1].equals(ST_IDLE)) {
+                    }  else if (cmd[1].equals(ST_IDLE)) {
                         exitValue = IDLE;
                     } else {
                         result = CMD_INCORRECTSTATE;
@@ -201,6 +223,54 @@ public class ControlBehaviour extends SimpleBehaviour {
         LOGGER.exit();
     }
 
+
+    public ACLMessage sendCommand(Agent agent, String cmd, String conversationId) throws Exception {
+
+        DFAgentDescription dfd = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+
+        sd.setType("sa");
+        dfd.addServices(sd);
+        String mwm;
+
+        while (true) {
+            DFAgentDescription[] result = DFService.search(myAgent, dfd);
+
+            if ((result != null) && (result.length > 0)) {
+                dfd = result[0];
+                mwm = dfd.getName().getLocalName();
+                break;
+            }
+            LOGGER.info(".");
+            Thread.sleep(100);
+
+        } //end while (true)
+
+        LOGGER.entry(mwm, cmd);
+        ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+        msg.addReceiver(new AID(mwm, AID.ISLOCALNAME));
+        msg.setConversationId(conversationId);
+        msg.setOntology("control");
+        msg.setContent(cmd);
+        msg.setReplyWith(cmd);
+        myAgent.send(msg);
+        if(cmd.contains("localneg")){
+            ACLMessage reply = myAgent.blockingReceive(
+                    MessageTemplate.and(
+                            MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
+                            MessageTemplate.MatchPerformative(ACLMessage.INFORM))
+                    , 400);
+            return LOGGER.exit(null);
+        }else{
+            ACLMessage reply = myAgent.blockingReceive(
+                    MessageTemplate.and(
+                            MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
+                            MessageTemplate.MatchPerformative(ACLMessage.INFORM))
+                    , 2000);
+            return LOGGER.exit(reply);
+        }
+
+    }
 
 
     @Override

@@ -257,8 +257,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                     }
 
                 }else if(actionValue.equals("restore")){                    //replica que quiere pasar a running
-                    negMsg = new MsgNegotiation((Iterator<AID>) msg.getAllReceiver(), conversationId, cmd.attribs.get("action"), cmd.attribs.get("criterion"),
-                            externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString());
+                    negMsg = new MsgNegotiation((Iterator<AID>) msg.getAllReceiver(), conversationId, cmd.attribs.get("action"), cmd.attribs.get("criterion"));
                     if(negMsg.getTargets().length<=1){
                         switch (aNegFunctionality.checkNegotiation(conversationId, cmd.attribs.get("action"), 100,
                                 1, true, true, true)) {

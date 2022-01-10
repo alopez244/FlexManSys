@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -62,7 +63,7 @@ public class MWAgent extends Agent {
     public Object initialExecutionState = null;
     public ArrayList<Object[]> expected_msgs= new ArrayList<Object[]>();
     private int convIDCounter=1;
-    public ArrayList<ACLMessage> MsgsWhileIdling=new ArrayList<ACLMessage>(); //Lista de mensajes recibidos mientras machine está en idle
+    public HashMap<String,ArrayList<ACLMessage>> msg_drawer=new HashMap<String,ArrayList<ACLMessage>>(); //listado de mensajes guardados para reenviar cuando el receptor este disponible
 
     // Parámetros de configuración
     public boolean mwmStoresExecutionState = true;

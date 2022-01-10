@@ -18,7 +18,7 @@ import javafx.application.Platform;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.core.config.Order;
-
+import es.ehu.platform.template.interfaces.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +28,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 
-public class Batch_Functionality extends DomApp_Functionality implements BasicFunctionality, AvailabilityFunctionality {
+public class Batch_Functionality extends DomApp_Functionality implements BasicFunctionality, AvailabilityFunctionality{
 
     private volatile ArrayList<String> itemreference=new ArrayList<String>();
     private MessageTemplate templateFT;
@@ -238,19 +238,10 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     }else {
                         System.out.println(getactualtime() + " " + myAgent.getLocalName() + " WARN " + batchreference + " batch has thrown a timeout on item number " + itemreference.get(actual_item_number) + " Checking failure with QoS Agent...");
                         QoSresponse_flag = false;
-                        sendACLMessage(ACLMessage.FAILURE, QoSID, "timeout", "timeout " + batchreference, batchreference + "/" + itemreference.get(actual_item_number), myAgent); //avisa al QoS de fallo por timeout
-                        Object[] ExpMsg=AddToExpectedMsgs(QoSID.getLocalName(),"timeout " + batchreference,batchreference + "/" + itemreference.get(actual_item_number));
+                        ACLMessage report_to_QoS= sendACLMessage(ACLMessage.FAILURE, QoSID, "timeout", "timeout " + batchreference, batchreference + "/" + itemreference.get(actual_item_number), myAgent); //avisa al QoS de fallo por timeout
+                        Object[] ExpMsg=AddToExpectedMsgs(report_to_QoS);
                         myAgent.expected_msgs.add(ExpMsg);
-                        //                        try {
-//                            Thread.sleep(2500);
-//                        } catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
-//
-//                        if (!QoSresponse_flag) {
-//                            System.out.println("I'm probably isolated. Shutting down entire node");
-//                            System.exit(0); //Mata el nodo y los agentes que se encuentran en el
-//                        }
+
                         takedown_flag = true;
                     }
                 }
@@ -471,8 +462,8 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                         myAgent.msgFIFO.add((String) reply.getContent());
                         if (reply != null) {   // Si no existe el id en el registro devuelve error
                             AID orderAgentID = new AID(reply.getContent(), false);
-                            sendACLMessage(7, orderAgentID,"Information", "ItemsInfo", msgToOrder, myAgent );
-                            Object[] ExpMsg=AddToExpectedMsgs(reply.getContent(),"ItemsInfo",msgToOrder);
+                            ACLMessage msg_to_order= sendACLMessage(7, orderAgentID,"Information", "ItemsInfo", msgToOrder, myAgent );
+                            Object[] ExpMsg=AddToExpectedMsgs(msg_to_order);
                             myAgent.expected_msgs.add(ExpMsg);
                         }
                     } catch (Exception e) {

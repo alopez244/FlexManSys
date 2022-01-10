@@ -56,6 +56,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             MessageTemplate.MatchOntology("acl_error"));
 
     private AID QoSID = new AID("QoSManagerAgent", false);
+    public ArrayList<ACLMessage> posponed_msgs_to_batch=new ArrayList<ACLMessage>();
+    public ArrayList<ACLMessage> posponed_msgs_to_gw=new ArrayList<ACLMessage>();
 //    public static String state ="";
 //    public static boolean change_state=false;
 
@@ -498,17 +500,38 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     e.printStackTrace();
                 }
                 try {
+                    posponed_msgs_to_batch= myAgent.msg_drawer.get(batchName);
+                    if(posponed_msgs_to_batch==null){ //si no se encuentra el parent en el listado de mensajes postpuestos entonces el receptor ha confirmado la recepcion de todos los mensajes hasta ahora. Todoo OK.
+                        if (reply != null) {   // Si no existe el id en el registro devuelve error
+                            myAgent.msgFIFO.add((String) reply.getContent());
+                            String batchAgentName = reply.getContent();
+                            AID batchAgentID = new AID(batchAgentName, false);
+                            if(!reply.getContent().equals("")){
+                                ACLMessage msg_to_batchagent=sendACLMessage(16, batchAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
+                                AddToExpectedMsgs(msg_to_batchagent);
+                            }else{
+                                ACLMessage msg_to_drawer=new ACLMessage(ACLMessage.REQUEST);
+                                msg_to_drawer.setConversationId("PLCdata");
+                                msg_to_drawer.setContent(MessageContent);
+//                            msg_to_drawer.addReceiver(batchAgentID); //no tenemos al agente en running porque el SA nos ha devuelto "", pero si tenemos al parent
+                                msg_to_drawer.setOntology("negotiation");
+                                posponed_msgs_to_batch.add(msg_to_drawer);
+                                myAgent.msg_drawer.put(batchName,posponed_msgs_to_batch); //guardamos el mensaje hasta que el D&D me informe de que ya tenemos disponible otro receptor
+                            }
+                        }
+                    }else{
+                        ACLMessage msg_to_drawer=new ACLMessage(ACLMessage.REQUEST);
+                        msg_to_drawer.setConversationId("PLCdata");
+                        msg_to_drawer.setContent(MessageContent);
+//                            msg_to_drawer.addReceiver(batchAgentID); //no tenemos al agente en running porque el SA nos ha devuelto "", pero si tenemos al parent
+                        msg_to_drawer.setOntology("negotiation");
+                        posponed_msgs_to_batch.add(msg_to_drawer);
+                        myAgent.msg_drawer.put(batchName,posponed_msgs_to_batch);
+                    }
                     reply = sendCommand(myAgent, "get * parent=" + batchName +" state=running", "BatchAgentID");
 
                     //returns the names of all the agents that are sons
-                    if (reply != null) {   // Si no existe el id en el registro devuelve error
-                        myAgent.msgFIFO.add((String) reply.getContent());
-                        String batchAgentName = reply.getContent();
-                        AID batchAgentID = new AID(batchAgentName, false);
-                        sendACLMessage(16, batchAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
-                        AddToExpectedMsgs(batchAgentName,"PLCdata",MessageContent);
 
-                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -614,41 +637,11 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         PLCmsgOut.remove("Index");
                         String MessageContent = new Gson().toJson(PLCmsgOut);
                         AID gatewayAgentID = new AID(gatewayAgentName, false);
-                        sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
+                        ACLMessage msg_to_gw=sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
 //                        MessageTemplate PLCconfirmation = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
 //                                MessageTemplate.MatchOntology("negotiation"));
-                        AddToExpectedMsgs(gatewayAgentName,"PLCdata",MessageContent);
-                        System.out.println("added expected message");
-//                        ACLMessage acknowledge = myAgent.blockingReceive(PLCconfirmation, 1000);
-//                        if (acknowledge != null) {
-////                            rcvd = new Gson().fromJson(acknowledge.getContent(), HashMap.class);
-////                            if (rcvd.containsKey("Received")) {   //Se asegura que se trate de un mensaje de confirmacion del PLC
-//                                LOGGER.info("GW confirmed reception");
-////                            }
-//                        } else {
-//                            LOGGER.info("Did not receive answer from GW");
-//                            String report_error = "16" + "/div/" + "negotiation" + "/div/" + "PLCdata" + "/div/" + gatewayAgentName + "/div/" + MessageContent;
-//                            sendACLMessage(6, QoSID, "acl_error", "communication error", report_error, myAgent);
-//                            ACLMessage QoScommand = myAgent.blockingReceive(QoStemplate, 1000);
-//                            if (QoScommand == null) { //si no se recibe respuesta del QoS, se asume que esta aislado
-//                                LOGGER.error("I'm probably isolated.");
-//                                myAgent.state="idle";
-//                                myAgent.change_state=true;
-//                            } else {
-//                                LOGGER.info("Received reply from QoS");
-//                                if (QoScommand.getContent().contains("confirmed")) {
-//                                    LOGGER.error("QoS confirmed that GW is down. Waiting until GW is recovered."); //pendiente de wake, por ahora solo manual
-//                                }
-//                            }
-//                            boolean f=false;
-//                            for(int i=0;i<myAgent.ReportedAgents.size();i++){
-//                                myAgent.ReportedAgents.get(i).equals(gatewayAgentName);
-//                                f=true;
-//                            }
-//                            if(!f){
-//                                myAgent.ReportedAgents.add(gatewayAgentName);//si no se ha denunciado el agente añadirlo a la lista
-//                            }
-//                        }
+
+                        AddToExpectedMsgs(msg_to_gw);
 
                         sendingFlag = false;
                         machinePlanIndex = 0;
@@ -695,15 +688,16 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             }
 
         }
-        public void AddToExpectedMsgs(String sender, String convID, String content){
-            Object[] ExpMsg=new Object[4];
-            ExpMsg[0]=sender;
-            ExpMsg[1]=convID;
-            ExpMsg[2]=content;
+        public void AddToExpectedMsgs(ACLMessage msg){
+            Object[] ExpMsg=new Object[2];
+//            ExpMsg[0]=sender;
+//            ExpMsg[1]=convID;
+//            ExpMsg[2]=content;
+            ExpMsg[0]=msg;
             Date date = new Date();
             long instant = date.getTime();
             instant=instant+2000; //añade una espera de 2 seg
-            ExpMsg[3]=instant;
+            ExpMsg[1]=instant;
             myAgent.expected_msgs.add(ExpMsg);
         }
 

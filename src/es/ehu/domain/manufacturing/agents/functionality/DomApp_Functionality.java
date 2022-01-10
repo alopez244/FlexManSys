@@ -3,6 +3,7 @@ package es.ehu.domain.manufacturing.agents.functionality;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.behaviour.NegotiatingBehaviour;
+import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.platform.utilities.Cmd;
 import es.ehu.platform.utilities.XMLReader;
 import jade.Boot;
@@ -28,7 +29,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 
-public class DomApp_Functionality extends Dom_Functionality{
+public class DomApp_Functionality extends Dom_Functionality implements NegFunctionality {
 
     /**
      * Class for DomainApplication_Functionality
@@ -118,17 +119,19 @@ public class DomApp_Functionality extends Dom_Functionality{
     public void Acknowledge(ACLMessage msg){
         sendACLMessage(ACLMessage.CONFIRM,msg.getSender(),msg.getOntology(),msg.getConversationId(),msg.getContent(),myAgent);
     }
-    public Object[] AddToExpectedMsgs(String sender, String convID, String content){
-        Object[] ExpMsg=new Object[4];
-        ExpMsg[0]=sender;
-        ExpMsg[1]=convID;
-        ExpMsg[2]=content;
+    public Object[] AddToExpectedMsgs(ACLMessage msg){ //funcion que añade un mensaje a la lista de esperados
+        Object[] ExpMsg=new Object[2];
+        ExpMsg[0]=msg; //mensaje completo
+//        ExpMsg[0]=sender;
+//        ExpMsg[1]=convID;
+//        ExpMsg[2]=content;
         Date date = new Date();
         long instant = date.getTime();
-        instant=instant+1000; //añade una espera de 1 seg
-        ExpMsg[3]=instant;
+        instant=instant+1000; //añade un tiempo límite para el que espera la respuesta de cierto agente
+        ExpMsg[1]=instant;
         return ExpMsg;
     }
+
 
     public void trackingOnBoot(MWAgent agent, String seType, String conversationId) {
 
@@ -275,7 +278,8 @@ public class DomApp_Functionality extends Dom_Functionality{
                 System.out.println(e.getMessage());
             }
             System.out.println(result);
-            return Long.parseLong(result);
+            String[] value=result.split(" "); //result= "100        "
+            return Long.parseLong(value[0]);
 
         }else {  //el SO es linux
             String cpu_usage="100";
@@ -352,16 +356,16 @@ public class DomApp_Functionality extends Dom_Functionality{
                     conversationId = myAgent.getLocalName() + "_" + chatID++;
 
                     //negotiate(myAgent, targets, "max mem", "start", elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy+","+myAgent.getLocalName(), conversationId);
-//                    String negotiationQuery = "localneg " + targets + " criterion=max mem action=start externaldata=" + elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking") + "," + redundancy + "," + myAgent.getLocalName();
+                    String negotiationQuery = "localneg " + targets + " criterion=max mem action=start externaldata=" + elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking") + "," + redundancy + "," + myAgent.getLocalName();
 
 
-                    ACLMessage negotiation= new ACLMessage(ACLMessage.CFP);
-                    negotiation.setConversationId(conversationId);
-                    negotiation.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE );
-                    negotiation.setContent("negotiate "+targets+" criterion=max mem action=start externaldata="+ elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking") + "," + redundancy + "," + myAgent.getLocalName());
-                    for (String target: targets.split(",")) negotiation.addReceiver(new AID(target, AID.ISLOCALNAME));
-                    myAgent.send(negotiation);
-//                    sendCommand(myAgent, negotiationQuery, conversationId);
+//                    ACLMessage negotiation= new ACLMessage(ACLMessage.CFP);
+//                    negotiation.setConversationId(conversationId);
+//                    negotiation.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE );
+//                    negotiation.setContent("negotiate "+targets+" criterion=max mem action=start externaldata="+ elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking") + "," + redundancy + "," + myAgent.getLocalName());
+//                    for (String target: targets.split(",")) negotiation.addReceiver(new AID(target, AID.ISLOCALNAME));
+//                    myAgent.send(negotiation);
+                    sendCommand(myAgent, negotiationQuery, conversationId);
                 }
 
             } catch (Exception e) {

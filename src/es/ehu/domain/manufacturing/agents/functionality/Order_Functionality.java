@@ -82,8 +82,8 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 }
                 if (!expected_finish_time.after(getactualtime()) && !exit_timeout&&!QoSreported) {
                     System.out.println("Order has thrown a timeout on batch " + batch + ". Checking with QoS.");
-                    sendACLMessage(ACLMessage.FAILURE, QoSID, "timeout", "order_timeout_"+batch, batch.substring(0, 2) + "/" + batch, myAgent); //avisa al QoS de fallo por timeout
-                    Object[] ExpMsg=AddToExpectedMsgs(QoSID.getLocalName(),"order_timeout_"+batch,batch.substring(0, 2) + "/" + batch);
+                    ACLMessage timeout_report= sendACLMessage(ACLMessage.FAILURE, QoSID, "timeout", "order_timeout_"+batch, batch.substring(0, 2) + "/" + batch, myAgent); //avisa al QoS de fallo por timeout
+                    Object[] ExpMsg=AddToExpectedMsgs(timeout_report);
                     myAgent.expected_msgs.add(ExpMsg);
 //                    try {
 //                        Thread.sleep(2000);
@@ -405,8 +405,8 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                     msgToMPLan = msgToMPLan.concat(aux);
                 }
                 AID Agent = new AID(parentAgentID, false);
-                sendACLMessage(7, Agent, "Information", "OrderInfo", msgToMPLan, myAgent);
-                Object[] ExpMsg=AddToExpectedMsgs(parentAgentID,"OrderInfo",msgToMPLan);
+                ACLMessage msg_to_mplan= sendACLMessage(7, Agent, "Information", "OrderInfo", msgToMPLan, myAgent);
+                Object[] ExpMsg=AddToExpectedMsgs(msg_to_mplan);
                 myAgent.expected_msgs.add(ExpMsg);
 
                 if (sonAgentID.size() == 0) { // todos los batch agent de los que es padre ya le han enviado la informacion

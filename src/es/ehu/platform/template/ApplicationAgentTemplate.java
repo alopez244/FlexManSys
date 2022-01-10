@@ -53,6 +53,7 @@ public class ApplicationAgentTemplate extends MWAgent {
     Behaviour tracking = new TrackingBehaviour(this);
 
     /** Comportamiento negociación **/
+    Behaviour negotiating = new NegotiatingBehaviour(this);
     Behaviour waitingForDecision = new WaitingForDecisionBehaviour(this);
 
     /** Comportamiento end **/
@@ -62,7 +63,7 @@ public class ApplicationAgentTemplate extends MWAgent {
     behaviourFSM.registerFirstState(new StateParallel(this, behaviourFSM, boot), ST_BOOT);
     behaviourFSM.registerState(new StateParallel(this, behaviourFSM, running, ping),ControlBehaviour.ST_RUNNING);
     behaviourFSM.registerState(new StateParallel(this, behaviourFSM, tracking, ping),ControlBehaviour.ST_TRACKING);
-    behaviourFSM.registerState(new StateParallel(this, behaviourFSM, waitingForDecision, ping),ControlBehaviour.ST_WAITINGFORDECISION);
+    behaviourFSM.registerState(new StateParallel(this, behaviourFSM, waitingForDecision, ping, negotiating),ControlBehaviour.ST_WAITINGFORDECISION);
     behaviourFSM.registerLastState(end, ControlBehaviour.ST_STOP);
 
     /** FSM transition **/

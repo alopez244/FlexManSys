@@ -10,6 +10,7 @@ import es.ehu.platform.MWAgent;
 import jade.core.behaviours.*;
 import jade.lang.acl.*;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 import static es.ehu.platform.utilities.MasReconOntologies.*;
@@ -73,11 +74,11 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         for(int i=0;i<myAgent.expected_msgs.size();i++){
             Object[] exp_msg;
             exp_msg=myAgent.expected_msgs.get(i);
-            String sender=(String) exp_msg[0];
-            AID exp_msg_sender=new AID(sender,false);
-            String convID=(String) exp_msg[1];
-            String content=(String) exp_msg[2];
-            long timeout=(long) exp_msg[3];
+            ACLMessage complete_msg=(ACLMessage) exp_msg[0];
+            AID exp_msg_sender=complete_msg.getSender();
+            String convID=complete_msg.getConversationId();
+            String content=complete_msg.getContent();
+            long timeout=(long) exp_msg[1];
             Date date = new Date();
             long instant = date.getTime();
             MessageTemplate ack_template=MessageTemplate.and(MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchConversationId(convID),
@@ -86,7 +87,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
             ACLMessage ack= myAgent.receive(ack_template);
             if(ack==null){
                 if(instant>timeout){
-                    if(exp_msg_sender.getLocalName().equals(QoSID.getLocalName())){
+                    if(exp_msg_sender.getLocalName().equals(QoSID.getLocalName())){ //si no contesta el QoS este agente se asume que esta aislado
                         LOGGER.info("QoS did not answer on time. THIS AGENT MIGHT BE ISOLATED.");
                         if(myAgent.getLocalName().contains("machine")){
                             myAgent.state="idle";	//es un agente máquina por lo que transiciona a idle
@@ -95,10 +96,11 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
                             LOGGER.debug("Condición no programada ");
                         }
                     }else{
-                        LOGGER.info("Expected answer did not arrive on time.");
-                        String report=sender+"/div/"+content;
-                        sendACLMessage(6, QoSID, "acl_error", convID, report, myAgent);
-                        AddToExpectedMsgs(QoSID.getLocalName(),convID,report);
+                        LOGGER.info("Expected answer did not arrive on time."); //el agente no ha respondido a tiempo, se denuncia al QoS
+
+                        String report=exp_msg_sender.getLocalName()+"/div/"+content;
+                        ACLMessage report_to_QoS=sendACLMessage(6, QoSID, "acl_error", convID, report, myAgent);
+                        AddToExpectedMsgs(report_to_QoS);
                     }
                     myAgent.expected_msgs.remove(i);
                 }
@@ -196,7 +198,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         }
         return LOGGER.exit(null);
     }
-    public void sendACLMessage(int performative, AID reciever, String ontology, String conversationId, String content, Agent agent) {
+    public ACLMessage sendACLMessage(int performative, AID reciever, String ontology, String conversationId, String content, Agent agent) {
 
         ACLMessage msg = new ACLMessage(performative); //envio del mensaje
         msg.addReceiver(reciever);
@@ -204,16 +206,18 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         msg.setConversationId(conversationId);
         msg.setContent(content);
         myAgent.send(msg);
+        return msg;
     }
-    public void AddToExpectedMsgs(String sender, String convID, String content){
-        Object[] ExpMsg=new Object[4];
-        ExpMsg[0]=sender;
-        ExpMsg[1]=convID;
-        ExpMsg[2]=content;
+    public void AddToExpectedMsgs(ACLMessage msg){
+        Object[] ExpMsg=new Object[2];
+//        ExpMsg[0]=sender;
+//        ExpMsg[1]=convID;
+//        ExpMsg[2]=content;
+        ExpMsg[0]=msg;
         Date date = new Date();
         long instant = date.getTime();
         instant=instant+2000; //añade una espera de 2 seg
-        ExpMsg[3]=instant;
+        ExpMsg[1]=instant;
         myAgent.expected_msgs.add(ExpMsg);
     }
 }

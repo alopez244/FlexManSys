@@ -227,7 +227,7 @@ public class DiagnosisAndDecision extends Agent{
                 MessageTemplate.and(
                         MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
                         MessageTemplate.MatchPerformative(ACLMessage.INFORM))
-                , 1000);
+                , 2000);
 
         return LOGGER.exit(reply);
     }

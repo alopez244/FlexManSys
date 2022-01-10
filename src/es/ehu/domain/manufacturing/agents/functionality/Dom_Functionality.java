@@ -64,7 +64,7 @@ public class Dom_Functionality{
 //                    MessageTemplate.and(
 //                            MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
 //                            MessageTemplate.MatchPerformative(ACLMessage.INFORM))
-//                    , 350);
+//                    , 400);
             return LOGGER.exit(null);
         }else{
             ACLMessage reply = myAgent.blockingReceive(
@@ -79,7 +79,7 @@ public class Dom_Functionality{
 
 
 
-    public void sendACLMessage(int performative, AID reciever, String ontology, String conversationId, String content, Agent agent) {
+    public ACLMessage sendACLMessage(int performative, AID reciever, String ontology, String conversationId, String content, Agent agent) {
 
                 this.myAgent = agent;
 
@@ -89,6 +89,7 @@ public class Dom_Functionality{
                 msg.setConversationId(conversationId);
                 msg.setContent(content);
                     myAgent.send(msg);
+                    return msg;
         }
 
     }

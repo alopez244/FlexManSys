@@ -123,18 +123,18 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
 //            ACLMessage hosted_elements =null;
             try {
 //                hosted_elements = sendCommand("get "+myAgent.getLocalName()+" attrib=HostedElements");
-                    if(!ListAttrib.contains(seID)) {
+                    if(!ListAttrib.contains(seID)) { //Si la lista de atributos no tiene la ID del sistem element lo añade
                         ACLMessage Actual_Attrib= sendCommand("get " + myAgent.getLocalName() + " attrib=HostedElements");
                         ListAttrib=Actual_Attrib.getContent(); //primero actualizamos la variable (para ejecucion de planes de manera consecutiva sin reinicializar el sistema).
 
                         if (ListAttrib.equals("")) {
-                            ListAttrib = seID;
+                            ListAttrib = seID; //si es el primero lo añade sin más
 //                            firstime = false;
                         } else {
-                            ListAttrib = ListAttrib + "," + seID;
+                            ListAttrib = ListAttrib + "," + seID; //si no es el primer lo concatena
                         }
                         LOGGER.debug("ACTUAL ATRIBUTES: " + ListAttrib);
-                        sendCommand("set " + myAgent.getLocalName() + " HostedElements=" + ListAttrib);
+                        sendCommand("set " + myAgent.getLocalName() + " HostedElements=" + ListAttrib); //peticion al SA de actualización
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -148,7 +148,7 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
                 AgentController ac = ((AgentController) myAgent.getContainerController().createNewAgent(agnID, seClass, new Object[] { "firstState="+seFirstTransition , "redundancy="+redundancy , "parentAgent=" + parentAgentID}));
                 ac.start();
                 String parts[]=myAgent.getLocalName().split("pnodeagent");
-                sendCommand("set "+agnID+" node="+parts[1]); //Añade en que nodo se va a encontrar el agente
+                sendCommand("set "+agnID+" node="+parts[1]); //Añade el número de nodo en el que se va a encontrar el agente
 
 
             }catch (Exception e) {e.printStackTrace();}
