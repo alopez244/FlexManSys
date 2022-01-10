@@ -348,7 +348,7 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
                     String seClass = attribs.get("seClass");
                 ACLMessage All_process_nodes = sendCommand(myAgent, "get * category=pNodeAgent", "GetAllNodes");
                 String targets=All_process_nodes.getContent();
-                for (int i = 0; i < Integer.parseInt(redundancy); i++) {
+//                for (int i = 0; i < Integer.parseInt(redundancy); i++) {
                 // Orden de negociacion a todos los nodos
                 //***********for antiguo
 
@@ -356,17 +356,17 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
                     conversationId = myAgent.getLocalName() + "_" + chatID++;
 
                     //negotiate(myAgent, targets, "max mem", "start", elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy+","+myAgent.getLocalName(), conversationId);
-                    String negotiationQuery = "localneg " + targets + " criterion=max mem action=start externaldata=" + elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking") + "," + redundancy + "," + myAgent.getLocalName();
+                    String negotiationQuery = "localneg " + targets + " criterion=max mem action=start externaldata=" + elementID + "," + seCategory + "," + seClass + "," + myAgent.getLocalName() + "," + redundancy;
 
 
 //                    ACLMessage negotiation= new ACLMessage(ACLMessage.CFP);
 //                    negotiation.setConversationId(conversationId);
 //                    negotiation.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE );
-//                    negotiation.setContent("negotiate "+targets+" criterion=max mem action=start externaldata="+ elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking") + "," + redundancy + "," + myAgent.getLocalName());
+//                    negotiation.setContent("negotiate "+targets+" criterion=max mem action=start externaldata="+ elementID + "," + seCategory + "," + seClass + "," + myAgent.getLocalName() + "," + redundancy);
 //                    for (String target: targets.split(",")) negotiation.addReceiver(new AID(target, AID.ISLOCALNAME));
 //                    myAgent.send(negotiation);
                     sendCommand(myAgent, negotiationQuery, conversationId);
-                }
+//                }
 
             } catch (Exception e) {
                 e.printStackTrace();

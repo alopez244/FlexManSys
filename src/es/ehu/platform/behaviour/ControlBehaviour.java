@@ -255,11 +255,11 @@ public class ControlBehaviour extends SimpleBehaviour {
         msg.setReplyWith(cmd);
         myAgent.send(msg);
         if(cmd.contains("localneg")){
-            ACLMessage reply = myAgent.blockingReceive(
-                    MessageTemplate.and(
-                            MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
-                            MessageTemplate.MatchPerformative(ACLMessage.INFORM))
-                    , 400);
+//            ACLMessage reply = myAgent.blockingReceive(
+//                    MessageTemplate.and(
+//                            MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
+//                            MessageTemplate.MatchPerformative(ACLMessage.INFORM))
+//                    , 400);
             return LOGGER.exit(null);
         }else{
             ACLMessage reply = myAgent.blockingReceive(

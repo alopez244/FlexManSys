@@ -95,9 +95,9 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
         String seID = (String)negExternalData[0];
         String seType = (String)negExternalData[1];
         String seClass = (String)negExternalData[2];
-        String seFirstTransition = (String)negExternalData[3];
+        String parentAgentID = (String)negExternalData[3];
         String redundancy = (String)negExternalData[4];
-        String parentAgentID = (String)negExternalData[5];
+        String seFirstTransition = (String)negExternalData[5];
 
         if (negReceivedValue>negScalarValue) return NegotiatingBehaviour.NEG_LOST; //pierde negociación
         if ((negReceivedValue==negScalarValue) && !tieBreak ) return NegotiatingBehaviour.NEG_LOST; //empata negocicación pero no es quien fija desempate

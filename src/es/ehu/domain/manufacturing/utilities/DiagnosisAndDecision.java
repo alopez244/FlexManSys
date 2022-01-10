@@ -322,7 +322,7 @@ public class DiagnosisAndDecision extends Agent{
                 }else{
                     criteria="cpu use"; //si la replica esta en running interesa negociar con el uso del CPU de los nodos
                 }
-                String negotationdata="localneg "+ToNegotiate+ " criterion="+criteria+" action=start externaldata=" + parent + "," + category.getContent() + "," + seClass + "," + state + "," + "1" + "," + myAgent.getLocalName();
+                String negotationdata="localneg "+ToNegotiate+ " criterion="+criteria+" action=start externaldata=" + parent + "," + category.getContent() + "," + seClass + "," + myAgent.getLocalName() + "," + "1" + "," + state;
                 sendCommand(myAgent,negotationdata , "Restore_"+state+"_Replica");
                 return true;
             }

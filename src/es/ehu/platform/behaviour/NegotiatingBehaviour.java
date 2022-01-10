@@ -300,13 +300,13 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                         String seID = (String) negotiationRuntime.get(conversationId).getExternalData()[0];
                         String seType = (String) negotiationRuntime.get(conversationId).getExternalData()[1];
                         String seClass = (String) negotiationRuntime.get(conversationId).getExternalData()[2];
-                        String seFirstTransition = (String) negotiationRuntime.get(conversationId).getExternalData()[3];
+                        String parentAgentID = (String) negotiationRuntime.get(conversationId).getExternalData()[3];
                         String redundancy = (String) negotiationRuntime.get(conversationId).getExternalData()[4];
-                        String parentAgentID = (String) negotiationRuntime.get(conversationId).getExternalData()[5];
+                        String seFirstTransition = (String) negotiationRuntime.get(conversationId).getExternalData()[5];
 
                         switch (aNegFunctionality.checkNegotiation(conversationId, negotiationRuntime.get(conversationId).getAction(), receivedVal,
                                 negotiationRuntime.get(conversationId).getScalarValue(), tieBreak, negotiationRuntime.get(conversationId).checkReplies(), negotiationRuntime.get(conversationId).isPartialWinner(),
-                                seID, seType, seClass, seFirstTransition, redundancy, parentAgentID)) {
+                                seID, seType, seClass, parentAgentID, redundancy, seFirstTransition)) {
 
                             case NEG_LOST: //he perdido la negociación
                                 LOGGER.info("Negotiation (id: " + conversationId + ") loser " + myAgent.getLocalName() + " (value:" + negotiationRuntime.get(conversationId).getScalarValue() + ") dropped");//                                negotiationRuntime.remove(conversationId); //salgo de esta negociación

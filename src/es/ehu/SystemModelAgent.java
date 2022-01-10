@@ -218,7 +218,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
 //            else if (cmds[0].equals("ext")) result.append(ext(cmds[1], attribs, conversationId)); //TODO Rafael
 
             else if (cmds[0].equals("localcmd")) result.append(localCmd(cmds[1], attribs, conversationId));
-            else if (cmds[0].equals("localneg")) result.append(negotiate(cmds[1], attribs.get("criterion"), attribs.get("action"),attribs.get("externaldata"), conversationId));
+            else if (cmds[0].equals("localneg")) result.append(negotiate(cmds[1], attribs.get("criterion"), attribs.get("action"),attribs.get("externaldata")));
                 //else if (cmds[0].equals("localneg")) result.append(negotiate(cmds[1], attribs, conversationId));
 
             else if (cmds[0].equals("appstart")) result.append(appStart(cmds[1], attribs, conversationId)); // threaded#condition
@@ -1129,19 +1129,16 @@ public class SystemModelAgent extends Agent implements IExecManagement {
 
 //        if (targets.length()<=0) return "-4";
         String UpdatedTargets=Alltargets;
+
         //mando negociar a todos
-        for (int i=0; i<Integer.parseInt(redundancy); i++) {
-            // Cada peticion de negociacion necesita un ID distinto
-            conversationId = getLocalName() + "_" + cmdId++;
+        conversationId = getLocalName() + "_" + cmdId++;
+        processCmd("localneg "+UpdatedTargets+" action=start criterion=max mem externaldata="+seID+","+seCategory+","+seClass+","+getLocalName()+","+redundancy, conversationId);
+        LOGGER.exit();
 
-            processCmd("localneg "+UpdatedTargets+" action=start criterion=max mem externaldata="+seID+","+seCategory+","+seClass+","+((i==0)?"running":"tracking")+","+redundancy+","+getLocalName(), conversationId);
-
-
-            LOGGER.exit();
-        }
 
         return "";
     }
+
     private String UpdateTargets(String targets, String target_to_remove) {
 
         String TargetsToReturn="";
@@ -1523,24 +1520,64 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         return LOGGER.exit((reply!=null)? reply.getContent() : "");
     }
 
-    private String negotiate(String targets, String negotiationCriteria, String action, String externalData, String conversationId){
-        LOGGER.entry(targets, negotiationCriteria, action, conversationId);
+    private String negotiate(String targets, String negotiationCriteria, String action, String externalData){
+        LOGGER.entry(targets, negotiationCriteria, action);
+        String conversationId=null;
 
-        //Request de nueva negociación
-        ACLMessage msg = new ACLMessage(ACLMessage.CFP);
+        //Primero se comprueba la acción a realizar como resultado de la negociación (la acción de arranque tiene requerimientos específicos).
+        if (action.equals("start")) {
 
-        for (String target: targets.split(",")) msg.addReceiver(new AID(target, AID.ISLOCALNAME));
 
-        // Si no me han pasado negotiationId, el sa es el que inicia la conversacion
-        if (conversationId==null) conversationId=String.valueOf(cmdId++);
+            //Separamos el external data para obtener la redundancia
+            String externalDataArray[]=externalData.split(",");
+            Integer redundancy = Integer.parseInt(externalDataArray[4]);
+            String state="";
 
-        msg.setConversationId(conversationId);
-        msg.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE );
-        System.out.println("****************");
+            //Con este valor, se puede iterar
+            for (int i=0; i<redundancy; i++) {
 
-        msg.setContent("negotiate "+targets+" criterion="+negotiationCriteria+" action="+action+" externaldata="+externalData);
-        LOGGER.debug(msg);
-        send(msg);
+                //Se comprueba si en la información externa se incluye el estado al que debe transicionar el agente tras el arranque.
+                //Si no, se asignará el estado running o tracking según corresponda
+                if (externalDataArray.length<6){
+                    state=","+((i==0)?"running":"tracking");
+                }
+
+                //Request de nueva negociación
+                ACLMessage msg = new ACLMessage(ACLMessage.CFP);
+
+                for (String target: targets.split(",")) msg.addReceiver(new AID(target, AID.ISLOCALNAME));
+
+                conversationId=String.valueOf(cmdId++);
+
+                msg.setConversationId(conversationId);
+                msg.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE );
+                System.out.println("****************");
+
+                msg.setContent("negotiate "+targets+" criterion="+negotiationCriteria+" action="+action+" externaldata="+externalData+state);
+                LOGGER.debug(msg);
+                send(msg);
+            }
+
+        } else {
+
+            //Request de nueva negociación
+            ACLMessage msg = new ACLMessage(ACLMessage.CFP);
+
+            for (String target: targets.split(",")) msg.addReceiver(new AID(target, AID.ISLOCALNAME));
+
+            // Si no me han pasado negotiationId, el sa es el que inicia la conversacion
+            conversationId=String.valueOf(cmdId++);
+
+            msg.setConversationId(conversationId);
+            msg.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE );
+            System.out.println("****************");
+
+            msg.setContent("negotiate "+targets+" criterion="+negotiationCriteria+" action="+action+" externaldata="+externalData);
+            LOGGER.debug(msg);
+            send(msg);
+        }
+
+
 
         return LOGGER.exit("threaded#localcmd .* setstate=running");
     }
