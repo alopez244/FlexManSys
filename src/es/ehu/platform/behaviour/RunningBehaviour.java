@@ -91,11 +91,12 @@ public class RunningBehaviour extends SimpleBehaviour {
 		for(int i=0;i<myAgent.expected_msgs.size();i++){
 			Object[] exp_msg;
 			exp_msg=myAgent.expected_msgs.get(i);
-			String sender=(String) exp_msg[0];
-			AID exp_msg_sender=new AID(sender,false);
-			String convID=(String) exp_msg[1];
-			String content=(String) exp_msg[2];
-			long timeout=(long) exp_msg[3];
+			ACLMessage complete_msg=(ACLMessage) exp_msg[0];
+			jade.util.leap.Iterator itor = complete_msg.getAllReceiver();
+			AID exp_msg_sender= (AID)itor.next();   //usa el iterador para obtener el AID de el receptor original del mensaje
+			String convID=complete_msg.getConversationId();
+			String content=complete_msg.getContent();
+			long timeout=(long) exp_msg[1];
 			Date date = new Date();
 			long instant = date.getTime();
 			MessageTemplate ack_template=MessageTemplate.and(MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchConversationId(convID),
@@ -113,7 +114,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 						}
 					}else{
 						LOGGER.info("Expected answer did not arrive on time.");
-						String report=sender+"/div/"+content;
+						String report=exp_msg_sender+"/div/"+content;
 						sendACLMessage(6, QoSID, "acl_error", convID, report, myAgent);
 						AddToExpectedMsgs(QoSID.getLocalName(),convID,report);
 					}

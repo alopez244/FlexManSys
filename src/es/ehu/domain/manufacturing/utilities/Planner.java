@@ -116,69 +116,12 @@ public class Planner extends Agent {
                                 if (cmds.length > 1) System.out.print(" < " + cmds[i]);
                                 System.out.print("\n\n");
                             }else if(cmds[i].equals("toggle")){
-                                if(control.equals("automatic")){
-                                    sendACL(ACLMessage.REQUEST,"D&D","man/auto","manual");
-                                    if(blockingReceive(template1,250)!=null){
-                                        control="manual";
-                                    }else{
-                                        control="automatic";
-                                    }
-                                } else if(control.equals("manual")){
-                                    sendACL(ACLMessage.REQUEST,"D&D","man/auto","automatic");
-                                    if(blockingReceive(template1,250)!=null){
-                                        control="automatic";
-                                    }else{
-                                        control="manual";
-                                    }
-                                }
+                                togglemode();  //cambia el modo en el D&D
                                 System.out.println("Changed to "+control+" mode.");
                             }else if(cmds[i].equals("errorlist")){
-                                MessageTemplate errtemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                                        MessageTemplate.MatchOntology("command"));
-                                sendACL(16, "QoSManagerAgent", "command", "errorlist");
-                                ACLMessage reply = blockingReceive(errtemplate, 500); //filtrar por template
-                                if(reply!=null) {
-                                    if (!reply.getContent().equals("")) {
-                                        String args[];
-                                        String errors[] = reply.getContent().split("/err/");
-                                        for (int j = 0; j < errors.length; j++) {
-                                            System.out.println("ERROR " + j);
-                                            args = errors[j].split("/inf/");
-                                            for (int k = 0; k < args.length; k++) {
-                                                System.out.print("    ");
-                                                System.out.println(args[k]);
-                                            }
-                                        }
-                                    } else {
-                                        System.out.println("No errors");
-                                    }
-                                }else{
-                                    System.out.println("QoS Manager did not answer on time.");
-                                }
+                                PrintErrorList();  //obtiene los errores registrados por el QoS
                             }else if(cmds[i].equals("relationship")){
-                                MessageTemplate reltemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                                        MessageTemplate.MatchOntology("askrelationship"));
-                                Scanner in2 = new Scanner(System.in);
-                                System.out.println("Define a batch or a machine agent: ");
-                                System.out.print("Agent: ");
-                                String cmd2 = in2.nextLine();
-                                if(cmd2.contains("machine")||cmd2.contains("batchagent")){
-                                    int found = SearchAgent(cmd2);
-                                    if (found != 1) {
-                                        LOGGER.error("Multiple or no resource agents found for provided name "+cmd2);
-                                    } else {
-                                        sendACL(16, "QoSManagerAgent","askrelationship" , cmd2);
-                                        ACLMessage reply = blockingReceive(reltemplate, 500);
-                                        if(reply!=null) {
-                                            System.out.print(cmd2 +" is assigned to "+reply.getContent());
-                                        }else{
-                                            System.out.println("QoS Manager did not answer on time.");
-                                        }
-                                    }
-                                }else{
-                                    System.out.println("Error. Not a valid agent.");
-                                }
-
+                                AskRelationship(); //Obtiene la relacion entre batch y maquina
                             }else if (cmds[i].equals("setstate")) {
                                 if(control.equals("manual")){
                                     changestate();
@@ -298,8 +241,6 @@ public class Planner extends Agent {
             Integer index;
 
             agentAttributes.put("seClass", "es.ehu.domain.manufacturing.agents.MPlanAgent");
-
-            // TODO Para pruebas con replicas
             Scanner in = new Scanner(System.in);
             System.out.println("Please, introduce the number of replicas you want to register.");
             System.out.print("Replicas: ");
@@ -480,42 +421,10 @@ public class Planner extends Agent {
                 e.printStackTrace();
             }
 
-            template = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
-                    MessageTemplate.MatchOntology("Ftime_batch_ask"));
-
             String BatchToFind;
             String OrderToFind;
-
-            while(batchlist.size()>0){//Se queda a la espera de recibir las consultas de finish time de cada batch
-
-                ACLMessage batch_asking=blockingReceive(template);
-                ACLMessage reply_to_batch=new ACLMessage(ACLMessage.INFORM);
-                AID batchAID = batch_asking.getSender();
-                BatchToFind=batch_asking.getContent();
-                item_ft_list=MPlanInterpreter.getItemFT(myAgent, xmlelements, planName,BatchToFind); //devuelve el finish time de la última operacion de cada item
-                String each_operation_time=BatchToFind+"&";
-                for(int i=0;i<item_ft_list.size();i++){
-                    each_operation_time=each_operation_time+item_ft_list.get(i);
-                    if(i+1!=item_ft_list.size()){
-                        each_operation_time=each_operation_time+"_";
-                    }
-                }
-                            reply_to_batch.setContent(each_operation_time);
-                            reply_to_batch.addReceiver(batchAID);
-                            reply_to_batch.setOntology("Ftime_batch_ask");
-                            send(reply_to_batch);
-
-                            for(int j=0;j<batchlist.size();j++){
-                                if(batchlist.get(j).equals(BatchToFind)){
-                                    batchlist.remove(j);
-                                }
-                            }
-
-            }
-//            batch_ft_list=MPlanInterpreter.getBatchFT(myAgent, xmlelements, planName,"11"); //para debug
             template = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
                     MessageTemplate.MatchOntology("Ftime_order_ask"));
-
             while(orderlist.size()>0){
                 ACLMessage order_asking=blockingReceive(template);
                 ACLMessage reply_to_order=new ACLMessage(ACLMessage.INFORM);
@@ -537,9 +446,42 @@ public class Planner extends Agent {
                 for(int j=0;j<orderlist.size();j++){
                     if(orderlist.get(j).equals(OrderToFind)){
                         orderlist.remove(j);
+                        j--;
                     }
                 }
             }
+
+            template = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+                    MessageTemplate.MatchOntology("Ftime_batch_ask"));
+
+            while(batchlist.size()>0){//Se queda a la espera de recibir las consultas de finish time de cada batch
+                ACLMessage batch_asking=blockingReceive(template);
+                ACLMessage reply_to_batch=new ACLMessage(ACLMessage.INFORM);
+                AID batchAID = batch_asking.getSender();
+                BatchToFind=batch_asking.getContent();
+                item_ft_list=MPlanInterpreter.getItemFT(myAgent, xmlelements, planName,BatchToFind); //devuelve el finish time de la última operacion de cada item
+                String each_operation_time=BatchToFind+"&";
+                for(int i=0;i<item_ft_list.size();i++){
+                    each_operation_time=each_operation_time+item_ft_list.get(i);
+                    if(i+1!=item_ft_list.size()){
+                        each_operation_time=each_operation_time+"_";
+                    }
+                }
+                            reply_to_batch.setContent(each_operation_time);
+                            reply_to_batch.addReceiver(batchAID);
+                            reply_to_batch.setOntology("Ftime_batch_ask");
+                            send(reply_to_batch);
+
+                            for(int j=0;j<batchlist.size();j++){  //buscamos y eliminamos el batch del listado.
+                                if(batchlist.get(j).equals(BatchToFind)){
+                                    batchlist.remove(j);
+                                    j--;
+                                }
+                            }
+
+            }
+//            batch_ft_list=MPlanInterpreter.getBatchFT(myAgent, xmlelements, planName,"11"); //para debug
+
 
         }
 
@@ -834,7 +776,7 @@ public class Planner extends Agent {
                 MessageTemplate.and(
                         MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
                         MessageTemplate.MatchPerformative(ACLMessage.INFORM))
-                , 3000);
+                , 5000);
         if(!cmd.contains("get *")){
             LOGGER.info((cmd.startsWith("validate"))?"xsd: "+reply.getContent(): cmd+" > "+reply.getContent());
         }
@@ -910,6 +852,74 @@ public class Planner extends Agent {
             }
         }
         return found;
+    }
+    private void togglemode(){
+        if(control.equals("automatic")){
+            sendACL(ACLMessage.REQUEST,"D&D","man/auto","manual");
+            if(blockingReceive(template1,250)!=null){
+                control="manual";
+            }else{
+                LOGGER.error("D&D did not answer. Keeping last mode "+ control);
+                control="automatic";
+            }
+        } else if(control.equals("manual")){
+            sendACL(ACLMessage.REQUEST,"D&D","man/auto","automatic");
+            if(blockingReceive(template1,250)!=null){
+                control="automatic";
+            }else{
+                LOGGER.error("D&D did not answer. Keeping last mode "+ control);
+                control="manual";
+            }
+        }
+    }
+    private void PrintErrorList(){
+        MessageTemplate errtemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                MessageTemplate.MatchOntology("command"));
+        sendACL(16, "QoSManagerAgent", "command", "errorlist");
+        ACLMessage reply = blockingReceive(errtemplate, 500);
+        if(reply!=null) {
+            if (!reply.getContent().equals("")) {
+                String args[];
+                String errors[] = reply.getContent().split("/err/");
+                for (int j = 0; j < errors.length; j++) {
+                    System.out.println("ERROR " + j);
+                    args = errors[j].split("/inf/");
+                    for (int k = 0; k < args.length; k++) {
+                        System.out.print("    ");
+                        System.out.println(args[k]);
+                    }
+                }
+            } else {
+                System.out.println("No errors");
+            }
+        }else{
+            System.out.println("QoS Manager did not answer on time.");
+        }
+    }
+    private void AskRelationship(){
+        MessageTemplate reltemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                MessageTemplate.MatchOntology("askrelationship"));
+        Scanner in2 = new Scanner(System.in);
+        System.out.println("Define a batch or a machine agent: ");
+        System.out.print("Agent: ");
+        String cmd2 = in2.nextLine();
+        if(cmd2.contains("machine")||cmd2.contains("batchagent")){
+            int found = SearchAgent(cmd2);
+            if (found != 1) {
+                LOGGER.error("Multiple or no resource agents found for provided name "+cmd2);
+            } else {
+                sendACL(16, "QoSManagerAgent","askrelationship" , cmd2);
+                ACLMessage reply = blockingReceive(reltemplate, 500);
+                if(reply!=null) {
+                    System.out.print(cmd2 +" is assigned to "+reply.getContent());
+                }else{
+                    System.out.println("QoS Manager did not answer on time.");
+                }
+            }
+        }else{
+            System.out.println("Error. Not a valid agent.");
+        }
+
     }
 
 }

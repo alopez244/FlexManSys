@@ -63,7 +63,7 @@ public class MWAgent extends Agent {
     public Object initialExecutionState = null;
     public ArrayList<Object[]> expected_msgs= new ArrayList<Object[]>();
     private int convIDCounter=1;
-    public HashMap<String,ArrayList<ACLMessage>> msg_drawer=new HashMap<String,ArrayList<ACLMessage>>(); //listado de mensajes guardados para reenviar cuando el receptor este disponible
+    public HashMap<String,ArrayList<ACLMessage>> msg_buffer=new HashMap<String,ArrayList<ACLMessage>>(); //listado de mensajes guardados para reenviar cuando el receptor este disponible
 
     // Parámetros de configuración
     public boolean mwmStoresExecutionState = true;
@@ -393,10 +393,8 @@ public class MWAgent extends Agent {
             aMsg.setContent(msg);
             for (String cmpins: cmpinss){
                 aMsg.addReceiver(new AID(cmpins, AID.ISLOCALNAME));
-                Object[] ExpMsg=AddToExpectedMsgs(cmpins,"state_refresh_"+String.valueOf(convIDCounter),msg); //un mensaje esperado por cada replica
-                expected_msgs.add(ExpMsg);
-                LOGGER.debug("ADDED EXPECTED MESSAGE: "+cmpins+" "+String.valueOf(convIDCounter));
             }
+            AddToExpectedMsgs(aMsg); //un mensaje esperado por cada replica
             send(aMsg);
             convIDCounter++;
             LOGGER.debug("sendState().send("+sTargets+"):"+aMsg);
@@ -485,16 +483,26 @@ public class MWAgent extends Agent {
 //        }
 //        LOGGER.exit();
 //    }
-    public Object[] AddToExpectedMsgs(String sender, String convID, String content){
-        Object[] ExpMsg=new Object[4];
-        ExpMsg[0]=sender;
-        ExpMsg[1]=convID;
-        ExpMsg[2]=content;
-        Date date = new Date();
-        long instant = date.getTime();
-        instant=instant+2000; //añade una espera de 2 seg
-        ExpMsg[3]=instant;
-        return ExpMsg;
+    public void AddToExpectedMsgs(ACLMessage msg){ //como se trata de un envío multiple en este caso hay que añadir un expected mesage para cada receptor
+
+        jade.util.leap.Iterator itor = msg.getAllReceiver();
+
+        while (itor.hasNext()) {
+            ACLMessage confirmation=new ACLMessage(msg.getPerformative());
+            Object[] ExpMsg=new Object[2];
+            confirmation.setOntology(msg.getOntology());
+            confirmation.setConversationId(msg.getConversationId());
+            confirmation.setContent(msg.getContent());
+            Date date = new Date();
+            long instant = date.getTime();
+            instant=instant+2000; //añade una espera de 2 seg
+            ExpMsg[1]=instant;
+            AID receiver=(AID) itor.next();
+            confirmation.addReceiver(receiver);
+            LOGGER.debug("Added expected mesage from: "+receiver.getLocalName()+" with ID conv: "+String.valueOf(convIDCounter));
+            ExpMsg[0]=confirmation; //codificamos en el object el mensaje de confirmacion para un unico receptor
+            expected_msgs.add(ExpMsg);
+        }
     }
     /**
      * Informa al middleware manager que la instancia de componente ha cambiado

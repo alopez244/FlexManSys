@@ -405,12 +405,18 @@ public class QoSManagerAgent extends Agent {
                                     }
                                 }
                             }
-                        }else if(msg.getContent().contains("batchagent")){
+                        }else{
                             try {
-                                ACLMessage reply =sendCommand(myAgent,"get "+msg.getContent()+" attrib=parent","QoS");
-                                ACLMessage reply2 =sendCommand(myAgent,"get "+reply.getContent()+ " attrib=reference","QoS");
+                                String parent="";
+                                if(msg.getContent().contains("batchagent")){ //si es un batchagent hay que buscar primero su parent
+                                    ACLMessage reply =sendCommand(myAgent,"get "+msg.getContent()+" attrib=parent","QoS");
+                                    parent=reply.getContent();
+                                }else  if(msg.getContent().contains("batch")){  //con el parent podemos obtener la referencia directamente
+                                    parent=msg.getContent();
+                                }
+                                ACLMessage reference =sendCommand(myAgent,"get "+parent+ " attrib=reference","QoS");
                                 for(int u=0;u<batch_and_machine.size();u++){
-                                    if(batch_and_machine.get(u).get(0).equals(reply2.getContent())){
+                                    if(batch_and_machine.get(u).get(0).equals(reference.getContent())){
                                         sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),batch_and_machine.get(u).get(1));
                                     }
                                 }
@@ -426,7 +432,7 @@ public class QoSManagerAgent extends Agent {
                         reply.setContent("0"); //si no encuentra ningun batch que coincida en la lista predefine un valor de 0
                         boolean flag = true;
                         if (allDelays.size() != 0) {
-                            for (int k = 0; k < allDelays.size() || flag; k++) {
+                            for (int k = 0; k < allDelays.size(); k++) {
                                 if (allDelays.get(k).get(0).equals(asking_batch)) {
                                     reply.setContent(allDelays.get(k).get(1));
                                     flag = false;
@@ -442,9 +448,9 @@ public class QoSManagerAgent extends Agent {
                             reply.addReceiver(msg.getSender());
                             reply.setOntology(msg.getOntology());
                             send(reply);
-                            LOGGER.info("Informing batch");
+                            LOGGER.info("Informing batch "+asking_batch);
                         }
-                    }else if(msg.getOntology().equals("command")){
+                    }else if(msg.getOntology().equals("command")){ //peticiones provenientes del D&D
                         if(msg.getContent().equals("errorlist")){
                             LOGGER.info(msg.getSender().getLocalName()+" asked to send error list");
                             String concatenated_errors="";

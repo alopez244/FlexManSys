@@ -475,62 +475,39 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     if (reply != null) {   // If the id does not exist, it returns error
                         myAgent.msgFIFO.add((String) reply.getContent());
                         batchName = reply.getContent();
-
-                    }else{
-
-//                        String informQoS="16"+"/div/"+"control"+"/div/"+"BatchAgentID"+"/div/"+"sa"+"/div/"+"get * reference=" + BathcID;
-//                        sendACLMessage(6, QoSID, "acl_error", "communication error", informQoS, myAgent);
-//
-//                        ACLMessage QoSR= myAgent.blockingReceive(QoStemplate,1000);
-//                        if(QoSR==null) {//si tampoco contesta el QoS se asume que esta aislado
-//                            LOGGER.error("I'm probably isolated.");
-//                            myAgent.state="idle";
-//                            myAgent.change_state=true;
-//                        }
-//                        boolean f=false;
-//                        for(int i=0;i<myAgent.ReportedAgents.size();i++){
-//                            myAgent.ReportedAgents.get(i).equals("sa");
-//                            f=true;
-//                        }
-//                        if(!f){
-//                            myAgent.ReportedAgents.add("sa");//si no se ha denunciado el agente añadirlo a la lista
-//                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 try {
-                    posponed_msgs_to_batch= myAgent.msg_drawer.get(batchName);
+                    posponed_msgs_to_batch= myAgent.msg_buffer.get(batchName);
                     if(posponed_msgs_to_batch==null){ //si no se encuentra el parent en el listado de mensajes postpuestos entonces el receptor ha confirmado la recepcion de todos los mensajes hasta ahora. Todoo OK.
-                        if (reply != null) {   // Si no existe el id en el registro devuelve error
-                            myAgent.msgFIFO.add((String) reply.getContent());
-                            String batchAgentName = reply.getContent();
+                        ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + batchName +" state=running", "BatchAgentID");
+                        if (running_replica != null) {   // Si no existe el id en el registro devuelve error
+                            myAgent.msgFIFO.add((String) running_replica.getContent());
+                            String batchAgentName = running_replica.getContent();
                             AID batchAgentID = new AID(batchAgentName, false);
-                            if(!reply.getContent().equals("")){
+                            if(!running_replica.getContent().equals("")){   //encontrada replica en running para este batch
                                 ACLMessage msg_to_batchagent=sendACLMessage(16, batchAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
                                 AddToExpectedMsgs(msg_to_batchagent);
-                            }else{
-                                ACLMessage msg_to_drawer=new ACLMessage(ACLMessage.REQUEST);
-                                msg_to_drawer.setConversationId("PLCdata");
-                                msg_to_drawer.setContent(MessageContent);
-//                            msg_to_drawer.addReceiver(batchAgentID); //no tenemos al agente en running porque el SA nos ha devuelto "", pero si tenemos al parent
-                                msg_to_drawer.setOntology("negotiation");
-                                posponed_msgs_to_batch.add(msg_to_drawer);
-                                myAgent.msg_drawer.put(batchName,posponed_msgs_to_batch); //guardamos el mensaje hasta que el D&D me informe de que ya tenemos disponible otro receptor
+                            }else{                                          //No encontrada replica en running para este batch. Puede que otro agente lo haya denunciado previamente
+                                ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.REQUEST);
+                                msg_to_buffer.setConversationId("PLCdata");
+                                msg_to_buffer.setContent(MessageContent);
+                                msg_to_buffer.setOntology("negotiation");
+                                posponed_msgs_to_batch.add(msg_to_buffer);
+                                myAgent.msg_buffer.put(batchName,posponed_msgs_to_batch); //guardamos el mensaje hasta que el D&D me informe de que ya tenemos disponible otro receptor
                             }
                         }
-                    }else{
-                        ACLMessage msg_to_drawer=new ACLMessage(ACLMessage.REQUEST);
-                        msg_to_drawer.setConversationId("PLCdata");
-                        msg_to_drawer.setContent(MessageContent);
-//                            msg_to_drawer.addReceiver(batchAgentID); //no tenemos al agente en running porque el SA nos ha devuelto "", pero si tenemos al parent
-                        msg_to_drawer.setOntology("negotiation");
-                        posponed_msgs_to_batch.add(msg_to_drawer);
-                        myAgent.msg_drawer.put(batchName,posponed_msgs_to_batch);
+                    }else{  //habia algun mensaje pendiente de envíar a un receptor aun no definido, por lo que se añade a la lista de mensajes postpuestos
+                        ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.REQUEST);
+                        msg_to_buffer.setConversationId("PLCdata");
+                        msg_to_buffer.setContent(MessageContent);
+                        msg_to_buffer.setOntology("negotiation");
+                        posponed_msgs_to_batch.add(msg_to_buffer);
+                        myAgent.msg_buffer.put(batchName,posponed_msgs_to_batch);
                     }
-                    reply = sendCommand(myAgent, "get * parent=" + batchName +" state=running", "BatchAgentID");
 
-                    //returns the names of all the agents that are sons
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -690,9 +667,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         }
         public void AddToExpectedMsgs(ACLMessage msg){
             Object[] ExpMsg=new Object[2];
-//            ExpMsg[0]=sender;
-//            ExpMsg[1]=convID;
-//            ExpMsg[2]=content;
             ExpMsg[0]=msg;
             Date date = new Date();
             long instant = date.getTime();

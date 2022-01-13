@@ -149,7 +149,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
     private ConcurrentHashMap<String, NegotiationData> negotiationRuntime = new ConcurrentHashMap<String, NegotiationData>();
     private CircularFifoQueue CFP_FIFO = new CircularFifoQueue(1000); //fifo para anotar los CFP recibidos hasta poder leerlos
 
-    private static String actionValue = null;
+    private String actionValue = null;
 
 
     public NegotiatingBehaviour(MWAgent a) {
@@ -353,7 +353,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 
                         // todavía no he entrado a esa negociación o ¿la he perdido?
 //                        myAgent.putBack(msg);
-                        initNegotiation();
+//                        initNegotiation();
                         myAgent.postMessage(msg);
                         LOGGER.debug("negotiation " + msg.getConversationId() + "is not for me");
                     }
@@ -497,6 +497,8 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                         inform_winner.addReceiver(id);
                                     }
                                 }
+                                AID DDId=new AID("D&D",false);
+                                inform_winner.addReceiver(DDId); //para este caso hay que avisar tambien al D&D para que se encargue de avisar a quien corresponda de que hay un nuevo encargado en running
                                 myAgent.send(inform_winner);
 
                                 ACLMessage recover_tracking_state = new ACLMessage(ACLMessage.REQUEST); //devuelve las replicas que han perdido a estado de tracking

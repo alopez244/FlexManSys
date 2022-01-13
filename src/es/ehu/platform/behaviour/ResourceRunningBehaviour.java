@@ -41,11 +41,12 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
 
     static final Logger LOGGER = LogManager.getLogger(ResourceRunningBehaviour.class.getName());
 
-    private MessageTemplate template;
+    private MessageTemplate template,template2;
     private MWAgent myAgent;
     private int PrevPeriod;
     private long NextActivation;
     private AID QoSID = new AID("QoSManagerAgent", false);
+    private AID DDID = new AID("D&D", false);
 
     // Constructor. Create a default template for the entry messages
     public ResourceRunningBehaviour(MWAgent a) {
@@ -54,6 +55,8 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         this.myAgent = a;
         this.template = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_RUN),
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+        this.template2 = MessageTemplate.and(MessageTemplate.MatchOntology("release_buffer"),
+                MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),MessageTemplate.MatchSender(DDID)));
     }
 
     public void onStart() {
@@ -71,14 +74,31 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
     public void action() {
         LOGGER.entry();
 
-        for(int i=0;i<myAgent.expected_msgs.size();i++){
+        ACLMessage new_target= myAgent.receive(template2);
+        if(new_target!=null){     //D&D avisa de que ya se puede vaciar el cbuffer de mensajes
+            if(new_target.getContent().contains("batchagent")){ //nuevo batch disponble para registrar la trazabilidad.
+                ACLMessage parent= myAgent.sendCommand("get "+new_target.getContent()+" attrib=parent"); //se ha registrado el parent como key
+                ArrayList<ACLMessage> postponed_msgs=new ArrayList<ACLMessage>();
+                postponed_msgs=myAgent.msg_buffer.get(parent.getContent()); //se obtiene el listado de mensajes pendientes para el batch
+                for(int i=0; i<postponed_msgs.size();i++){
+                    postponed_msgs.get(i).addReceiver(new AID(new_target.getContent(),false));
+                    myAgent.send(postponed_msgs.get(i));
+                }
+            }else{   //si no es el batch será que el GW ya esta disponible
+
+            }
+        }
+
+
+        for(int i=0;i<myAgent.expected_msgs.size();i++){         //realiza el checkeo de mensajes de acknowledge
             Object[] exp_msg;
             exp_msg=myAgent.expected_msgs.get(i);
-            ACLMessage complete_msg=(ACLMessage) exp_msg[0];
-            AID exp_msg_sender=complete_msg.getSender();
+            ACLMessage complete_msg=(ACLMessage) exp_msg[0];     //el mensaje que se ha enviado
+            jade.util.leap.Iterator itor = complete_msg.getAllReceiver();
+            AID exp_msg_sender= (AID)itor.next();   //usa el iterador para obtener el AID de el receptor original del mensaje
             String convID=complete_msg.getConversationId();
             String content=complete_msg.getContent();
-            long timeout=(long) exp_msg[1];
+            long timeout=(long) exp_msg[1];        //el instante para el cual ya se deberia haber obtenido respuesta
             Date date = new Date();
             long instant = date.getTime();
             MessageTemplate ack_template=MessageTemplate.and(MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchConversationId(convID),
@@ -96,16 +116,33 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
                             LOGGER.debug("Condición no programada ");
                         }
                     }else{
-                        LOGGER.info("Expected answer did not arrive on time."); //el agente no ha respondido a tiempo, se denuncia al QoS
-
+                        String sender_on_drawer="";  //para guardar el mensaje en el buffer hay que asignarle un receptor
+                        LOGGER.error("Expected answer did not arrive on time from "+exp_msg_sender.getLocalName()); //el agente no ha respondido a tiempo, se denuncia al QoS
+                        if(exp_msg_sender.getLocalName().contains("batchagent")){  //si el mensaje era para el agente batch se asigna el parent en el buffer
+                            ACLMessage parent_name= myAgent.sendCommand("get "+exp_msg_sender.getLocalName()+" attrib=parent");
+                            sender_on_drawer=parent_name.getContent();
+                        }else{
+                            sender_on_drawer=exp_msg_sender.getLocalName();
+                        }
+                        ArrayList<ACLMessage> postponed_msgs=new ArrayList<ACLMessage>();
+                        postponed_msgs=myAgent.msg_buffer.get(sender_on_drawer); //por si habia algún mensaje anteriormente
+                        if(postponed_msgs==null){
+                            postponed_msgs=new ArrayList<ACLMessage>();
+                            postponed_msgs.add(complete_msg);
+                        }else{
+                            postponed_msgs.add(complete_msg);
+                        }
+                        myAgent.msg_buffer.put(sender_on_drawer,postponed_msgs);  //se añade el mensaje a la lista de espera para enviarlo cuando el D&D nos confirme que existe un nuevo destinatario
                         String report=exp_msg_sender.getLocalName()+"/div/"+content;
                         ACLMessage report_to_QoS=sendACLMessage(6, QoSID, "acl_error", convID, report, myAgent);
-                        AddToExpectedMsgs(report_to_QoS);
+                        AddToExpectedMsgs(report_to_QoS);  //se espera una respuesta del QoS también
                     }
                     myAgent.expected_msgs.remove(i);
+                    i--;
                 }
             }else{
                 myAgent.expected_msgs.remove(i);
+                i--;
             }
         }
 

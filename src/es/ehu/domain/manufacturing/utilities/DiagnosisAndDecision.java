@@ -23,9 +23,10 @@ public class DiagnosisAndDecision extends Agent{
     static final Logger LOGGER = LogManager.getLogger(DiagnosisAndDecision.class.getName());
     private Agent myAgent=this;
     public String control="automatic";
-    public MessageTemplate expected_senders=MessageTemplate.or(MessageTemplate.MatchSender(new AID("planner",AID.ISLOCALNAME)),
+    private MessageTemplate expected_senders=MessageTemplate.or(MessageTemplate.MatchSender(new AID("planner",AID.ISLOCALNAME)),
                                             MessageTemplate.MatchSender(new AID("QoSManagerAgent",AID.ISLOCALNAME)));
-
+    private MessageTemplate neg_template=MessageTemplate.and(MessageTemplate.MatchOntology("negotiation"),
+            MessageTemplate.MatchPerformative(ACLMessage.INFORM));
     protected void setup(){
         LOGGER.entry();
 
@@ -39,23 +40,43 @@ public class DiagnosisAndDecision extends Agent{
         private String control="automatic";
 
         public void action() {
+
+                ACLMessage negotiation_result=receive(neg_template);
+                if(negotiation_result!=null){
+
+                    String convID="negotiation_winner_";
+                    String winner=negotiation_result.getSender().getLocalName();
+                    if(winner.contains("batchagent")){
+                        try {
+                            ACLMessage parent=sendCommand(myAgent,"get "+winner+" attrib=parent",convID+String.valueOf(convIDCounter));
+                            String target=get_relationship(parent.getContent());
+                            sendACL(ACLMessage.INFORM,target,"release_buffer",winner);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }else if(winner.contains("orderagent")){
+                        //TODO
+                    }else if(winner.contains("mplanagent")){
+                        //TODO
+                    }
+                    convIDCounter++;
+                }
                 ACLMessage msg=receive(expected_senders);  //solo lee mensajes de los agentes indicados en el template
                 if(msg!=null) {
                     if (msg.getOntology().equals("not_found")&&msg.getSender().getLocalName().equals("QoSManagerAgent")) { //Se reporta un agente aislado o muerto
                         if(control.equals("automatic")){ //solo toma decisiones si está en modo automatico
-                            if(!msg.getContent().contains("ControlGatewayCont")){ //no es un agente GW
+                            if(!msg.getContent().contains("ControlGatewayCont")){ //no es un agente GW por lo que el D&D puede realizar alguna acción
                                 LOGGER.error(msg.getContent()+" is either dead or isolated.");
-
-                                if(msg.getContent().contains("batchagent")||msg.getContent().contains("orderagent")||msg.getContent().contains("mplanagent")){ //si es agente de aplicacion
+                                if(msg.getContent().contains("batchagent")||msg.getContent().contains("orderagent")||msg.getContent().contains("mplanagent")){ //Es agente de aplicacion
                                     try {
                                         ACLMessage state= sendCommand(myAgent, "get "+msg.getContent()+" attrib=state", msg.getContent()+"_State_"+convIDCounter); //consigue el estado de la replcia caida
                                         LOGGER.warn(msg.getContent()+" was in "+state.getContent()+" state.");
                                         ACLMessage parent= sendCommand(myAgent, "get "+msg.getContent()+" attrib=parent", msg.getContent()+"_parent_"+convIDCounter);
 
-                                            ACLMessage hosting_node=sendCommand(myAgent, "get "+msg.getContent()+" attrib=node", msg.getContent()+"_Hosting_PNode_"+convIDCounter);
+                                            ACLMessage hosting_node=sendCommand(myAgent, "get "+msg.getContent()+" attrib=node", msg.getContent()+"_Hosting_PNode_"+convIDCounter); //devuelve el número de nodo que hostea a la replica
 //                                            sendACL(7, reply3.getContent(), "delete_replica", msg.getContent()); //TODO innecesario con el nuevo sistema porque esta centralizado en el SA. ELIMINAR esta parte de los agentes de aplicación
                                             sendCommand(myAgent, "del "+msg.getContent(),"Unregister_"+msg.getContent()+"_"+convIDCounter);
-                                            if(!PingAgent("pnodeagent"+hosting_node.getContent())){
+                                            if(!PingAgent("pnodeagent"+hosting_node.getContent())){  //checkea el estado del nodo para saber si hay que desregistrarlo o puede participar en la negociacion
                                                 //TODO reiniciar todas las replicas de este nodo
                                                 sendCommand(myAgent, "del pnodeagent"+hosting_node.getContent(),"Unregister_pnodeagent"+hosting_node.getContent()+convIDCounter); //nodo caido, se desregistra del SA
                                             }else{  //nodo no caido, pero replica sí
@@ -81,15 +102,15 @@ public class DiagnosisAndDecision extends Agent{
                                                             new_HE=new_HE+","+updated_hosted_elements.get(i);
                                                         }
                                                     }
-                                                }
-                                                ACLMessage set= sendCommand(myAgent, "set pnodeagent"+hosting_node.getContent()+" HostedElements="+new_HE, "pnodeagent"+hosting_node.getContent()+"_set_hosting_elements_"+convIDCounter);
+                                                }  //Actualiza los atributos del nodo para que pueda participar en la negociacion
+                                               sendCommand(myAgent, "set pnodeagent"+hosting_node.getContent()+" HostedElements="+new_HE, "pnodeagent"+hosting_node.getContent()+"_set_hosting_elements_"+convIDCounter);
                                             }
-                                        if(!state.getContent().equals("tracking")){ //si no estaba en tracking estaría en running o bootToRunning y requiere una acción
-                                            if (msg.getContent().contains("batchagent")) { //en caso de ser batch habría que hibernar el agente máquina hasta recuperar la replica
-                                                String machine = get_relationship(msg.getContent());
-                                                LOGGER.info(machine + " is changing to idle state");
-                                                sendACL(16, machine, "control", "setstate idle");
-                                            }
+                                        if(!state.getContent().equals("tracking")){ //si no estaba en tracking estaría en running o bootToRunning
+//                                            if (msg.getContent().contains("batchagent")) { //en caso de ser batch habría que hibernar el agente máquina hasta recuperar la replica
+//                                                String machine = get_relationship(msg.getContent());
+//                                                LOGGER.info(machine + " is changing to idle state");
+//                                                sendACL(16, machine, "control", "setstate idle");
+//                                            }
                                             ACLMessage tracking_instances= sendCommand(myAgent, "get * state=tracking parent="+parent.getContent(), parent.getContent()+"_tracking_instances_"+convIDCounter);
                                             String[] TrackingReplicas=new String[1];
                                             ACLMessage SetReplicasWFD=new ACLMessage(ACLMessage.REQUEST);
@@ -107,11 +128,11 @@ public class DiagnosisAndDecision extends Agent{
                                             SetReplicasWFD.setConversationId("Restore_running_replica_"+convIDCounter);
                                             myAgent.send(SetReplicasWFD);
 
-                                            String negotationdata="localneg "+tracking_instances.getContent()+ " criterion=CPU_usage action=restore externaldata=" + parent;
+                                            String negotationdata="localneg "+tracking_instances.getContent()+ " criterion=CPU_usage action=restore externaldata=" + parent; //se lanza negociacion entre las replicas en tracking
                                             sendCommand(myAgent,negotationdata , "Restore_"+state+"_Replica_"+convIDCounter);
 
                                         }else{
-                                            boolean done=restart_replica(parent.getContent(),state.getContent());
+                                            restart_replica(parent.getContent(),state.getContent()); //si esta en tracking simplemente recuperamos la replica si hay nodos disponibles
                                         }
 
                                     } catch (Exception e) {
@@ -317,11 +338,7 @@ public class DiagnosisAndDecision extends Agent{
                     seClass="es.ehu.domain.manufacturing.agents.MPlanAgent";
                 }
                 String criteria="";
-                if(state.equals("tracking")){
-                    criteria="max mem"; //si la replica esta en tracking interesa negociar con la memoria de los nodos
-                }else{
-                    criteria="cpu use"; //si la replica esta en running interesa negociar con el uso del CPU de los nodos
-                }
+                criteria="max mem"; //mismo criterio que al inicio del plan
                 String negotationdata="localneg "+ToNegotiate+ " criterion="+criteria+" action=start externaldata=" + parent + "," + category.getContent() + "," + seClass + "," + myAgent.getLocalName() + "," + "1" + "," + state;
                 sendCommand(myAgent,negotationdata , "Restore_"+state+"_Replica");
                 return true;

@@ -77,12 +77,9 @@ public class Dom_Functionality{
 
     }
 
-
-
     public ACLMessage sendACLMessage(int performative, AID reciever, String ontology, String conversationId, String content, Agent agent) {
 
                 this.myAgent = agent;
-
                 ACLMessage msg = new ACLMessage(performative); //envio del mensaje
                 msg.addReceiver(reciever);
                 msg.setOntology(ontology);
