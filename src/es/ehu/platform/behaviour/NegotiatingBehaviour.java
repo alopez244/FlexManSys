@@ -353,7 +353,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 
                         // todavía no he entrado a esa negociación o ¿la he perdido?
 //                        myAgent.putBack(msg);
-//                        initNegotiation();
+                        initNegotiation();
                         myAgent.postMessage(msg);
                         LOGGER.debug("negotiation " + msg.getConversationId() + "is not for me");
                     }
