@@ -45,12 +45,14 @@ public class RunningBehaviour extends SimpleBehaviour {
 
 	static final Logger LOGGER = LogManager.getLogger(RunningBehaviour.class.getName());
 
-	private MessageTemplate template;
+	private MessageTemplate template,template2;
 	private MWAgent myAgent;
 	private int PrevPeriod;
 	private long NextActivation;
 	private Boolean endFlag;
 	private AID QoSID = new AID("QoSManagerAgent", false);
+	private AID DDID = new AID("D&D", false);
+	private boolean wait=false;
 	// Constructor. Create a default template for the entry messages
 	public RunningBehaviour(MWAgent a) {
 		super(a);
@@ -58,6 +60,8 @@ public class RunningBehaviour extends SimpleBehaviour {
 		this.myAgent = a;
 		this.template = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_DATA),
 				MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+		this.template2 = MessageTemplate.and(MessageTemplate.MatchOntology("release_buffer"),
+				MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),MessageTemplate.MatchSender(DDID)));
 
 	}
 
@@ -86,17 +90,44 @@ public class RunningBehaviour extends SimpleBehaviour {
 		LOGGER.entry();
 		Object[] receivedMsgs = null;
 
+		//****************** 1) Etapa de checkeo para mensajes retenidos por falta de disponibilidad de agentes
+		//comprueba si hay mensajes que permitan liberar los mensajes retenidos por el agente
+		ACLMessage new_target= myAgent.receive(template2);
+		if(new_target!=null){     //D&D avisa de que ya se puede vaciar el buffer de mensajes
+			if(new_target.getContent().contains("orderagent")||new_target.getContent().contains("mplanagent")){ //nuevo agente de aplicación disponible para recibir el aviso
+				ACLMessage parent= myAgent.sendCommand("get "+new_target.getContent()+" attrib=parent"); //se ha registrado el parent como key para los agentes de aplicación
+				ArrayList<ACLMessage> postponed_msgs=new ArrayList<ACLMessage>();
+				postponed_msgs=myAgent.msg_buffer.get(parent.getContent()); //se obtiene el listado de mensajes pendientes para el agente
+				if(postponed_msgs!=null){
+					for(int i=0; i<postponed_msgs.size();i++){
+						ACLMessage msg_to_release=new ACLMessage(postponed_msgs.get(i).getPerformative());
+						msg_to_release.setContent(postponed_msgs.get(i).getContent());
+						msg_to_release.setOntology(postponed_msgs.get(i).getOntology());
+						msg_to_release.setConversationId(postponed_msgs.get(i).getConversationId());
+						msg_to_release.addReceiver(new AID(new_target.getContent(),false));
+						myAgent.send(msg_to_release);
+					}
+					myAgent.msg_buffer.remove(parent.getContent());
+				}else{
+					LOGGER.error("Received a release buffer petition while not having the target registered on msg buffer");
+				}
+			}else{   //si no es un agente de apliación será de otro tipo
+				LOGGER.error("No programmed function for this agent");
+			}
+		}
+		//****************** Fin de etapa de checkeo para mensajes retenidos por falta de disponibilidad de agentes
 
-		//****************** Etapa de checkeo de mensajes de acknowledge
+		//****************** 2) Etapa de checkeo de mensajes de acknowledge
+		//Se recorre el queue de mensajes para comprobar si todos los mensajes que esperaban respuesta la han obtenido a tiempo
 		for(int i=0;i<myAgent.expected_msgs.size();i++){
 			Object[] exp_msg;
 			exp_msg=myAgent.expected_msgs.get(i);
 			ACLMessage complete_msg=(ACLMessage) exp_msg[0];
 			jade.util.leap.Iterator itor = complete_msg.getAllReceiver();
-			AID exp_msg_sender= (AID)itor.next();   //usa el iterador para obtener el AID de el receptor original del mensaje
+			AID exp_msg_sender= (AID)itor.next();   //usa el iterador para obtener el AID de el receptor original del mensaje (solo debería ser uno)
 			String convID=complete_msg.getConversationId();
 			String content=complete_msg.getContent();
-			long timeout=(long) exp_msg[1];
+			long timeout=(long) exp_msg[1]; //obtiene el tiempo limite para recibir la confirmación de mensaje
 			Date date = new Date();
 			long instant = date.getTime();
 			MessageTemplate ack_template=MessageTemplate.and(MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchConversationId(convID),
@@ -108,15 +139,32 @@ public class RunningBehaviour extends SimpleBehaviour {
 					if(exp_msg_sender.getLocalName().equals(QoSID.getLocalName())){
 						LOGGER.info("QoS did not answer on time. THIS AGENT MIGHT BE ISOLATED.");
 						if(myAgent.getLocalName().contains("batchagent")||myAgent.getLocalName().contains("orderagent")||myAgent.getLocalName().contains("mplanagent")){
-							System.exit(0); //es un agente de aplicacion, por lo que se "suicida" si esta aislado
+							System.exit(0); //es un agente de aplicacion, por lo que se "suicida" si esta aislado. El nodo completo es eliminado.
 						}else{ //TODO añadir aquí agentes no contemplados cuando proceda
-							LOGGER.debug("Condición no programada ");
+
 						}
 					}else{
+						String sender_on_msgbuffer="";
 						LOGGER.info("Expected answer did not arrive on time.");
-						String report=exp_msg_sender+"/div/"+content;
-						sendACLMessage(6, QoSID, "acl_error", convID, report, myAgent);
-						AddToExpectedMsgs(QoSID.getLocalName(),convID,report);
+						if(exp_msg_sender.getLocalName().contains("batchagent")||exp_msg_sender.getLocalName().contains("orderagent")||exp_msg_sender.getLocalName().contains("mplanagent")){  //si el mensaje era para el agente batch se asigna el parent en el buffer
+							ACLMessage parent_name= myAgent.sendCommand("get "+exp_msg_sender.getLocalName()+" attrib=parent");
+							sender_on_msgbuffer=parent_name.getContent();
+						}else{
+							sender_on_msgbuffer=exp_msg_sender.getLocalName();
+						}
+						ArrayList<ACLMessage> postponed_msgs=new ArrayList<ACLMessage>();
+						postponed_msgs=myAgent.msg_buffer.get(sender_on_msgbuffer); //por si habia algún mensaje anteriormente
+						if(postponed_msgs==null){
+							postponed_msgs=new ArrayList<ACLMessage>();
+							postponed_msgs.add(complete_msg);  //como vamos a denunciar a este agente debemos guardar el mensaje para enviarselo a su sustituto
+						}else{
+							postponed_msgs.add(complete_msg);
+						}
+						myAgent.msg_buffer.put(sender_on_msgbuffer,postponed_msgs);  //se añade el mensaje a la lista de espera para enviarlo cuando el D&D nos confirme que existe un nuevo destinatario
+						LOGGER.debug("Añadido mensaje a la lista de espera: "+complete_msg);
+						String report=exp_msg_sender.getLocalName()+"/div/"+content;
+						ACLMessage reported_msg= sendACLMessage(6, QoSID, "acl_error", convID, report, myAgent); //se denuncia al QoS el agnete que no respondía.
+						myAgent.AddToExpectedMsgs(reported_msg); //se esperará tambien respuesta del QoS.
 					}
 					myAgent.expected_msgs.remove(i);
 					i--;
@@ -128,12 +176,16 @@ public class RunningBehaviour extends SimpleBehaviour {
 		}
 		//****************** Fin de etapa de checkeo de mensajes de acknowledge
 
-		//****************** Etapa de actualización de replicas
-		// Consigue el estado actual de la replica cuando se recibe cualquier mensaje. A través de un template se pueden filtrar.
+		//****************** 3) Etapa de actualización de replicas
+		// Consigue el estado actual de la replica cuando se recibe cualquier mensaje y se devuelve al queue.
 		String currentState = null;
 		ACLMessage any_msg = myAgent.receive();
 		if(any_msg!=null){
-			myAgent.putBack(any_msg);
+			LOGGER.debug("Peeked msg: "+any_msg.getContent());
+			LOGGER.debug("From: "+any_msg.getSender().getLocalName());
+			if(!any_msg.getContent().equals("done")){ //"flushea" mensajes de tipo done para evitar bucles
+				myAgent.putBack(any_msg);  //en caso de no serlo, se devuelve al queue de mensajes ACL
+			}
 			if(!myAgent.antiloopflag) { //el flag de antiloop evita bucles infinitos acotando un tramo de código
 				currentState = (String) ((AvailabilityFunctionality) myAgent.functionalityInstance).getState();
 				if (currentState != null) {
@@ -144,14 +196,28 @@ public class RunningBehaviour extends SimpleBehaviour {
 		}
 		//****************** Fin de etapa de actualización de replicas
 
-
-		//***************** Etapa de ejecución de funtionality
+		//***************** 4) Etapa de ejecución de funtionality
 		ACLMessage msg = myAgent.receive(template);
 		receivedMsgs = manageReceivedMsg(msg);
 		Object result = myAgent.functionalityInstance.execute(receivedMsgs);
-		endFlag = Boolean.valueOf(result.toString());
+		endFlag =Boolean.valueOf(result.toString());
+		if(endFlag){
+			if(!myAgent.msg_buffer.isEmpty()||myAgent.expected_msgs.size()!=0){  //si tenemos mensajes en el cajon o esperamos respuestas de confirmación no podemos terminar aun
+				endFlag=false;
+				result=false;
+				wait=true;
+			}
+		}
+		if(wait){  //si el agente ha recibido todos los mensajes
+			if(myAgent.msg_buffer.isEmpty()&&myAgent.expected_msgs.size()==0){
+				endFlag=true;
+				result=true;
+				wait=false;
+			}
+		}
 		manageExecutionResult(result);
 		//***************** Fin de etapa de ejecución de funtionality
+
 
 //		Serializable state = null;
 //		try {
@@ -295,7 +361,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 		}
 		return LOGGER.exit(t);
 	}
-	public void sendACLMessage(int performative, AID reciever, String ontology, String conversationId, String content, Agent agent) {
+	public ACLMessage sendACLMessage(int performative, AID reciever, String ontology, String conversationId, String content, Agent agent) {
 
 		ACLMessage msg = new ACLMessage(performative); //envio del mensaje
 		msg.addReceiver(reciever);
@@ -303,17 +369,8 @@ public class RunningBehaviour extends SimpleBehaviour {
 		msg.setConversationId(conversationId);
 		msg.setContent(content);
 		myAgent.send(msg);
+		return msg;
 	}
-	public void AddToExpectedMsgs(String sender, String convID, String content){
-		Object[] ExpMsg=new Object[4];
-		ExpMsg[0]=sender;
-		ExpMsg[1]=convID;
-		ExpMsg[2]=content;
-		Date date = new Date();
-		long instant = date.getTime();
-		instant=instant+2000; //añade una espera de 2 seg
-		ExpMsg[3]=instant;
-		myAgent.expected_msgs.add(ExpMsg);
-	}
+
 
 }

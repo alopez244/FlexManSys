@@ -135,8 +135,8 @@ public class SystemModelAgent extends Agent implements IExecManagement {
                           key = "";
                       else
                           key = msg.getConversationId();
-                      ds.put(key, msg);
-                      behaviours.put(key, new ThreadedCommandProcessor(key, myAgent));
+//                      ds.put(key, msg);
+                      behaviours.put(key, new ThreadedCommandProcessor(key, myAgent,msg));
                       myAgent.addBehaviour(tbf.wrap(behaviours.get(key)));
 
                 } // end ontología de control

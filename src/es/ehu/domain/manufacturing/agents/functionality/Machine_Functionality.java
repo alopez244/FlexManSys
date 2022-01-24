@@ -195,17 +195,14 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     @Override
     public Object execute(Object[] input) {
 
-
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try { Thread.sleep(5000);} catch (InterruptedException e) {e.printStackTrace();}  //con el buffer de mensajes esta espera es innecesaria
 
         System.out.println("El agente recurso " + myAgent.getLocalName() + " ya esta en el metodo execute");
 
         if (input[0] != null) {
             ACLMessage msg = (ACLMessage) input[0];
+            Acknowledge(msg,myAgent);
+
             if (msg.getContent().equals("All manufacturing plan ready to run")) {
 
                 System.out.println("Ya estoy listo para empezar a hacer mis operaciones");
@@ -317,13 +314,13 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         myAgent.msgFIFO.add((String) msg2.getContent());
         this.PLCmsgIn = new Gson().fromJson(msg2.getContent(), HashMap.class);   //Data type conversion Json->Hashmap class
         if(PLCmsgIn.containsKey("Received")){   //Checks if it is a confirmation message
-//            if(PLCmsgIn.get("Received").equals(true)){
-//
-//                System.out.println("<--PLC reception confirmation");
-//            }else{
-//                System.out.println("<--Problem receiving the message");
-//            }
-            LOGGER.debug("Received a confirmation message out of the timeout. Timeout might be increased.");
+            if(PLCmsgIn.get("Received").equals(true)){
+
+                System.out.println("<--PLC reception confirmation");
+            }else{
+                System.out.println("<--Problem receiving the message");
+            }
+//            LOGGER.debug("Received a confirmation message out of the timeout. Timeout might be increased.");
         }else{
             recvBatchInfo(msg2);   // sends item information to batch agent
             if(PLCmsgIn.containsKey("Control_Flag_Service_Completed")) {    //At least the first field is checked
@@ -479,18 +476,19 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+
                 try {
                     posponed_msgs_to_batch= myAgent.msg_buffer.get(batchName);
                     if(posponed_msgs_to_batch==null){ //si no se encuentra el parent en el listado de mensajes postpuestos entonces el receptor ha confirmado la recepcion de todos los mensajes hasta ahora. Todoo OK.
                         ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + batchName +" state=running", "BatchAgentID");
-                        if (running_replica != null) {   // Si no existe el id en el registro devuelve error
-                            myAgent.msgFIFO.add((String) running_replica.getContent());
+                        if (running_replica != null) {
                             String batchAgentName = running_replica.getContent();
                             AID batchAgentID = new AID(batchAgentName, false);
                             if(!running_replica.getContent().equals("")){   //encontrada replica en running para este batch
                                 ACLMessage msg_to_batchagent=sendACLMessage(16, batchAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
-                                AddToExpectedMsgs(msg_to_batchagent);
-                            }else{                                          //No encontrada replica en running para este batch. Puede que otro agente lo haya denunciado previamente
+                                myAgent.AddToExpectedMsgs(msg_to_batchagent);
+
+                            }else{    //No encontrada replica en running para este batch. Puede que otro agente lo haya denunciado previamente o que el batch aun no se haya iniciado
                                 ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.REQUEST);
                                 msg_to_buffer.setConversationId("PLCdata");
                                 msg_to_buffer.setContent(MessageContent);
@@ -499,16 +497,21 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                                 myAgent.msg_buffer.put(batchName,posponed_msgs_to_batch); //guardamos el mensaje hasta que el D&D me informe de que ya tenemos disponible otro receptor
                             }
                         }
-                    }else{  //habia algun mensaje pendiente de envíar a un receptor aun no definido, por lo que se añade a la lista de mensajes postpuestos
+                    }else{  //habia algun mensaje pendiente de envíar a un receptor aun no definido
+
+                        System.out.println("Added message to buffer:\nContent: "+MessageContent+"\nTo: "+batchName);
                         ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.REQUEST);
                         msg_to_buffer.setConversationId("PLCdata");
                         msg_to_buffer.setContent(MessageContent);
                         msg_to_buffer.setOntology("negotiation");
                         posponed_msgs_to_batch.add(msg_to_buffer);
                         myAgent.msg_buffer.put(batchName,posponed_msgs_to_batch);
+
+                        ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + batchName +" state=running", "BatchAgentID");
+                        if(!running_replica.getContent().equals("")){ //nos aseguramos de que el receptor aun no exista. Si existe ya, vaciamos el cajón con un automensaje.
+                            sendACLMessage(7, myAgent.getAID(), "release_buffer","new_replica_detected",running_replica.getContent(),myAgent);
+                        }
                     }
-
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -615,10 +618,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         String MessageContent = new Gson().toJson(PLCmsgOut);
                         AID gatewayAgentID = new AID(gatewayAgentName, false);
                         ACLMessage msg_to_gw=sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
-//                        MessageTemplate PLCconfirmation = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-//                                MessageTemplate.MatchOntology("negotiation"));
 
-                        AddToExpectedMsgs(msg_to_gw);
+                        myAgent.AddToExpectedMsgs(msg_to_gw);
 
                         sendingFlag = false;
                         machinePlanIndex = 0;
@@ -665,15 +666,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             }
 
         }
-        public void AddToExpectedMsgs(ACLMessage msg){
-            Object[] ExpMsg=new Object[2];
-            ExpMsg[0]=msg;
-            Date date = new Date();
-            long instant = date.getTime();
-            instant=instant+2000; //añade una espera de 2 seg
-            ExpMsg[1]=instant;
-            myAgent.expected_msgs.add(ExpMsg);
-        }
+
 
 }
 

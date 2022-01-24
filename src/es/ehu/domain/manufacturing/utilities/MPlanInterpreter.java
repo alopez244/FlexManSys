@@ -63,6 +63,7 @@ public class MPlanInterpreter {
         if (error) {
             // Si alguna maquina no esta disponible no se puede registrar la maquina
             return null;    // De momento lo dejamos asi, pero habria que poner un mensaje de error o lanzar una excepcion
+            //TODO antes del return, printear por pantalla que no se puede registrar el plan porque alguna máquina no está disponible
         }
 
         //TODO si las maquinas estan disponibles hay que enviarles las operaciones que van a hacer
@@ -133,7 +134,12 @@ public class MPlanInterpreter {
             msg.setContent((String) pair.getValue());
 
             myAgent.send(msg);
+            ACLMessage ack= myAgent.blockingReceive(MessageTemplate.MatchPerformative(ACLMessage.CONFIRM),500);
+            if(ack==null){
+                System.out.println("ERROR. "+msg.getAllReceiver()+" did not answer on time.");
+            }
 
+//TODO añadir un blocking receive y añadir en la recepción de este mensaje por parte de las máquinas una respuesta de confirmación
 
         }
         //No es necesario con la estructura nueva de XML ***************************************************************
@@ -355,7 +361,7 @@ public class MPlanInterpreter {
         msg.setReplyWith(cmd);
 
         myAgent.send(msg);
-
+//Todo revisar este blocking receive
         /*
         ACLMessage reply = myAgent.blockingReceive(MessageTemplate.and(
                 MessageTemplate.MatchInReplyTo(msg.getReplyWith()),

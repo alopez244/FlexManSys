@@ -44,11 +44,12 @@ public class ThreadedCommandProcessor extends SimpleBehaviour {
    * @param a
    *            a reference to the Agent
    **/
-  public ThreadedCommandProcessor(String key , Agent a) {
+  public ThreadedCommandProcessor(String key , Agent a, ACLMessage msg) {
     super(a);
     LOGGER.entry(key, a);
     this.key = key;
     this.myAgent = (SystemModelAgent)a;
+    this.msg=msg;
     LOGGER.exit();
   }
 
@@ -59,11 +60,13 @@ public class ThreadedCommandProcessor extends SimpleBehaviour {
   public void onStart() {
     LOGGER.entry();
 
-    // recojo y borro del ds el mensaje que contiene el comando
-    msg = (ACLMessage)myAgent.ds.get(this.key);
-    myAgent.ds.remove(this.key);
-    // proceso el comando
+
+//    msg = (ACLMessage)myAgent.ds.get(this.key);
+//    myAgent.ds.remove(this.key);  //Todo comentado para evitar nullpointers en negociaciones
+    // proceso el  comando
+
     result = myAgent.processCmd(msg.getContent(), key);
+
     if (result.startsWith("threaded#")) this.condition = result.substring(result.indexOf("#")+1);
     
     myAgent.threadLog.put(key, ((this.result.length()>20)?this.result.substring(0,20)+"...-":this.result) + " < " 
@@ -86,10 +89,10 @@ public class ThreadedCommandProcessor extends SimpleBehaviour {
          LOGGER.trace("tbf.getThread(this).suspend();");
          myAgent.tbf.getThread(this).suspend();
          LOGGER.trace("tbf.getThread(this).resume();");
-         if (myAgent.ds.containsKey(key)) {
-           data = ((ACLMessage)myAgent.ds.get(this.key)).getContent();
-           myAgent.ds.remove(key);
-         } 
+//         if (myAgent.ds.containsKey(key)) {
+//           data = ((ACLMessage)myAgent.ds.get(this.key)).getContent();
+//           myAgent.ds.remove(key);
+//         }
          LOGGER.debug("data="+data);
          
        } while (!data.matches(condition));

@@ -166,7 +166,7 @@ public class AvailabilityManager extends Agent {
 
         String key = String.valueOf(cmdId++);     
         ds.put(key, msg);
-        behaviours.put(key, new ThreadedCommandProcessor(key, myAgent));
+        behaviours.put(key, new ThreadedCommandProcessor(key, myAgent, msg));
         myAgent.addBehaviour(tbf.wrap(behaviours.get(key)));
 
       } // end ontología de control 

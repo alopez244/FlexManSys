@@ -51,12 +51,12 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
     // Constructor. Create a default template for the entry messages
     public ResourceRunningBehaviour(MWAgent a) {
         super(a);
-        LOGGER.debug("*** Constructing RunningBehaviour ***");
+        LOGGER.debug("*** Constructing ResourceRunningBehaviour ***");
         this.myAgent = a;
         this.template = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_RUN),
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
         this.template2 = MessageTemplate.and(MessageTemplate.MatchOntology("release_buffer"),
-                MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),MessageTemplate.MatchSender(DDID)));
+                MessageTemplate.MatchPerformative(ACLMessage.INFORM));
     }
 
     public void onStart() {
@@ -74,22 +74,34 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
     public void action() {
         LOGGER.entry();
 
+        //****************** 1) Etapa de checkeo para mensajes retenidos por falta de disponibilidad de agentes
         ACLMessage new_target= myAgent.receive(template2);
-        if(new_target!=null){     //D&D avisa de que ya se puede vaciar el cbuffer de mensajes
-            if(new_target.getContent().contains("batchagent")){ //nuevo batch disponble para registrar la trazabilidad.
+        if(new_target!=null){     //D&D avisa de que ya se puede vaciar el buffer de mensajes
+            if(new_target.getContent().contains("batchagent")){ //nuevo agente batch disponble para registrar la trazabilidad.
                 ACLMessage parent= myAgent.sendCommand("get "+new_target.getContent()+" attrib=parent"); //se ha registrado el parent como key
                 ArrayList<ACLMessage> postponed_msgs=new ArrayList<ACLMessage>();
                 postponed_msgs=myAgent.msg_buffer.get(parent.getContent()); //se obtiene el listado de mensajes pendientes para el batch
-                for(int i=0; i<postponed_msgs.size();i++){
-                    postponed_msgs.get(i).addReceiver(new AID(new_target.getContent(),false));
-                    myAgent.send(postponed_msgs.get(i));
+                if(postponed_msgs!=null){
+                    for(int i=0; i<postponed_msgs.size();i++){
+                        ACLMessage msg_to_release=new ACLMessage(postponed_msgs.get(i).getPerformative());
+                        msg_to_release.setContent(postponed_msgs.get(i).getContent());
+                        msg_to_release.setOntology(postponed_msgs.get(i).getOntology());
+                        msg_to_release.setConversationId(postponed_msgs.get(i).getConversationId());
+                        msg_to_release.addReceiver(new AID(new_target.getContent(),false));
+                        myAgent.send(msg_to_release);
+                    }
+                    myAgent.msg_buffer.remove(parent.getContent());
+                }else{
+                    LOGGER.error("Buffer already released.");
                 }
-            }else{   //si no es el batch será que el GW ya esta disponible
 
+            }else{   //si no es un agente de apliación será GW
+                //todo añadir aqui para relese de agente GW
             }
         }
+        //****************** Fin de etapa de checkeo para mensajes retenidos por falta de disponibilidad de agentes
 
-
+        //****************** 2) Etapa de checkeo de mensajes de acknowledge
         for(int i=0;i<myAgent.expected_msgs.size();i++){         //realiza el checkeo de mensajes de acknowledge
             Object[] exp_msg;
             exp_msg=myAgent.expected_msgs.get(i);
@@ -113,29 +125,31 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
                             myAgent.state="idle";	//es un agente máquina por lo que transiciona a idle
                             myAgent.change_state=true;
                         }else{ //TODO añadir aquí agentes no contemplados cuando proceda
-                            LOGGER.debug("Condición no programada ");
+
                         }
                     }else{
-                        String sender_on_drawer="";  //para guardar el mensaje en el buffer hay que asignarle un receptor
+                        String sender_on_msgbuffer="";  //para guardar el mensaje en el buffer hay que asignarle un receptor
                         LOGGER.error("Expected answer did not arrive on time from "+exp_msg_sender.getLocalName()); //el agente no ha respondido a tiempo, se denuncia al QoS
                         if(exp_msg_sender.getLocalName().contains("batchagent")){  //si el mensaje era para el agente batch se asigna el parent en el buffer
                             ACLMessage parent_name= myAgent.sendCommand("get "+exp_msg_sender.getLocalName()+" attrib=parent");
-                            sender_on_drawer=parent_name.getContent();
+                            sender_on_msgbuffer=parent_name.getContent();
                         }else{
-                            sender_on_drawer=exp_msg_sender.getLocalName();
+                            sender_on_msgbuffer=exp_msg_sender.getLocalName();
                         }
+
                         ArrayList<ACLMessage> postponed_msgs=new ArrayList<ACLMessage>();
-                        postponed_msgs=myAgent.msg_buffer.get(sender_on_drawer); //por si habia algún mensaje anteriormente
+                        postponed_msgs=myAgent.msg_buffer.get(sender_on_msgbuffer); //por si habia algún mensaje anteriormente
                         if(postponed_msgs==null){
                             postponed_msgs=new ArrayList<ACLMessage>();
-                            postponed_msgs.add(complete_msg);
+                            postponed_msgs.add(complete_msg);  //como vamos a denunciar a este agente debemos guardar el mensaje para enviarselo a su sustituto
                         }else{
                             postponed_msgs.add(complete_msg);
                         }
-                        myAgent.msg_buffer.put(sender_on_drawer,postponed_msgs);  //se añade el mensaje a la lista de espera para enviarlo cuando el D&D nos confirme que existe un nuevo destinatario
+                        myAgent.msg_buffer.put(sender_on_msgbuffer,postponed_msgs);  //se añade el mensaje a la lista de espera para enviarlo cuando el D&D nos confirme que existe un nuevo destinatario
+                        LOGGER.debug("Añadido mensaje a la lista de espera: "+complete_msg.getContent());
                         String report=exp_msg_sender.getLocalName()+"/div/"+content;
                         ACLMessage report_to_QoS=sendACLMessage(6, QoSID, "acl_error", convID, report, myAgent);
-                        AddToExpectedMsgs(report_to_QoS);  //se espera una respuesta del QoS también
+                        myAgent.AddToExpectedMsgs(report_to_QoS);  //se espera una respuesta del QoS también
                     }
                     myAgent.expected_msgs.remove(i);
                     i--;
@@ -145,23 +159,22 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
                 i--;
             }
         }
+        //****************** Fin de etapa de checkeo de mensajes de acknowledge
 
+        //***************** 3) Etapa de ejecución de funtionality
         ACLMessage msg = myAgent.receive(template);
-
         if (msg!=null) {
             //lo que haga en el running
-
             // Esto deberia ir dentro del if anterior, pero de momento no se le mandan mensajes de ese tipo (ontology: ONT_RUN)
             // TODO CUIDADO --> Se ha copiado de RunningBehaviour
             Object[] receivedMsgs = manageReceivedMsg(msg);
             Object result = myAgent.functionalityInstance.execute(receivedMsgs);
         }
-
+        //***************** Fin de etapa de ejecución de funtionality
 
         long t = manageBlockingTimes();
-
         if (msg == null&&myAgent.expected_msgs.size()==0) {
-            LOGGER.debug("Block time: " + t);
+//            LOGGER.debug("Block time: " + t);
             block(t); // cada cierto tiempo comprobar recursos/alarmas
         }
         LOGGER.exit();
@@ -245,16 +258,5 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         myAgent.send(msg);
         return msg;
     }
-    public void AddToExpectedMsgs(ACLMessage msg){
-        Object[] ExpMsg=new Object[2];
-//        ExpMsg[0]=sender;
-//        ExpMsg[1]=convID;
-//        ExpMsg[2]=content;
-        ExpMsg[0]=msg;
-        Date date = new Date();
-        long instant = date.getTime();
-        instant=instant+2000; //añade una espera de 2 seg
-        ExpMsg[1]=instant;
-        myAgent.expected_msgs.add(ExpMsg);
-    }
+
 }

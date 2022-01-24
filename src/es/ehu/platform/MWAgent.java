@@ -6,7 +6,6 @@ package es.ehu.platform;
 
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.ContainerID;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -19,7 +18,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.collections4.queue.CircularFifoQueue;
@@ -449,7 +447,7 @@ public class MWAgent extends Agent {
         LOGGER.entry(msg);
         String parts1[] = msg.split("/div0/");
 
-        String sTracking = parts1[5];
+        String sTracking = parts1[5]; //las replicas siempre van codificadas en la posicion 5 del estado
         LOGGER.info("Tracking: " + sTracking);
 
         if(sTracking != null&&(!sTracking.equals(" "))){
@@ -495,7 +493,7 @@ public class MWAgent extends Agent {
             confirmation.setContent(msg.getContent());
             Date date = new Date();
             long instant = date.getTime();
-            instant=instant+2000; //añade una espera de 2 seg
+            instant=instant+1500; //añade una espera de 1.5 seg
             ExpMsg[1]=instant;
             AID receiver=(AID) itor.next();
             confirmation.addReceiver(receiver);

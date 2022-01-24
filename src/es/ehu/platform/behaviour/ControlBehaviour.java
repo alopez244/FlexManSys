@@ -86,7 +86,7 @@ public class ControlBehaviour extends SimpleBehaviour {
         this.exitValue=0;
         this.exit=false;
 
-        LOGGER.debug(myAgent.cmpID+"("+myAgent.getLocalName()+"): SupervisorControl.action()");
+//        LOGGER.debug(myAgent.cmpID+"("+myAgent.getLocalName()+"): SupervisorControl.action()");
         ACLMessage msg = myAgent.receive(template);
 
         if (msg != null|| myAgent.change_state) {

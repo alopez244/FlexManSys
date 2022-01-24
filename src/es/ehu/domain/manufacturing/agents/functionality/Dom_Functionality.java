@@ -16,6 +16,8 @@ import jade.domain.FIPAAgentManagement.*;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.*;
 
+import java.util.Date;
+
 
 public class Dom_Functionality{
 
@@ -65,13 +67,14 @@ public class Dom_Functionality{
 //                            MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
 //                            MessageTemplate.MatchPerformative(ACLMessage.INFORM))
 //                    , 400);
+//            System.out.println(msg.getContent());
             return LOGGER.exit(null);
         }else{
             ACLMessage reply = myAgent.blockingReceive(
                     MessageTemplate.and(
                             MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
                             MessageTemplate.MatchPerformative(ACLMessage.INFORM))
-                    , 2000);
+                    );
             return LOGGER.exit(reply);
         }
 
@@ -88,6 +91,22 @@ public class Dom_Functionality{
                     myAgent.send(msg);
                     return msg;
         }
+
+//    public Object[] AddToExpectedMsgs(ACLMessage msg){ //funcion que añade un mensaje a la lista de esperados
+//
+//        Object[] ExpMsg=new Object[2];
+//        ExpMsg[0]=msg; //mensaje completo
+//        Date date = new Date();
+//        long instant = date.getTime();
+//        instant=instant+1000; //añade un tiempo límite para el que espera la respuesta de cierto agente
+//        ExpMsg[1]=instant;
+//        return ExpMsg;
+//    }
+
+    public void Acknowledge(ACLMessage msg, Agent agent){
+        sendACLMessage(ACLMessage.CONFIRM,msg.getSender(),msg.getOntology(),msg.getConversationId(),msg.getContent(),agent);
+    }
+
 
     }
 

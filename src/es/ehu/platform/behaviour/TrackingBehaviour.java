@@ -99,6 +99,7 @@ public class TrackingBehaviour extends SimpleBehaviour {
 							((msg.getContent()==null)));
 					
 //					((AvailabilityFunctionality)myAgent.functionalityInstance).setState(msg.getContentObject());  //anterior
+					myAgent.msgFIFO.add((String) msg.getContent());
 					Acknowledge(msg);
 					((AvailabilityFunctionality)myAgent.functionalityInstance).setState(msg.getContent());
 					LOGGER.debug(myAgent.cmpID+"("+((MWAgent) myAgent).getLocalName()+") < " + myAgent.cmpID+"("+msg.getSender().getLocalName()+"):"
@@ -155,7 +156,7 @@ public class TrackingBehaviour extends SimpleBehaviour {
 						block(blockTime);
 					}
 				} else { // no he recibido ningun estado, timeout a partir del primero
-					LOGGER.info("tracking.beh.block()");
+//					LOGGER.debug("tracking.beh.block()");
 					block();
 				}
 			}
