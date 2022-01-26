@@ -132,14 +132,12 @@ public class MPlanInterpreter {
             msg.addReceiver(new AID((String) pair.getKey(), AID.ISLOCALNAME));
             msg.setOntology("data");
             msg.setContent((String) pair.getValue());
-
             myAgent.send(msg);
             ACLMessage ack= myAgent.blockingReceive(MessageTemplate.MatchPerformative(ACLMessage.CONFIRM),500);
             if(ack==null){
-                System.out.println("ERROR. "+msg.getAllReceiver()+" did not answer on time.");
+//                System.out.println("ERROR. "+msg.getAllReceiver()+" did not answer on time.");
+                return null;
             }
-
-//TODO añadir un blocking receive y añadir en la recepción de este mensaje por parte de las máquinas una respuesta de confirmación
 
         }
         //No es necesario con la estructura nueva de XML ***************************************************************
@@ -148,8 +146,6 @@ public class MPlanInterpreter {
         //Ahora componenmos el plan de fabricación con su jerarquía a partir de la secuencia de Master Recipes.
 
         ArrayList<ArrayList<ArrayList<String>>> structuredPlan = new ArrayList<ArrayList<ArrayList<String>>>();
-
-
         ArrayList<String> orderList = new ArrayList<String>();
         ArrayList<String> batchList = new ArrayList<String>();
         ArrayList<String> ItemList = new ArrayList<String>();

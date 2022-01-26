@@ -212,10 +212,14 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             }else{
                 ACLMessage parent = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "GetOrderParent");
                 ACLMessage replicasACL = sendCommand(myAgent, "get * state=tracking parent=" + parent.getContent(), "GetOrderUpdatedReplicas");
-                if(replicasACL.getContent().contains(",")){
-                    replicas= replicasACL.getContent().split(",");
+                if(replicasACL.equals("")){
+                    replicas[0] =" ";
                 }else{
-                    replicas[0] = replicasACL.getContent();
+                    if(replicasACL.getContent().contains(",")){
+                        replicas= replicasACL.getContent().split(",");
+                    }else{
+                        replicas[0] = replicasACL.getContent();
+                    }
                 }
             }
 

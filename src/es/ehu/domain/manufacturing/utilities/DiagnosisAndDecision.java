@@ -28,6 +28,7 @@ public class DiagnosisAndDecision extends Agent{
                                             MessageTemplate.MatchSender(new AID("QoSManagerAgent",AID.ISLOCALNAME)));
     private MessageTemplate neg_template=MessageTemplate.and(MessageTemplate.MatchOntology("negotiation"),
             MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+    private HashMap<String,HashMap<String,ArrayList<String>>> agents_sorted_by_state=new HashMap<String,HashMap<String,ArrayList<String>>>();
     protected void setup(){
         LOGGER.entry();
 
@@ -80,7 +81,7 @@ public class DiagnosisAndDecision extends Agent{
                     if (msg.getOntology().equals("not_found")&&msg.getSender().getLocalName().equals("QoSManagerAgent")) { //Se reporta un agente aislado o muerto
                         if(control.equals("automatic")){ //solo toma decisiones si está en modo automatico
                             if(!msg.getContent().contains("ControlGatewayCont")){ //no es un agente GW por lo que el D&D puede realizar alguna acción
-                                LOGGER.error(msg.getContent()+" is either dead or isolated.");
+                                LOGGER.error(msg.getContent()+" is dead or isolated.");
                                 if(msg.getContent().contains("batchagent")||msg.getContent().contains("orderagent")||msg.getContent().contains("mplanagent")){ //Es agente de aplicacion
                                     try {
                                         ACLMessage state= sendCommand(myAgent, "get "+msg.getContent()+" attrib=state", "D&D_"+convIDCounter++); //consigue el estado de la replcia caida
@@ -90,7 +91,8 @@ public class DiagnosisAndDecision extends Agent{
                                             ACLMessage hosting_node=sendCommand(myAgent, "get "+msg.getContent()+" attrib=node", "D&D_"+convIDCounter++); //devuelve el número de nodo que hostea a la replica
                                             sendCommand(myAgent, "del "+msg.getContent(),"D&D_"+convIDCounter++);
 
-                                        HashMap<String,HashMap<String,ArrayList<String>>> agents_sorted_by_state=new HashMap<String,HashMap<String,ArrayList<String>>>();
+                                            add_to_restart_queue(state.getContent(),msg.getContent(),null); //se añade a la lista para reiniciar agentes TODO hay que bajarlo
+
                                             if(!PingAgent("pnodeagent"+hosting_node.getContent())){  //checkea el estado del nodo para saber si hay que desregistrarlo o puede participar en la negociacion
 
                                                 //Si esta caido el nodo hay que reiniciar las replicas que este albergaba. Se priorizan las replicas en running y las de tipo batch
@@ -107,41 +109,42 @@ public class DiagnosisAndDecision extends Agent{
                                                     ACLMessage Dead_SE= sendCommand(myAgent,"get * parent="+parts1[i]+" node="+hosting_node.getContent(),"D&D_"+convIDCounter++);
                                                     if(!Dead_SE.getContent().equals("")){
                                                         ACLMessage se_state= sendCommand(myAgent,"get "+Dead_SE.getContent()+" attrib=state","D&D_"+convIDCounter++);
-                                                        HashMap<String,ArrayList<String>> agents_sorted_by_category=agents_sorted_by_state.get(se_state);
-                                                        if(agents_sorted_by_category==null) {
-                                                            agents_sorted_by_category=new HashMap<String,ArrayList<String>>();
-                                                        }
-                                                            if(Dead_SE.getContent().contains("batchagent")){
-                                                                ArrayList<String>a=agents_sorted_by_category.get("batchagent");
-                                                                if(a==null){
-                                                                    a=new ArrayList<String>();
-                                                                }
-                                                                LOGGER.info(Dead_SE.getContent()+" found to be dead on node "+hosting_node.getContent());
-                                                                sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE.getContent());
-                                                                a.add(Dead_SE.getContent());
-                                                                agents_sorted_by_category.put("batchagent",a);
-                                                            }else if(Dead_SE.getContent().contains("orderagent")){
-                                                                ArrayList<String>a=agents_sorted_by_category.get("orderagent");
-                                                                if(a==null){
-                                                                    a=new ArrayList<String>();
-                                                                }
-                                                                a.add(Dead_SE.getContent());
-                                                                LOGGER.info(Dead_SE.getContent()+" found to be dead on node "+hosting_node.getContent());
-                                                                sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE.getContent());
-                                                                agents_sorted_by_category.put("orderagent",a);
-                                                            }else{
-                                                                ArrayList<String>a=agents_sorted_by_category.get("mplanagent");
-                                                                if(a==null){
-                                                                    a=new ArrayList<String>();
-                                                                }
-                                                                a.add(Dead_SE.getContent());
-                                                                LOGGER.info(Dead_SE.getContent()+" found to be dead on node "+hosting_node.getContent());
-                                                                sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE.getContent());
-                                                                agents_sorted_by_category.put("mplanagent",a);
-                                                            }
-                                                        agents_sorted_by_state.put(se_state.getContent(),agents_sorted_by_category);
 
-                                                        //TODO avisar al QoS para que añada a su listado de caidos el agente
+                                                        add_to_restart_queue(se_state.getContent(),Dead_SE.getContent(),hosting_node.getContent());
+//                                                        HashMap<String,ArrayList<String>> agents_sorted_by_category=agents_sorted_by_state.get(se_state.getContent());
+//                                                        if(agents_sorted_by_category==null) {
+//                                                            agents_sorted_by_category=new HashMap<String,ArrayList<String>>();
+//                                                        }
+//                                                            if(Dead_SE.getContent().contains("batchagent")){
+//                                                                ArrayList<String>a=agents_sorted_by_category.get("batchagent");
+//                                                                if(a==null){
+//                                                                    a=new ArrayList<String>();
+//                                                                }
+//                                                                LOGGER.info(Dead_SE.getContent()+" found to be dead on node "+hosting_node.getContent());
+//                                                                sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE.getContent());
+//                                                                a.add(Dead_SE.getContent());
+//                                                                agents_sorted_by_category.put("batchagent",a);
+//                                                            }else if(Dead_SE.getContent().contains("orderagent")){
+//                                                                ArrayList<String>a=agents_sorted_by_category.get("orderagent");
+//                                                                if(a==null){
+//                                                                    a=new ArrayList<String>();
+//                                                                }
+//                                                                a.add(Dead_SE.getContent());
+//                                                                LOGGER.info(Dead_SE.getContent()+" found to be dead on node "+hosting_node.getContent());
+//                                                                sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE.getContent());
+//                                                                agents_sorted_by_category.put("orderagent",a);
+//                                                            }else{
+//                                                                ArrayList<String>a=agents_sorted_by_category.get("mplanagent");
+//                                                                if(a==null){
+//                                                                    a=new ArrayList<String>();
+//                                                                }
+//                                                                a.add(Dead_SE.getContent());
+//                                                                LOGGER.info(Dead_SE.getContent()+" found to be dead on node "+hosting_node.getContent());
+//                                                                sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE.getContent());
+//                                                                agents_sorted_by_category.put("mplanagent",a);
+//                                                            }
+//                                                        agents_sorted_by_state.put(se_state.getContent(),agents_sorted_by_category);
+//
 
                                                     }else{
                                                         LOGGER.error("No system element found for node "+hosting_node.getContent()+" and parent "+parts1[i]);
@@ -176,12 +179,12 @@ public class DiagnosisAndDecision extends Agent{
                                                sendCommand(myAgent, "set pnodeagent"+hosting_node.getContent()+" HostedElements="+new_HE, "D&D_"+convIDCounter);
                                             }
 
-                                        if(!state.getContent().equals("tracking")){ //si no estaba en tracking estaría en running o bootToRunning
-                                            tracking_to_running(parent.getContent());
-                                        }else{
-                                            restart_replica(parent.getContent()); //si esta en tracking simplemente recuperamos la replica si hay nodos disponibles
-                                        }
-                                        //Ahora hay que comprobar el listado si el nodo había caido.
+//                                        if(!state.getContent().equals("tracking")){ //si no estaba en tracking estaría en running o bootToRunning
+//                                            tracking_to_running(parent.getContent());
+//                                        }else{
+//                                            restart_replica(parent.getContent()); //si esta en tracking simplemente recuperamos la replica si hay nodos disponibles
+//                                        }
+                                        //Ahora hay que restaurar todos los agentes caidos, haya caido el nodo o no.
                                         HashMap<String, ArrayList<String>> agents_in_running_state= agents_sorted_by_state.get("running"); //los agentes en running tienen prioridad
                                         if(agents_in_running_state!=null){
                                             ArrayList<String> dead_batchs=agents_in_running_state.get("batchagent"); //los agentes batch tienen prioridad
@@ -211,6 +214,7 @@ public class DiagnosisAndDecision extends Agent{
                                                 }
                                                 agents_in_running_state.remove("mplanagent");
                                             }
+                                            agents_sorted_by_state.remove("running"); //ya no quedan agentes en running por iniciar
                                         }
                                         HashMap<String, ArrayList<String>> agents_in_tracking_state= agents_sorted_by_state.get("tracking");
                                         if(agents_in_tracking_state!=null){
@@ -238,6 +242,7 @@ public class DiagnosisAndDecision extends Agent{
                                                 }
                                                 agents_in_tracking_state.remove("mplanagent");
                                             }
+                                            agents_sorted_by_state.remove("tracking");  //ya no quedan agentes en tracking por iniciar
                                         }
 
                                     } catch (Exception e) {
@@ -245,20 +250,11 @@ public class DiagnosisAndDecision extends Agent{
                                     }
                                 }else if(msg.getContent().contains("machine")){
                                     String batch=get_relationship(msg.getContent());
-                                    //TODO machine agent  aislado
+                                    //TODO poner a negociar otras maquinas para asumir el mando
                                 }
 
                             }else { //agente GW no encontrado
-                                String msgparts[] = msg.getContent().split("/div/"); //el agente GW siempre se reporta con su machine responsable
-                                String GW = msgparts[0];
-                                LOGGER.error(GW + " is either dead or isolated. Manually reset GW.");
-                                if (msgparts[1] != null) {
-//                                    LOGGER.info(msgparts[1] + " is the machine assigned to "+GW);
-                                    sendACL(16,msgparts[1] , "control", "setstate idle");
-                                    LOGGER.info(msgparts[1] + " is now idling");
-                                }else{
-                                    LOGGER.error("QoS should have sent which machine is assigned to GW.");
-                                }
+                                //TODO poner a negociar otras maquinas para asumir el mando del batch
                             }
                         }else{
                             LOGGER.error(msg.getContent()+" is either dead or isolated.");
@@ -298,6 +294,49 @@ public class DiagnosisAndDecision extends Agent{
 
             }
         }
+
+    private void add_to_restart_queue(String state, String Dead_SE, String Dead_PN){
+        HashMap<String,ArrayList<String>> agents_sorted_by_category=agents_sorted_by_state.get(state);
+        if(agents_sorted_by_category==null) {
+            agents_sorted_by_category=new HashMap<String,ArrayList<String>>();
+        }
+        if(Dead_SE.contains("batchagent")){
+            ArrayList<String>a=agents_sorted_by_category.get("batchagent");
+            if(a==null){
+                a=new ArrayList<String>();
+            }
+            if(Dead_PN!=null){
+                LOGGER.info(Dead_SE+" found to be dead on node "+Dead_PN);
+                sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE);
+            }
+
+            a.add(Dead_SE);
+            agents_sorted_by_category.put("batchagent",a);
+        }else if(Dead_SE.contains("orderagent")){
+            ArrayList<String>a=agents_sorted_by_category.get("orderagent");
+            if(a==null){
+                a=new ArrayList<String>();
+            }
+            a.add(Dead_SE);
+            if(Dead_PN!=null){
+                LOGGER.info(Dead_SE+" found to be dead on node "+Dead_PN);
+                sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE);
+            }
+            agents_sorted_by_category.put("orderagent",a);
+        }else{
+            ArrayList<String>a=agents_sorted_by_category.get("mplanagent");
+            if(a==null){
+                a=new ArrayList<String>();
+            }
+            a.add(Dead_SE);
+            if(Dead_PN!=null){
+                LOGGER.info(Dead_SE+" found to be dead on node "+Dead_PN);
+                sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE);
+            }
+            agents_sorted_by_category.put("mplanagent",a);
+        }
+        agents_sorted_by_state.put(state,agents_sorted_by_category);
+    }
 
     private void sendACL(int performative,String receiver,String ontology,String content){ //Funcion estándar de envío de mensajes
         AID receiverAID=new AID(receiver,false); //pasamos la máquina a estado idle
@@ -387,25 +426,32 @@ public class DiagnosisAndDecision extends Agent{
         ACLMessage tracking_instances= null;
         try {
             tracking_instances = sendCommand(myAgent, "get * state=tracking parent="+parent, "D&D_"+convIDCounter);
+            if (tracking_instances != null) {
+                if(tracking_instances.getContent().equals("")){
+                    LOGGER.error("No tracking instances found. Start a node and then start manually the running replica.");
+                }else{
+                    String[] TrackingReplicas=new String[1];
+                    ACLMessage SetReplicasWFD=new ACLMessage(ACLMessage.REQUEST);
+                    SetReplicasWFD.setContent("setstate waitingfordecision");   //debemos poner en waiting for decision a las replicas en tracking primero
+                    SetReplicasWFD.setOntology("control");
+                    if(tracking_instances.getContent().contains(",")){
+                        TrackingReplicas=tracking_instances.getContent().split(",");
+                    }else{
+                        TrackingReplicas[0]=tracking_instances.getContent();
+                    }
+                    for(int i=0;i<TrackingReplicas.length;i++) {
+                        AID Replica=new AID(TrackingReplicas[i],false);
+                        SetReplicasWFD.addReceiver(Replica);
+                    }
+                    SetReplicasWFD.setConversationId("D&D_"+convIDCounter++);
+                    myAgent.send(SetReplicasWFD);
+                    String negotationdata="localneg "+tracking_instances.getContent()+ " criterion=CPU_usage action=restore externaldata=" + parent; //se lanza negociacion entre las replicas en tracking
+                    sendCommand(myAgent,negotationdata , "D&D_"+convIDCounter++);
+                }
+            }else{
+                LOGGER.error("No tracking instances found");
+            }
 
-        String[] TrackingReplicas=new String[1];
-        ACLMessage SetReplicasWFD=new ACLMessage(ACLMessage.REQUEST);
-        SetReplicasWFD.setContent("setstate waitingfordecision");   //debemos poner en waiting for decision a las replicas en tracking primero
-        SetReplicasWFD.setOntology("control");
-        if(tracking_instances.getContent().contains(",")){
-            TrackingReplicas=tracking_instances.getContent().split(",");
-        }else{
-            TrackingReplicas[0]=tracking_instances.getContent();
-        }
-        for(int i=0;i<TrackingReplicas.length;i++) {
-            AID Replica=new AID(TrackingReplicas[i],false);
-            SetReplicasWFD.addReceiver(Replica);
-        }
-        SetReplicasWFD.setConversationId("D&D_"+convIDCounter++);
-        myAgent.send(SetReplicasWFD);
-
-        String negotationdata="localneg "+tracking_instances.getContent()+ " criterion=CPU_usage action=restore externaldata=" + parent; //se lanza negociacion entre las replicas en tracking
-        sendCommand(myAgent,negotationdata , "D&D_"+convIDCounter++);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -480,21 +526,27 @@ public class DiagnosisAndDecision extends Agent{
         return false;
     }
     private boolean PingAgent (String name){  //checkea el estado de los agentes de aplicación, recurso y gateway
+
         MessageTemplate pingtemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                 MessageTemplate.MatchOntology("ping"));
         boolean state;
-        AID Agent_to_ping_ID=new AID(name,false);
-        ACLMessage ping=new ACLMessage(ACLMessage.REQUEST);
-        ping.setOntology("ping");
-        ping.addReceiver(Agent_to_ping_ID);
-        ping.setContent("");
-        send(ping);
-        ACLMessage echo=blockingReceive(pingtemplate,500);
-        if(echo!=null) {
-            LOGGER.info(name+" answered on time.");
-            state=true;
+        int n=SearchAgent(name);
+        if(n>0){
+            AID Agent_to_ping_ID=new AID(name,false);
+            ACLMessage ping=new ACLMessage(ACLMessage.REQUEST);
+            ping.setOntology("ping");
+            ping.addReceiver(Agent_to_ping_ID);
+            ping.setContent("");
+            send(ping);
+            ACLMessage echo=blockingReceive(pingtemplate,500);
+            if(echo!=null) {
+                LOGGER.info(name+" answered on time.");
+                state=true;
+            }else{
+                LOGGER.error(name+" did not answer on time. Confirming failure.");
+                state=false;
+            }
         }else{
-            LOGGER.error(name+" did not answer on time. Confirming failure.");
             state=false;
         }
         return state;

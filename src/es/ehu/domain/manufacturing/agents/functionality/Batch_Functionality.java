@@ -263,7 +263,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
 
     class timeout extends Thread{
-    private boolean takedown_flag=false;
+    private boolean timeout=false;
         public void run() {
 
 
@@ -271,7 +271,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             while (finish_times_of_batch == null) {} //tramo de espera de seguridad hasta tener los finish times
             items_finish_times = take_finish_times(finish_times_of_batch); //extrae la información útil que se usa en el timeout
             itemreference=take_item_references(finish_times_of_batch);//nos devuelve las referencias de los item para este batch, ordenados como los tiempos extraidos en la anterior función
-            if(!reset_flag) {
+            if(!reset_flag) { //si no ha sido un reset pedido con el QoS debemos construir los FT
                 try {
                     expected_finish_date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(items_finish_times.get(actual_item_number));
                 } catch (ParseException e) {
@@ -279,27 +279,28 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 }
             }
 
-            while (actual_item_number < items_finish_times.size() && !takedown_flag) {
-                if(getactualtime().after(expected_finish_date)&& !takedown_flag){
+            while (actual_item_number < items_finish_times.size() && !timeout) {  //Mientras que no estemos en la ultima pieza o se haya lanzado timeout
+                if(getactualtime().after(expected_finish_date)&& !timeout){
                     if(!delay_already_incremented){
                         expected_finish_date=FIUpdateFinishTimes();
+
+                        //Actualiza el estado de las replicas tras obtener el delay
+                        String currentState = (String) ((AvailabilityFunctionality) myAgent.functionalityInstance).getState(); //disponemos de delaynum, date_when_delay_was_asked y expected_finish_date
+                        if (currentState != null) {
+                            System.out.println("Send state");
+                            myAgent.sendStateToTracking(currentState); //comunicamos a las replicas nuestro estado
+                        }
+
                     }else {
                         System.out.println(getactualtime() + " " + myAgent.getLocalName() + " WARN " + batchreference + " batch has thrown a timeout on item number " + itemreference.get(actual_item_number) + " Checking failure with QoS Agent...");
                         QoSresponse_flag = false;
                         ACLMessage report_to_QoS= sendACLMessage(ACLMessage.FAILURE, QoSID, "timeout", "timeout " + batchreference, batchreference + "/" + itemreference.get(actual_item_number), myAgent); //avisa al QoS de fallo por timeout
                         myAgent.AddToExpectedMsgs(report_to_QoS);
-
-                        takedown_flag = true;
+                        timeout = true;
                     }
                 }
-                //Actualiza el estado de las replicas
-                String currentState = (String) ((AvailabilityFunctionality) myAgent.functionalityInstance).getState(); //disponemos de delaynum, date_when_delay_was_asked y expected_finish_date
-                if (currentState != null) {
-                    System.out.println("Send state");
-                    myAgent.sendStateToTracking(currentState); //comunicamos a las replicas nuestro estado
-                }
 
-                while (getactualtime().before(expected_finish_date)&&actual_item_number<items_finish_times.size()&&!takedown_flag) {  //se queda a la espera siempre que no se supere la fecha de finishtime
+                while (getactualtime().before(expected_finish_date)&&actual_item_number<items_finish_times.size()&&!timeout) {  //se queda a la espera siempre que no se supere la fecha de finishtime
 
                     if (update_timeout_flag) {
                         actual_item_number++;
@@ -311,7 +312,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     }
                 }
             }
-            if(!takedown_flag){
+            if(!timeout){
                 System.out.println("Batch finished");
             }
             System.out.println("Item timeout finished.");
@@ -453,7 +454,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
             }else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getContent().equals("confirmed_timeout")){
 //                QoSresponse_flag=true;
-                System.out.println("Timeout confirmed. Qos received report.");
+                System.out.println("Timeout confirmed by QoS.");
             } else if (msg.getPerformative() == ACLMessage.REQUEST&&msg.getOntology().equals("negotiation")) {
 
                 Acknowledge(msg,myAgent);

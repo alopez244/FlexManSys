@@ -62,7 +62,7 @@ public class MWAgent extends Agent {
     public ArrayList<Object[]> expected_msgs= new ArrayList<Object[]>();
     private int convIDCounter=1;
     public HashMap<String,ArrayList<ACLMessage>> msg_buffer=new HashMap<String,ArrayList<ACLMessage>>(); //listado de mensajes guardados para reenviar cuando el receptor este disponible
-
+    public String gatewayAgentName; // Guarda el nombre del agente pasarela
     // Parámetros de configuración
     public boolean mwmStoresExecutionState = true;
 

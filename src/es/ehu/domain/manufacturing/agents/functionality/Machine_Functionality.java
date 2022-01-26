@@ -48,7 +48,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private Boolean matReqDone = false; // Flag que se mantiene activo desde que se hace la peticion de consumibles hasta que se reponen
     private Boolean requestMaterial = false; // Flag que se activa cuando se necesita hacer una peticion de consumibles
     private Boolean orderQueueFlag = false; // Flag que se activa cuando existen nuevas ordenes en cola para la maquina
-    private String gatewayAgentName; // Guarda el nombre del agente pasarela
+    public static int convIDcnt=0;
     private AID gatewayAgentID =null;
     private MessageTemplate echotemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
             MessageTemplate.MatchOntology("Acknowledge"));
@@ -91,9 +91,31 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
         String machineName = myAgent.resourceName;
         Integer machineNumber = Integer.parseInt(machineName.split("_")[1]);
-        gatewayAgentName = "ControlGatewayCont" + machineNumber.toString(); //Se genera el nombre del Gateway Agent con el que se tendra que comunicar
+        myAgent.gatewayAgentName = "ControlGatewayCont" + machineNumber.toString(); //Se genera el nombre del Gateway Agent con el que se tendrá que comunicar
         //First, the Machine Model is read
-        gatewayAgentID = new AID(gatewayAgentName, false);
+        gatewayAgentID = new AID(myAgent.gatewayAgentName, false);
+
+        sendACLMessage(16,gatewayAgentID,"ping","","",myAgent);
+        ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 300);
+        if(answer_gw==null){
+            System.out.println("GW is not online. Start GW and repeat.");
+            System.exit(0);
+        }
+
+        sendACLMessage(16, gatewayAgentID, "check_asset","check_asset_on_boot_"+convIDcnt++,"ask_state",myAgent); //primero antes de nada debemos comprobar si el agente GW y el PLC están disponibles
+        ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 300);
+        if(answer!=null){
+            if(!answer.getContent().equals("Working")&&!answer.getContent().equals("Not working")){
+                System.out.println("PLC is not prepared to work.");
+                System.exit(0); //si el PLC o el GW no están disponible no tiene sentido que iniciemos el agente máquina
+            }else{
+                System.out.println("PLC is "+answer.getContent());
+            }
+        }else{
+            System.out.println("PLC is not prepared to work.");
+            System.exit(0); //si el PLC o el GW no están disponible no tiene sentido que iniciemos el agente máquina
+        }
+
         String [] args = (String[]) myAgent.getArguments();
 
         for (int i=0; i<args.length; i++){
@@ -167,6 +189,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         } catch (Exception e1) {
             e1.printStackTrace();
         }
+
 
         //myAgent.initTransition = ControlBehaviour.RUNNING;
 
@@ -616,7 +639,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
                         PLCmsgOut.remove("Index");
                         String MessageContent = new Gson().toJson(PLCmsgOut);
-                        AID gatewayAgentID = new AID(gatewayAgentName, false);
+                        AID gatewayAgentID = new AID(myAgent.gatewayAgentName, false);
                         ACLMessage msg_to_gw=sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
 
                         myAgent.AddToExpectedMsgs(msg_to_gw);

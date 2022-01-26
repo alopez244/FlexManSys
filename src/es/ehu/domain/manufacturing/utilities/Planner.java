@@ -312,27 +312,24 @@ public class Planner extends Agent {
             // We use MPlanInterpreter tu obtain all information
             String planName = file.substring(0, file.length()-4); //saves the plan´s ID to be assigned later in the name attribute
             xmlelements = MPlanInterpreter.getManEntities(myAgent, xmlelements, planName);
-
-            //The plan has been successfully read
-            //Next step is to interpret the set of masterRecipes to compose the hierarchy of applications
-
-            //Variable initialization at their first levels
-            ArrayList<String> parentIdList = new ArrayList<>();
-            parentIdList.add(0,"system");
-            String parentId = "";
-            String seId = "";
+            if(xmlelements!=null){
+                //Variable initialization at their first levels
+                ArrayList<String> parentIdList = new ArrayList<>();
+                parentIdList.add(0,"system");
+                String parentId = "";
+                String seId = "";
 
 
 
-            // TODO mas adelante mirar lo de las restricciones --> Si no hay que escribirlas en el SystemModelAgent buscar una solucion
-            //restrictionList.put("HostedElements", "id55");
-            //restrictionLists.put("pNodeAgent", restrictionList);
+                // TODO mas adelante mirar lo de las restricciones --> Si no hay que escribirlas en el SystemModelAgent buscar una solucion
+                //restrictionList.put("HostedElements", "id55");
+                //restrictionLists.put("pNodeAgent", restrictionList);
 
-            //For structure is used to register all the elements
-            for (int i = 0; i < xmlelements.size(); i++) {
+                //For structure is used to register all the elements
+                for (int i = 0; i < xmlelements.size(); i++) {
 
-                //First the attributes are collected
-                attributes.clear();
+                    //First the attributes are collected
+                    attributes.clear();
 
                     String attrName = xmlelements.get(i).get(0).get(0);
                     if (attrName.equals("batch")||attrName.equals("order")||attrName.equals("mPlan")){
@@ -365,7 +362,7 @@ public class Planner extends Agent {
                             }
                             attributes.put("reference",xmlelements.get(i).get(3).get(2));
                             attributes.put("refProductID",xmlelements.get(i).get(3).get(1));
-                            }
+                        }
                         l++;
                         //The parent Id is always the last element Id of the upper level
                         parentId = parentIdList.get(Integer.parseInt(xmlelements.get(i).get(1).get(0)) - 1);
@@ -400,89 +397,92 @@ public class Planner extends Agent {
                     }
                 }
 
-            //After the register, the element to be validated and started will be the second on the list (the level 1 element)
-            String app = parentIdList.get(1);
+                //After the register, the element to be validated and started will be the second on the list (the level 1 element)
+                String app = parentIdList.get(1);
 
-            String commandIValid = "ivalidate " + app;
-            try {
-                sendCommand(commandIValid, conversationId);
-            } catch (FIPAException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+                String commandIValid = "ivalidate " + app;
+                try {
+                    sendCommand(commandIValid, conversationId);
+                } catch (FIPAException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
 
-            //Start
-            try {
-                start(app, agentAttributes, conversationId);
-            } catch (Exception e) {
-                LOGGER.error("ERROR IN start METHOD OF PLANNER: Sending command to systemModelAgent");
-                e.printStackTrace();
-            }
+                //Start
+                try {
+                    start(app, agentAttributes, conversationId);
+                } catch (Exception e) {
+                    LOGGER.error("ERROR IN start METHOD OF PLANNER: Sending command to systemModelAgent");
+                    e.printStackTrace();
+                }
 
-            String BatchToFind;
-            String OrderToFind;
-            template = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
-                    MessageTemplate.MatchOntology("Ftime_order_ask"));
-            while(orderlist.size()>0){
-                ACLMessage order_asking=blockingReceive(template);
-                ACLMessage reply_to_order=new ACLMessage(ACLMessage.INFORM);
-                AID orderAID = order_asking.getSender();
-                OrderToFind=order_asking.getContent();
-                batch_ft_list=MPlanInterpreter.getBatchFT(myAgent, xmlelements, planName,OrderToFind); //devuelve ve el finish time de la ultima operación de cada batch
-                String each_batch_time=OrderToFind+"&";
-                for(int i=0;i<batch_ft_list.size();i++){
-                    each_batch_time=each_batch_time+batch_ft_list.get(i);
-                    if(i+1!=batch_ft_list.size()){
-                        each_batch_time=each_batch_time+"_";
+                String BatchToFind;
+                String OrderToFind;
+                template = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+                        MessageTemplate.MatchOntology("Ftime_order_ask"));
+                while(orderlist.size()>0){
+                    ACLMessage order_asking=blockingReceive(template);
+                    ACLMessage reply_to_order=new ACLMessage(ACLMessage.INFORM);
+                    AID orderAID = order_asking.getSender();
+                    OrderToFind=order_asking.getContent();
+                    batch_ft_list=MPlanInterpreter.getBatchFT(myAgent, xmlelements, planName,OrderToFind); //devuelve ve el finish time de la ultima operación de cada batch
+                    String each_batch_time=OrderToFind+"&";
+                    for(int i=0;i<batch_ft_list.size();i++){
+                        each_batch_time=each_batch_time+batch_ft_list.get(i);
+                        if(i+1!=batch_ft_list.size()){
+                            each_batch_time=each_batch_time+"_";
+                        }
+                    }
+                    reply_to_order.setContent(each_batch_time);
+                    reply_to_order.addReceiver(orderAID);
+                    reply_to_order.setOntology("Ftime_order_ask");
+                    send(reply_to_order);
+
+                    for(int j=0;j<orderlist.size();j++){
+                        if(orderlist.get(j).equals(OrderToFind)){
+                            orderlist.remove(j);
+                            j--;
+                        }
                     }
                 }
-                reply_to_order.setContent(each_batch_time);
-                reply_to_order.addReceiver(orderAID);
-                reply_to_order.setOntology("Ftime_order_ask");
-                send(reply_to_order);
 
-                for(int j=0;j<orderlist.size();j++){
-                    if(orderlist.get(j).equals(OrderToFind)){
-                        orderlist.remove(j);
-                        j--;
+                template = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+                        MessageTemplate.MatchOntology("Ftime_batch_ask"));
+
+                while(batchlist.size()>0){//Se queda a la espera de recibir las consultas de finish time de cada batch
+                    ACLMessage batch_asking=blockingReceive(template);
+                    ACLMessage reply_to_batch=new ACLMessage(ACLMessage.INFORM);
+                    AID batchAID = batch_asking.getSender();
+                    BatchToFind=batch_asking.getContent();
+                    item_ft_list=MPlanInterpreter.getItemFT(myAgent, xmlelements, planName,BatchToFind); //devuelve el finish time de la última operacion de cada item
+                    String each_operation_time=BatchToFind+"&";
+                    for(int i=0;i<item_ft_list.size();i++){
+                        each_operation_time=each_operation_time+item_ft_list.get(i);
+                        if(i+1!=item_ft_list.size()){
+                            each_operation_time=each_operation_time+"_";
+                        }
+                    }
+                    reply_to_batch.setContent(each_operation_time);
+                    reply_to_batch.addReceiver(batchAID);
+                    reply_to_batch.setOntology("Ftime_batch_ask");
+                    send(reply_to_batch);
+
+                    for(int j=0;j<batchlist.size();j++){  //buscamos y eliminamos el batch del listado.
+                        if(batchlist.get(j).equals(BatchToFind)){
+                            batchlist.remove(j);
+                            j--;
+                        }
                     }
                 }
+                //The plan has been successfully read
+                //Next step is to interpret the set of masterRecipes to compose the hierarchy of applications
+            }else{
+                LOGGER.error("ERROR. Could not create plan. One or more machines are not online.");
             }
 
-            template = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
-                    MessageTemplate.MatchOntology("Ftime_batch_ask"));
-
-            while(batchlist.size()>0){//Se queda a la espera de recibir las consultas de finish time de cada batch
-                ACLMessage batch_asking=blockingReceive(template);
-                ACLMessage reply_to_batch=new ACLMessage(ACLMessage.INFORM);
-                AID batchAID = batch_asking.getSender();
-                BatchToFind=batch_asking.getContent();
-                item_ft_list=MPlanInterpreter.getItemFT(myAgent, xmlelements, planName,BatchToFind); //devuelve el finish time de la última operacion de cada item
-                String each_operation_time=BatchToFind+"&";
-                for(int i=0;i<item_ft_list.size();i++){
-                    each_operation_time=each_operation_time+item_ft_list.get(i);
-                    if(i+1!=item_ft_list.size()){
-                        each_operation_time=each_operation_time+"_";
-                    }
-                }
-                            reply_to_batch.setContent(each_operation_time);
-                            reply_to_batch.addReceiver(batchAID);
-                            reply_to_batch.setOntology("Ftime_batch_ask");
-                            send(reply_to_batch);
-
-                            for(int j=0;j<batchlist.size();j++){  //buscamos y eliminamos el batch del listado.
-                                if(batchlist.get(j).equals(BatchToFind)){
-                                    batchlist.remove(j);
-                                    j--;
-                                }
-                            }
-
-            }
 //            batch_ft_list=MPlanInterpreter.getBatchFT(myAgent, xmlelements, planName,"11"); //para debug
-
-
         }
 
         public void demoPredefined(String cmd) {
