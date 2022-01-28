@@ -19,7 +19,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
     private static final long serialVersionUID = 1L;
     private MWAgent myAgent;
-
+    private ArrayList<ACLMessage> posponed_msgs_to_mplan=new ArrayList<ACLMessage>();
     private List<String> elementsToCreate = new ArrayList<>();
     private int chatID = 0; // Numero incremental para crear conversationID
     private ACLMessage orderName=new ACLMessage();
@@ -111,6 +111,11 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         String FinishTimesConc=parts1[3]; //finish times concatenados (cada agente de aplicación lleva un formato)
         parentAgentID=parts1[4]; 					//parent
         String replicasConc=parts1[5];		//replicas del agente
+        String Snewbatch=parts1[6];
+        String Sbatchindex=parts1[7];
+        newBatch=Boolean.parseBoolean(Snewbatch);
+        batchIndex=Integer.parseInt(Sbatchindex);
+
 
         String parts2[] = productTraceabilityConc.split("/div1/"); //construye la trazabilidad
         for (int i = 0; i < parts2.length; i++) {
@@ -128,7 +133,11 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 }
             }
         }
-        batchTraceability=Traceability;
+        firstTime = Boolean.parseBoolean(firstimeString);
+        if(!firstTime){
+            batchTraceability=Traceability;
+        }
+
         if (remainingConc != null) {    //construye los sonagentID o actionlist
             String parts6[] = remainingConc.split("/div1/");
             for (int i = 0; i < parts6.length; i++) {
@@ -136,7 +145,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
             }
         }
         sonAgentID=remaining;
-        firstTime = Boolean.parseBoolean(firstimeString);
+
         String parts7[]=FinishTimesConc.split("/div1/");
         for(int i=0;i<parts7.length;i++) {
             FT.add(i, new ArrayList<String>());
@@ -230,6 +239,10 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                     state=state+"/div1/"+replicas[i];
                 }
             }
+            state=state+"/div0/"+String.valueOf(newBatch);
+            state=state+"/div0/"+String.valueOf(batchIndex);
+
+
         }catch  (Exception e) {
             e.printStackTrace();
         }
@@ -388,9 +401,44 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                     aux = a.toString();
                     msgToMPLan = msgToMPLan.concat(aux);
                 }
-                AID Agent = new AID(parentAgentID, false);
-                ACLMessage msg_to_mplan= sendACLMessage(7, Agent, "Information", "OrderInfo", msgToMPLan, myAgent);
-                myAgent.AddToExpectedMsgs(msg_to_mplan);
+//                AID Agent = new AID(parentAgentID, false);
+                try{
+                    ACLMessage orde_parent= sendCommand(myAgent, "get "+myAgent.getLocalName()+" attrib=parent", myAgent.getLocalName()+"_parent");
+                    ACLMessage mplan_parent= sendCommand(myAgent, "get "+orde_parent.getContent()+" attrib=parent", myAgent.getLocalName()+"_parent_parent");
+                    posponed_msgs_to_mplan= myAgent.msg_buffer.get(mplan_parent.getContent());
+                    if(posponed_msgs_to_mplan==null){  //si no se encuentra el parent en el listado de mensajes postpuestos entonces el receptor ha confirmado la recepcion de todos los mensajes hasta ahora. Seguimos con la ejecución normal.
+                        ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + mplan_parent.getContent()+" state=running", myAgent.getLocalName()+"_parent_running_replica");
+                        myAgent.msgFIFO.add((String) running_replica.getContent());
+                        if (!running_replica.getContent().equals("")) {
+                            AID mplanAgentID = new AID(running_replica.getContent(), false);
+                            ACLMessage msg_to_mplan= sendACLMessage(7, mplanAgentID, "Information", "OrderInfo", msgToMPLan, myAgent);
+                            myAgent.AddToExpectedMsgs(msg_to_mplan);
+                        }else{
+                            posponed_msgs_to_mplan=new ArrayList<ACLMessage>();
+                            ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.INFORM);
+                            msg_to_buffer.setConversationId("ItemsInfo");
+                            msg_to_buffer.setContent(msgToMPLan);
+                            msg_to_buffer.setOntology("Information");
+                            posponed_msgs_to_mplan.add(msg_to_buffer);
+                            myAgent.msg_buffer.put(mplan_parent.getContent(),posponed_msgs_to_mplan);
+                        }
+                    }else{  //si no es null significa que el agente sigue denunciado y aun no se ha resuelto el problema.
+
+                        System.out.println("Added message to buffer:\nContent: "+msgToMPLan+"\nTo: "+mplan_parent.getContent()+"\n Still waiting for a solution.");
+                        ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.INFORM);
+                        msg_to_buffer.setConversationId("ItemsInfo");
+                        msg_to_buffer.setContent(msgToMPLan);
+                        msg_to_buffer.setOntology("Information");
+                        posponed_msgs_to_mplan.add(msg_to_buffer); //se añade el mensaje a la lista de mensajes retenidos
+                        myAgent.msg_buffer.put(mplan_parent.getContent(),posponed_msgs_to_mplan);
+                    }
+                }catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+
+//                ACLMessage msg_to_mplan= sendACLMessage(7, Agent, "Information", "OrderInfo", msgToMPLan, myAgent);
+//                myAgent.AddToExpectedMsgs(msg_to_mplan);
 
                 if (sonAgentID.size() == 0) { // todos los batch agent de los que es padre ya le han enviado la informacion
                     sendACLMessage(7, myAgent.getAID(), "Information", "Shutdown", "Shutdown", myAgent); // autoenvio de mensaje para asegurar que el agente de desregistre y se apague
@@ -491,8 +539,14 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 }
 
             try {
-                AID Agent = new AID(parentAgentID, false);
-                KillReplicas(myAgent.replicas);
+
+//                KillReplicas(myAgent.replicas);
+                KillReplicas(myAgent);
+//                sendACLMessage(7, Agent, parentName, "Shutdown", "Order completed", myAgent); // Informa al Mplan Agent que ya ha finalizado su tarea
+
+                ACLMessage mplan_parent= sendCommand(myAgent, "get "+parentName+" attrib=parent", myAgent.getLocalName()+"_parent_parent");
+                ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + mplan_parent.getContent()+" state=running", myAgent.getLocalName()+"_parent_running_replica");
+                AID Agent = new AID(running_replica.getContent(), false);
                 sendACLMessage(7, Agent, parentName, "Shutdown", "Order completed", myAgent); // Informa al Mplan Agent que ya ha finalizado su tarea
                 myAgent.deregisterAgent(parentName);
             } catch (Exception e) {

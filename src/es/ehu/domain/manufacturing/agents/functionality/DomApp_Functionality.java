@@ -586,19 +586,47 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
         return java.sql.Timestamp.valueOf(dateToConvert);
     }
 
-    protected void KillReplicas(ArrayList<String> replicas){
-        for(int i=0; i<replicas.size();i++){
-            AID AgentID = new AID(replicas.get(i), false);
-            sendACLMessage(16, AgentID, "control", "Shutdown", "setstate stop", myAgent);
-            int  found =SearchAgent(replicas.get(i));
-            while(found!=0){  //hay que esperar a que los tracking desaparezcan antes de desregistrar el agente running
-                found =SearchAgent(replicas.get(i));
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+//    protected void KillReplicas(ArrayList<String> replicas){
+//        for(int i=0; i<replicas.size();i++){
+//            AID AgentID = new AID(replicas.get(i), false);
+//
+//            sendACLMessage(16, AgentID, "control", "Shutdown", "setstate stop", myAgent);
+//            int  found =SearchAgent(replicas.get(i));
+//            while(found!=0){  //hay que esperar a que los tracking desaparezcan antes de desregistrar el agente running
+//                found =SearchAgent(replicas.get(i));
+//                try {
+//                    Thread.sleep(100);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//    }
+    protected void KillReplicas(Agent agent){
+        this.myAgent=agent;
+
+        String[] Sreplicas=new String[1];
+        ACLMessage parent = null;
+        try {
+            parent = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "Get_"+myAgent.getLocalName()+"_parent");
+        ACLMessage replicasACL = sendCommand(myAgent, "get * state=tracking parent=" + parent.getContent(), "GetBatchUpdatedReplicas");
+
+        if(replicasACL.getContent().contains(",")){
+            Sreplicas= replicasACL.getContent().split(",");
+        }else{
+            Sreplicas[0] = replicasACL.getContent();
+        }
+            for(int i=0;i<Sreplicas.length;i++){ //actualiza las replicas de este agente
+                AID AgentID = new AID(Sreplicas[i], false);
+                sendACLMessage(16, AgentID, "control", "Shutdown", "setstate stop", myAgent);
+                int  found =SearchAgent(Sreplicas[i]);
+                while(found!=0){  //hay que esperar a que los tracking desaparezcan antes de desregistrar el agente running
+                    found =SearchAgent(Sreplicas[i]);
+                        Thread.sleep(200);
             }
+        }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

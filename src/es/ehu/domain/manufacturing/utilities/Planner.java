@@ -33,7 +33,7 @@ public class Planner extends Agent {
     private ArrayList<String> batch_ft_list=new ArrayList<String>();
     public String control="automatic";
     private Agent myAgent=this;
-    private MessageTemplate template1=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+    private MessageTemplate template1=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.CONFIRM),
             MessageTemplate.MatchOntology("man/auto"));
 
     protected void setup() {

@@ -66,7 +66,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private volatile AID QoSID = new AID("QoSManagerAgent", false);
     private volatile boolean reset_flag=false;
     private volatile boolean delay_already_incremented=false,QoSresponse_flag=false;
-    public ArrayList<ACLMessage> posponed_msgs_to_batch=new ArrayList<ACLMessage>();
+    private ArrayList<ACLMessage> posponed_msgs_to_order=new ArrayList<ACLMessage>();
 
 
 
@@ -517,23 +517,26 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     }
                     System.out.println(msgToOrder);
                     try {
-                        ACLMessage order_parent= sendCommand(myAgent, "get "+parentAgentID+" attrib=parent", "OrderAgentID");
-                        myAgent.msgFIFO.add((String) order_parent.getContent());
-                        posponed_msgs_to_batch= myAgent.msg_buffer.get(batchName);
-                        if(posponed_msgs_to_batch==null){  //si no se encuentra el parent en el listado de mensajes postpuestos entonces el receptor ha confirmado la recepcion de todos los mensajes hasta ahora. Seguimos con la ejecución normal.
-                            ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + order_parent.getContent()+" state=running", "OrderAgentID");
+//                        ACLMessage order_parent= sendCommand(myAgent, "get "+parentAgentID+" attrib=parent", "OrderAgentID");
+                        ACLMessage batch_parent= sendCommand(myAgent, "get "+myAgent.getLocalName()+" attrib=parent", myAgent.getLocalName()+"_parent");
+                        ACLMessage order_parent= sendCommand(myAgent, "get "+batch_parent.getContent()+" attrib=parent", myAgent.getLocalName()+"_parent_parent");
+
+                        posponed_msgs_to_order= myAgent.msg_buffer.get(order_parent.getContent());
+                        if(posponed_msgs_to_order==null){  //si no se encuentra el parent en el listado de mensajes postpuestos entonces el receptor ha confirmado la recepcion de todos los mensajes hasta ahora. Seguimos con la ejecución normal.
+                            ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + order_parent.getContent()+" state=running", myAgent.getLocalName()+"_parent_running_replica");
                             myAgent.msgFIFO.add((String) running_replica.getContent());
                             if (!running_replica.getContent().equals("")) {
                                 AID orderAgentID = new AID(running_replica.getContent(), false);
                                 ACLMessage msg_to_order= sendACLMessage(7, orderAgentID,"Information", "ItemsInfo", msgToOrder, myAgent );
                                 myAgent.AddToExpectedMsgs(msg_to_order);
                             }else{
+                                posponed_msgs_to_order=new ArrayList<ACLMessage>();
                                 ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.INFORM);
                                 msg_to_buffer.setConversationId("ItemsInfo");
                                 msg_to_buffer.setContent(msgToOrder);
                                 msg_to_buffer.setOntology("Information");
-                                posponed_msgs_to_batch.add(msg_to_buffer);
-                                myAgent.msg_buffer.put(order_parent.getContent(),posponed_msgs_to_batch);
+                                posponed_msgs_to_order.add(msg_to_buffer);
+                                myAgent.msg_buffer.put(order_parent.getContent(),posponed_msgs_to_order);
                             }
                         }else{  //si no es null significa que el agente sigue denunciado y aun no se ha resuelto el problema.
 
@@ -542,8 +545,8 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                             msg_to_buffer.setConversationId("ItemsInfo");
                             msg_to_buffer.setContent(msgToOrder);
                             msg_to_buffer.setOntology("Information");
-                            posponed_msgs_to_batch.add(msg_to_buffer); //se añade el mensaje a la lista de mensajes retenidos
-                            myAgent.msg_buffer.put(order_parent.getContent(),posponed_msgs_to_batch);
+                            posponed_msgs_to_order.add(msg_to_buffer); //se añade el mensaje a la lista de mensajes retenidos
+                            myAgent.msg_buffer.put(order_parent.getContent(),posponed_msgs_to_order);
                         }
 
                     } catch (Exception e) {
@@ -576,10 +579,17 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 if (reply != null)   // Si no existe el id en el registro devuelve error
                     parentName = reply.getContent(); //gets the name of the agent´s parent
 
-            AID Agent = new AID(parentAgentID, false);
-            KillReplicas(myAgent.replicas);
+//            AID Agent = new AID(parentAgentID, false);
+
+//            KillReplicas(myAgent.replicas);
+                KillReplicas(myAgent);
 //            sendACLMessage(7, Agent, myAgent.getLocalName(), "Shutdown", "Batch completed", myAgent);
-            sendACLMessage(7, Agent, parentName, "Shutdown", "Batch completed", myAgent);
+
+                ACLMessage order_parent= sendCommand(myAgent, "get "+parentName+" attrib=parent", myAgent.getLocalName()+"_parent_parent");
+                ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + order_parent.getContent()+" state=running", myAgent.getLocalName()+"_parent_running_replica");
+                AID Agent = new AID(running_replica.getContent(), false);
+                sendACLMessage(7, Agent, parentName, "Shutdown", "Batch completed", myAgent);
+
             } catch (Exception e) {
                 e.printStackTrace();
             }

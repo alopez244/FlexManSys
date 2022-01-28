@@ -61,6 +61,11 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     String FinishTimesConc=parts1[3]; //finish times concatenados (cada agente de aplicación lleva un formato)
     parentAgentID=parts1[4]; 					//parent
     String replicasConc=parts1[5];		//replicas del agente
+    String SnewOrder=parts1[6];
+    String SorderIndex=parts1[7];
+    newOrder=Boolean.parseBoolean(SnewOrder);
+    orderIndex=Integer.parseInt(SorderIndex);
+
 
     String parts2[] = productTraceabilityConc.split("/div1/"); //construye la trazabilidad
     for (int i = 0; i < parts2.length; i++) {
@@ -78,7 +83,11 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
         }
       }
     }
-    ordersTraceability=Traceability;
+    firstTime = Boolean.parseBoolean(firstimeString);
+    if(!firstTime) {
+      ordersTraceability=Traceability; //solo hay que escribir esta variable cuando anteriormente se haya construido
+    }
+
     if (remainingConc != null) {    //construye los sonagentID o actionlist
       String parts6[] = remainingConc.split("/div1/");
       for (int i = 0; i < parts6.length; i++) {
@@ -86,8 +95,6 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
       }
     }
     sonAgentID=remaining;
-
-    firstTime = Boolean.parseBoolean(firstimeString);
 
     String parts7[]=FinishTimesConc.split("/div1/");
     for(int i=0;i<parts7.length;i++) {
@@ -171,7 +178,6 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
         }
       }
 
-
       for(int i=0; i<replicas.length;i++){
         if(i==0){
           state=state+replicas[i];
@@ -179,6 +185,11 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
           state=state+"/div1/"+replicas[i];
         }
       }
+
+      state=state+"/div0/"+String.valueOf(newOrder);
+      state=state+"/div0/"+String.valueOf(orderIndex);
+
+
     }catch  (Exception e) {
       e.printStackTrace();
     }
@@ -340,7 +351,8 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     }
     try {
       AID Agent = new AID(parentAgentID, false);
-      KillReplicas(myAgent.replicas);
+//      KillReplicas(myAgent.replicas);
+      KillReplicas(myAgent);
       sendACLMessage(7, Agent, "Information", "Shutdown", "Manufacturing Plan has been completed", myAgent);
       myAgent.deregisterAgent(parentName);
 
