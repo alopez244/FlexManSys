@@ -579,9 +579,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 if (reply != null)   // Si no existe el id en el registro devuelve error
                     parentName = reply.getContent(); //gets the name of the agent´s parent
 
-//            AID Agent = new AID(parentAgentID, false);
-
-//            KillReplicas(myAgent.replicas);
                 KillReplicas(myAgent);
 //            sendACLMessage(7, Agent, myAgent.getLocalName(), "Shutdown", "Batch completed", myAgent);
 

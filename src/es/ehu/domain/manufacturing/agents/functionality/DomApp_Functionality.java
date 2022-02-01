@@ -725,7 +725,12 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
                     }
                 }
             }
-            sendCommand(myAgent, "set "+hosting_node+" HostedElements="+new_HE, myAgent.getLocalName()+"_EraseHostedElements");
+            if(new_HE.equals("")){
+                sendCommand(myAgent, "set "+hosting_node+" HostedElements= ", myAgent.getLocalName()+"_EraseHostedElements");
+            }else{
+                sendCommand(myAgent, "set "+hosting_node+" HostedElements="+new_HE, myAgent.getLocalName()+"_EraseHostedElements");
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }

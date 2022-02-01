@@ -45,7 +45,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent{
 
                 ACLMessage negotiation_result=myAgent.receive(neg_template);
                 if(negotiation_result!=null){
-
+                    LOGGER.info("New agent started: "+negotiation_result.getSender().getLocalName());
                     String convID="negotiation_winner_";
                     String winner=negotiation_result.getSender().getLocalName();
                     if(winner.contains("batchagent")){
@@ -53,6 +53,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent{
                         sendACL(7,winner,"restart_timeout","reset_timeout",myAgent); //si es batch debe resetear el timeout
                         try {
                             ACLMessage parent=sendCommand(myAgent,"get "+winner+" attrib=parent",convID+String.valueOf(convIDCounter++));
+                            restart_replica(parent.getContent()); //hay que generar una replica en tracking si es posible para mantener el numero de replicas constante
                             String target=get_relationship(parent.getContent());
                             sendACL(ACLMessage.INFORM,target,"release_buffer",winner,myAgent);
                         } catch (Exception e) {
@@ -62,7 +63,8 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent{
                         try {
                             String[] category=winner.split("agent");
                             LOGGER.info("New "+category[0]+" agent is in running state: "+winner);
-                            ACLMessage parent_of_dead_SE=sendCommand(myAgent,"get "+winner+" attrib=parent",convID+String.valueOf(convIDCounter++)); //parent del order
+                            ACLMessage parent_of_dead_SE=sendCommand(myAgent,"get "+winner+" attrib=parent",convID+String.valueOf(convIDCounter++)); //parent del order o batch
+                            restart_replica(parent_of_dead_SE.getContent()); //hay que generar una replica en tracking si es posible para mantener el numero de replicas constante
                             String son_category="";
                             if(category[0].equals("order")){
                                 son_category="batch";
@@ -111,7 +113,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent{
 
                                                 //Si esta caido el nodo hay que reiniciar todas las replicas que este albergaba. Se priorizan las replicas en running y las de tipo batch
 
-                                                ACLMessage HEofDeadPnode= sendCommand(myAgent,"get pnodeagent"+hosting_node.getContent()+" attrib=HostedElements","D&D_"+convIDCounter++);
+                                                ACLMessage HEofDeadPnode= sendCommand(myAgent,"get pnodeagent"+hosting_node.getContent()+" attrib=HostedElements","D&D_"+convIDCounter++); //consigue los batch order y mplan
                                                 String[] parts1=new String[1];
                                                 if(HEofDeadPnode.getContent().contains(",")){
                                                     parts1=HEofDeadPnode.getContent().split(",");
@@ -433,7 +435,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent{
                     myAgent.send(SetReplicasWFD);
                     String negotationdata="localneg "+tracking_instances.getContent()+ " criterion=CPU_usage action=restore externaldata=" + parent; //se lanza negociacion entre las replicas en tracking
                     sendCommand(myAgent,negotationdata , "D&D_"+convIDCounter++);
-                    restart_replica(parent); //hay que generar una replica en tracking si es posible para mantener el numero de replicas constante
+
                 }
             }else{
                 LOGGER.error("No tracking instances found");

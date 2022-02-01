@@ -68,12 +68,17 @@ public class ErrorHandlerAgent extends Agent{
             msg.setContent(cmd);
             msg.setReplyWith(cmd);
             send(msg);
-            ACLMessage reply = agent.blockingReceive(
-                    MessageTemplate.and(
-                            MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
-                            MessageTemplate.MatchPerformative(ACLMessage.INFORM))
-                    , 2000);
+        ACLMessage reply =new ACLMessage();
+            if(msg.getContent().contains("localneg")){
+                reply.setContent("");
+            }else{
+                reply = agent.blockingReceive(
+                        MessageTemplate.and(
+                                MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
+                                MessageTemplate.MatchPerformative(ACLMessage.INFORM))
+                        );
 
+            }
             return LOGGER.exit(reply);
         }
 
