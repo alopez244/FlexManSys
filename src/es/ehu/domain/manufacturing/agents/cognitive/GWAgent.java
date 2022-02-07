@@ -19,7 +19,7 @@ public class GWAgent extends GatewayAgent {
     private String stateasker="";
     CircularFifoQueue msgInFIFO = new CircularFifoQueue(bufferSize);
     CircularFifoQueue msgInFIFO2 = new CircularFifoQueue(bufferSize);
-    public AID MAID = new AID("machine1", false);
+
 
 
     protected void processCommand(java.lang.Object command) {   //this method will be executed when the externalJAde class executes the command JadeGateway.execute

@@ -1,23 +1,23 @@
 package es.ehu.platform.behaviour;
 
-import java.io.Serializable;
-
-//import jade.util.leap.ArrayList;
-
-import java.util.ArrayList;
-import java.util.Date;
-
+import es.ehu.platform.MWAgent;
+import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.SimpleBehaviour;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import es.ehu.platform.MWAgent;
-import jade.core.behaviours.*;
-import jade.lang.acl.*;
-import es.ehu.platform.template.interfaces.*;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
 
 import static es.ehu.platform.utilities.MasReconOntologies.ONT_DATA;
+
+//import jade.util.leap.ArrayList;
 
 /**
  * This behaviour receives messages from the templates used in the constructor
@@ -75,6 +75,9 @@ public class RunningBehaviour extends SimpleBehaviour {
 
 	public void onStart() {
 		LOGGER.entry();
+
+		myAgent.get_timestamp(myAgent,"ExecutionTime");
+
 		myAgent.ActualState="running";
 		this.PrevPeriod = myAgent.period;
 		if (myAgent.period < 0) {
@@ -181,6 +184,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 		String currentState = null;
 		ACLMessage any_msg = myAgent.receive();
 		if(any_msg!=null){
+			myAgent.msgFIFO.add((String) any_msg.getContent());
 			LOGGER.debug("Peeked msg: "+any_msg.getContent());
 			LOGGER.debug("From: "+any_msg.getSender().getLocalName());
 			if(!any_msg.getContent().equals("done")){ //"flushea" mensajes de tipo done para evitar bucles
@@ -198,6 +202,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 
 		//***************** 4) Etapa de ejecución de funtionality
 		ACLMessage msg = myAgent.receive(template);
+
 		receivedMsgs = manageReceivedMsg(msg);
 		Object result = myAgent.functionalityInstance.execute(receivedMsgs);
 		endFlag =Boolean.valueOf(result.toString());

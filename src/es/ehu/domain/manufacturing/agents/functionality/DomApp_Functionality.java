@@ -5,16 +5,11 @@ import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.behaviour.NegotiatingBehaviour;
 import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.platform.utilities.Cmd;
-import es.ehu.platform.utilities.XMLReader;
-import jade.Boot;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.AMSService;
-import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.AMSAgentDescription;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import org.apache.commons.lang.SystemUtils;
@@ -22,7 +17,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -610,21 +604,23 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
         try {
             parent = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "Get_"+myAgent.getLocalName()+"_parent");
         ACLMessage replicasACL = sendCommand(myAgent, "get * state=tracking parent=" + parent.getContent(), "GetBatchUpdatedReplicas");
-
-        if(replicasACL.getContent().contains(",")){
-            Sreplicas= replicasACL.getContent().split(",");
-        }else{
-            Sreplicas[0] = replicasACL.getContent();
-        }
+        if(!replicasACL.getContent().equals("")){ //es posible que no tenga replicas por lo que no se hace nada en dicho caso
+            if(replicasACL.getContent().contains(",")){
+                Sreplicas= replicasACL.getContent().split(",");
+            }else{
+                Sreplicas[0] = replicasACL.getContent();
+            }
             for(int i=0;i<Sreplicas.length;i++){ //actualiza las replicas de este agente
                 AID AgentID = new AID(Sreplicas[i], false);
                 sendACLMessage(16, AgentID, "control", "Shutdown", "setstate stop", myAgent);
                 int  found =SearchAgent(Sreplicas[i]);
                 while(found!=0){  //hay que esperar a que los tracking desaparezcan antes de desregistrar el agente running
                     found =SearchAgent(Sreplicas[i]);
-                        Thread.sleep(200);
+                    Thread.sleep(200);
+                }
             }
         }
+
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -112,39 +112,11 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
 
                         if (msg.getSender().getLocalName().contains("batch")) { //timeout enviado por un batch
                             report_back(msg); //confirmacion de recepcion de mensaje
-                            add_timeout_error_flag = true;
+
                             String[] parts = msg.getContent().split("/");
                             String timeout_batch_id = parts[0];
                             String timeout_item_id = parts[1];
 
-//                            for(int m=0; m<ErrorList.size();m++) { //Primero comprueba que el error no esté repetido
-//                                if (ErrorList.get(m).get(0).equals("timeout")) {
-//                                    if (ErrorList.get(m).get(2).equals(timeout_batch_id)) {
-//                                        if(ErrorList.get(m).get(3).equals(timeout_item_id)){
-//                                            LOGGER.error("Timeout repeated on same batch and item, confirming failure.");
-//                                            sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),"confirmed_timeout");
-////                                            for (int k = 0; k < batch_and_machine.size(); k++) {
-////                                                if(batch_and_machine.get(k).get(0).equals(timeout_batch_id)){
-////                                                    sendACL(ACLMessage.INFORM,"D&D","timeout",batch_and_machine.get(k).get(1));
-////                                                }
-////                                            }
-//                                            add_timeout_error_flag=false;
-//                                            for (int p = 0; p < batch_and_machine.size(); p++) {
-//                                                if (batch_and_machine.get(p).get(0).equals(timeout_batch_id)) {
-//                                                    String MA = batch_and_machine.get(p).get(1);
-//                                                    if(CheckNotFoundRegistry(MA)){ //comprueba que el agente maquina no este en la blacklist de agentes no encontrados
-//                                                        sendACL(ACLMessage.INFORM,"D&D","timeout",MA); //Se informa al D&D para que el agente máquina pase a idle.
-//                                                    }else{
-//                                                        LOGGER.warn(MA+" is on not found registry. Ignoring error.");
-//                                                    }
-//                                                }
-//                                            }
-//                                        }
-//                                    }
-//                                }
-//                            }
-
-                            if (add_timeout_error_flag) {
                                 argument1 = "timeout";
                                 LOGGER.warn(timeout_batch_id + " batch has thrown a timeout on item " + timeout_item_id);
                                 if (!CheckNotFoundRegistry(msg.getSender().getLocalName())&&timeout_batch_id!=null) {
@@ -157,7 +129,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
 //                                        add_to_error_list(argument1,timeout_batch_id,"","","");
                                     }
                                 }
-                            }
+
 
                         } else if (msg.getSender().getLocalName().contains("order")) { //es un timeout enviado por un order agent.
                             report_back(msg);

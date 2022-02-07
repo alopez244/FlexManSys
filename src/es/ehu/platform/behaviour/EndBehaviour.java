@@ -1,18 +1,9 @@
 package es.ehu.platform.behaviour;
 
-import jade.core.AID;
-import jade.core.Agent;
-import jade.domain.DFService;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
-import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
+import es.ehu.platform.MWAgent;
+import jade.core.behaviours.OneShotBehaviour;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import es.ehu.platform.MWAgent;
-
-import jade.core.behaviours.OneShotBehaviour;
 
 public class EndBehaviour extends OneShotBehaviour {
     private static final long serialVersionUID = -2673578185687045396L;
@@ -27,7 +18,6 @@ public class EndBehaviour extends OneShotBehaviour {
 
     @Override
     public void action() {
-
         myAgent.functionalityInstance.terminate(myAgent);
         myAgent.doDelete();
 

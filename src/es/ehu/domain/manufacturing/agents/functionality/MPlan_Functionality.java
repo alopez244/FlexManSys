@@ -200,12 +200,13 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   @Override
   public Void init(MWAgent myAgent) {
 
+    this.myAgent = myAgent;
     this.template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
             MessageTemplate.MatchOntology("Information")),MessageTemplate.MatchConversationId("OrderInfo"));
     this.template2=MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
             MessageTemplate.MatchContent("Order completed")),MessageTemplate.MatchConversationId("Shutdown"));
-    this.myAgent = myAgent;
 
+    myAgent.get_timestamp(myAgent,"CreationTime");
     // Crear un nuevo conversationID
     String conversationId = myAgent.getLocalName() + "_" + chatID;
 
@@ -339,6 +340,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
     this.myAgent = myAgent;
     String parentName = "";
     unregister_from_node();
+    myAgent.get_timestamp(myAgent,"FinishTime");
   if(myAgent.ActualState=="running"){ //para filtrar las replicas ejecutando terminate
     try {
       String planName = "MPlan" + planNumber;

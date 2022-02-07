@@ -50,6 +50,8 @@ public class TrackingBehaviour extends SimpleBehaviour {
 	 *            a timeout for waiting until a message arrives. It must
 	 *            be expressed as an absolute time, as it would be returned by <code>System.currentTimeMillisec()</code>
 	 **/
+
+
 	public TrackingBehaviour(MWAgent a) {
 		super(a);
 		LOGGER.entry(a);
@@ -64,6 +66,9 @@ public class TrackingBehaviour extends SimpleBehaviour {
 
 	public void onStart(){
 		template = MessageTemplate.MatchOntology("state");
+
+		myAgent.get_timestamp(myAgent,"ExecutionTime");
+
 		myAgent.ActualState="tracking";
 		timeout = 0;
 		expired = false;

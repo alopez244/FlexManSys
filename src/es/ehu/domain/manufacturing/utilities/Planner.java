@@ -18,6 +18,7 @@ import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Scanner;
@@ -35,6 +36,7 @@ public class Planner extends Agent {
     private Agent myAgent=this;
     private MessageTemplate template1=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.CONFIRM),
             MessageTemplate.MatchOntology("man/auto"));
+    private int TMSTMP_cnt=0;
 
     protected void setup() {
         LOGGER.entry();
@@ -412,7 +414,12 @@ public class Planner extends Agent {
 
                 //Start
                 try {
+                    Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
                     start(app, agentAttributes, conversationId);
+
+                    get_timestamp(parentIdList,timestamp);
+
                 } catch (Exception e) {
                     LOGGER.error("ERROR IN start METHOD OF PLANNER: Sending command to systemModelAgent");
                     e.printStackTrace();
@@ -635,6 +642,7 @@ public class Planner extends Agent {
 
                 //Start
                 try {
+
                     start(app, agentAttributes, conversationId);
                 } catch (Exception e) {
                     LOGGER.error("ERROR IN start METHOD OF PLANNER: Sending command to systemModelAgent");
@@ -896,6 +904,45 @@ public class Planner extends Agent {
             System.out.println("QoS Manager did not answer on time.");
         }
     }
+
+    public void get_timestamp(ArrayList<String> parents,Timestamp timestamp){
+
+        String id="";
+        String category="";
+        String appId="";
+
+        for (int k=0;k<parents.size();k++) {
+
+            if(!parents.get(k).equals("system")){
+                id=parents.get(k);
+                category = id.substring(0,id.length()-3);
+                if(parents.get(k).contains("mplan")){
+                    appId = "app"+id.substring(id.length()-3);
+
+                    //Mando un mensaje para añadir el tiempo en el que se solicita la creación de la aplicación (solo se envía una vez)
+//                    String contenido = appId+",planner"+",DeploymentRequestTime,"+String.valueOf(timestamp.getTime());
+                    String contenido = "app, "+",DeploymentRequestTime,"+String.valueOf(timestamp.getTime());
+                    ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+                    msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME)); //Confirma el nombre del control container antes de nada
+                    msg.setOntology("timestamp");
+                    msg.setConversationId("");
+                    msg.setContent(contenido);
+                    myAgent.send(msg);
+                }
+                //Por último, mando un otro mensaje para añadir el tiempo en el que se solicita la creación del componente
+                String contenido = id+",planner"+",DeploymentRequestTime,"+String.valueOf(timestamp.getTime());
+                ACLMessage msg3 = new ACLMessage(ACLMessage.INFORM);
+                msg3.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
+                msg3.setOntology("timestamp");
+                msg3.setConversationId("");
+                msg3.setContent(contenido);
+                myAgent.send(msg3);
+            }
+
+        }
+
+    }
+
     private void AskRelationship(){
         MessageTemplate reltemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                 MessageTemplate.MatchOntology("askrelationship"));

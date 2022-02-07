@@ -14,6 +14,8 @@ import es.ehu.platform.template.interfaces.*;
 import es.ehu.platform.utilities.Cmd;
 import es.ehu.platform.behaviour.*;
 
+import java.sql.Timestamp;
+
 public class ProcNode_Functionality implements BasicFunctionality, NegFunctionality{
 
     /**
@@ -24,6 +26,7 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
     private String ID, className;
     private String ListAttrib="";
     private boolean firstime=true;
+    private int TMSTMP_cnt=0;
 
     @Override
     public Void init(MWAgent myAgent) {
@@ -119,6 +122,9 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
         Cmd action = new Cmd(sAction);
 
         if (action.cmd.equals("start")) {
+            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
+
             LOGGER.info("id="+action.who);
 //            ACLMessage hosted_elements =null;
             try {
@@ -144,6 +150,8 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
                 // Registro el agente id>appagn101. seTypeAgent ASA, APA
                 String agnID = sendCommand("reg "+seType+"Agent parent="+seID).getContent();
                 // Instancio nuevo agente
+                get_timestamp(timestamp, seID,agnID,"Node");
+                get_timestamp(timestamp, seID,agnID,"NegotiationTime");
 
                 AgentController ac = ((AgentController) myAgent.getContainerController().createNewAgent(agnID, seClass, new Object[] { "firstState="+seFirstTransition , "redundancy="+redundancy , "parentAgent=" + parentAgentID}));
                 ac.start();
@@ -214,5 +222,32 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
         msg.setContent(content);
         msg.setConversationId(ConvID);
         myAgent.send(msg);
+    }
+    public void get_timestamp(Timestamp timestamp, String seID,String agent,String type){
+
+
+        String contenido =null;
+        if(type.equals("Node")){
+            contenido = seID +","+agent+","+type+","+myAgent.getLocalName();
+        }else{
+            contenido = seID +","+agent+","+type+","+String.valueOf(timestamp.getTime());
+//            if(seID.contains("batch")){
+//                String appId =  "app"+seID.substring(seID.length()-3);
+                String contenido1 = "app,"+" ,NegotiationTime,"+String.valueOf(timestamp.getTime());
+                ACLMessage msg3 = new ACLMessage(ACLMessage.INFORM);
+                msg3.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
+                msg3.setOntology("timestamp");
+                msg3.setContent(contenido1);
+                myAgent.send(msg3);
+//            }
+        }
+
+        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+        msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
+        msg.setOntology("timestamp");
+        msg.setConversationId(myAgent.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
+        msg.setContent(contenido);
+        myAgent.send(msg);
+
     }
 }

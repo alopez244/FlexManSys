@@ -1,11 +1,9 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
-import FIPA.DateTime;
 import com.google.gson.Gson;
 import es.ehu.domain.manufacturing.agents.MachineAgent;
 import es.ehu.domain.manufacturing.behaviour.ReceiveTaskBehaviour;
 import es.ehu.platform.MWAgent;
-import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.behaviour.NegotiatingBehaviour;
 import es.ehu.platform.template.interfaces.AssetManagement;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
@@ -13,23 +11,17 @@ import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.platform.template.interfaces.Traceability;
 import es.ehu.platform.utilities.Cmd;
 import jade.core.AID;
-import jade.core.Agent;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.wrapper.AgentController;
-import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import jade.core.NotFoundException;
-import jade.core.messaging.MessagingService;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import java.util.*;
-import java.util.spi.CalendarDataProvider;
 
 public class Machine_Functionality extends DomRes_Functionality implements BasicFunctionality, NegFunctionality, AssetManagement, Traceability {
     private boolean firstItemFlag=false;
@@ -95,26 +87,30 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         //First, the Machine Model is read
         gatewayAgentID = new AID(myAgent.gatewayAgentName, false);
 
-        sendACLMessage(16,gatewayAgentID,"ping","","",myAgent);
-        ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 300);
-        if(answer_gw==null){
-            System.out.println("GW is not online. Start GW and repeat.");
-            System.exit(0);
-        }
 
-        sendACLMessage(16, gatewayAgentID, "check_asset","check_asset_on_boot_"+convIDcnt++,"ask_state",myAgent); //primero antes de nada debemos comprobar si el agente GW y el PLC están disponibles
-        ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 300);
-        if(answer!=null){
-            if(!answer.getContent().equals("Working")&&!answer.getContent().equals("Not working")){
-                System.out.println("PLC is not prepared to work.");
-                System.exit(0); //si el PLC o el GW no están disponible no tiene sentido que iniciemos el agente máquina
-            }else{
-                System.out.println("PLC is "+answer.getContent());
-            }
-        }else{
-            System.out.println("PLC is not prepared to work.");
-            System.exit(0); //si el PLC o el GW no están disponible no tiene sentido que iniciemos el agente máquina
-        }
+        //******************************Comentar para iniciar MA indiferentemente de si el GW y el PLC estan OK
+//        sendACLMessage(16,gatewayAgentID,"ping","","",myAgent);
+//        ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 300);
+//        if(answer_gw==null){
+//            System.out.println("GW is not online. Start GW and repeat.");
+//            System.exit(0);
+//        }
+//
+//        sendACLMessage(16, gatewayAgentID, "check_asset","check_asset_on_boot_"+convIDcnt++,"ask_state",myAgent); //primero antes de nada debemos comprobar si el agente GW y el PLC están disponibles
+//        ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 300);
+//        if(answer!=null){
+//            if(!answer.getContent().equals("Working")&&!answer.getContent().equals("Not working")){
+//                System.out.println("PLC is not prepared to work.");
+//                System.exit(0); //si el PLC o el GW no están disponible no tiene sentido que iniciemos el agente máquina
+//            }else{
+//                System.out.println("PLC is "+answer.getContent());
+//            }
+//        }else{
+//            System.out.println("PLC is not prepared to work.");
+//            System.exit(0); //si el PLC o el GW no están disponible no tiene sentido que iniciemos el agente máquina
+//        }
+        //*************************************
+
 
         String [] args = (String[]) myAgent.getArguments();
 
@@ -521,7 +517,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                             }
                         }
                     }else{  //habia algun mensaje pendiente de envíar a un receptor aun no definido
-
+//                        posponed_msgs_to_batch=new ArrayList<ACLMessage>();
                         System.out.println("Added message to buffer:\nContent: "+MessageContent+"\nTo: "+batchName);
                         ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.REQUEST);
                         msg_to_buffer.setConversationId("PLCdata");

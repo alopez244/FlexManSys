@@ -3,26 +3,15 @@ package es.ehu.domain.manufacturing.agents.functionality;
 import com.google.gson.Gson;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.ControlBehaviour;
-import es.ehu.platform.behaviour.NegotiatingBehaviour;
-import es.ehu.platform.behaviour.TrackingBehaviour;
 import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
-import es.ehu.platform.template.interfaces.Traceability;
-import es.ehu.platform.utilities.Cmd;
 import es.ehu.platform.utilities.XMLReader;
 import jade.core.AID;
-import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import javafx.application.Platform;
-import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.logging.log4j.core.config.Order;
-import es.ehu.platform.template.interfaces.*;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -323,9 +312,8 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     public Void init(MWAgent myAgent) {
 
         this.myAgent = myAgent;
-
+         myAgent.get_timestamp(myAgent,"CreationTime");
         String conversationId = myAgent.getLocalName() + "_" + chatID++;
-
         firstState = getArgumentOfAgent(myAgent, "firstState");
         redundancy = getArgumentOfAgent(myAgent, "redundancy");
         parentAgentID = getArgumentOfAgent(myAgent, "parentAgent");
@@ -376,8 +364,9 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
         } else {
             // Si su estado es tracking
-            trackingOnBoot(myAgent, mySeType, conversationId);
 
+
+            trackingOnBoot(myAgent, mySeType, conversationId);
             myAgent.initTransition = ControlBehaviour.TRACKING;
         }
 
@@ -386,6 +375,8 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
     @Override
     public Object execute(Object[] input) {
+
+
 
         HashMap infoForTraceability = new HashMap();
 
@@ -403,6 +394,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
         ACLMessage msg = myAgent.receive(batch_f_template);
         if (msg != null) {
+
             myAgent.msgFIFO.add((String) msg.getContent()); //se añade en buffer de listado de mensajes recibidos
 
             if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("askdelay")){ //si es un mensaje con info del delay creamos el timeout
@@ -571,7 +563,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         this.myAgent = myAgent;
         String parentName = "";
         unregister_from_node();
-
+        myAgent.get_timestamp(myAgent,"FinishTime");
         if(myAgent.ActualState=="running"){ //para filtrar las replicas ejecutando terminate
             try {
                 ACLMessage reply = sendCommand(myAgent, "get * reference=" + batchNumber, "parentAgentID");

@@ -5,10 +5,8 @@ import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import jade.core.AID;
-import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import org.apache.commons.collections4.queue.CircularFifoQueue;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -265,6 +263,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 MessageTemplate.MatchOntology("delay"));
         this.myAgent = myAgent;
 
+        myAgent.get_timestamp(myAgent,"CreationTime");
         // Crear un nuevo conversationID
         String conversationId = myAgent.getLocalName() + "_" + chatID++;
 
@@ -530,6 +529,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         this.myAgent = myAgent;
         String parentName = "";
         unregister_from_node();
+        myAgent.get_timestamp(myAgent,"FinishTime");
         if(myAgent.ActualState=="running"){ //para filtrar las replicas ejecutando terminate
             try {
                 ACLMessage reply = sendCommand(myAgent, "get * reference=" + orderNumber, "parentAgentID");
@@ -540,7 +540,6 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
             try {
 
-//                KillReplicas(myAgent.replicas);
                 KillReplicas(myAgent);
 //                sendACLMessage(7, Agent, parentName, "Shutdown", "Order completed", myAgent); // Informa al Mplan Agent que ya ha finalizado su tarea
 

@@ -4,29 +4,29 @@ package es.ehu.platform;
  * Agente base el cual contiene las funciones necesarias para interactuar con el middleware
  */
 
+import es.ehu.platform.template.interfaces.BasicFunctionality;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.DFService;
-import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import org.apache.commons.collections4.queue.CircularFifoQueue;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.collections4.queue.CircularFifoQueue;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
-
-import static es.ehu.platform.utilities.MasReconOntologies.*;
 import static es.ehu.platform.utilities.MWMCommands.*;
-import es.ehu.platform.template.interfaces.BasicFunctionality;
+import static es.ehu.platform.utilities.MasReconOntologies.*;
 
 public class MWAgent extends Agent {
     private static final long serialVersionUID = 8505462503088901786L;
@@ -58,6 +58,7 @@ public class MWAgent extends Agent {
     public CircularFifoQueue msgFIFO = new CircularFifoQueue(5);    //variable de almacenamiento de ACL
     public int initTransition;
     public String conversationId;
+    public int TMSTMP_cnt=0;
     public Object initialExecutionState = null;
     public ArrayList<Object[]> expected_msgs= new ArrayList<Object[]>();
     private int convIDCounter=1;
@@ -347,32 +348,7 @@ public class MWAgent extends Agent {
                 ((msg.getClass()==null)?"null":msg.getClass().getSimpleName())+
                 ") > "+sTargets );
 
-			/*MessageTemplate mt = MessageTemplate.MatchInReplyTo(aMsg.getReplyWith());
 
-			int repliesCnt = 0;
-			while (repliesCnt<cmpIDs.length) {
-				ACLMessage aReply = receive(mt);
-				if (aReply != null){
-					if (aReply.getPerformative() == ACLMessage.FAILURE) {
-	                	String name=aReply.getContent().substring(aReply.getContent().indexOf(":name ", aReply.getContent().indexOf("MTS-error"))+":name ".length());
-	                	name=name.substring(0, name.indexOf('@'));
-	                	System.out.println(name+" FAILURE");
-					}
-					repliesCnt++;
-				}
-			  System.out.println("sendMessage.rcvReply.block()");
-			  try { Thread.sleep(100); } catch (InterruptedException e) { e.printStackTrace(); }
-			  ACLMessage test = receive();
-			  if (test == null) System.out.println("*********** desbloqueado con mensaje nuloï¿½?");
-			  else System.out.println("*************** "+test.getContent());
-
-			} */
-
-        //sendMessage(msg, ontology, targets);
-
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
         return LOGGER.exit(response);
     }
 
@@ -404,32 +380,7 @@ public class MWAgent extends Agent {
         return LOGGER.exit(response);
     }
 
-//    public String sendState(Serializable msg, final String sTargets) { //anulado
-//        LOGGER.entry(msg, sTargets);
-//        String [] cmpinss = sTargets.split(",");
-//        if (cmpinss == null) return null;
-//        if (msg==null) msg = "null";
-//
-//        String response = "";
-//        try {
-//
-//            ACLMessage aMsg = new ACLMessage(ACLMessage.INFORM);
-//
-//            aMsg.setOntology(ONT_STATE);
-//            aMsg.setContentObject(msg);
-//            for (String cmpins: cmpinss) aMsg.addReceiver(new AID(cmpins, AID.ISLOCALNAME));
-//
-//            send(aMsg);
-//
-//            LOGGER.debug("sendState().send("+sTargets+"):"+aMsg);
-//
-//            LOGGER.info(cmpID+"("+getLocalName() + "):state("+ ((msg.getClass()==null)?"null":msg.getClass().getSimpleName())+ ") > "+cmpID+"("+sTargets+")" );
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return LOGGER.exit(response);
-//    }
+
 
     public void triggerEvent(final String eventId){
         LOGGER.entry(eventId);
@@ -461,26 +412,38 @@ public class MWAgent extends Agent {
         LOGGER.exit();
     }
 
+    public void get_timestamp(Agent a,String type){
+
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        String myParentID=null;
+        try {
+            ACLMessage reply = sendCommand("get " + a.getLocalName() + " attrib=parent");
+            if (reply != null)
+                myParentID = reply.getContent();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+//        String contenido = myParentID+",CreationTime,"+String.valueOf(timestamp.getTime());
+        String contenido = myParentID+","+a.getLocalName() +","+type+","+String.valueOf(timestamp.getTime());
+        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+        msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
+        msg.setOntology("timestamp");
+        msg.setConversationId(a.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
+        msg.setContent(contenido);
+        a.send(msg);
+
+//        String appId =  "app"+myParentID.substring(myParentID.length()-3);
+        String contenido1 = "app, "+","+type+","+String.valueOf(timestamp.getTime()); //pisa el ultimo dato hasta terminar de generar todos los agentes
+        ACLMessage msg2 = new ACLMessage(ACLMessage.INFORM);
+        msg2.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
+        msg2.setOntology("timestamp");
+        msg2.setConversationId(conversationId);
+        msg2.setContent(contenido1);
+        a.send(msg2);
+
+    }
 
 
-//    public void sendState(final Serializable msg){
-//        LOGGER.entry(msg);
-//        String sTracking = this.getInstances(this.cmpID, "tracking");
-//        LOGGER.info("Tracking: " + sTracking);
-//        if ((sTracking != null) && (sTracking.length() > 0) && (!sTracking.equals("type not found"))) {
-//            sTracking += "," + runningMwm.get("tmwm");
-//        } else {
-//            sTracking = runningMwm.get("tmwm");
-//        }
-//
-//        if (sTracking.length() > 0) {
-//            LOGGER.info("Refresh state to tracking instances:"+ sTracking);
-//            this.sendState(msg, sTracking);
-//        } else {
-//            LOGGER.info("No tracking instances:");
-//        }
-//        LOGGER.exit();
-//    }
     public void AddToExpectedMsgs(ACLMessage msg){ //como se trata de un envío multiple en este caso hay que añadir un expected mesage para cada receptor
 
         jade.util.leap.Iterator itor = msg.getAllReceiver();
