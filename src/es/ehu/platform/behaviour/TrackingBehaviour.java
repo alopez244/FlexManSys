@@ -1,14 +1,14 @@
 package es.ehu.platform.behaviour;
 
 
+import es.ehu.platform.MWAgent;
+import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
+import jade.core.AID;
+import jade.core.behaviours.SimpleBehaviour;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import es.ehu.platform.MWAgent;
-import jade.core.*;
-import jade.core.behaviours.*;
-import jade.lang.acl.*;
-import es.ehu.platform.template.interfaces.*;
 
 import java.util.ArrayList;
 
@@ -67,7 +67,22 @@ public class TrackingBehaviour extends SimpleBehaviour {
 	public void onStart(){
 		template = MessageTemplate.MatchOntology("state");
 
-		myAgent.get_timestamp(myAgent,"ExecutionTime");
+		String recovery_value = get_recovery_value();
+		if (recovery_value.equals("true")){ //si es recovery significa que el D&D ha pedido restaurar una replica en tracking
+			ACLMessage parent= myAgent.sendCommand("get "+myAgent.getLocalName()+" attrib=parent");
+			ACLMessage running_replica= myAgent.sendCommand("get * parent="+ parent.getContent()+" state=running");
+			if(running_replica!=null){
+				if(!running_replica.getContent().equals("")){
+					AID target=new AID(running_replica.getContent(),false);
+					sendACLMessage(ACLMessage.REQUEST,target,"trigger_getState",myAgent.getLocalName(),""); //pedimos al agente en running que nos envie el estado
+				}
+			}
+			myAgent.get_timestamp(myAgent,"RedundancyRecovery"); //replica lista para funcionar, se recoge el timestamp
+		}
+		if(!myAgent.ExecTimeStamped){
+			myAgent.get_timestamp(myAgent,"ExecutionTime");
+			myAgent.ExecTimeStamped=true;
+		}
 
 		myAgent.ActualState="tracking";
 		timeout = 0;
@@ -78,6 +93,20 @@ public class TrackingBehaviour extends SimpleBehaviour {
 		
 		
 	}
+
+
+	private String get_recovery_value() {
+		Object[] allArguments = myAgent.getArguments();
+
+		for (int i = 0; i < allArguments.length; i++) {
+			String[] argument = allArguments[i].toString().split("=");
+			if (argument[0].equals("recovery")){
+				return argument[1];
+			}
+		}
+		return null;
+	}
+
 	public void action() {
 		LOGGER.entry();
 			ACLMessage msg = myAgent.receive(template);

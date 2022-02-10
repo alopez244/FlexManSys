@@ -10,6 +10,8 @@ public class StructMessage {
     private Integer performative;
     private HashMap<String,HashMap<String,HashMap<String,String>>> testResults;
     private HashMap<String,HashMap<String,HashMap<String,String>>> testResultsApp;
+    private HashMap<String,HashMap<String,HashMap<String,String>>> testResultsErr;
+
 
     public StructMessage() {
     }
@@ -31,6 +33,8 @@ public class StructMessage {
         this.testResultsApp = _resultsApp;
     }
 
+    public void setTestResultsErr(HashMap _resultsErr) { this.testResultsErr = _resultsErr; }
+
     public void setPerformative(int _performative) {
         this.performative = _performative;
     }
@@ -49,6 +53,10 @@ public class StructMessage {
 
     public HashMap readTestResults() {
         return this.testResults;
+    }
+
+    public HashMap readTestResultsErr() {
+        return this.testResultsErr;
     }
 
     public HashMap readTestResultsApp() {

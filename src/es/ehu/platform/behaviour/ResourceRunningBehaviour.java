@@ -1,19 +1,19 @@
 package es.ehu.platform.behaviour;
 
+import es.ehu.platform.MWAgent;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.SimpleBehaviour;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import es.ehu.platform.MWAgent;
-
-import jade.core.behaviours.*;
-import jade.lang.acl.*;
 
 import java.util.ArrayList;
 import java.util.Date;
 
-import static es.ehu.platform.utilities.MasReconOntologies.*;
+import static es.ehu.platform.utilities.MasReconOntologies.ONT_RUN;
 
 /**
  * This behaviour receives messages from the templates used in the constructor
@@ -41,7 +41,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
 
     static final Logger LOGGER = LogManager.getLogger(ResourceRunningBehaviour.class.getName());
 
-    private MessageTemplate template,template2;
+    private MessageTemplate template,template2,template3;
     private MWAgent myAgent;
     private int PrevPeriod;
     private long NextActivation;
@@ -57,6 +57,8 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
         this.template2 = MessageTemplate.and(MessageTemplate.MatchOntology("release_buffer"),
                 MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+        this.template3 = MessageTemplate.and(MessageTemplate.MatchOntology("node_kill"),
+                MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
     }
 
     public void onStart() {
@@ -172,6 +174,16 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         }
         //***************** Fin de etapa de ejecución de funtionality
 
+        //***************** 4) Etapa de muerte deliberada de agente
+        ACLMessage err_simulation = myAgent.receive(template3);
+        if (err_simulation!=null) {
+            System.out.println(err_simulation.getSender().getLocalName()+" politely asked to kill myself");
+            myAgent.get_timestamp(myAgent,"AgentKilled");
+            System.out.println(System.currentTimeMillis());
+            System.exit(0); //mata al nodo completo
+        }
+
+        //***************** Fin de etapa de muerte deliberada de agente
         long t = manageBlockingTimes();
         if (msg == null&&myAgent.expected_msgs.size()==0) {
 //            LOGGER.debug("Block time: " + t);

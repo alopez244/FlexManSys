@@ -49,6 +49,7 @@ public class MWAgent extends Agent {
     public int period = -1;
     public String ActualState=null;
     public ArrayList<String> replicas=new ArrayList<String>();
+    public boolean ExecTimeStamped=false;
 //    public static ArrayList<String> ReportedAgents=new ArrayList<String>(); //agentes reportados
 //    public ArrayList<String> IgnoredReplicas=new ArrayList<String>();
     public String cmpID = null;
@@ -417,30 +418,74 @@ public class MWAgent extends Agent {
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         String myParentID=null;
         try {
+
+        if(type.equals("AgentKilled")){
+
+            String[] number_of_node=a.getLocalName().split("pnodeagent");
+            ACLMessage HE= sendCommand("get * node="+number_of_node[1]);
+            String[] agents_killed=new String[1];
+            if(HE.getContent().contains(",")){
+                agents_killed=HE.getContent().split(",");
+            }else{
+                agents_killed[0]=HE.getContent();
+            }
+
+
+            for(int i=0;i< agents_killed.length;i++){
+
+                ACLMessage parent = sendCommand("get " + agents_killed[i] + " attrib=parent");
+                if(parent!=null){
+                    String contenido = parent.getContent()+","+agents_killed[i] +","+type+","+String.valueOf(timestamp.getTime());
+                    ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+                    msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
+                    msg.setOntology("timestamp_err");
+                    msg.setConversationId(a.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
+                    msg.setContent(contenido);
+                    a.send(msg);
+                }
+            }
+
+        }else if(type.equals("RedundancyRecovery")) {
+            ACLMessage parent = sendCommand("get " + a.getLocalName() + " attrib=parent");
+            if(parent!=null){
+                String contenido = parent.getContent()+","+a.getLocalName() +","+type+","+String.valueOf(timestamp.getTime());
+                ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+                msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
+                msg.setOntology("timestamp_err");
+                msg.setConversationId(a.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
+                msg.setContent(contenido);
+                a.send(msg);
+            }
+
+        }else{
             ACLMessage reply = sendCommand("get " + a.getLocalName() + " attrib=parent");
-            if (reply != null)
+            if (reply != null){
                 myParentID = reply.getContent();
+            }
+            //        String contenido = myParentID+",CreationTime,"+String.valueOf(timestamp.getTime());
+            String contenido = myParentID+","+a.getLocalName() +","+type+","+String.valueOf(timestamp.getTime());
+            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+            msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
+            msg.setOntology("timestamp");
+            msg.setConversationId(a.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
+            msg.setContent(contenido);
+            a.send(msg);
+
+
+            String contenido1 = "app, "+","+type+","+String.valueOf(timestamp.getTime()); //pisa el ultimo dato hasta terminar de generar todos los agentes
+            ACLMessage msg2 = new ACLMessage(ACLMessage.INFORM);
+            msg2.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
+            msg2.setOntology("timestamp");
+            msg2.setConversationId(conversationId);
+            msg2.setContent(contenido1);
+            a.send(msg2);
+
+        }
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
-//        String contenido = myParentID+",CreationTime,"+String.valueOf(timestamp.getTime());
-        String contenido = myParentID+","+a.getLocalName() +","+type+","+String.valueOf(timestamp.getTime());
-        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-        msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
-        msg.setOntology("timestamp");
-        msg.setConversationId(a.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
-        msg.setContent(contenido);
-        a.send(msg);
-
-//        String appId =  "app"+myParentID.substring(myParentID.length()-3);
-        String contenido1 = "app, "+","+type+","+String.valueOf(timestamp.getTime()); //pisa el ultimo dato hasta terminar de generar todos los agentes
-        ACLMessage msg2 = new ACLMessage(ACLMessage.INFORM);
-        msg2.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
-        msg2.setOntology("timestamp");
-        msg2.setConversationId(conversationId);
-        msg2.setContent(contenido1);
-        a.send(msg2);
-
     }
 
 

@@ -318,6 +318,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         redundancy = getArgumentOfAgent(myAgent, "redundancy");
         parentAgentID = getArgumentOfAgent(myAgent, "parentAgent");
 
+
         mySeType = getMySeType(myAgent, conversationId);
 
         // Hay que leer el modelo de trazabilidad que estara en alguna carpeta

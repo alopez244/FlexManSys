@@ -3,24 +3,17 @@ package es.ehu.domain.manufacturing.utilities;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
-import jade.domain.introspection.*;
-import jade.domain.introspection.Event;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import jade.domain.DFService;
-import jade.domain.FIPAAgentManagement.*;
-import jade.core.ContainerID;
-import  jade.util.*;
-import jade.domain.AMSService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import java.text.DateFormat;
-import java.util.Map;
 
 
 public class QoSManagerAgent extends ErrorHandlerAgent {
@@ -68,8 +61,10 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
 //                        String convID = msgparts[2];
                         String receiver = msgparts[0];
                         String intercepted_msg = msgparts[1];
+
                         LOGGER.warn(msg.getSender().getLocalName() + " reported a failure while trying to communicate with " + receiver);
                         if (CheckNotFoundRegistry(receiver) && CheckNotFoundRegistry(msg.getSender().getLocalName())) { //comprueba que el denunciante y el denunciado no esten en la blacklist de agentes no encontrados
+                            get_timestamp(myAgent,receiver,"DeadAgentDetection");
                             LOGGER.info("Checking if " + receiver + " is alive and if the agent received the reported msg.");
                             String command = CheckMsgFIFO(receiver, intercepted_msg); //checkMsgFIFo se puede usar con order, batch y machine por ahora, el resto responde como un ping
                             System.out.println(command);
@@ -229,6 +224,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                     } else if (msg.getOntology().equals("asset_state")) { //recibe ping de vuelta del asset (solo para testing)
                         LOGGER.info("Recieved asset state out of the timeout: " + msg.getContent());
                     } else if (msg.getOntology().equals("reported_on_dead_node")) {
+                        get_timestamp(myAgent,msg.getContent(),"DeadAgentConfirmation");
                         add_to_error_list("not_found", msg.getContent(), "", "", "");
                         LOGGER.info("D&D reported a dead agent (" + msg.getContent() + "). Added to error list.");
                     }
@@ -491,80 +487,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
             confirm.setConversationId(msg.getConversationId());
             myAgent.send(confirm);
         }
-//        public void sendACL(int performative,String receiver,String ontology,String content){ //Funcion express de envío de mensajes
-//            AID receiverAID=new AID(receiver,false);
-//            ACLMessage msg=new ACLMessage(performative);
-//            msg.addReceiver(receiverAID);
-//            msg.setOntology(ontology);
-//            msg.setContent(content);
-//            send(msg);
-//        }
 
-//        private int SearchAgent (String agent){
-//            int found=0;
-//            AMSAgentDescription [] agents = null;
-//
-//            try {
-//                SearchConstraints c = new SearchConstraints();
-//                c.setMaxResults ( new Long(-1) );
-//                agents = AMSService.search(myAgent, new AMSAgentDescription (), c );
-//            }
-//            catch (Exception e) {
-//                System.out.println(e);
-//            }
-//            for (int i=0; i<agents.length;i++){
-//                AID agentID = agents[i].getName();
-//                String agent_to_check=agentID.getLocalName();
-////            System.out.println(agent_to_check);
-//                if(agent_to_check.contains(agent)){
-//                    found++;
-//                }
-//            }
-//            return found;
-//        }
-
-//        private ACLMessage sendCommand(Agent agent, String cmd, String conversationId) throws Exception {
-//
-//            this.myAgent = agent;
-//
-//            DFAgentDescription dfd = new DFAgentDescription();
-//            ServiceDescription sd = new ServiceDescription();
-//
-//            sd.setType("sa");
-//            dfd.addServices(sd);
-//            String mwm;
-//
-//            while (true) {
-//                DFAgentDescription[] result = DFService.search(myAgent, dfd);
-//
-//                if ((result != null) && (result.length > 0)) {
-//                    dfd = result[0];
-//                    mwm = dfd.getName().getLocalName();
-//                    break;
-//                }
-//                LOGGER.info(".");
-//                Thread.sleep(100);
-//
-//            } //end while (true)
-//
-//            LOGGER.entry(mwm, cmd);
-//            ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-//            msg.addReceiver(new AID(mwm, AID.ISLOCALNAME));
-//            msg.setConversationId(conversationId);
-//            msg.setOntology("control");
-//            msg.setContent(cmd);
-//            msg.setReplyWith(cmd);
-//            myAgent.send(msg);
-//            ACLMessage reply = myAgent.blockingReceive(
-//                    MessageTemplate.and(
-//                            MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
-//                            MessageTemplate.MatchPerformative(ACLMessage.INFORM))
-//                    , 1000);
-//
-//            return LOGGER.exit(reply);
-//
-//        }
-//    }
 
         public void takeDown() {
             LOGGER.entry();

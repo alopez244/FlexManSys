@@ -17,6 +17,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
     private int convIDCounter=1;
     static final Logger LOGGER = LogManager.getLogger(DiagnosisAndDecision.class.getName());
     private Agent myAgent=this;
+    private String reported_agent="";
     public String control="automatic";
     private MessageTemplate expected_senders=MessageTemplate.or(MessageTemplate.MatchSender(new AID("planner",AID.ISLOCALNAME)),
                                             MessageTemplate.MatchSender(new AID("QoSManagerAgent",AID.ISLOCALNAME)));
@@ -68,18 +69,18 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             sendACL(7,winner,"restart_timeout","reset_timeout",myAgent); //si es batch debe resetear el timeout
             try {
                 ACLMessage parent=sendCommand(myAgent,"get "+winner+" attrib=parent",convID+String.valueOf(convIDCounter++));
-                restart_replica(parent.getContent()); //hay que generar una replica en tracking si es posible para mantener el numero de replicas constante
                 String target=get_relationship(parent.getContent());
                 sendACL(ACLMessage.INFORM,target,"release_buffer",winner,myAgent);
+                restart_replica(parent.getContent()); //hay que generar una replica en tracking si es posible para mantener el numero de replicas constante
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            get_timestamp(myAgent,msg.getSender().getLocalName(),"RunningAgentRecovery");
         }else if(winner.contains("orderagent")||winner.contains("mplanagent")){
             try {
                 String[] category=winner.split("agent");
                 LOGGER.info("New "+category[0]+" agent is in running state: "+winner);
                 ACLMessage parent_of_dead_SE=sendCommand(myAgent,"get "+winner+" attrib=parent",convID+String.valueOf(convIDCounter++)); //parent del order o batch
-                restart_replica(parent_of_dead_SE.getContent()); //hay que generar una replica en tracking si es posible para mantener el numero de replicas constante
                 String son_category="";
                 if(category[0].equals("order")){
                     son_category="batch";
@@ -103,19 +104,23 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                     }
                     sendACL(ACLMessage.INFORM,target.getContent(),"release_buffer",winner,myAgent);
                 }
+                restart_replica(parent_of_dead_SE.getContent()); //hay que generar una replica en tracking si es posible para mantener el numero de replicas constante
 
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            get_timestamp(myAgent,msg.getSender().getLocalName(),"RunningAgentRecovery");
         }else {
             //TODO
         }
     }
 
     public void actions_after_not_found(ACLMessage msg){
+        reported_agent= msg.getContent();
         if(!msg.getContent().contains("ControlGatewayCont")){ //no es un agente GW por lo que el D&D puede realizar alguna acción
             if(msg.getContent().contains("batchagent")||msg.getContent().contains("orderagent")||msg.getContent().contains("mplanagent")){ //Es agente de aplicacion
                 try {
+                    get_timestamp(myAgent,msg.getContent(),"DeadAgentConfirmation");
                     ACLMessage state= sendCommand(myAgent, "get "+msg.getContent()+" attrib=state", "D&D_"+convIDCounter++); //consigue el estado de la replcia caida
                     LOGGER.warn(msg.getContent()+" is dead or isolated and was in "+state.getContent()+" state.");
                     ACLMessage parent= sendCommand(myAgent, "get "+msg.getContent()+" attrib=parent", "D&D_"+convIDCounter++);
@@ -250,6 +255,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
         }else { //agente GW no encontrado
             //TODO poner a negociar otras maquinas para asumir el mando del batch
         }
+        reported_agent= "";
     }
 
     public void actions_after_msg_lost(ACLMessage msg){
@@ -280,9 +286,11 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             }
             if(Dead_PN!=null){
                 LOGGER.info(Dead_SE+" found to be dead on node "+Dead_PN);
-                sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE,myAgent);
+                if(!reported_agent.equals(Dead_SE)){
+                    get_timestamp(myAgent,Dead_SE,"DeadAgentDetection");
+                    sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE,myAgent);
+                }
             }
-
             a.add(Dead_SE);
             agents_sorted_by_category.put("batchagent",a);
         }else if(Dead_SE.contains("orderagent")){
@@ -293,7 +301,10 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             a.add(Dead_SE);
             if(Dead_PN!=null){
                 LOGGER.info(Dead_SE+" found to be dead on node "+Dead_PN);
-                sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE,myAgent);
+                if(!reported_agent.equals(Dead_SE)){
+                    get_timestamp(myAgent,Dead_SE,"DeadAgentDetection");
+                    sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE,myAgent);
+                }
             }
             agents_sorted_by_category.put("orderagent",a);
         }else{
@@ -304,7 +315,10 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             a.add(Dead_SE);
             if(Dead_PN!=null){
                 LOGGER.info(Dead_SE+" found to be dead on node "+Dead_PN);
-                sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE,myAgent);
+                if(!reported_agent.equals(Dead_SE)){
+                    get_timestamp(myAgent,Dead_SE,"DeadAgentDetection");
+                    sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE,myAgent);
+                }
             }
             agents_sorted_by_category.put("mplanagent",a);
         }
@@ -416,7 +430,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                 }
                 String criteria="";
                 criteria="max mem"; //mismo criterio que al inicio del plan
-                String negotationdata="localneg "+ToNegotiate+ " criterion="+criteria+" action=start externaldata=" + parent + "," + category.getContent() + "," + seClass + "," + myAgent.getLocalName() + "," + "1" + "," + "tracking";
+                String negotationdata="localneg "+ToNegotiate+ " criterion="+criteria+" action=recover_tracking externaldata=" + parent + "," + category.getContent() + "," + seClass + "," + myAgent.getLocalName() + "," + "1" + "," + "tracking";
                 sendCommand(myAgent,negotationdata , "D&D_"+convIDCounter++);
                 return true;
             }
@@ -429,31 +443,6 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
         }
         return false;
     }
-//    private boolean PingAgent (String name){  //checkea el estado de los agentes de aplicación, recurso y gateway
-//
-//        MessageTemplate pingtemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-//                MessageTemplate.MatchOntology("ping"));
-//        boolean state;
-//        int n=SearchAgent(name);
-//        if(n>0){
-//            AID Agent_to_ping_ID=new AID(name,false);
-//            ACLMessage ping=new ACLMessage(ACLMessage.REQUEST);
-//            ping.setOntology("ping");
-//            ping.addReceiver(Agent_to_ping_ID);
-//            ping.setContent("");
-//            send(ping);
-//            ACLMessage echo=blockingReceive(pingtemplate,500);
-//            if(echo!=null) {
-//                LOGGER.info(name+" answered on time.");
-//                state=true;
-//            }else{
-//                LOGGER.error(name+" did not answer on time. Confirming failure.");
-//                state=false;
-//            }
-//        }else{
-//            state=false;
-//        }
-//        return state;
-//    }
+
 
 }

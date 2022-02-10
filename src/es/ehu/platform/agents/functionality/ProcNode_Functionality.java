@@ -102,6 +102,7 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
         String redundancy = (String)negExternalData[4];
         String seFirstTransition = (String)negExternalData[5];
 
+
         if (negReceivedValue>negScalarValue) return NegotiatingBehaviour.NEG_LOST; //pierde negociación
         if ((negReceivedValue==negScalarValue) && !tieBreak ) return NegotiatingBehaviour.NEG_LOST; //empata negocicación pero no es quien fija desempate
 //        if ((negReceivedValue==negScalarValue) && !tieBreak ) return NegotiatingBehaviour.NEG_RETRY;
@@ -153,14 +154,54 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
                 get_timestamp(timestamp, seID,agnID,"Node");
                 get_timestamp(timestamp, seID,agnID,"NegotiationTime");
 
-                AgentController ac = ((AgentController) myAgent.getContainerController().createNewAgent(agnID, seClass, new Object[] { "firstState="+seFirstTransition , "redundancy="+redundancy , "parentAgent=" + parentAgentID}));
+                AgentController ac = ((AgentController) myAgent.getContainerController().createNewAgent(agnID, seClass, new Object[] { "firstState="+seFirstTransition , "redundancy="+redundancy , "parentAgent=" + parentAgentID,"recovery=false"}));
                 ac.start();
                 String parts[]=myAgent.getLocalName().split("pnodeagent");
                 sendCommand("set "+agnID+" node="+parts[1]); //Añade el número de nodo en el que se va a encontrar el agente
 
 
             }catch (Exception e) {e.printStackTrace();}
-        }
+        }else if(action.cmd.equals("recover_tracking")){
+            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
+
+            LOGGER.info("id="+action.who);
+//            ACLMessage hosted_elements =null;
+            try {
+//                hosted_elements = sendCommand("get "+myAgent.getLocalName()+" attrib=HostedElements");
+                if(!ListAttrib.contains(seID)) { //Si la lista de atributos no tiene la ID del sistem element lo añade
+                    ACLMessage Actual_Attrib= sendCommand("get " + myAgent.getLocalName() + " attrib=HostedElements");
+                    ListAttrib=Actual_Attrib.getContent(); //primero actualizamos la variable (para ejecucion de planes de manera consecutiva sin reinicializar el sistema).
+
+                    if (ListAttrib.equals("")) {
+                        ListAttrib = seID; //si es el primero lo añade sin más
+//                            firstime = false;
+                    } else {
+                        ListAttrib = ListAttrib + "," + seID; //si no es el primer lo concatena
+                    }
+                    LOGGER.debug("ACTUAL ATRIBUTES: " + ListAttrib);
+                    sendCommand("set " + myAgent.getLocalName() + " HostedElements=" + ListAttrib); //peticion al SA de actualización
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            try {
+                // Registro el agente id>appagn101. seTypeAgent ASA, APA
+                String agnID = sendCommand("reg " + seType + "Agent parent=" + seID).getContent();
+                // Instancio nuevo agente
+                get_timestamp(timestamp, seID, agnID, "Node");
+                get_timestamp(timestamp, seID, agnID, "NegotiationTime");
+
+                AgentController ac = ((AgentController) myAgent.getContainerController().createNewAgent(agnID, seClass, new Object[]{"firstState=" + seFirstTransition, "redundancy=" + redundancy, "parentAgent=" + parentAgentID,"recovery=true"}));
+                ac.start();
+                String parts[] = myAgent.getLocalName().split("pnodeagent");
+                sendCommand("set " + agnID + " node=" + parts[1]); //Añade el número de nodo en el que se va a encontrar el agente
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            }
+
         return NegotiatingBehaviour.NEG_WON;
     }
 

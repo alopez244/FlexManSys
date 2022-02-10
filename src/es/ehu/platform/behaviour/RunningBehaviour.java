@@ -45,7 +45,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 
 	static final Logger LOGGER = LogManager.getLogger(RunningBehaviour.class.getName());
 
-	private MessageTemplate template,template2;
+	private MessageTemplate template,template2,template3;
 	private MWAgent myAgent;
 	private int PrevPeriod;
 	private long NextActivation;
@@ -76,7 +76,10 @@ public class RunningBehaviour extends SimpleBehaviour {
 	public void onStart() {
 		LOGGER.entry();
 
-		myAgent.get_timestamp(myAgent,"ExecutionTime");
+		if(!myAgent.ExecTimeStamped){
+			myAgent.get_timestamp(myAgent,"ExecutionTime");
+			myAgent.ExecTimeStamped=true;
+		}
 
 		myAgent.ActualState="running";
 		this.PrevPeriod = myAgent.period;
@@ -187,7 +190,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 			myAgent.msgFIFO.add((String) any_msg.getContent());
 			LOGGER.debug("Peeked msg: "+any_msg.getContent());
 			LOGGER.debug("From: "+any_msg.getSender().getLocalName());
-			if(!any_msg.getContent().equals("done")){ //"flushea" mensajes de tipo done para evitar bucles
+			if(!any_msg.getContent().equals("done")&&!any_msg.getOntology().equals("trigger_getState")){ //"flushea" mensajes de tipo done y de trigger para evitar bucles
 				myAgent.putBack(any_msg);  //en caso de no serlo, se devuelve al queue de mensajes ACL
 			}
 			if(!myAgent.antiloopflag) { //el flag de antiloop evita bucles infinitos acotando un tramo de código
@@ -223,18 +226,6 @@ public class RunningBehaviour extends SimpleBehaviour {
 		manageExecutionResult(result);
 		//***************** Fin de etapa de ejecución de funtionality
 
-
-//		Serializable state = null;
-//		try {
-//			state = (Serializable) ((AvailabilityFunctionality)myAgent.functionalityInstance).getState();
-//
-//		} catch (Exception e) {
-//			LOGGER.debug("GetState is returning a non-serializable object");
-//		}
-//		if (state != null) {
-//			LOGGER.debug("Send state");
-//			myAgent.sendState(state);
-//		}
 
 		long t = manageBlockingTimes();
 

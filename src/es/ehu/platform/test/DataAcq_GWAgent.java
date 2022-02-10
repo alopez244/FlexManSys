@@ -13,7 +13,7 @@ public class DataAcq_GWAgent extends GatewayAgent {
 
     public HashMap<String,HashMap<String,HashMap<String,String>>> times = new HashMap<>();
     public HashMap<String,HashMap<String,HashMap<String,String>>> apptimes = new HashMap<>();
-
+    public HashMap<String,HashMap<String,HashMap<String,String>>> errtimes= new HashMap<>();
 
     protected void processCommand(java.lang.Object command) { //The method is called each time a request to process a command is received from the JSP Gateway. receive strmessage
 
@@ -40,6 +40,7 @@ public class DataAcq_GWAgent extends GatewayAgent {
 
             ((StructMessage) command).setTestResults(times);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
             ((StructMessage) command).setTestResultsApp(apptimes);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
+            ((StructMessage) command).setTestResultsErr(errtimes);
             ((StructMessage) command).setNewData(true);
 
         } else if (action.equals("init")) {
@@ -59,6 +60,8 @@ public class DataAcq_GWAgent extends GatewayAgent {
         System.out.println("En GWAgentRos");
         MessageTemplate template = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                 MessageTemplate.MatchOntology("timestamp"));
+        MessageTemplate template_err = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                MessageTemplate.MatchOntology("timestamp_err"));
         // MENSAJE DESDE TRANSPORT AGENT
 
         addBehaviour(new CyclicBehaviour() { //keep executing constantly
@@ -67,6 +70,7 @@ public class DataAcq_GWAgent extends GatewayAgent {
 
                 //System.out.println("Entering CyclicBehaviour");
                 ACLMessage msg = receive(template); //recivir mensaje desde Transport Agent
+                ACLMessage msg_err=receive(template_err);
                 if (msg != null) {
                     System.out.println("GWagent, message received");
 
@@ -98,7 +102,12 @@ public class DataAcq_GWAgent extends GatewayAgent {
                         //Se comprueba si ya hay en el HashMap información sobre este componente
                         times=time_contructor(dataArray, times);
                     }
-                } else {
+                } else if(msg_err!=null) {
+                    String data = msg_err.getContent();
+                    String[] dataArray = data.split(",");
+                   errtimes =time_contructor(dataArray, errtimes);
+
+                }else{
                     //System.out.println("Block the agent");
                     block();
                 }
