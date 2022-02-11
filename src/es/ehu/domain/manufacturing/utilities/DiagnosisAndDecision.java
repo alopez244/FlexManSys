@@ -8,6 +8,7 @@ import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -120,8 +121,9 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
         if(!msg.getContent().contains("ControlGatewayCont")){ //no es un agente GW por lo que el D&D puede realizar alguna acción
             if(msg.getContent().contains("batchagent")||msg.getContent().contains("orderagent")||msg.getContent().contains("mplanagent")){ //Es agente de aplicacion
                 try {
-                    get_timestamp(myAgent,msg.getContent(),"DeadAgentConfirmation");
+
                     ACLMessage state= sendCommand(myAgent, "get "+msg.getContent()+" attrib=state", "D&D_"+convIDCounter++); //consigue el estado de la replcia caida
+                    //TODO condicion de agente repetido
                     LOGGER.warn(msg.getContent()+" is dead or isolated and was in "+state.getContent()+" state.");
                     ACLMessage parent= sendCommand(myAgent, "get "+msg.getContent()+" attrib=parent", "D&D_"+convIDCounter++);
 
@@ -287,7 +289,9 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             if(Dead_PN!=null){
                 LOGGER.info(Dead_SE+" found to be dead on node "+Dead_PN);
                 if(!reported_agent.equals(Dead_SE)){
-                    get_timestamp(myAgent,Dead_SE,"DeadAgentDetection");
+                    Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+                    get_defined_timestamp(myAgent,Dead_SE,"DeadAgentDetection",timestamp);
+                    get_defined_timestamp(myAgent,Dead_SE,"DeadAgentConfirmation",timestamp);
                     sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE,myAgent);
                 }
             }
@@ -302,7 +306,9 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             if(Dead_PN!=null){
                 LOGGER.info(Dead_SE+" found to be dead on node "+Dead_PN);
                 if(!reported_agent.equals(Dead_SE)){
-                    get_timestamp(myAgent,Dead_SE,"DeadAgentDetection");
+                    Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+                    get_defined_timestamp(myAgent,Dead_SE,"DeadAgentDetection",timestamp);
+                    get_defined_timestamp(myAgent,Dead_SE,"DeadAgentConfirmation",timestamp);
                     sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE,myAgent);
                 }
             }
@@ -316,7 +322,9 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             if(Dead_PN!=null){
                 LOGGER.info(Dead_SE+" found to be dead on node "+Dead_PN);
                 if(!reported_agent.equals(Dead_SE)){
-                    get_timestamp(myAgent,Dead_SE,"DeadAgentDetection");
+                    Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+                    get_defined_timestamp(myAgent,Dead_SE,"DeadAgentDetection",timestamp);
+                    get_defined_timestamp(myAgent,Dead_SE,"DeadAgentConfirmation",timestamp);
                     sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE,myAgent);
                 }
             }

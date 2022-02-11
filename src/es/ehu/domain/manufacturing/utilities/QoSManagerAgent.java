@@ -95,6 +95,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
 //                                if (receiver.contains("ControlGatewayCont")) {  //en algunos casos necesitamos saber el agente que ha denunciado el fallo para que pase a idle a traves del D&D
 //                                    msgtoDD = msgtoDD + "/div/" + msg.getSender().getLocalName();
 //                                }
+                                get_timestamp(myAgent,receiver,"DeadAgentConfirmation");
                                 add_to_error_list("not_found", receiver, "", "", "");
                                 sendACL(ACLMessage.INFORM, "D&D", "not_found", msgtoDD,myAgent);
                             }
@@ -163,6 +164,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                                                     timeout_handler(msg, timeout_batch_id);
                                                 }
                                             } else {
+                                                get_timestamp(myAgent,batch_to_ping,"DeadAgentDetection");
                                                 add_to_error_list("not_found", batch_to_ping, "", "", "");
                                                 sendACL(ACLMessage.INFORM, "D&D", "not_found", batch_to_ping,myAgent);
                                             }

@@ -167,6 +167,29 @@ public class ErrorHandlerAgent extends Agent{
                 System.out.println("Not a valid agent for capturing a timestamp");
             }
         }
+
+    public void get_defined_timestamp(Agent a,String agent, String type,Timestamp timestamp){
+
+        if(agent.contains("batchagent")||agent.contains("orderagent")||agent.contains("mplanagent")){
+            String ParentID=null;
+            try {
+                ACLMessage reply = sendCommand(a,"get " + agent + " attrib=parent","TMSTMP_"+timeStmp++);
+                if (reply != null)
+                    ParentID = reply.getContent();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            String contenido = ParentID+","+agent +","+type+","+String.valueOf(timestamp.getTime());
+            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+            msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
+            msg.setOntology("timestamp_err");
+            msg.setConversationId(agent+"_"+type+"_timestamp_"+timeStmp);
+            msg.setContent(contenido);
+            send(msg);
+        }else{
+            System.out.println("Not a valid agent for capturing a timestamp");
+        }
+    }
     }
 
 
