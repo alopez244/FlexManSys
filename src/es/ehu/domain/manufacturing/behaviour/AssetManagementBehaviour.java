@@ -1,13 +1,11 @@
 package es.ehu.domain.manufacturing.behaviour;
 
-import es.ehu.domain.manufacturing.agents.functionality.Machine_Functionality;
 import es.ehu.platform.MWAgent;
-import es.ehu.platform.template.interfaces.AssetManagement;
+import es.ehu.platform.template.interfaces.AssetManagementFunctionality;
 import es.ehu.platform.template.interfaces.Traceability;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,14 +15,14 @@ public class AssetManagementBehaviour extends SimpleBehaviour {
 
     private MessageTemplate template;
     private MWAgent myAgent;
-    private AssetManagement aAssetManagement;
+    private AssetManagementFunctionality aAssetManagement;
     private Traceability traceability;
 
     public AssetManagementBehaviour(MWAgent a) {
         super(a);
         LOGGER.debug("*** Constructing RunningBehaviour ***");
         this.myAgent = a;
-        this.aAssetManagement = (AssetManagement) a.functionalityInstance;
+        this.aAssetManagement = (AssetManagementFunctionality) a.functionalityInstance;
         this.template = MessageTemplate.and(MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.CONFIRM),MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
                MessageTemplate.MatchOntology("assetdata"));
     }

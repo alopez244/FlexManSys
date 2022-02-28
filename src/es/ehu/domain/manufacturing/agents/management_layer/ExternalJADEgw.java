@@ -1,19 +1,15 @@
-package es.ehu.domain.manufacturing.agents.cognitive;
+package es.ehu.domain.manufacturing.agents.management_layer;
 
-import com.google.gson.Gson;
 import es.ehu.domain.manufacturing.utilities.StructMessage;
-import jade.core.AID;
 import jade.core.Profile;
 import jade.lang.acl.ACLMessage;
 import jade.util.leap.Properties;
-import jade.wrapper.ControllerException;
 import jade.wrapper.gateway.JadeGateway;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.security.AccessControlContext;
 
 public class ExternalJADEgw {
 

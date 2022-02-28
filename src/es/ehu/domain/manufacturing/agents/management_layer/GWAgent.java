@@ -1,4 +1,4 @@
-package es.ehu.domain.manufacturing.agents.cognitive;
+package es.ehu.domain.manufacturing.agents.management_layer;
 
 import es.ehu.domain.manufacturing.utilities.StructMessage;
 import jade.core.AID;
@@ -7,9 +7,6 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.wrapper.gateway.GatewayAgent;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
-
-import java.io.*;
-import java.util.Iterator;
 
 public class GWAgent extends GatewayAgent {
 

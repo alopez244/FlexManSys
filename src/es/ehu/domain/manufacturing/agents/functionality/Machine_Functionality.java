@@ -5,7 +5,7 @@ import es.ehu.domain.manufacturing.agents.MachineAgent;
 import es.ehu.domain.manufacturing.behaviour.AssetManagementBehaviour;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.NegotiatingBehaviour;
-import es.ehu.platform.template.interfaces.AssetManagement;
+import es.ehu.platform.template.interfaces.AssetManagementFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.platform.template.interfaces.Traceability;
@@ -23,7 +23,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class Machine_Functionality extends DomRes_Functionality implements BasicFunctionality, NegFunctionality, AssetManagement, Traceability {
+public class Machine_Functionality extends DomRes_Functionality implements BasicFunctionality, NegFunctionality, AssetManagementFunctionality, Traceability {
     private boolean firstItemFlag=false;
 //    public static CircularFifoQueue msgFIFO = new CircularFifoQueue(5);
     private static final long serialVersionUID = -4307559193624552630L;
