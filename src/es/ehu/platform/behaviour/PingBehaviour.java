@@ -26,7 +26,7 @@ public class PingBehaviour extends SimpleBehaviour{
         LOGGER.debug("*******Ping behaviour started*******");
         this.myAgent = a;
         this.template = MessageTemplate.and(MessageTemplate.or(MessageTemplate.MatchOntology("ping"),MessageTemplate.MatchOntology("ping_PLC")),
-                MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+                MessageTemplate.MatchPerformative(ACLMessage.REQUEST)); //hay 2 tipos de ping: ping a agente y ping hasta el PLC, que se le envía al agente máquina
         LOGGER.exit();
     }
 @Override
@@ -42,46 +42,46 @@ public class PingBehaviour extends SimpleBehaviour{
                 reply.addReceiver(msg.getSender());
                 reply.setOntology("ping");
 
-                if(myAgent.getLocalName().contains("machine")&&msg.getOntology().equals("ping_PLC")){
+                if(myAgent.getLocalName().contains("machine")&&msg.getOntology().equals("ping_PLC")){ //si soy agente máquina y he recibido un ping PLC le pido al GW
 
                     ACLMessage PLC_ping=new ACLMessage(ACLMessage.REQUEST);
                     AID myGW=new AID(myAgent.gatewayAgentName,false);
                     PLC_ping.addReceiver(myGW);
                     //primero hay que chekcear el estado del GW con un ping
                     ACLMessage GW_ping=new ACLMessage(ACLMessage.REQUEST);
-                    GW_ping.setOntology("ping");
+                    GW_ping.setOntology("ping"); //primero se le envia al GW un ping para evaluar su estado. No se envía el "check_asset" directamente porque los tiempos de espera de respuesta se incrementan
                     GW_ping.setContent("");
                     GW_ping.addReceiver(myGW);
                     myAgent.send(GW_ping);
                     ACLMessage GW_state= myAgent.blockingReceive(MessageTemplate.and(MessageTemplate.MatchOntology("ping"),MessageTemplate.MatchPerformative(7)),300);
                     if(GW_state==null){
                         reply.setContent(myAgent.gatewayAgentName+":DOWN\n"+"PLC:?");
-                    }else {
+                    }else { //si ha contestado el GW le pregutamos el estado del PLC
                         PLC_ping.setOntology("check_asset");
                         PLC_ping.setContent("ask_state");
                         myAgent.send(PLC_ping);
                         ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 300);
                         if (answer != null) {
-                            if (answer.getContent().equals("Working")) {
+                            if (answer.getContent().equals("Working")) { //PLC esta ejecutando algun plan y no tiene errores
                                 reply.setContent(myAgent.gatewayAgentName + ":OK\n" + "PLC:W");
-                            } else if (answer.getContent().equals("Not working")) {
+                            } else if (answer.getContent().equals("Not working")) { //PLC esta a la espera de recibir plan
                                 reply.setContent(myAgent.gatewayAgentName + ":OK\n" + "PLC:NW");
-                            } else if (answer.getContent().equals("Error while working")) {
+                            } else if (answer.getContent().equals("Error while working")) { //Error mientras se encontraba trabajando
                                 reply.setContent(myAgent.gatewayAgentName + ":OK\n" + "PLC:EW");
-                            } else if (answer.getContent().equals("Error while not working")) {
+                            } else if (answer.getContent().equals("Error while not working")) { //Error sin estar trabajando
                                 reply.setContent(myAgent.gatewayAgentName + ":OK\n" + "PLC:ENW");
                             } else {
                                 reply.setContent(myAgent.gatewayAgentName + ":OK\n" + "PLC:?");
                             }
                         } else {
-                            reply.setContent(myAgent.gatewayAgentName + ":OK\n" + "PLC:?"); //con el tecnomatix en pausa siempre se devuelve esto aunque el GW este bien
+                            reply.setContent(myAgent.gatewayAgentName + ":OK\n" + "PLC:?"); //con el tecnomatix en pausa siempre se devuelve esto aunque el GW este bien porque no contesta
                         }
                     }
                 }else{
                     reply.setContent("Alive");
                 }
                 myAgent.send(reply);
-            }else{
+            }else{ //si el mensaje de ping tiene content, es una consulta de si hemos recibido otro mensaje anteriormente "te ha llegado este mensaje:...?"
                 msgFIFO = myAgent.msgFIFO;
                 boolean found=false;
                 if(msgFIFO!=null) {
@@ -102,7 +102,7 @@ public class PingBehaviour extends SimpleBehaviour{
                         reply.setContent("N");
                         myAgent.send(reply);
                     }
-                }else{
+                }else{  //si es un ping sin content simplemente contestamos
                     ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
                     reply.addReceiver(msg.getSender());
                     reply.setOntology(msg.getOntology());

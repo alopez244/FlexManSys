@@ -114,11 +114,11 @@ public class AgentToCSVgw {
         //Ruta al fichero raw (sin restas)
 //        String componentsRawPath = "/home/" + System.getProperty("user.name") + "/shared/timestamps/components_raw.csv";
 
-        String componentsRawPath = "C:/Users/" + System.getProperty("user.name") + "/IdeaProjects/FlexManSys/timestamps/components_raw.csv";
+        String componentsRawPath = "C:/FlexManSys/timestamps/components_raw.csv";
         //Ruta al fichero final (con restas)
 //        String componentsPath = "/home/" + System.getProperty("user.name") + "/shared/timestamps/components.csv";
 
-        String componentsPath = "C:/Users/" + System.getProperty("user.name") + "/IdeaProjects/FlexManSys/timestamps/components.csv";
+        String componentsPath = "C:/FlexManSys/timestamps/components.csv";
 
         //Ahora se escribe el tiempo de despliegue para los tres componentes
         try {
@@ -228,11 +228,13 @@ public class AgentToCSVgw {
 
         //Ruta al fichero raw (sin restas)
 //        String applicationsRawPath = "/home/" + System.getProperty("user.name") + "/shared/timestamps/applications_raw.csv";
-        String applicationsRawPath = "C:/Users/" + System.getProperty("user.name") + "/IdeaProjects/FlexManSys/timestamps/applications_raw.csv";
+//        String applicationsRawPath = "C:/Users/" + System.getProperty("user.name") + "/IdeaProjects/FlexManSys/timestamps/applications_raw.csv";
+        String applicationsRawPath = "C:/FlexManSys/timestamps/applications_raw.csv";
 
         //Ruta al fichero final (con restas)
 //        String applicationsPath = "/home/" + System.getProperty("user.name") + "/shared/timestamps/applications.csv";
-        String applicationsPath = "C:/Users/" + System.getProperty("user.name") + "/IdeaProjects/FlexManSys/timestamps/applications.csv";
+//        String applicationsPath = "C:/Users/" + System.getProperty("user.name") + "/IdeaProjects/FlexManSys/timestamps/applications.csv";
+        String applicationsPath = "C:/FlexManSys/timestamps/applications.csv";
 
         //Ahora se escribe el tiempo de despliegue para los tres componentes
         try {
@@ -334,9 +336,9 @@ public class AgentToCSVgw {
 
         }
         //Ruta al fichero raw (sin restas)
-        String errorsRawPath = "C:/Users/" + System.getProperty("user.name") + "/IdeaProjects/FlexManSys/timestamps/errors_raw.csv";
+        String errorsRawPath = "C:/FlexManSys/timestamps/errors_raw.csv";
         //Ruta al fichero final (con restas)
-        String errorsPath = "C:/Users/" + System.getProperty("user.name") + "/IdeaProjects/FlexManSys/timestamps/errors.csv";
+        String errorsPath = "C:/FlexManSys/timestamps/errors.csv";
 
         //Ahora se escribe el tiempo de despliegue para los tres componentes
         try {
@@ -361,8 +363,13 @@ public class AgentToCSVgw {
         HashMap<String, HashMap<String, HashMap<String, String>>> testResultsAppHM = new HashMap<>();
         HashMap<String, HashMap<String, HashMap<String, String>>> testResultsErrHM = new HashMap<>();
         Properties pp = new Properties();
-        pp.setProperty(Profile.MAIN_HOST, "192.168.249.1");
-        pp.setProperty(Profile.LOCAL_HOST, "192.168.249.1");
+
+//        pp.setProperty(Profile.MAIN_HOST, "192.168.249.1");
+        pp.setProperty(Profile.MAIN_HOST, "192.168.137.17");
+
+//        pp.setProperty(Profile.LOCAL_HOST, "192.168.249.1");
+        pp.setProperty(Profile.LOCAL_HOST, "192.168.137.17");
+
         pp.setProperty(Profile.MAIN_PORT, "1099");
         pp.setProperty(Profile.LOCAL_PORT, "1099");
 
@@ -400,8 +407,12 @@ public class AgentToCSVgw {
     public static void agentInit (){
 
         Properties pp = new Properties();
-        pp.setProperty(Profile.MAIN_HOST, "192.168.249.1");
-        pp.setProperty(Profile.LOCAL_HOST, "192.168.249.1");
+//        pp.setProperty(Profile.MAIN_HOST, "192.168.249.1");
+        pp.setProperty(Profile.MAIN_HOST, "192.168.137.17");
+
+//        pp.setProperty(Profile.LOCAL_HOST, "192.168.249.1");
+        pp.setProperty(Profile.LOCAL_HOST, "192.168.137.17");
+
         pp.setProperty(Profile.MAIN_PORT, "1099");
         pp.setProperty(Profile.LOCAL_PORT, "1099");
 

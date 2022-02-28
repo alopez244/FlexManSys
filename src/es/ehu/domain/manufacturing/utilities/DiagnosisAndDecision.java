@@ -19,7 +19,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
     static final Logger LOGGER = LogManager.getLogger(DiagnosisAndDecision.class.getName());
     private Agent myAgent=this;
     private String reported_agent="";
-    public String control="automatic";
+    public String control="automatic"; //variable que conmutamos cuando la interfaz (planner) lo pide
     private MessageTemplate expected_senders=MessageTemplate.or(MessageTemplate.MatchSender(new AID("planner",AID.ISLOCALNAME)),
                                             MessageTemplate.MatchSender(new AID("QoSManagerAgent",AID.ISLOCALNAME)));
     private MessageTemplate neg_template=MessageTemplate.and(MessageTemplate.MatchOntology("negotiation"),
@@ -39,7 +39,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
 
         public void action() {
 
-                ACLMessage negotiation_result=myAgent.receive(neg_template); //comprueba si ha
+                ACLMessage negotiation_result=myAgent.receive(neg_template); //comprueba si alguna replica en tracking ha cambiado a running
                 if(negotiation_result!=null){
                     actions_after_negotiation(negotiation_result);
                 }
@@ -70,18 +70,18 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             sendACL(7,winner,"restart_timeout","reset_timeout",myAgent); //si es batch debe resetear el timeout
             try {
                 ACLMessage parent=sendCommand(myAgent,"get "+winner+" attrib=parent",convID+String.valueOf(convIDCounter++));
-                String target=get_relationship(parent.getContent());
-                sendACL(ACLMessage.INFORM,target,"release_buffer",winner,myAgent);
+                String target=get_relationship(parent.getContent()); //devuelve el agente máquina que cuelga del machine
+                sendACL(ACLMessage.INFORM,target,"release_buffer",winner,myAgent); //pide al machine que vacie el buffer de mensajes retenidos
                 restart_replica(parent.getContent()); //hay que generar una replica en tracking si es posible para mantener el numero de replicas constante
             } catch (Exception e) {
                 e.printStackTrace();
             }
             get_timestamp(myAgent,msg.getSender().getLocalName(),"RunningAgentRecovery");
-        }else if(winner.contains("orderagent")||winner.contains("mplanagent")){
+        }else if(winner.contains("orderagent")||winner.contains("mplanagent")){ //en caso de ser un order o mplan hay que buscar a los sons responsables de informar
             try {
                 String[] category=winner.split("agent");
                 LOGGER.info("New "+category[0]+" agent is in running state: "+winner);
-                ACLMessage parent_of_dead_SE=sendCommand(myAgent,"get "+winner+" attrib=parent",convID+String.valueOf(convIDCounter++)); //parent del order o batch
+                ACLMessage parent_of_dead_SE=sendCommand(myAgent,"get "+winner+" attrib=parent",convID+String.valueOf(convIDCounter++)); //parent del winner
                 String son_category="";
                 if(category[0].equals("order")){
                     son_category="batch";
@@ -89,20 +89,20 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                     son_category="order";
                 }
 
-                ACLMessage parent_of_targets=sendCommand(myAgent,"get * parent="+parent_of_dead_SE.getContent()+" category="+son_category,convID+String.valueOf(convIDCounter)); //devuelve todos los batchs que colgaban de order
+                ACLMessage parent_of_targets=sendCommand(myAgent,"get * parent="+parent_of_dead_SE.getContent()+" category="+son_category,convID+String.valueOf(convIDCounter)); //devuelve todos los batchs que colgaban de order o los order que colgaban del mplan
                 String[] target_parents=new String[1];
-                if(parent_of_targets.getContent().contains(",")){ //podría haber varios
+                if(parent_of_targets.getContent().contains(",")){ //podría haber varios y todos necesitarán vaciar el buffer
                     target_parents=parent_of_targets.getContent().split(",");
                 }else{
                     target_parents[0]=parent_of_targets.getContent();
                 }
                 for(int i=0; i<target_parents.length;i++){
                     ACLMessage target=sendCommand(myAgent,"get * parent="+target_parents[i]+" state=running",convID+String.valueOf(convIDCounter));
-                    while(target.getContent().equals("")){ //hasta no tener la replica en running no podemos informarla
-                        LOGGER.debug("Running replica not found for "+target_parents[i]+". Retrying.");
-                        target=sendCommand(myAgent,"get * parent="+target_parents[i]+" state=running",convID+String.valueOf(convIDCounter));
-                        Thread.sleep(1000);
-                    }
+//                    while(target.getContent().equals("")){ // es posible no tener una replica en running disponible por lo que hay que esperar hasta poder informarla
+//                        LOGGER.debug("Running replica not found for "+target_parents[i]+". Retrying.");
+//                        target=sendCommand(myAgent,"get * parent="+target_parents[i]+" state=running",convID+String.valueOf(convIDCounter));
+//                        Thread.sleep(1000);
+//                    }
                     sendACL(ACLMessage.INFORM,target.getContent(),"release_buffer",winner,myAgent);
                 }
                 restart_replica(parent_of_dead_SE.getContent()); //hay que generar una replica en tracking si es posible para mantener el numero de replicas constante
@@ -123,135 +123,148 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                 try {
 
                     ACLMessage state= sendCommand(myAgent, "get "+msg.getContent()+" attrib=state", "D&D_"+convIDCounter++); //consigue el estado de la replcia caida
-                    //TODO condicion de agente repetido
-                    LOGGER.warn(msg.getContent()+" is dead or isolated and was in "+state.getContent()+" state.");
-                    ACLMessage parent= sendCommand(myAgent, "get "+msg.getContent()+" attrib=parent", "D&D_"+convIDCounter++);
+                    if(state.getContent().equals("")){
+                        LOGGER.warn(msg.getContent()+" reported by QoS but no data available. Already solved."); //si el QoS denuncia un agente ya detectado mientras se ha estado trabajando en ello no se debe hacer nada
+                    }else{
+                        LOGGER.warn(msg.getContent()+" is dead or isolated and was in "+state.getContent()+" state.");
+                        ACLMessage parent= sendCommand(myAgent, "get "+msg.getContent()+" attrib=parent", "D&D_"+convIDCounter++);
 
-                    ACLMessage hosting_node=sendCommand(myAgent, "get "+msg.getContent()+" attrib=node", "D&D_"+convIDCounter++); //devuelve el número de nodo que hostea a la replica
+                        ACLMessage hosting_node=sendCommand(myAgent, "get "+msg.getContent()+" attrib=node", "D&D_"+convIDCounter++); //devuelve el número de nodo que hostea a la replica
 
-                    if(!PingAgent("pnodeagent"+hosting_node.getContent(),myAgent)){  //checkea el estado del nodo para saber si hay que desregistrarlo o puede participar en la negociacion
+                        if(!PingAgent("pnodeagent"+hosting_node.getContent(),myAgent)){  //checkea el estado del nodo para saber si hay que desregistrarlo o puede participar en la negociacion
 
-                        //Si esta caido el nodo hay que reiniciar todas las replicas que este albergaba. Se priorizan las replicas en running y las de tipo batch
+                            //Si esta caido el nodo se aprovecha para restaurar todas las replicas que este albergaba.
 
-                        ACLMessage HEofDeadPnode= sendCommand(myAgent,"get pnodeagent"+hosting_node.getContent()+" attrib=HostedElements","D&D_"+convIDCounter++); //consigue los batch order y mplan
-                        String[] parts1=new String[1];
-                        if(HEofDeadPnode.getContent().contains(",")){
-                            parts1=HEofDeadPnode.getContent().split(",");
-                        }else{
-                            parts1[0]=HEofDeadPnode.getContent();
-                        }
-
-                        for(int i=0;i<parts1.length;i++){
-                            ACLMessage Dead_SE= sendCommand(myAgent,"get * parent="+parts1[i]+" node="+hosting_node.getContent(),"D&D_"+convIDCounter++);
-                            if(!Dead_SE.getContent().equals("")){
-                                ACLMessage se_state= sendCommand(myAgent,"get "+Dead_SE.getContent()+" attrib=state","D&D_"+convIDCounter++);
-
-                                add_to_restart_queue(se_state.getContent(),Dead_SE.getContent(),hosting_node.getContent()); //añade a la lista ordenada los agentes caidos
-
+                            ACLMessage HEofDeadPnode= sendCommand(myAgent,"get pnodeagent"+hosting_node.getContent()+" attrib=HostedElements","D&D_"+convIDCounter++); //consigue los parent de los agentes albergados
+                            String[] parts1=new String[1];
+                            if(HEofDeadPnode.getContent().contains(",")){ //si son varios
+                                parts1=HEofDeadPnode.getContent().split(",");
                             }else{
-                                LOGGER.error("No system element found for node "+hosting_node.getContent()+" and parent "+parts1[i]);
+                                parts1[0]=HEofDeadPnode.getContent();
                             }
-                        }
-                        sendCommand(myAgent, "del pnodeagent"+hosting_node.getContent(),"D&D_"+convIDCounter++); //ya se puede desregistrar del SMA el nodo
 
-                    }else{  //nodo no caido, pero replica sí
-                        add_to_restart_queue(state.getContent(),msg.getContent(),null); //se añade a la lista para reiniciar agentes el denunciado
-                        ACLMessage hosted_elements=sendCommand(myAgent, "get "+"pnodeagent"+hosting_node.getContent()+" attrib=HostedElements", "D&D_"+convIDCounter);
-                        String[] HE=new String[1];
-                        if(hosted_elements.getContent().contains(",")){
-                            HE=hosted_elements.getContent().split(",");
-                        }else{
-                            HE[0]=hosted_elements.getContent();
-                        }
-                        String new_HE="";
-                        ArrayList<String> updated_hosted_elements=new ArrayList<String>();
-                        for(int i=0;i<HE.length;i++){
-                            updated_hosted_elements.add(HE[i]);
-                        }
-                        for(int i=0;i< updated_hosted_elements.size();i++){
-                            if(updated_hosted_elements.get(i).contains(parent.getContent())){
-                                updated_hosted_elements.remove(i);
-                            }else{
-                                if(i==0){
-                                    new_HE=updated_hosted_elements.get(i);
+                            for(int i=0;i<parts1.length;i++){ //comprobamos de cada parent que estaba registrado de que agentes se trataba
+                                ACLMessage Dead_SE= sendCommand(myAgent,"get * parent="+parts1[i]+" node="+hosting_node.getContent(),"D&D_"+convIDCounter++);
+                                if(!Dead_SE.getContent().equals("")){
+                                    ACLMessage se_state= sendCommand(myAgent,"get "+Dead_SE.getContent()+" attrib=state","D&D_"+convIDCounter++);
+                                    add_to_restart_queue(se_state.getContent(),Dead_SE.getContent(),hosting_node.getContent()); //añade a la lista los agentes caidos
+
                                 }else{
-                                    new_HE=new_HE+","+updated_hosted_elements.get(i);
+                                    LOGGER.error("No system element found for node "+hosting_node.getContent()+" and parent "+parts1[i]);
                                 }
                             }
-                        }  //Actualiza los atributos del nodo para que pueda participar en la negociacion
-                        sendCommand(myAgent, "set pnodeagent"+hosting_node.getContent()+" HostedElements="+new_HE, "D&D_"+convIDCounter);
+                            sendCommand(myAgent, "del pnodeagent"+hosting_node.getContent(),"D&D_"+convIDCounter++); //ya se puede desregistrar del SMA el nodo
+
+                        }else{  //nodo no caido, pero replica sí. Posible fallo de agente
+                            //No tendría sentido intentar "matar" al agente pillado porque no respondería a un setstate stop.
+                            //Simplemente lo borramos del sistema para que el resto de agetes lo ignore
+                            LOGGER.info("Posible malfunction of agent. Making it invisible to the system.");
+                            add_to_restart_queue(state.getContent(),msg.getContent(),null); //se añade a la lista para reiniciar agentes el denunciado
+                            ACLMessage hosted_elements=sendCommand(myAgent, "get "+"pnodeagent"+hosting_node.getContent()+" attrib=HostedElements", "D&D_"+convIDCounter);
+                            String[] HE=new String[1];
+                            if(hosted_elements.getContent().contains(",")){
+                                HE=hosted_elements.getContent().split(",");
+                            }else{
+                                HE[0]=hosted_elements.getContent();
+                            }
+                            String new_HE=""; //se actualiza el atributo HostedElements
+                            ArrayList<String> updated_hosted_elements=new ArrayList<String>();
+                            for(int i=0;i<HE.length;i++){
+                                updated_hosted_elements.add(HE[i]);
+                            }
+                            for(int i=0;i< updated_hosted_elements.size();i++){
+                                if(updated_hosted_elements.get(i).contains(parent.getContent())){
+                                    updated_hosted_elements.remove(i);
+                                }else{
+                                    if(i==0){
+                                        new_HE=updated_hosted_elements.get(i);
+                                    }else{
+                                        new_HE=new_HE+","+updated_hosted_elements.get(i);
+                                    }
+                                }
+                            }  //Actualiza los atributos del nodo para que pueda participar en la negociacion
+                            sendCommand(myAgent, "set pnodeagent"+hosting_node.getContent()+" HostedElements="+new_HE, "D&D_"+convIDCounter);
+                        }
+
+                        //Ahora hay que restaurar todos los agentes caidos, haya caido el nodo o no. Se corregirá con la siguiente prioridad:
+                        //1) Batch running
+                        //2) Order running
+                        //3) Mplan running
+                        //4) Batch tracking
+                        //5) Order tracking
+                        //6) Mplan tracking
+
+                        HashMap<String, ArrayList<String>> agents_in_running_state= agents_sorted_by_state.get("running");
+                        if(agents_in_running_state!=null){
+                            ArrayList<String> dead_batchs=agents_in_running_state.get("batchagent");
+                            if (dead_batchs != null) {
+                                for(int i=0; i<dead_batchs.size();i++){
+                                    ACLMessage Dead_SE_parent= sendCommand(myAgent,"get "+dead_batchs.get(i)+" attrib=parent","D&D_"+convIDCounter++);
+                                    sendCommand(myAgent, "del "+dead_batchs.get(i),"D&D_"+convIDCounter++);
+                                    tracking_to_running(Dead_SE_parent.getContent());
+                                }
+                                agents_in_running_state.remove("batchagent");
+                            }
+                            ArrayList<String> dead_orders=agents_in_running_state.get("orderagent");
+                            if (dead_orders != null) {
+                                for(int i=0; i<dead_orders.size();i++){
+                                    ACLMessage Dead_SE_parent= sendCommand(myAgent,"get "+dead_orders.get(i)+" attrib=parent","D&D_"+convIDCounter++);
+                                    sendCommand(myAgent, "del "+dead_orders.get(i),"D&D_"+convIDCounter++);
+                                    tracking_to_running(Dead_SE_parent.getContent());
+                                }
+                                agents_in_running_state.remove("orderagent");
+                            }
+                            ArrayList<String> dead_mplans=agents_in_running_state.get("mplanagent");
+                            if (dead_mplans != null) {
+                                for(int i=0; i<dead_mplans.size();i++){
+                                    ACLMessage Dead_SE_parent= sendCommand(myAgent,"get "+dead_mplans.get(i)+" attrib=parent","D&D_"+convIDCounter++);
+                                    sendCommand(myAgent, "del "+dead_mplans.get(i),"D&D_"+convIDCounter++);
+                                    tracking_to_running(Dead_SE_parent.getContent());
+                                }
+                                agents_in_running_state.remove("mplanagent");
+                            }
+                            agents_sorted_by_state.remove("running"); //ya no quedan agentes en running por iniciar
+                        }
+                        HashMap<String, ArrayList<String>> agents_in_tracking_state= agents_sorted_by_state.get("tracking");
+                        if(agents_in_tracking_state!=null){
+                            ArrayList<String> dead_batchs=agents_in_tracking_state.get("batchagent");
+                            if (dead_batchs != null) {
+                                for(int i=0; i<dead_batchs.size();i++){
+                                    ACLMessage Dead_SE_parent= sendCommand(myAgent,"get "+dead_batchs.get(i)+" attrib=parent","D&D_"+convIDCounter++);
+                                    sendCommand(myAgent, "del "+dead_batchs.get(i),"D&D_"+convIDCounter++);
+                                    restart_replica(Dead_SE_parent.getContent());
+                                }
+                                agents_in_tracking_state.remove("batchagent");
+                            }
+                            ArrayList<String> dead_orders=agents_in_tracking_state.get("orderagent");
+                            if (dead_orders != null) {
+                                for(int i=0; i<dead_orders.size();i++){
+                                    ACLMessage Dead_SE_parent= sendCommand(myAgent,"get "+dead_orders.get(i)+" attrib=parent","D&D_"+convIDCounter++);
+                                    sendCommand(myAgent, "del "+dead_orders.get(i),"D&D_"+convIDCounter++);
+                                    restart_replica(Dead_SE_parent.getContent());
+                                }
+                                agents_in_tracking_state.remove("orderagent");
+                            }
+                            ArrayList<String> dead_mplans=agents_in_tracking_state.get("mplanagent");
+                            if (dead_mplans != null) {
+                                for(int i=0; i<dead_mplans.size();i++){
+                                    ACLMessage Dead_SE_parent= sendCommand(myAgent,"get "+dead_mplans.get(i)+" attrib=parent","D&D_"+convIDCounter++);
+                                    sendCommand(myAgent, "del "+dead_mplans.get(i),"D&D_"+convIDCounter++);
+                                    restart_replica(Dead_SE_parent.getContent());
+                                }
+                                agents_in_tracking_state.remove("mplanagent");
+                            }
+                            agents_sorted_by_state.remove("tracking");  //ya no quedan agentes en tracking por iniciar
+                        }
                     }
 
-                    //Ahora hay que restaurar todos los agentes caidos, haya caido el nodo o no.
-                    HashMap<String, ArrayList<String>> agents_in_running_state= agents_sorted_by_state.get("running"); //los agentes en running tienen prioridad
-                    if(agents_in_running_state!=null){
-                        ArrayList<String> dead_batchs=agents_in_running_state.get("batchagent"); //los agentes batch tienen prioridad
-                        if (dead_batchs != null) {
-                            for(int i=0; i<dead_batchs.size();i++){
-                                ACLMessage Dead_SE_parent= sendCommand(myAgent,"get "+dead_batchs.get(i)+" attrib=parent","D&D_"+convIDCounter++);
-                                sendCommand(myAgent, "del "+dead_batchs.get(i),"D&D_"+convIDCounter++);
-                                tracking_to_running(Dead_SE_parent.getContent());
-                            }
-                            agents_in_running_state.remove("batchagent");
-                        }
-                        ArrayList<String> dead_orders=agents_in_running_state.get("orderagent");
-                        if (dead_orders != null) {
-                            for(int i=0; i<dead_orders.size();i++){
-                                ACLMessage Dead_SE_parent= sendCommand(myAgent,"get "+dead_orders.get(i)+" attrib=parent","D&D_"+convIDCounter++);
-                                sendCommand(myAgent, "del "+dead_orders.get(i),"D&D_"+convIDCounter++);
-                                tracking_to_running(Dead_SE_parent.getContent());
-                            }
-                            agents_in_running_state.remove("orderagent");
-                        }
-                        ArrayList<String> dead_mplans=agents_in_running_state.get("mplanagent");
-                        if (dead_mplans != null) {
-                            for(int i=0; i<dead_mplans.size();i++){
-                                ACLMessage Dead_SE_parent= sendCommand(myAgent,"get "+dead_mplans.get(i)+" attrib=parent","D&D_"+convIDCounter++);
-                                sendCommand(myAgent, "del "+dead_mplans.get(i),"D&D_"+convIDCounter++);
-                                tracking_to_running(Dead_SE_parent.getContent());
-                            }
-                            agents_in_running_state.remove("mplanagent");
-                        }
-                        agents_sorted_by_state.remove("running"); //ya no quedan agentes en running por iniciar
-                    }
-                    HashMap<String, ArrayList<String>> agents_in_tracking_state= agents_sorted_by_state.get("tracking");
-                    if(agents_in_tracking_state!=null){
-                        ArrayList<String> dead_batchs=agents_in_tracking_state.get("batchagent");
-                        if (dead_batchs != null) {
-                            for(int i=0; i<dead_batchs.size();i++){
-                                ACLMessage Dead_SE_parent= sendCommand(myAgent,"get "+dead_batchs.get(i)+" attrib=parent","D&D_"+convIDCounter++);
-                                sendCommand(myAgent, "del "+dead_batchs.get(i),"D&D_"+convIDCounter++);
-                                restart_replica(Dead_SE_parent.getContent());
-                            }
-                            agents_in_tracking_state.remove("batchagent");
-                        }
-                        ArrayList<String> dead_orders=agents_in_tracking_state.get("orderagent");
-                        if (dead_orders != null) {
-                            for(int i=0; i<dead_orders.size();i++){
-                                ACLMessage Dead_SE_parent= sendCommand(myAgent,"get "+dead_orders.get(i)+" attrib=parent","D&D_"+convIDCounter++);
-                                sendCommand(myAgent, "del "+dead_orders.get(i),"D&D_"+convIDCounter++);
-                                restart_replica(Dead_SE_parent.getContent());
-                            }
-                            agents_in_tracking_state.remove("orderagent");
-                        }
-                        ArrayList<String> dead_mplans=agents_in_tracking_state.get("mplanagent");
-                        if (dead_mplans != null) {
-                            for(int i=0; i<dead_mplans.size();i++){
-                                ACLMessage Dead_SE_parent= sendCommand(myAgent,"get "+dead_mplans.get(i)+" attrib=parent","D&D_"+convIDCounter++);
-                                sendCommand(myAgent, "del "+dead_mplans.get(i),"D&D_"+convIDCounter++);
-                                restart_replica(Dead_SE_parent.getContent());
-                            }
-                            agents_in_tracking_state.remove("mplanagent");
-                        }
-                        agents_sorted_by_state.remove("tracking");  //ya no quedan agentes en tracking por iniciar
-                    }
 //                agents_sorted_by_state.clear();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }else if(msg.getContent().contains("machine")){
                 String batch=get_relationship(msg.getContent());
-                //TODO poner a negociar otras maquinas para asumir el mando
+                //TODO poner a negociar otras maquinas para asumir el mando del batch
             }
 
         }else { //agente GW no encontrado
@@ -277,6 +290,16 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
     }
 
     private void add_to_restart_queue(String state, String Dead_SE, String Dead_PN){
+        //Ejemplo de estructura del hashmap:
+        //Running ->  Batch -> batchagent1
+        //                     batchagent10
+        //            Order -> orderagent1
+        //            Mplan -> mplanagent1
+        //Tracking -> Batch -> batchagent2
+        //                     batchagent3
+        //            Order -> orderagent2
+        //            Mplan -> mplanagent2
+
         HashMap<String,ArrayList<String>> agents_sorted_by_category=agents_sorted_by_state.get(state);
         if(agents_sorted_by_category==null) {
             agents_sorted_by_category=new HashMap<String,ArrayList<String>>();
@@ -286,13 +309,13 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             if(a==null){
                 a=new ArrayList<String>();
             }
-            if(Dead_PN!=null){
+            if(Dead_PN!=null){ //en caso de que el nodo este muerto
                 LOGGER.info(Dead_SE+" found to be dead on node "+Dead_PN);
                 if(!reported_agent.equals(Dead_SE)){
                     Timestamp timestamp = new Timestamp(System.currentTimeMillis());
                     get_defined_timestamp(myAgent,Dead_SE,"DeadAgentDetection",timestamp);
                     get_defined_timestamp(myAgent,Dead_SE,"DeadAgentConfirmation",timestamp);
-                    sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE,myAgent);
+                    sendACL(ACLMessage.INFORM, "QoSManagerAgent","reported_on_dead_node",Dead_SE,myAgent); //se avisa al QoS por si otro agente se lo denuncia
                 }
             }
             a.add(Dead_SE);
@@ -334,7 +357,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
     }
 
 
-    private String get_relationship(String agent){
+    private String get_relationship(String agent){ //obtiene la relacion entre agente máquina y batch. TODO Haría falta un sistema mejor.
         MessageTemplate t=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                 MessageTemplate.MatchOntology("askrelationship"));
         sendACL(16,"QoSManagerAgent" , "askrelationship", agent,myAgent);
@@ -424,12 +447,12 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             }
             LOGGER.debug("Participating nodes: "+ToNegotiate);
             if(ToNegotiate.equals("")){
-                LOGGER.warn("There is no node available to store a tracking replica");
+                LOGGER.warn("There is no node available to store a tracking replica"); //si todos los nodos están ocupados no se hace nada
                 return false;
             }else{
                 ACLMessage category = sendCommand(myAgent, "get " + parent + " attrib=category","GetReplicaCategory");
                 String seClass="";
-                if(parent.contains("batch")){
+                if(parent.contains("batch")){ //se elige la clase del agente a iniciar
                     seClass="es.ehu.domain.manufacturing.agents.BatchAgent";
                 }else if(parent.contains("order")){
                     seClass="es.ehu.domain.manufacturing.agents.OrderAgent";

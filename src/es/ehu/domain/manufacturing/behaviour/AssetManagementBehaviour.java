@@ -11,22 +11,22 @@ import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class ReceiveTaskBehaviour extends SimpleBehaviour {
+public class AssetManagementBehaviour extends SimpleBehaviour {
 
-    static final Logger LOGGER = LogManager.getLogger(SendTaskBehaviour.class.getName());
+    static final Logger LOGGER = LogManager.getLogger(AssetManagementBehaviour.class.getName());
 
     private MessageTemplate template;
     private MWAgent myAgent;
     private AssetManagement aAssetManagement;
     private Traceability traceability;
 
-    public ReceiveTaskBehaviour(MWAgent a) {
+    public AssetManagementBehaviour(MWAgent a) {
         super(a);
         LOGGER.debug("*** Constructing RunningBehaviour ***");
         this.myAgent = a;
         this.aAssetManagement = (AssetManagement) a.functionalityInstance;
-        this.template = MessageTemplate.and(MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
-               MessageTemplate.or(MessageTemplate.MatchOntology("negotiation"),MessageTemplate.MatchOntology("data")));
+        this.template = MessageTemplate.and(MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.CONFIRM),MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
+               MessageTemplate.MatchOntology("assetdata"));
     }
 
     @Override

@@ -2,6 +2,7 @@ package es.ehu.platform.template.interfaces;
 
 import java.io.Serializable;
 
+import jade.lang.acl.ACLMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

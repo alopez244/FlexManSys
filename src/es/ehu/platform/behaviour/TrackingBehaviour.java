@@ -80,7 +80,7 @@ public class TrackingBehaviour extends SimpleBehaviour {
 			myAgent.get_timestamp(myAgent,"RedundancyRecovery"); //replica lista para funcionar, se recoge el timestamp
 		}
 		if(!myAgent.ExecTimeStamped){
-			myAgent.get_timestamp(myAgent,"ExecutionTime");
+			myAgent.get_timestamp(myAgent,"ExecutionTime"); //para que solo se ejecute una vez
 			myAgent.ExecTimeStamped=true;
 		}
 

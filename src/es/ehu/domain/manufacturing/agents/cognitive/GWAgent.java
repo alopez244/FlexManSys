@@ -45,7 +45,7 @@ public class GWAgent extends GatewayAgent {
             System.out.println("---Gateway send command");
             ACLMessage msgToAgent = new ACLMessage(msgStruct.readPerformative()); //reads the performative saved in StructMessage data structure
             msgToAgent.addReceiver(machineAgentName);   //for a correct data exchanging, agent must send a message to the PLC first
-            msgToAgent.setOntology("negotiation");
+            msgToAgent.setOntology("assetdata");
             msgToAgent.setConversationId("PLCdata");
             msgToAgent.setContent(msgStruct.readMessage()); //reads the message saved in StructMessage data structure
             send(msgToAgent);
@@ -91,9 +91,8 @@ public class GWAgent extends GatewayAgent {
     }
 
     public void setup() {
-        MessageTemplate template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.or(
-                MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
-                MessageTemplate.MatchOntology("negotiation")),MessageTemplate.MatchConversationId("PLCdata"));
+        MessageTemplate template = MessageTemplate.and(
+                MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchOntology("data"));
         MessageTemplate templateping = MessageTemplate.and(MessageTemplate.MatchOntology("ping"),
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
         MessageTemplate checkasset = MessageTemplate.and(MessageTemplate.MatchOntology("check_asset"),
@@ -107,7 +106,7 @@ public class GWAgent extends GatewayAgent {
 
                 ACLMessage ping = receive(templateping);
 
-                if(ping!=null) {
+                if(ping!=null) {  //ping normal
                     ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
                     reply.addReceiver(ping.getSender());
                     reply.setOntology(ping.getOntology());
@@ -116,7 +115,7 @@ public class GWAgent extends GatewayAgent {
                     send(reply);
                 }
                 ACLMessage check_asset_state=receive(checkasset);
-                if(check_asset_state!=null) {
+                if(check_asset_state!=null) { //consulta al PLC su estado
                     if(msgInFIFO2.isAtFullCapacity()) {
                         System.out.println("buffer full, old message lost");
                     }
@@ -130,7 +129,7 @@ public class GWAgent extends GatewayAgent {
 
                     System.out.println("GWagent, message received from Machine Agent");
                     machineAgentName = msgToFIFO.getSender();//saves the sender ID for a later reply
-                    ACLMessage ack=new ACLMessage(4);
+                    ACLMessage ack=new ACLMessage(ACLMessage.CONFIRM);
                     ack.setOntology(msgToFIFO.getOntology());
                     ack.setConversationId(msgToFIFO.getConversationId());
                     ack.setContent(msgToFIFO.getContent());

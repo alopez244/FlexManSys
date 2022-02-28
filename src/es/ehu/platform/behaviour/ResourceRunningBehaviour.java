@@ -90,7 +90,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
                         msg_to_release.setOntology(postponed_msgs.get(i).getOntology());
                         msg_to_release.setConversationId(postponed_msgs.get(i).getConversationId());
                         msg_to_release.addReceiver(new AID(new_target.getContent(),false));
-                        myAgent.send(msg_to_release);
+                        myAgent.send(msg_to_release);  //se libera el mensaje retenido con nuevo destinatario
                     }
                     myAgent.msg_buffer.remove(parent.getContent());
                 }else{
@@ -174,12 +174,12 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         }
         //***************** Fin de etapa de ejecución de funtionality
 
-        //***************** 4) Etapa de muerte deliberada de agente
+        //***************** 4) Etapa de muerte deliberada de Nodo
         ACLMessage err_simulation = myAgent.receive(template3);
         if (err_simulation!=null) {
             System.out.println(err_simulation.getSender().getLocalName()+" politely asked to kill myself");
             myAgent.get_timestamp(myAgent,"AgentKilled");
-            System.out.println(System.currentTimeMillis());
+            System.out.println(System.currentTimeMillis()); //timestamp para comparar tiempos entre muerte real y timestamp: ~12ms en PC
             System.exit(0); //mata al nodo completo
         }
 

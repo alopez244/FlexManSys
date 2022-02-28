@@ -2,7 +2,7 @@ package es.ehu.domain.manufacturing.agents.functionality;
 
 import com.google.gson.Gson;
 import es.ehu.domain.manufacturing.agents.MachineAgent;
-import es.ehu.domain.manufacturing.behaviour.ReceiveTaskBehaviour;
+import es.ehu.domain.manufacturing.behaviour.AssetManagementBehaviour;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.NegotiatingBehaviour;
 import es.ehu.platform.template.interfaces.AssetManagement;
@@ -88,7 +88,13 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         gatewayAgentID = new AID(myAgent.gatewayAgentName, false);
 
 
-        //******************************Comentar para iniciar MA indiferentemente de si el GW y el PLC estan OK
+
+        String [] args = (String[]) myAgent.getArguments();
+
+        for (int i=0; i<args.length; i++){
+            if (args[i].toLowerCase().startsWith("id=")) return null;
+        }
+        //******************************Checkeo del estado del GW y PLC. Agente maquina no iniciará hasta tenerlos disponibles
 //        sendACLMessage(16,gatewayAgentID,"ping","","",myAgent);
 //        ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 300);
 //        if(answer_gw==null){
@@ -110,14 +116,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 //            System.exit(0); //si el PLC o el GW no están disponible no tiene sentido que iniciemos el agente máquina
 //        }
         //*************************************
-
-
-        String [] args = (String[]) myAgent.getArguments();
-
-        for (int i=0; i<args.length; i++){
-            if (args[i].toLowerCase().startsWith("id=")) return null;
-        }
-
         //First, the machine attributes are included
         String attribs = "";
         for (int j = 0; j < myAgent.resourceModel.get(0).get(2).size(); j++){
@@ -365,7 +363,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         orderQueueFlag = false;
                     } else{
                         sendingFlag = true; //if there is any operation left, send behavior is called
-                        SimpleBehaviour sendingBehaviour = new ReceiveTaskBehaviour(myAgent);
+                        SimpleBehaviour sendingBehaviour = new AssetManagementBehaviour(myAgent);
                         sendingBehaviour.action();
                     }
                 }
@@ -504,14 +502,15 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                             String batchAgentName = running_replica.getContent();
                             AID batchAgentID = new AID(batchAgentName, false);
                             if(!running_replica.getContent().equals("")){   //encontrada replica en running para este batch
-                                ACLMessage msg_to_batchagent=sendACLMessage(16, batchAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
+                                ACLMessage msg_to_batchagent=sendACLMessage(ACLMessage.INFORM, batchAgentID, "data", "PLCdata", MessageContent, myAgent);
                                 myAgent.AddToExpectedMsgs(msg_to_batchagent);
 
                             }else{    //No encontrada replica en running para este batch. Puede que otro agente lo haya denunciado previamente o que el batch aun no se haya iniciado
-                                ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.REQUEST);
+                                posponed_msgs_to_batch = new ArrayList<ACLMessage>();
+                                ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.INFORM);
                                 msg_to_buffer.setConversationId("PLCdata");
                                 msg_to_buffer.setContent(MessageContent);
-                                msg_to_buffer.setOntology("negotiation");
+                                msg_to_buffer.setOntology("data");
                                 posponed_msgs_to_batch.add(msg_to_buffer);
                                 myAgent.msg_buffer.put(batchName,posponed_msgs_to_batch); //guardamos el mensaje hasta que el D&D me informe de que ya tenemos disponible otro receptor
                             }
@@ -519,10 +518,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     }else{  //habia algun mensaje pendiente de envíar a un receptor aun no definido
 //                        posponed_msgs_to_batch=new ArrayList<ACLMessage>();
                         System.out.println("Added message to buffer:\nContent: "+MessageContent+"\nTo: "+batchName);
-                        ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.REQUEST);
+                        ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.INFORM);
                         msg_to_buffer.setConversationId("PLCdata");
                         msg_to_buffer.setContent(MessageContent);
-                        msg_to_buffer.setOntology("negotiation");
+                        msg_to_buffer.setOntology("data");
                         posponed_msgs_to_batch.add(msg_to_buffer);
                         myAgent.msg_buffer.put(batchName,posponed_msgs_to_batch);
 
@@ -636,7 +635,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         PLCmsgOut.remove("Index");
                         String MessageContent = new Gson().toJson(PLCmsgOut);
                         AID gatewayAgentID = new AID(myAgent.gatewayAgentName, false);
-                        ACLMessage msg_to_gw=sendACLMessage(16, gatewayAgentID, "negotiation", "PLCdata", MessageContent, myAgent);
+                        ACLMessage msg_to_gw=sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "data", "PLCdata", MessageContent, myAgent);
 
                         myAgent.AddToExpectedMsgs(msg_to_gw);
 

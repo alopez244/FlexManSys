@@ -15,8 +15,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 
-import static es.ehu.platform.utilities.MasReconOntologies.ONT_DATA;
-
 //import jade.util.leap.ArrayList;
 
 /**
@@ -49,17 +47,33 @@ public class RunningBehaviour extends SimpleBehaviour {
 	private MWAgent myAgent;
 	private int PrevPeriod;
 	private long NextActivation;
-	private Boolean endFlag;
+	private Boolean endFlag=false;
 	private AID QoSID = new AID("QoSManagerAgent", false);
 	private AID DDID = new AID("D&D", false);
-	private boolean wait=false;
+	private boolean agent_block_flag =false;
 	// Constructor. Create a default template for the entry messages
 	public RunningBehaviour(MWAgent a) {
 		super(a);
 		LOGGER.debug("*** Constructing RunningBehaviour ***");
 		this.myAgent = a;
-		this.template = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_DATA),
-				MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+//		this.template = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_DATA),
+//				MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+		this.template=
+				//templates batch
+				MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+				MessageTemplate.or(MessageTemplate.MatchOntology("askdelay"),
+				MessageTemplate.or(MessageTemplate.MatchContent("reset_timeout"),
+				MessageTemplate.or(MessageTemplate.MatchOntology("data"),
+				//templates order
+				MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchOntology("Information"),MessageTemplate.MatchConversationId("ItemsInfo")),
+				MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchContent("Batch completed"),MessageTemplate.MatchConversationId("Shutdown")),
+				MessageTemplate.or(MessageTemplate.MatchOntology("update_timeout"),
+				MessageTemplate.or(MessageTemplate.MatchOntology("delay"),
+				//templates mplan
+				MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchOntology("Information"),MessageTemplate.MatchConversationId("OrderInfo")),
+				MessageTemplate.and(MessageTemplate.MatchContent("Order completed"),MessageTemplate.MatchConversationId("Shutdown"))
+												)))))))));
+
 		this.template2 = MessageTemplate.and(MessageTemplate.MatchOntology("release_buffer"),
 				MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),MessageTemplate.MatchSender(DDID)));
 
@@ -142,6 +156,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 			ACLMessage ack= myAgent.receive(ack_template);
 			if(ack==null){
 				if(instant>timeout){
+					System.out.println("No confirmation from: "+exp_msg_sender.getLocalName()+"\n"+"Sended message content: "+content);
 					if(exp_msg_sender.getLocalName().equals(QoSID.getLocalName())){
 						LOGGER.info("QoS did not answer on time. THIS AGENT MIGHT BE ISOLATED.");
 						if(myAgent.getLocalName().contains("batchagent")||myAgent.getLocalName().contains("orderagent")||myAgent.getLocalName().contains("mplanagent")){
@@ -188,9 +203,9 @@ public class RunningBehaviour extends SimpleBehaviour {
 		ACLMessage any_msg = myAgent.receive();
 		if(any_msg!=null){
 			myAgent.msgFIFO.add((String) any_msg.getContent());
-			LOGGER.debug("Peeked msg: "+any_msg.getContent());
-			LOGGER.debug("From: "+any_msg.getSender().getLocalName());
-			if(!any_msg.getContent().equals("done")&&!any_msg.getOntology().equals("trigger_getState")){ //"flushea" mensajes de tipo done y de trigger para evitar bucles
+			System.out.println("Peeked msg: "+any_msg.getContent()); //para visualizar que mensaje es el que dispara el getstate
+			System.out.println("From: "+any_msg.getSender().getLocalName());
+			if(!any_msg.getContent().equals("done")&&!any_msg.getOntology().equals("trigger_getState")){ //"flushea" mensajes de tipo done y de trigger para evitar bucles porque estos nadie los lee
 				myAgent.putBack(any_msg);  //en caso de no serlo, se devuelve al queue de mensajes ACL
 			}
 			if(!myAgent.antiloopflag) { //el flag de antiloop evita bucles infinitos acotando un tramo de código
@@ -205,25 +220,26 @@ public class RunningBehaviour extends SimpleBehaviour {
 
 		//***************** 4) Etapa de ejecución de funtionality
 		ACLMessage msg = myAgent.receive(template);
-
 		receivedMsgs = manageReceivedMsg(msg);
+
 		Object result = myAgent.functionalityInstance.execute(receivedMsgs);
-		endFlag =Boolean.valueOf(result.toString());
-		if(endFlag){
-			if(!myAgent.msg_buffer.isEmpty()||myAgent.expected_msgs.size()!=0){  //si tenemos mensajes en el cajon o esperamos respuestas de confirmación no podemos terminar aun
-				endFlag=false;
-				result=false;
-				wait=true;
-			}
-		}
-		if(wait){  //si el agente ha recibido todos los mensajes
+		if(!agent_block_flag){ //Si previamente se ha puesto el flag de agent_block_flag en 1 significa que tenemos mensajes pendientes de recibir o enviar no debemos tocar el flag de end
+			endFlag =Boolean.valueOf(result.toString());
+			manageExecutionResult(result);
+		}else{
 			if(myAgent.msg_buffer.isEmpty()&&myAgent.expected_msgs.size()==0){
 				endFlag=true;
 				result=true;
-				wait=false;
+				agent_block_flag =false;
+				manageExecutionResult(result);
 			}
 		}
-		manageExecutionResult(result);
+		if(endFlag&&(!myAgent.msg_buffer.isEmpty()||myAgent.expected_msgs.size()!=0)){ //en caso de que el agente haya terminado pero aun conserve mensajes pendientes de recibir o enviar hay que evitar que desaparezca
+			//endFlag=false;
+//			result=false;
+			agent_block_flag =true;
+		}
+
 		//***************** Fin de etapa de ejecución de funtionality
 
 
@@ -235,7 +251,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 		}
 
 		// TODO prueba para ver el cambio de estados --> luego borrar
-		System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo action del RunningBehaviour");
+//		System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo action del RunningBehaviour");
 
 		LOGGER.exit();
 	}
@@ -309,7 +325,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 			resultMsg = (ACLMessage) result;
 
 		} catch (Exception e) {
-			LOGGER.debug("Execute result is not an ACLMessage");
+//			LOGGER.debug("Execute result is not an ACLMessage");
 		}
 
 		if (resultMsg != null && templateAny.match(resultMsg)) {
@@ -322,7 +338,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 		} else {
 			try {
 				Serializable resultSer = (Serializable) result;
-				LOGGER.debug("Send Message to source components");
+//				LOGGER.debug("Send Message to source components");
 				myAgent.sendMessage(resultSer, myAgent.targetComponentIDs);
 			} catch (Exception e) {
 				LOGGER.debug("Execute result is not serializable");

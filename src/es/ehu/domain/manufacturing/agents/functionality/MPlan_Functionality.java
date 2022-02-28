@@ -246,6 +246,12 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 
       notifyMachinesToStartOperations(myAgent, conversationId);
 
+      String currentState = (String) ((AvailabilityFunctionality) myAgent.functionalityInstance).getState(); //se actualiza el estado de las replicas
+      if (currentState != null) {
+        System.out.println("Send state");
+        myAgent.sendStateToTracking(currentState); //comunicamos a las replicas nuestro estado
+      }
+
     } else {
       // Si su estado es tracking
       trackingOnBoot(myAgent, mySeType, conversationId);
@@ -279,60 +285,60 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 
   @Override
   public Object execute(Object[] input) {
-    System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
 
-    ACLMessage msg = myAgent.receive(template);
-    if (msg != null) {
-      myAgent.msgFIFO.add((String) msg.getContent());
-      Acknowledge(msg,myAgent);
-
-      if (firstTime) { //solo se quiere añadir el nuevo nivel la primera vez
-        deserializedMessage = deserializeMsg(msg.getContent());
-        ordersTraceability = addNewLevel(ordersTraceability, deserializedMessage, true); //añade el espacio para la informacion de la orden en primera posicion, sumando un nivel mas a los datos anteriores
-        ordersTraceability.get(0).get(0).get(0).add("PlanLevel"); // en ese espacio creado, se añade la informacion
-        ordersTraceability.get(0).get(0).get(2).add("planReference");
-        String orderNumber = ordersTraceability.get(1).get(0).get(3).get(0);  //se obtiene la referencia de la orden
-        planNumber = orderNumber.substring(0,1);  // se obtiene la referencia del plan
-        ordersTraceability.get(0).get(0).get(3).add(planNumber);
-        firstTime = false;
-      } else {
-        if (newOrder == false) {
-            for (int i = ordersTraceability.size() - 1; i >= orderIndex; i--) {
-              ordersTraceability.remove(i); //se elimina el ultimo order añadido para poder sobreescribirlo
+    if (input!= null) {
+      if (input[0] != null) {
+        System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
+        ACLMessage msg = (ACLMessage) input[0];
+        myAgent.msgFIFO.add((String) msg.getContent());
+        if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("Information")&&msg.getConversationId().equals("OrderInfo")){
+          Acknowledge(msg,myAgent);
+          if (firstTime) { //solo se quiere añadir el nuevo nivel la primera vez
+            deserializedMessage = deserializeMsg(msg.getContent());
+            ordersTraceability = addNewLevel(ordersTraceability, deserializedMessage, true); //añade el espacio para la informacion de la orden en primera posicion, sumando un nivel mas a los datos anteriores
+            ordersTraceability.get(0).get(0).get(0).add("PlanLevel"); // en ese espacio creado, se añade la informacion
+            ordersTraceability.get(0).get(0).get(2).add("planReference");
+            String orderNumber = ordersTraceability.get(1).get(0).get(3).get(0);  //se obtiene la referencia de la orden
+            planNumber = orderNumber.substring(0,1);  // se obtiene la referencia del plan
+            ordersTraceability.get(0).get(0).get(3).add(planNumber);
+            firstTime = false;
+          } else {
+            if (newOrder == false) {
+              for (int i = ordersTraceability.size() - 1; i >= orderIndex; i--) {
+                ordersTraceability.remove(i); //se elimina el ultimo order añadido para poder sobreescribirlo
+              }
             }
-        }
-        deserializedMessage = deserializeMsg(msg.getContent());
-        ordersTraceability = addNewLevel(ordersTraceability, deserializedMessage, false); //añade el espacio para la informacion del plan en primera posicion, sumando un nivel mas a los datos anteriores
-      }
-      newOrder = false;
-    }
-
-    ACLMessage msgEnd = myAgent.receive(template2);
-    // Recepcion de mensajes para eliminar de la lista de agentes hijo los agentes order que ya han enviado toda la informacion
-    if (msgEnd != null) {
-      myAgent.msgFIFO.add((String) msgEnd.getContent());
-        String msgSender = msgEnd.getOntology();
-        for (int i = 0; i < sonAgentID.size(); i++) {
+            deserializedMessage = deserializeMsg(msg.getContent());
+            ordersTraceability = addNewLevel(ordersTraceability, deserializedMessage, false); //añade el espacio para la informacion del plan en primera posicion, sumando un nivel mas a los datos anteriores
+          }
+          newOrder = false;
+        }else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getContent().equals("Order completed")&&msg.getConversationId().equals("Shutdown")){
+          String msgSender = msg.getOntology();
+          for (int i = 0; i < sonAgentID.size(); i++) {
 //          if (sonAgentID.get(i).getName().split("@")[0].equals(msgSender)) {
             if (sonAgentID.get(i).equals(msgSender)) {
-            sonAgentID.remove(i);
-            i--;
-          }
-        }
-        if (sonAgentID.size() == 0) { // todos los batch agent de los que es padre ya le han enviado la informacion
-          //se adecuan los datos antes de llamar al metodo XMLwrite
-          ArrayList<ArrayList<ArrayList<String>>> toXML = new ArrayList<>();
-          for (int j = 0; j < ordersTraceability.size(); j++) {
-            for (int k = 0; k < ordersTraceability.get(j).size(); k++) {
-              toXML.add(ordersTraceability.get(j).get(k));
+              sonAgentID.remove(i);
+              i--;
             }
           }
-          XMLWriter.writeFile(toXML, planNumber);//se introducen como entrada los datos a convertir y el identificador del MPlan
+          if (sonAgentID.size() == 0) { // todos los batch agent de los que es padre ya le han enviado la informacion
+            //se adecuan los datos antes de llamar al metodo XMLwrite
+            ArrayList<ArrayList<ArrayList<String>>> toXML = new ArrayList<>();
+            for (int j = 0; j < ordersTraceability.size(); j++) {
+              for (int k = 0; k < ordersTraceability.get(j).size(); k++) {
+                toXML.add(ordersTraceability.get(j).get(k));
+              }
+            }
+            //XMLWriter.writeFile(toXML, planNumber);//se introducen como entrada los datos a convertir y el identificador del MPlan
 //          sendACLMessage(7, myAgent.getAID(), "Information", "Shutdown", "Shutdown", myAgent); // autoenvio de mensaje para asegurar que el agente de desregistre y se apague
-          return true;
+            return true;
+          }
+          orderIndex = ordersTraceability.size() - 1; //se actualiza el valor para borrar en el nuevo rango
+          newOrder = true; // aun quedan orders por añadir
         }
-        orderIndex = ordersTraceability.size() - 1; //se actualiza el valor para borrar en el nuevo rango
-        newOrder = true; // aun quedan orders por añadir
+
+
+      }
     }
 
     return false;

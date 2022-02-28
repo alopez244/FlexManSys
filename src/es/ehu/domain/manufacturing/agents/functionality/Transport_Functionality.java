@@ -1,28 +1,21 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
-import com.google.gson.Gson;
-import es.ehu.domain.manufacturing.agents.MachineAgent;
 import es.ehu.domain.manufacturing.agents.TransportAgent;
-import es.ehu.domain.manufacturing.behaviour.ReceiveTaskBehaviour;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.NegotiatingBehaviour;
 import es.ehu.platform.template.interfaces.AssetManagement;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.platform.utilities.Cmd;
-import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.core.AID;
 import jade.lang.acl.MessageTemplate;
 import jade.wrapper.AgentController;
-import org.apache.commons.collections4.bag.SynchronizedSortedBag;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.sql.SQLOutput;
-import java.util.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;

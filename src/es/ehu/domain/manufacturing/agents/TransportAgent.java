@@ -1,14 +1,9 @@
 package es.ehu.domain.manufacturing.agents;
 
-import es.ehu.domain.manufacturing.agents.cognitive.Ros_Jade_Dummy;
-import es.ehu.domain.manufacturing.agents.functionality.Batch_Functionality;
 import es.ehu.domain.manufacturing.agents.functionality.Transport_Functionality;
-import es.ehu.domain.manufacturing.behaviour.ReceiveTaskBehaviour;
 import es.ehu.domain.manufacturing.template.DomResAgentTemplate;
 import es.ehu.platform.behaviour.ControlBehaviour;
-import es.ehu.platform.behaviour.RunningBehaviour;
 import es.ehu.platform.template.ResourceAgentTemplate;
-import es.ehu.platform.utilities.XMLReader;
 import jade.core.behaviours.Behaviour;
 import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;

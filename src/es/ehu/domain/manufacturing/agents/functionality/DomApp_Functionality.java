@@ -284,7 +284,14 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
-            return Long.parseLong(cpu_usage);
+            String[] value=cpu_usage.split(",");
+            long result=0;
+            if(Long.parseLong(value[1])>49){
+                result=Long.parseLong(value[0])+1;
+            }else{
+                result=Long.parseLong(value[0]);
+            }
+            return result;
         }
     }
 
@@ -329,11 +336,8 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
                     String seClass = attribs.get("seClass");
                 ACLMessage All_process_nodes = sendCommand(myAgent, "get * category=pNodeAgent", "GetAllNodes");
                 String targets=All_process_nodes.getContent();
-//                for (int i = 0; i < Integer.parseInt(redundancy); i++) {
                 // Orden de negociacion a todos los nodos
-                //***********for antiguo
 
-//                    =getTargets(elementID);
                     conversationId = myAgent.getLocalName() + "_" + chatID;
                     chatID++;
                     //negotiate(myAgent, targets, "max mem", "start", elementID + "," + seCategory + "," + seClass + "," + ((i == 0) ? "running" : "tracking")+","+redundancy+","+myAgent.getLocalName(), conversationId);
@@ -341,12 +345,6 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
                     System.out.println(conversationId);
                     System.out.println(negotiationQuery);
 
-//                    ACLMessage negotiation= new ACLMessage(ACLMessage.CFP);
-//                    negotiation.setConversationId(conversationId);
-//                    negotiation.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE );
-//                    negotiation.setContent("negotiate "+targets+" criterion=max mem action=start externaldata="+ elementID + "," + seCategory + "," + seClass + "," + myAgent.getLocalName() + "," + redundancy);
-//                    for (String target: targets.split(",")) negotiation.addReceiver(new AID(target, AID.ISLOCALNAME));
-//                    myAgent.send(negotiation);
                     sendCommand(myAgent, negotiationQuery, conversationId);
 //                }
 
@@ -493,6 +491,7 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
         return traceability;
     }
     //Metedo que deserializa los mensajes que se envian desde el BatchAgent al OrderAgent y desde el OrderAgent al MPlanAgent
+
     public ArrayList<ArrayList<ArrayList<ArrayList<String>>>> deserializeMsg(String msgContent) { //metodo que deserializa el mensage recibido desde el batch agent
 
         ArrayList<ArrayList<ArrayList<ArrayList<String>>>> traceability = new ArrayList<>();

@@ -54,7 +54,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private volatile boolean update_timeout_flag=false, delay_already_asked=false;
     private volatile AID QoSID = new AID("QoSManagerAgent", false);
     private volatile boolean reset_flag=false;
-    private volatile boolean delay_already_incremented=false,QoSresponse_flag=false;
+    private volatile boolean delay_already_incremented=false;
     private ArrayList<ACLMessage> posponed_msgs_to_order=new ArrayList<ACLMessage>();
 
 
@@ -127,7 +127,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             }
         }
         productsTraceability=Traceability;
-        if (remainingConc != null) {    //construye bien los sonagentID o actionlist
+        if (remainingConc != null) {    //construye bien los sonagentID o actionlist segun el tipo de agente
             String parts6[] = remainingConc.split("/div1/");
             for (int i = 0; i < parts6.length; i++) {
                 remaining.add(parts6[i]);
@@ -255,12 +255,11 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private boolean timeout=false;
         public void run() {
 
-
             System.out.println("Item timeout initialized");
             while (finish_times_of_batch == null) {} //tramo de espera de seguridad hasta tener los finish times
             items_finish_times = take_finish_times(finish_times_of_batch); //extrae la información útil que se usa en el timeout
             itemreference=take_item_references(finish_times_of_batch);//nos devuelve las referencias de los item para este batch, ordenados como los tiempos extraidos en la anterior función
-            if(!reset_flag) { //si no ha sido un reset pedido con el QoS debemos construir los FT
+            if(!reset_flag) { //si no ha sido un reset pedido externamente debemos construir los FT, si es un reset por replica caida etc., ya los tenemos
                 try {
                     expected_finish_date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(items_finish_times.get(actual_item_number));
                 } catch (ParseException e) {
@@ -269,20 +268,19 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             }
 
             while (actual_item_number < items_finish_times.size() && !timeout) {  //Mientras que no estemos en la ultima pieza o se haya lanzado timeout
-                if(getactualtime().after(expected_finish_date)&& !timeout){
-                    if(!delay_already_incremented){
+                if(getactualtime().after(expected_finish_date)&& !timeout){ //Si el tiempo actual es superior a la fecha de FT hay que hacer algo
+                    if(!delay_already_incremented){ //en caso de no haberse incrementado el timeout con el delay aun, se realiza
                         expected_finish_date=FIUpdateFinishTimes();
 
                         //Actualiza el estado de las replicas tras obtener el delay
-                        String currentState = (String) ((AvailabilityFunctionality) myAgent.functionalityInstance).getState(); //disponemos de delaynum, date_when_delay_was_asked y expected_finish_date
+                        String currentState = (String) ((AvailabilityFunctionality) myAgent.functionalityInstance).getState(); //se actualiza el estado de las replicas
                         if (currentState != null) {
                             System.out.println("Send state");
                             myAgent.sendStateToTracking(currentState); //comunicamos a las replicas nuestro estado
                         }
 
-                    }else {
+                    }else { //si ya ha sido incrementado el delay no queda otra que considerarlo timeout y el thread desaparece
                         System.out.println(getactualtime() + " " + myAgent.getLocalName() + " WARN " + batchreference + " batch has thrown a timeout on item number " + itemreference.get(actual_item_number) + " Checking failure with QoS Agent...");
-                        QoSresponse_flag = false;
                         ACLMessage report_to_QoS= sendACLMessage(ACLMessage.FAILURE, QoSID, "timeout", "timeout " + batchreference, batchreference + "/" + itemreference.get(actual_item_number), myAgent); //avisa al QoS de fallo por timeout
                         myAgent.AddToExpectedMsgs(report_to_QoS);
                         timeout = true;
@@ -294,7 +292,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     if (update_timeout_flag) {
                         actual_item_number++;
                         if(actual_item_number<items_finish_times.size()) {
-//                            System.out.println("Next item started");
                             expected_finish_date = UpdateFinishTimes(actual_item_number); //actualiza la fecha de finish time
                             update_timeout_flag = false;
                         }
@@ -376,179 +373,181 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
     @Override
     public Object execute(Object[] input) {
+        if (input!= null) {
+            if (input[0] != null) {
+
+                HashMap infoForTraceability = new HashMap();
+
+//        System.out.println(input);
+
+                System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
+
+                System.out.println("Ahora el agente " + myAgent.getLocalName() + " se va a quedar a la espera de la informacion de las operaciones");
+
+                MessageTemplate batch_f_template = MessageTemplate.or(MessageTemplate.or(MessageTemplate.or(
+                        MessageTemplate.and(MessageTemplate.MatchOntology("askdelay"), MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
+                        MessageTemplate.and(MessageTemplate.MatchContent("reset_timeout"), MessageTemplate.MatchPerformative(ACLMessage.INFORM))),
+                        MessageTemplate.and(MessageTemplate.MatchContent("confirmed_timeout"), MessageTemplate.MatchPerformative(ACLMessage.INFORM))),
+                        MessageTemplate.and(MessageTemplate.MatchOntology("data"), MessageTemplate.MatchPerformative(ACLMessage.INFORM)));
+
+                ACLMessage msg = (ACLMessage) input[0];
+//        ACLMessage msg = myAgent.receive(batch_f_template);
 
 
+                myAgent.msgFIFO.add((String) msg.getContent()); //se añade en buffer de listado de mensajes recibidos
 
-        HashMap infoForTraceability = new HashMap();
+                if (msg.getPerformative() == ACLMessage.INFORM && msg.getOntology().equals("askdelay")) { //si es un mensaje con info del delay creamos el timeout
+                    date_when_delay_was_asked = getactualtime();
+                    String delay = msg.getContent();
 
-        System.out.println(input);
-
-        System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
-
-        System.out.println("Ahora el agente " + myAgent.getLocalName() + " se va a quedar a la espera de la informacion de las operaciones");
-
-        MessageTemplate batch_f_template=MessageTemplate.or(MessageTemplate.or(MessageTemplate.or(
-                MessageTemplate.and(MessageTemplate.MatchOntology("askdelay"),MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
-                MessageTemplate.and(MessageTemplate.MatchContent("reset_timeout"),MessageTemplate.MatchPerformative(ACLMessage.INFORM))),
-                MessageTemplate.and(MessageTemplate.MatchContent("confirmed_timeout"),MessageTemplate.MatchPerformative(ACLMessage.INFORM))),
-                MessageTemplate.and(MessageTemplate.MatchOntology("negotiation"),MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
-
-        ACLMessage msg = myAgent.receive(batch_f_template);
-        if (msg != null) {
-
-            myAgent.msgFIFO.add((String) msg.getContent()); //se añade en buffer de listado de mensajes recibidos
-
-            if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("askdelay")){ //si es un mensaje con info del delay creamos el timeout
-                date_when_delay_was_asked = getactualtime();
-                String delay = msg.getContent();
-
-                delaynum = Long.parseLong(delay);
-                AID OrderAgent = new AID(parentAgentID, false);
-
-                try {
-                    batchName=sendCommand(myAgent,"get "+myAgent.getLocalName()+" attrib=parent","name"); //consigue el nombre del batch
-                    ACLMessage reference=sendCommand(myAgent,"get "+batchName.getContent()+" attrib=reference","Reference");
-                    sendACLMessage(7, OrderAgent,"delay", "inform delay", reference.getContent()+"/"+delay, myAgent ); //informa al parent
-                    //TODO timeout de ACL aquí
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-
-                delay_already_asked = true;
-                timeout thread=new timeout();
-                thread.start(); //se inicia el timeout tras recibir delay
-            }else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getContent().equals("reset_timeout")){
-//                QoSresponse_flag=true;
-                reset_flag=true;
-                System.out.println("Timeout has been asked to be reset");
-                if(date_when_delay_was_asked==null||delaynum==0||expected_finish_date==null){
-                    System.out.println("Error starting timeout. Some data has been lost.");
-                }else{
-                    Date last_expected_finish_time=expected_finish_date;
-                    if(actual_item_number==0) {
-                        expected_finish_date = FIUpdateFinishTimes();
-                    }else{
-                        expected_finish_date = UpdateFinishTimes(actual_item_number);
-                    }
-                    long difference=expected_finish_date.getTime()- last_expected_finish_time.getTime();
+                    delaynum = Long.parseLong(delay);
                     AID OrderAgent = new AID(parentAgentID, false);
+
                     try {
-                        batchName=sendCommand(myAgent,"get "+myAgent.getLocalName()+" attrib=parent","name"); //consigue el nombre del batch
-                        ACLMessage reference=sendCommand(myAgent,"get "+batchName.getContent()+" attrib=reference","Reference");
+                        batchName = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "name"); //consigue el nombre del batch
+                        ACLMessage reference = sendCommand(myAgent, "get " + batchName.getContent() + " attrib=reference", "Reference");
+                        sendACLMessage(7, OrderAgent, "delay", "inform delay", reference.getContent() + "/" + delay, myAgent); //informa al parent
                         //TODO timeout de ACL aquí
-                        sendACLMessage(ACLMessage.INFORM,OrderAgent,"update_timeout","timeout",reference.getContent()+"/"+ difference,myAgent);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    timeout thread=new timeout(); //reinicio de timeout
-                    thread.start();
-                }
 
-            }else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getContent().equals("confirmed_timeout")){
+
+                    delay_already_asked = true;
+                    timeout thread = new timeout();
+                    thread.start(); //se inicia el timeout tras recibir delay
+                } else if (msg.getPerformative() == ACLMessage.INFORM && msg.getContent().equals("reset_timeout")) {
 //                QoSresponse_flag=true;
-                System.out.println("Timeout confirmed by QoS.");
-            } else if (msg.getPerformative() == ACLMessage.REQUEST&&msg.getOntology().equals("negotiation")) {
+                    reset_flag = true;
+                    System.out.println("Timeout has been asked to be reset");
+                    if (date_when_delay_was_asked == null || delaynum == 0 || expected_finish_date == null) {
+                        System.out.println("Error starting timeout. Some data has been lost.");
+                    } else {
+                        Date last_expected_finish_time = expected_finish_date;
+                        if (actual_item_number == 0) {
+                            expected_finish_date = FIUpdateFinishTimes();
+                        } else {
+                            expected_finish_date = UpdateFinishTimes(actual_item_number);
+                        }
+                        long difference = expected_finish_date.getTime() - last_expected_finish_time.getTime();
+                        AID OrderAgent = new AID(parentAgentID, false);
+                        try {
+                            batchName = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "name"); //consigue el nombre del batch
+                            ACLMessage reference = sendCommand(myAgent, "get " + batchName.getContent() + " attrib=reference", "Reference");
+                            //TODO timeout de ACL aquí
+                            sendACLMessage(ACLMessage.INFORM, OrderAgent, "update_timeout", "timeout", reference.getContent() + "/" + difference, myAgent);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        timeout thread = new timeout(); //reinicio de timeout
+                        thread.start();
+                    }
 
-                Acknowledge(msg,myAgent);
-                System.out.println("Mensaje con la informacion del PLC");
-                System.out.println("Quien envia el mensaje: " + msg.getSender());
-                System.out.println("Contenido: " + msg.getContent());
-                System.out.println("ConversationId: " + msg.getConversationId());
+                } else if (msg.getPerformative() == ACLMessage.INFORM && msg.getContent().equals("confirmed_timeout")) {
+//                QoSresponse_flag=true;
+                    System.out.println("Timeout confirmed by QoS.");
+                } else if (msg.getPerformative() == ACLMessage.INFORM && msg.getOntology().equals("data")) {
 
-                infoForTraceability = new Gson().fromJson(msg.getContent(), HashMap.class);  //Data type conversion Json->Hashmap class
-                // Se extraen los datos necesarios del mensaje recibido
-                // Cada mensaje contiene informacion del  fabricado
-                String idItem = String.valueOf(infoForTraceability.get("Id_Item_Number"));
-                batchNumber = String.valueOf(infoForTraceability.get("Id_Batch_Reference"));
-                String ActionTypes = String.valueOf(infoForTraceability.get("Id_Action_Type"));
-                update_timeout_flag=true;
-                itemreference=take_item_references(finish_times_of_batch);
-                for (int i=0; i < productsTraceability.size(); i++) {
-                    // Se identifica la estructura de datos correspondiente al item que se ha fabricado
-                    if (productsTraceability.get(i).get(0).get(3).size() > 2) { //se comprueba que contenga mas de dos elementos, ya que en la siguiente linea se accede al tercero
-                        if (productsTraceability.get(i).get(0).get(3).get(3).equals(GetItemIDForTraceability(idItem,itemreference))) {
-                            for (int j = 0; j < productsTraceability.get(i).size(); j++) {
-                                if (productsTraceability.get(i).get(j).get(0).get(0).equals("action")) {    // Dentro del action, se registran los datos de fabricacion
-                                    if (ActionTypes.contains(productsTraceability.get(i).get(j).get(3).get(1))) {   //solo se escribe en los actions que esten definidos en el ActionTypes
-                                        productsTraceability.get(i).get(j).get(3).set(3, String.valueOf(infoForTraceability.get("Id_Machine_Reference")));
-                                        productsTraceability.get(i).get(j).get(3).set(4, String.valueOf(infoForTraceability.get("Id_Machine_Reference")));
-                                        productsTraceability.get(i).get(j).get(3).set(5, String.valueOf(infoForTraceability.get("Data_Initial_Time_Stamp")));
-                                        productsTraceability.get(i).get(j).get(3).set(6, String.valueOf(infoForTraceability.get("Data_Final_Time_Stamp")));
+                    Acknowledge(msg, myAgent);
+                    System.out.println("Mensaje con la informacion del PLC");
+                    System.out.println("Quien envia el mensaje: " + msg.getSender());
+                    System.out.println("Contenido: " + msg.getContent());
+                    System.out.println("ConversationId: " + msg.getConversationId());
+
+                    infoForTraceability = new Gson().fromJson(msg.getContent(), HashMap.class);  //Data type conversion Json->Hashmap class
+                    // Se extraen los datos necesarios del mensaje recibido
+                    // Cada mensaje contiene informacion del  fabricado
+                    String idItem = String.valueOf(infoForTraceability.get("Id_Item_Number"));
+                    batchNumber = String.valueOf(infoForTraceability.get("Id_Batch_Reference"));
+                    String ActionTypes = String.valueOf(infoForTraceability.get("Id_Action_Type"));
+                    update_timeout_flag = true; //se pide al timeout que actualice el item
+                    itemreference = take_item_references(finish_times_of_batch);
+                    for (int i = 0; i < productsTraceability.size(); i++) {
+                        // Se identifica la estructura de datos correspondiente al item que se ha fabricado
+                        if (productsTraceability.get(i).get(0).get(3).size() > 2) { //se comprueba que contenga mas de dos elementos, ya que en la siguiente linea se accede al tercero
+                            if (productsTraceability.get(i).get(0).get(3).get(3).equals(GetItemIDForTraceability(idItem, itemreference))) {
+                                for (int j = 0; j < productsTraceability.get(i).size(); j++) {
+                                    if (productsTraceability.get(i).get(j).get(0).get(0).equals("action")) {    // Dentro del action, se registran los datos de fabricacion
+                                        if (ActionTypes.contains(productsTraceability.get(i).get(j).get(3).get(1))) {   //solo se escribe en los actions que esten definidos en el ActionTypes
+                                            productsTraceability.get(i).get(j).get(3).set(3, String.valueOf(infoForTraceability.get("Id_Machine_Reference")));
+                                            productsTraceability.get(i).get(j).get(3).set(4, String.valueOf(infoForTraceability.get("Id_Machine_Reference")));
+                                            productsTraceability.get(i).get(j).get(3).set(5, String.valueOf(infoForTraceability.get("Data_Initial_Time_Stamp")));
+                                            productsTraceability.get(i).get(j).get(3).set(6, String.valueOf(infoForTraceability.get("Data_Final_Time_Stamp")));
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
-                // Inicialización de las variables donde se guardaran los datos serializados
-                String aux = "";
-                String msgToOrder = "";
+                    // Inicialización de las variables donde se guardaran los datos serializados
+                    String aux = "";
+                    String msgToOrder = "";
 
-                if (infoForTraceability.containsKey("Data_Service_Time_Stamp")) { //El lote ha terminado de fabricarse y se envian los datos al order agent
-                    sendACLMessage(7,QoSID,"batch_finish",batchNumber+" finish",batchNumber,myAgent);
-                    for (int k = 0; k < actionList.size(); k++) { // Se eliminan las acciones que ya se han realizado
-                        if (ActionTypes.contains(actionList.get(k))) {
-                            actionList.remove(k);
-                            k--;
+                    if (infoForTraceability.containsKey("Data_Service_Time_Stamp")) { //El lote ha terminado de fabricarse y se envian los datos al order agent
+                        sendACLMessage(7, QoSID, "batch_finish", batchNumber + " finish", batchNumber, myAgent);
+                        for (int k = 0; k < actionList.size(); k++) { // Se eliminan las acciones que ya se han realizado
+                            if (ActionTypes.contains(actionList.get(k))) {
+                                actionList.remove(k);
+                                k--;
+                            }
                         }
-                    }
-                    if (firstTime) { //solo se añade la informacion la primera vez
-                        ArrayList<ArrayList<ArrayList<ArrayList<String>>>> traceability = new ArrayList<>();
-                        productsTraceability = addNewLevel(traceability, productsTraceability, true); //añade el espacio para la informacion del lote en primera posicion, sumando un nivel mas a los datos anteriores
-                        productsTraceability.get(0).get(0).get(0).add("BatchLevel"); // en ese espacio creado, se añade la informacion del lote
-                        productsTraceability.get(0).get(0).get(2).add("batchReference");
-                        productsTraceability.get(0).get(0).get(2).add("Data_Service_Time_Stamp");
-                        productsTraceability.get(0).get(0).get(3).add(batchNumber);
-                        productsTraceability.get(0).get(0).get(3).add(String.valueOf(infoForTraceability.get("Data_Service_Time_Stamp")));
-                        firstTime = false;
-                    }
+                        if (firstTime) { //solo se añade la informacion la primera vez
+                            ArrayList<ArrayList<ArrayList<ArrayList<String>>>> traceability = new ArrayList<>();
+                            productsTraceability = addNewLevel(traceability, productsTraceability, true); //añade el espacio para la informacion del lote en primera posicion, sumando un nivel mas a los datos anteriores
+                            productsTraceability.get(0).get(0).get(0).add("BatchLevel"); // en ese espacio creado, se añade la informacion del lote
+                            productsTraceability.get(0).get(0).get(2).add("batchReference");
+                            productsTraceability.get(0).get(0).get(2).add("Data_Service_Time_Stamp");
+                            productsTraceability.get(0).get(0).get(3).add(batchNumber);
+                            productsTraceability.get(0).get(0).get(3).add(String.valueOf(infoForTraceability.get("Data_Service_Time_Stamp")));
+                            firstTime = false;
+                        }
 
-                    for (ArrayList<ArrayList<ArrayList<String>>> a : productsTraceability) { //serializacion de los datos a enviar
-                        aux = a.toString();
-                        msgToOrder = msgToOrder.concat(aux);
-                    }
-                    System.out.println(msgToOrder);
-                    try {
+                        for (ArrayList<ArrayList<ArrayList<String>>> a : productsTraceability) { //serializacion de los datos a enviar
+                            aux = a.toString();
+                            msgToOrder = msgToOrder.concat(aux);
+                        }
+                        System.out.println(msgToOrder);
+                        try {
 //                        ACLMessage order_parent= sendCommand(myAgent, "get "+parentAgentID+" attrib=parent", "OrderAgentID");
-                        ACLMessage batch_parent= sendCommand(myAgent, "get "+myAgent.getLocalName()+" attrib=parent", myAgent.getLocalName()+"_parent");
-                        ACLMessage order_parent= sendCommand(myAgent, "get "+batch_parent.getContent()+" attrib=parent", myAgent.getLocalName()+"_parent_parent");
+                            ACLMessage batch_parent = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", myAgent.getLocalName() + "_parent");
+                            ACLMessage order_parent = sendCommand(myAgent, "get " + batch_parent.getContent() + " attrib=parent", myAgent.getLocalName() + "_parent_parent");
 
-                        posponed_msgs_to_order= myAgent.msg_buffer.get(order_parent.getContent());
-                        if(posponed_msgs_to_order==null){  //si no se encuentra el parent en el listado de mensajes postpuestos entonces el receptor ha confirmado la recepcion de todos los mensajes hasta ahora. Seguimos con la ejecución normal.
-                            ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + order_parent.getContent()+" state=running", myAgent.getLocalName()+"_parent_running_replica");
-                            myAgent.msgFIFO.add((String) running_replica.getContent());
-                            if (!running_replica.getContent().equals("")) {
-                                AID orderAgentID = new AID(running_replica.getContent(), false);
-                                ACLMessage msg_to_order= sendACLMessage(7, orderAgentID,"Information", "ItemsInfo", msgToOrder, myAgent );
-                                myAgent.AddToExpectedMsgs(msg_to_order);
-                            }else{
-                                posponed_msgs_to_order=new ArrayList<ACLMessage>();
-                                ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.INFORM);
+                            posponed_msgs_to_order = myAgent.msg_buffer.get(order_parent.getContent());
+                            if (posponed_msgs_to_order == null) {  //si no se encuentra el parent en el listado de mensajes postpuestos entonces el receptor ha confirmado la recepcion de todos los mensajes hasta ahora. Seguimos con la ejecución normal.
+                                ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + order_parent.getContent() + " state=running", myAgent.getLocalName() + "_parent_running_replica");
+                                myAgent.msgFIFO.add((String) running_replica.getContent());
+                                if (!running_replica.getContent().equals("")) {
+                                    AID orderAgentID = new AID(running_replica.getContent(), false);
+                                    ACLMessage msg_to_order = sendACLMessage(7, orderAgentID, "Information", "ItemsInfo", msgToOrder, myAgent);
+                                    myAgent.AddToExpectedMsgs(msg_to_order);
+                                } else {
+                                    posponed_msgs_to_order = new ArrayList<ACLMessage>();
+                                    ACLMessage msg_to_buffer = new ACLMessage(ACLMessage.INFORM);
+                                    msg_to_buffer.setConversationId("ItemsInfo");
+                                    msg_to_buffer.setContent(msgToOrder);
+                                    msg_to_buffer.setOntology("Information");
+                                    posponed_msgs_to_order.add(msg_to_buffer);
+                                    myAgent.msg_buffer.put(order_parent.getContent(), posponed_msgs_to_order);
+                                }
+                            } else {  //si no es null significa que el agente sigue denunciado y aun no se ha resuelto el problema.
+
+                                System.out.println("Added message to buffer:\nContent: " + msgToOrder + "\nTo: " + order_parent.getContent() + "\n Still waiting for a solution.");
+                                ACLMessage msg_to_buffer = new ACLMessage(ACLMessage.INFORM);
                                 msg_to_buffer.setConversationId("ItemsInfo");
                                 msg_to_buffer.setContent(msgToOrder);
                                 msg_to_buffer.setOntology("Information");
-                                posponed_msgs_to_order.add(msg_to_buffer);
-                                myAgent.msg_buffer.put(order_parent.getContent(),posponed_msgs_to_order);
+                                posponed_msgs_to_order.add(msg_to_buffer); //se añade el mensaje a la lista de mensajes retenidos
+                                myAgent.msg_buffer.put(order_parent.getContent(), posponed_msgs_to_order);
                             }
-                        }else{  //si no es null significa que el agente sigue denunciado y aun no se ha resuelto el problema.
 
-                            System.out.println("Added message to buffer:\nContent: "+msgToOrder+"\nTo: "+order_parent.getContent()+"\n Still waiting for a solution.");
-                            ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.INFORM);
-                            msg_to_buffer.setConversationId("ItemsInfo");
-                            msg_to_buffer.setContent(msgToOrder);
-                            msg_to_buffer.setOntology("Information");
-                            posponed_msgs_to_order.add(msg_to_buffer); //se añade el mensaje a la lista de mensajes retenidos
-                            myAgent.msg_buffer.put(order_parent.getContent(),posponed_msgs_to_order);
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
                     }
-                }
 
-                if (actionList.size() == 0){ // cuando todas las acciones se han completado, se elimina el batch agent
-                    return true; //Batch agent a terminado su funcion y pasa a STOP
+                    if (actionList.size() == 0) { // cuando todas las acciones se han completado, se elimina el batch agent
+                        return true; //Batch agent a terminado su funcion y pasa a STOP
+                    }
                 }
             }
         }

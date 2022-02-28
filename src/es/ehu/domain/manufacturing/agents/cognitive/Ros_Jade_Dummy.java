@@ -1,8 +1,4 @@
 package es.ehu.domain.manufacturing.agents.cognitive;
-import es.ehu.domain.manufacturing.agents.TransportAgent;
-import es.ehu.domain.manufacturing.behaviour.InformAgent;
-import es.ehu.domain.manufacturing.behaviour.SendTaskBehaviour;
-import jade.wrapper.gateway.GatewayAgent;
 import org.ros.RosCore;
 import org.ros.message.MessageListener;
 import org.ros.namespace.GraphName;
@@ -13,22 +9,11 @@ import org.ros.message.Time;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import social_msgs.social;
-import org.ros.RosCore;
-import java.util.concurrent.TimeUnit;
-import org.apache.commons.logging.Log;
-import org.ros.message.MessageListener;
-import org.ros.namespace.GraphName;
 import org.ros.node.AbstractNodeMain;
 import org.ros.node.ConnectedNode;
 import org.ros.node.NodeMain;
-import org.ros.node.topic.Publisher;
-import org.ros.node.*;
-import jade.core.Agent;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
-import java.util.concurrent.TimeUnit;
 
 public class Ros_Jade_Dummy extends AbstractNodeMain{ // SIMULADOR KOBUKI
     /** JADE Agent represented in the ROS platform */

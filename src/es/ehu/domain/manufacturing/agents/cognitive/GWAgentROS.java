@@ -1,19 +1,12 @@
 package es.ehu.domain.manufacturing.agents.cognitive;
 
-import es.ehu.domain.manufacturing.behaviour.SendTaskBehaviour;
 import es.ehu.domain.manufacturing.utilities.StructMessage;
 import jade.core.AID;
-import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.wrapper.gateway.GatewayAgent;
-import jade.wrapper.gateway.GatewayListener;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
-import org.ros.node.topic.Subscriber;
-import social_msgs.social;
-
-import java.util.concurrent.ConcurrentHashMap;
 
 public class GWAgentROS extends GatewayAgent {  //ROS
 
