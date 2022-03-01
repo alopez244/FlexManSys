@@ -6,7 +6,7 @@
 		<xs:complexType name="Operation">
 			<xs:complexContent>
 				<xs:extension base="Operation">
-					<xs:sequence>
+					<xs:sequence minOccurs="0" maxOccurs="unbounded">
 						<xs:element name="Product">
 							<xs:complexType>
 								<xs:attribute name="productType" type="xs:string" use="optional"/>

@@ -152,7 +152,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 ArrayList<String> elementName = new ArrayList<>();
                 ArrayList<String> hierarchyLevel = new ArrayList<>();
                 elementName.add("operation");
-                hierarchyLevel.add("3");
+                hierarchyLevel.add("2");
 
                 /* Se declaran dos arraylist de string en los que se guardas el nombre y el valor de los atributos */
                 ArrayList<String> attNames = new ArrayList<>();
@@ -165,7 +165,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 for (String singleAttribute : allAttributes){
 
                     /* Se separa el nombre del atributo de los valores */
-                    String [] attInfo = singleOperation.split("=");
+                    String [] attInfo = singleAttribute.split("=");
                     attNames.add(attInfo[0]);
                     attValues.add(attInfo[1]);
 
@@ -263,7 +263,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
             /* Si el transporte está libre, se comprueba si hay tareas en el plan
             * La cabecera del modelo ocupa una posición, por lo que para que haya tareas, el tamaño del modelo tiene que ser de 2 o más */
-            if (myAgent.transportPlan.size() > 2) {
+            if (myAgent.transportPlan.size() >= 2) {
 
                 /* Se leen las posiciones de la primera operación del plan (el tercer elemento del plan) */
                 /* Recordatorio: del segundo elemento del modelo (primera operación), se obtiene el cuarto elemento (valores de sus atributos)...
@@ -280,13 +280,13 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
                     /* Para cada posición tengo que encontrar la coordenada correspondiente
                     *  Para ello, recorro el submodelo de posiciones clave */
-                    for (int j = 0; j<myAgent.keyPosition.size(); j++){
+                    for (int j = 0; j<myAgent.keyPosition.get(0).get(2).size(); j++){
 
                         /* Compruebo si la posición i del array allPositions coincide con la posición j de keyPosition */
-                        if (myAgent.keyPosition.get(j).get(2).get(0).equals(allPositions[i])){
+                        if (myAgent.keyPosition.get(0).get(2).get(j).equals(allPositions[i])){
 
                             /* Si coinciden, obtengo la coordenada */
-                            allCoordinates[i]=myAgent.keyPosition.get(j).get(3).get(0);
+                            allCoordinates[i]=myAgent.keyPosition.get(0).get(3).get(j);
                         }
                     }
                 }

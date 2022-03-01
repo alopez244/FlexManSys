@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- editado con XMLSpy v2020 sp1 (x64) (http://www.altova.com) por  (University of the Basque Country) -->
+<!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
+<xs:schema xmlns="transportPlan" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="transportPlan" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:redefine schemaLocation="../ListOfOperations.xsd">
+		<xs:complexType name="Operation">
+			<xs:complexContent>
+				<xs:extension base="Operation">
+					<xs:attribute name="positions" type="xs:string" use="required"/>
+					<xs:attribute name="requester" type="xs:string" use="required"/>
+					<xs:attribute name="receiver" type="xs:string" use="required"/>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:redefine>
+	<xs:element name="transportPlan">
+		<xs:complexType>
+			<xs:sequence minOccurs="0">
+				<xs:element name="operation" type="Operation"/>
+			</xs:sequence>
+			<xs:attribute name="id" type="xs:NMTOKEN" use="required"/>
+			<xs:attribute name="transport_id" type="xs:NMTOKEN" use="required"/>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

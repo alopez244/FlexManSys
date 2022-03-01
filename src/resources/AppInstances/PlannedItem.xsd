@@ -3,9 +3,9 @@
 <!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by  (University of the Basque Country) -->
 <xs:schema xmlns="ManufacturingPlan" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" targetNamespace="ManufacturingPlan" elementFormDefault="qualified" attributeFormDefault="unqualified">
 	<xs:redefine schemaLocation="../Base Schemas/Operations.xsd">
-		<xs:complexType name="TAction">
+		<xs:complexType name="Action">
 			<xs:complexContent>
-				<xs:extension base="TAction">
+				<xs:extension base="Action">
 					<xs:attributeGroup ref="masterRecipe"/>
 					<xs:attributeGroup ref="controlRecipe"/>
 				</xs:extension>

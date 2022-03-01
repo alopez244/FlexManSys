@@ -1,12 +1,10 @@
 package es.ehu.domain.manufacturing.utilities;
 
-import com.sun.org.apache.xerces.internal.xs.ItemPSVI;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
-import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
@@ -18,11 +16,11 @@ public class MPlanInterpreter {
 
         //Recibimos el plan de fabricación
         //Nos quedamos solo con los elementos masterRecipe
-        ArrayList<ArrayList<ArrayList<String>>> masterRecipes = new ArrayList<ArrayList<ArrayList<String>>>();
-        int size = masterRecipes.size();
+        ArrayList<ArrayList<ArrayList<String>>> plannedItems = new ArrayList<ArrayList<ArrayList<String>>>();
+        int size = plannedItems.size();
         for (int i = 0; i < roughPlan.size(); i++) {
             if (roughPlan.get(i).get(0).get(0).equals("PlannedItem")) {
-                masterRecipes.add(size, roughPlan.get(i));
+                plannedItems.add(size, roughPlan.get(i));
             }
         }
 
@@ -82,13 +80,13 @@ public class MPlanInterpreter {
         attribsToFind.add("plannedFinishTime");
         attribsToFind.add("plannedStartTime");
         attribsToFind.add("productType");
-        attribsToFind.add("type");
 
         String masterAttributes = "";
         String machineId = null;
 
         for (int i = 0; i < roughPlan.size(); i++) {
             if (roughPlan.get(i).get(0).get(0).equals("PlannedItem")) {
+                // Si un elemento es de tipo PlannedItem, se recuperan los atributos que interesan (attribsToFind) y se guardan en la variable masterAttributes
                 masterAttributes = "";
                 for (int m = 0; m < roughPlan.get(i).get(2).size(); m++) {
                     if (attribsToFind.contains(roughPlan.get(i).get(2).get(m)))
@@ -97,7 +95,8 @@ public class MPlanInterpreter {
             }
             else if (roughPlan.get(i).get(0).get(0).contains("Operation")) {
 
-                // Get machine ID
+                // Se obtiene el nombre del agente al que hay que enviar el mensaje con la información de las operaciones
+                // Para ello, se obtiene el atributo plannedStationId de la operación, y se utiliza para consultar al SMA
                 for (int z = 0; z < roughPlan.get(i).get(2).size(); z++) {
                     if (roughPlan.get(i).get(2).get(z).equals("plannedStationId")) {
                         ACLMessage reply = null;
@@ -111,7 +110,7 @@ public class MPlanInterpreter {
                         }
                     }
                 }
-                // Añadimos las informacion que se le va a enviar a las maquinas
+                // Se termina la búsqueda de los atributos que nos interesan (attribsToFind) mirando en los atributos del elemento Operation
                 for (int j = 0; j < roughPlan.get(i).get(2).size(); j++) {
                     if (attribsToFind.contains(roughPlan.get(i).get(2).get(j)))
                         if (machinesWithAllOpInfo.get(machineId) == null)
@@ -119,6 +118,7 @@ public class MPlanInterpreter {
                         else
                             machinesWithAllOpInfo.put(machineId, machinesWithAllOpInfo.get(machineId) + roughPlan.get(i).get(2).get(j) + "=" + roughPlan.get(i).get(3).get(j) + " ");
                 }
+                //Después de guardar los atributos de interés del elemento Operation, se guardan los atributos recogidos del elemento PlannedItem
                 machinesWithAllOpInfo.put(machineId, machinesWithAllOpInfo.get(machineId) + masterAttributes + "&");
 
             }
@@ -173,15 +173,15 @@ public class MPlanInterpreter {
         entities=entities+1;//Después de guardar un elemento, sumo 1 al contador
 
         //Ahora completamos la jerarquía
-        for (int j = 0; j < masterRecipes.size(); j++){
+        for (int j = 0; j < plannedItems.size(); j++){
             //Compruebo si la receta tiene order asociado en sus atributos
-            if(masterRecipes.get(j).get(2).contains("order_ID")){
+            if(plannedItems.get(j).get(2).contains("order_ID")){
                 //Estoy en order, nivel 2
                 hl=2; //Este valor luego no irá hard coded, sino que se extraerá de un modelo
 
                 //Obtengo la posición en la que está el orderName, y obtengo su valor
-                index=masterRecipes.get(j).get(2).indexOf("order_ID");
-                thisOrder=masterRecipes.get(j).get(3).get(index);
+                index= plannedItems.get(j).get(2).indexOf("order_ID");
+                thisOrder= plannedItems.get(j).get(3).get(index);
 
                 //Compruebo si es la primera receta asociada a este order
                 if (!orderList.contains(thisOrder)) {//Si no lo contiene, lo guardo
@@ -202,16 +202,16 @@ public class MPlanInterpreter {
             }
 
             //Compruebo si la receta tiene batch asociado
-            if (masterRecipes.get(j).get(2).contains("batch_ID")) {
+            if (plannedItems.get(j).get(2).contains("batch_ID")) {
                 //Estoy en batch, nivel 3
                 hl=3; //Este valor luego no irá hard coded, sino que se extraerá de un modelo
 
                 //Obtengo la posición en la que está el orderName, y obtengo su valor
-                index=masterRecipes.get(j).get(2).indexOf("batch_ID");
-                thisBatch=masterRecipes.get(j).get(3).get(index);
+                index= plannedItems.get(j).get(2).indexOf("batch_ID");
+                thisBatch= plannedItems.get(j).get(3).get(index);
 
-                index=masterRecipes.get(j).get(2).indexOf("item_ID");
-                thisItem = masterRecipes.get(j).get(3).get(index);
+                index= plannedItems.get(j).get(2).indexOf("item_ID");
+                thisItem = plannedItems.get(j).get(3).get(index);
 
 
 
@@ -237,8 +237,8 @@ public class MPlanInterpreter {
                     //structuredPlan.get(entities).get(3).add(String.valueOf(1)); //Inicializo el número de items a 1
 
                     //el productType no se en qué posición está, lo busco
-                    index=masterRecipes.get(j).get(2).indexOf("productType");
-                    structuredPlan.get(entities).get(3).add(masterRecipes.get(j).get(3).get(index));
+                    index= plannedItems.get(j).get(2).indexOf("productType");
+                    structuredPlan.get(entities).get(3).add(plannedItems.get(j).get(3).get(index));
                     entities=entities+1;//Después de guardar un elemento, sumo 1 al contador
                     batchList.add(thisBatch);//Añadimos el batch al batchList
 
