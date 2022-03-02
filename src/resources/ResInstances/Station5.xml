@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<station xmlns="station" id="51" description="Station 5 has all the consumable materials: bearings axes and covers" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="station ./Station.xsd">
+	<palletIn id="PI1_ST_05" xPos="80" yPos="80" zPos="50"/>
+	<palletIn id="PI2_ST_05" xPos="520" yPos="80" zPos="50"/>
+	<palletOut id="PO1_ST_05" xPos="620" yPos="380" zPos="50"/>
+	<buffer id="B1_ST_05" description="Buffer 1 contains bearings" current="10" max="10" warning="5" xPos="220" yPos="580" zPos="40" consumable_id="LB">
+		<consumable id="LB" description="Lower Bearing" type="bearing"/>
+	</buffer>
+	<buffer id="B2_ST_05" description="Buffer 2 contains bearings" current="10" max="10" warning="5" xPos="320" yPos="580" zPos="40" consumable_id="HB">
+		<consumable id="HB" description="Higher Bearing" type="bearing"/>
+	</buffer>
+	<buffer id="B3_ST_05" description="Buffer 3 contains axes" current="10" max="10" warning="5" xPos="420" yPos="580" zPos="40" consumable_id="A">
+		<consumable id="A" description="Shaft" type="axle"/>
+	</buffer>
+	<buffer id="B4_ST_05" description="Buffer 4 contains covers" current="10" max="10" warning="5" xPos="520" yPos="580" zPos="40" consumable_id="C">
+		<consumable id="C" description="Cover" type="cover"/>
+	</buffer>
+	<tool id="T1_ST_05" type="gripper" changeoverT="00:15:00" description="Double gripper"/>
+	<simple_operation id="1" executionTime="00:00:15">
+		<action id="1" type="insert" actionPos="1" description="insert lower bearing">
+			<consumable id="LB" description="Lower Bearing" type="bearing"/>
+		</action>
+	</simple_operation>
+	<simple_operation id="2" executionTime="00:00:30">
+		<action id="2" type="insert" actionPos="2" description="insert axis">
+			<consumable id="A" description="Shaft" type="axle"/>
+		</action>
+		<action id="1" type="insert" actionPos="1" description="insert lower bearing">
+			<consumable id="LB" description="Lower Bearing" type="bearing"/>
+		</action>
+	</simple_operation>
+	<simple_operation id="3" executionTime="00:00:45">
+		<action id="3" type="insert" actionPos="3" description="insert upper bearing">
+			<consumable id="HB" description="Higher Bearing" type="bearing"/>
+		</action>
+		<action id="2" type="insert" actionPos="2" description="insert axis">
+			<consumable id="A" description="Shaft" type="axle"/>
+		</action>
+		<action id="1" type="insert" actionPos="1" description="insert lower bearing">
+			<consumable id="LB" description="Lower Bearing" type="bearing"/>
+		</action>
+	</simple_operation>
+	<simple_operation id="4" executionTime="00:01:00">
+		<action id="4" type="pick_and_place" actionPos="4" description="place cover">
+			<consumable id="C" description="Cover" type="cover"/>
+		</action>
+		<action id="3" type="insert" actionPos="3" description="insert upper bearing">
+			<consumable id="HB" description="Higher Bearing" type="bearing"/>
+		</action>
+		<action id="2" type="insert" actionPos="2" description="insert axis">
+			<consumable id="A" description="Shaft" type="axle"/>
+		</action>
+		<action id="1" type="insert" actionPos="1" description="insert lower bearing">
+			<consumable id="LB" description="Lower Bearing" type="bearing"/>
+		</action>
+	</simple_operation>
+	<simple_operation id="5" executionTime="00:00:15">
+		<action id="2" type="insert" actionPos="2" description="insert axis">
+			<consumable id="A" description="Shaft" type="axle"/>
+		</action>
+	</simple_operation>
+	<simple_operation id="6" executionTime="00:00:30">
+		<action id="3" type="insert" actionPos="3" description="insert upper bearing">
+			<consumable id="HB" description="Higher Bearing" type="bearing"/>
+		</action>
+		<action id="2" type="insert" actionPos="2" description="insert axis">
+			<consumable id="A" description="Shaft" type="axle"/>
+		</action>
+	</simple_operation>
+	<simple_operation id="7" executionTime="00:00:45">
+		<action id="4" type="pick_and_place" actionPos="4" description="place cover">
+			<consumable id="C" description="Cover" type="cover"/>
+		</action>
+		<action id="3" type="insert" actionPos="3" description="insert upper bearing">
+			<consumable id="HB" description="Higher Bearing" type="bearing"/>
+		</action>
+		<action id="2" type="insert" actionPos="2" description="insert axis">
+			<consumable id="A" description="Shaft" type="axle"/>
+		</action>
+	</simple_operation>
+	<simple_operation id="8" executionTime="00:00:15">
+		<action id="3" type="insert" actionPos="3" description="insert upper bearing">
+			<consumable id="HB" description="Higher Bearing" type="bearing"/>
+		</action>
+	</simple_operation>
+	<simple_operation id="9" executionTime="00:00:30">
+		<action id="4" type="pick_and_place" actionPos="4" description="place cover">
+			<consumable id="C" description="Cover" type="cover"/>
+		</action>
+		<action id="3" type="insert" actionPos="3" description="insert upper bearing">
+			<consumable id="HB" description="Higher Bearing" type="bearing"/>
+		</action>
+	</simple_operation>
+	<simple_operation id="10" executionTime="00:00:15">
+		<action id="4" type="pick_and_place" actionPos="4" description="place cover">
+			<consumable id="C" description="Cover" type="cover"/>
+		</action>
+	</simple_operation>
+</station>

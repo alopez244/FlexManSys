@@ -61,20 +61,20 @@ public class AgentToCSVgw {
         //Itero todas las posiciones del HasMap de componentes
         String t0="", t1="", t2="", t3="",t4="";
         for(Map.Entry<String, HashMap<String, HashMap<String, String>>> parent : ParentResults.entrySet()){
-
-
-            String node =" ";
-            String agentname = " ";
             if(parent.getKey().contains("mplan")){
                 t0=parent.getValue().get("planner").get("DeploymentRequestTime");
             }
+        }
+
+        for(Map.Entry<String, HashMap<String, HashMap<String, String>>> parent : ParentResults.entrySet()){
+
+            String node =" ";
+            String agentname = " ";
+
             for (Map.Entry<String, HashMap<String, String>> agent : parent.getValue().entrySet()){
 
                     System.out.println(agent.getKey());
 
-//                if(agent.getKey().contains("planner")){
-//                    t0 = agent.getValue().get("DeploymentRequestTime"); //appstart en planner
-//                }
 
                 if(agent.getKey().contains("mplanagent")||agent.getKey().contains("orderagent")||agent.getKey().contains("batchagent")){
                     agentname=agent.getKey();
@@ -154,6 +154,12 @@ public class AgentToCSVgw {
         t2="";
         t3="";
         t4="";
+
+//        for(Map.Entry<String, HashMap<String, HashMap<String, String>>> parentapp : ParentResultsApp.entrySet()){
+//            if(parentapp.getKey().contains("mplan")){
+//                t0=parentapp.getValue().get("planner").get("DeploymentRequestTime");
+//            }
+//        }
         for(Map.Entry<String, HashMap<String, HashMap<String, String>>> parentapp : ParentResultsApp.entrySet()) {
 //            HashMap<String, HashMap<String, String>> AgentResultsApp = ParentResultsApp.get(aplicacion1);
 
@@ -201,7 +207,7 @@ public class AgentToCSVgw {
                         String[] data = new String[]{parentapp.getKey(),schedTime, bootTime, execTime, deploymentTime, ProcessTime};
                         testResultsAppCSV.add(data);
                     } else {
-                        System.out.println("Time intervals lost for " + agentapp.getKey());
+                        System.out.println("Time intervals of app lost for " + agentapp.getKey());
                     }
 
 
