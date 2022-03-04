@@ -46,35 +46,8 @@ Se inicializa el functionalityInstance con un objeto de tipo TransportFunctional
         Leer 3 argumentos (Nombre del recurso, posiciones clave y pila de tareas)
         Inicializar el functionalityInstance con un objeto de tipo TransportFunctionality
 
-TransportFunctionality de FlexManSys:
-¿Qué hace a día 15/02/2022?
-init:
-Se identifica al gatewayAgent asociado al agente transporte (variable duplicada en el Transport Functionality y en el MWAgent. Crear GatewayAgentID por similitud al MachineFunctionality)
-Se leen los argumentos del agente y se comprueba si estos argumentos incluyen el id (para saber si es el agente auxiliar o el definitivo)
-Si no es el caso, se registra el agente y se crea un nuevo agente transporte pasándole como argumento el nuevo id asignado por el SystemModelAgent.
+TransportFunctionality de FlexManSys: 
 
-        execute:
-            Recibe un mensaje enviado desde un MachineAgent con una petición. Procesa la petición con el método processData y responde enviándole un mensaje.
-
-        calculateNegotiationValue:
-            No hace nada útil: lee unos valores y luego devuelve el valor de memoria (que no tiene nada que ver)
-
-        checkNegotiation:
-            Compara el valor recibido con el valor propio. 
-            En caso de ganar, llama al método processData y responde con el resultado al agente máquina que inició la negociación.
-
-        sendDataToDevice:
-            Se comprueba si el transporte está libre (si está ocupado no mando nuevas tareas)
-            Se comprueba si hay operaciones en el plan del transporte (si no tengo trabajo, no hago nada)
-            Si hay una operación, se coge la primera y se le envía al transporte. Luego, se pone a true el flag de transporte ocupado
-
-        rcvDataFromDevice:
-            Recibe el mensaje del gatewayAgent y lo transforma a la estructura correspondiente
-            Comprueba de qué tipo de mensaje se trata y lo procesa
-
-        terminate:
-            No hace nada
-            
     ¿Qué debería hacer la versión final del TransportFunctionality?
         init: 
             Se identifica al gatewayAgent asociado al agente transporte (variable GatewayAgentID)
@@ -84,7 +57,7 @@ Si no es el caso, se registra el agente y se crea un nuevo agente transporte pas
 
         execute:
             Recibe operaciones y las añade a su listado de tareas. Puede ser invocado por recepción de una tarea asignada "a dedo" o como resultado de una negociación (?)
-            Se van a recibir mensajes que tengan la estructura "positions=A1,B2 requester=batchagent1 receiver=machine1" o similar.
+            Se van a recibir mensajes que tengan la estructura "positions=docking,buffer requester=batchagent1 receiver=machine1" o similar.
             Pueden recibirse varias operaciones juntas, separadas por un &. Ejemplo positions=A1,B2 & positions=C3,D4 ESTO ES IMPORTANTE, HAY QUE CAMBIARLO EN EL MACHINE FUNCTIONALITY
 
         calculateNegotiationValue:
