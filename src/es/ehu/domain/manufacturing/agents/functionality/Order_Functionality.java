@@ -359,7 +359,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 myAgent.msgFIFO.add((String) msg.getContent());
 
             if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("Information")&&msg.getConversationId().equals("ItemsInfo")){
-                Acknowledge(msg, myAgent);
+//                Acknowledge(msg, myAgent);
                 if (firstTime) {
                     deserializedMessage = deserializeMsg(msg.getContent());
                     batchTraceability = addNewLevel(batchTraceability, deserializedMessage, true); //añade el espacio para la informacion de la orden en primera posicion, sumando un nivel mas a los datos anteriores
@@ -428,7 +428,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                             }
                         } else {  //si no es null significa que el agente sigue denunciado y aun no se ha resuelto el problema.
 
-                            System.out.println("Added message to buffer:\nContent: " + msgToMPLan + "\nTo: " + mplan_parent.getContent() + "\n Still waiting for a solution.");
+                            System.out.println("Added message to buffer" + "To: " + mplan_parent.getContent() + "\n Still waiting for a solution.");
                             ACLMessage msg_to_buffer = new ACLMessage(ACLMessage.INFORM);
                             msg_to_buffer.setConversationId("OrderInfo");
                             msg_to_buffer.setContent(msgToMPLan);

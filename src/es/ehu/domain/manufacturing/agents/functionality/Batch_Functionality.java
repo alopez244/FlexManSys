@@ -448,7 +448,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     System.out.println("Timeout confirmed by QoS.");
                 } else if (msg.getPerformative() == ACLMessage.INFORM && msg.getOntology().equals("data")) {
 
-                    Acknowledge(msg, myAgent);
+//                    Acknowledge(msg, myAgent);
                     System.out.println("Mensaje con la informacion del PLC");
                     System.out.println("Quien envia el mensaje: " + msg.getSender());
                     System.out.println("Contenido: " + msg.getContent());
@@ -506,7 +506,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                             aux = a.toString();
                             msgToOrder = msgToOrder.concat(aux);
                         }
-                        System.out.println(msgToOrder);
+//                        System.out.println(msgToOrder);
                         try {
 //                        ACLMessage order_parent= sendCommand(myAgent, "get "+parentAgentID+" attrib=parent", "OrderAgentID");
                             ACLMessage batch_parent = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", myAgent.getLocalName() + "_parent");
@@ -531,7 +531,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                                 }
                             } else {  //si no es null significa que el agente sigue denunciado y aun no se ha resuelto el problema.
 
-                                System.out.println("Added message to buffer:\nContent: " + msgToOrder + "\nTo: " + order_parent.getContent() + "\n Still waiting for a solution.");
+                                System.out.println("Added message to buffer:\nContent" + "\nTo: " + order_parent.getContent() + "\n Still waiting for a solution.");
                                 ACLMessage msg_to_buffer = new ACLMessage(ACLMessage.INFORM);
                                 msg_to_buffer.setConversationId("ItemsInfo");
                                 msg_to_buffer.setContent(msgToOrder);
@@ -863,8 +863,8 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             productsTraceability.get(i).get(0).get(3).add(separatedItemsID[i]); //A cada item se le añade su ID para despues poder ser identificado
 
         }
-        System.out.println("PRODUCT TRACEABILITY OF " + myAgent.getLocalName() + ":\n" + productsTraceability);
-        System.out.println("\n");
+//        System.out.println("PRODUCT TRACEABILITY OF " + myAgent.getLocalName() + ":\n" + productsTraceability);
+//        System.out.println("\n");
     }
 
     protected ArrayList<String> take_item_references(String rawdata){

@@ -288,11 +288,11 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 
     if (input!= null) {
       if (input[0] != null) {
-        System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
+//        System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
         ACLMessage msg = (ACLMessage) input[0];
         myAgent.msgFIFO.add((String) msg.getContent());
         if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("Information")&&msg.getConversationId().equals("OrderInfo")){
-          Acknowledge(msg,myAgent);
+//          Acknowledge(msg,myAgent);
           if (firstTime) { //solo se quiere añadir el nuevo nivel la primera vez
             deserializedMessage = deserializeMsg(msg.getContent());
             ordersTraceability = addNewLevel(ordersTraceability, deserializedMessage, true); //añade el espacio para la informacion de la orden en primera posicion, sumando un nivel mas a los datos anteriores

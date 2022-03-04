@@ -43,7 +43,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 
 	static final Logger LOGGER = LogManager.getLogger(RunningBehaviour.class.getName());
 
-	private MessageTemplate template,template2,template3;
+	private MessageTemplate template,template2,confirmation_required;
 	private MWAgent myAgent;
 	private int PrevPeriod;
 	private long NextActivation;
@@ -76,6 +76,11 @@ public class RunningBehaviour extends SimpleBehaviour {
 
 		this.template2 = MessageTemplate.and(MessageTemplate.MatchOntology("release_buffer"),
 				MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),MessageTemplate.MatchSender(DDID)));
+		this.confirmation_required=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+				MessageTemplate.or(MessageTemplate.MatchOntology("data"),
+				MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchOntology("Information"),MessageTemplate.MatchConversationId("ItemsInfo")),
+				MessageTemplate.and(MessageTemplate.MatchOntology("Information"),MessageTemplate.MatchConversationId("OrderInfo")))));
+
 
 	}
 
@@ -109,8 +114,15 @@ public class RunningBehaviour extends SimpleBehaviour {
 
 		LOGGER.entry();
 		Object[] receivedMsgs = null;
+		//****************** 1) Generación de acknowledges
+		ACLMessage msg_asking_confirmation=myAgent.receive(confirmation_required);
+		if(msg_asking_confirmation!=null){ //si se recibe un mensaje que sea necesario contestar mandamos un acknowledge y volvemos a meter el mensaje a la cola
+			myAgent.Acknowledge(msg_asking_confirmation,myAgent);
+			myAgent.putBack(msg_asking_confirmation);
+		}
+		//****************** Fin de generación de acknowledge
 
-		//****************** 1) Etapa de checkeo para mensajes retenidos por falta de disponibilidad de agentes
+		//****************** 2) Etapa de checkeo para mensajes retenidos por falta de disponibilidad de agentes
 		//comprueba si hay mensajes que permitan liberar los mensajes retenidos por el agente
 		ACLMessage new_target= myAgent.receive(template2);
 		if(new_target!=null){     //D&D avisa de que ya se puede vaciar el buffer de mensajes
@@ -137,7 +149,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 		}
 		//****************** Fin de etapa de checkeo para mensajes retenidos por falta de disponibilidad de agentes
 
-		//****************** 2) Etapa de checkeo de mensajes de acknowledge
+		//****************** 3) Etapa de checkeo de mensajes de acknowledge
 		//Se recorre el queue de mensajes para comprobar si todos los mensajes que esperaban respuesta la han obtenido a tiempo
 		for(int i=0;i<myAgent.expected_msgs.size();i++){
 			Object[] exp_msg;
@@ -197,13 +209,13 @@ public class RunningBehaviour extends SimpleBehaviour {
 		}
 		//****************** Fin de etapa de checkeo de mensajes de acknowledge
 
-		//****************** 3) Etapa de actualización de replicas
+		//****************** 4) Etapa de actualización de replicas
 		// Consigue el estado actual de la replica cuando se recibe cualquier mensaje y se devuelve al queue.
 		String currentState = null;
 		ACLMessage any_msg = myAgent.receive();
 		if(any_msg!=null){
 			myAgent.msgFIFO.add((String) any_msg.getContent());
-			System.out.println("Peeked msg: "+any_msg.getContent()); //para visualizar que mensaje es el que dispara el getstate
+//			System.out.println("Peeked msg: "+any_msg.getContent()); //para visualizar que mensaje es el que dispara el getstate
 			System.out.println("From: "+any_msg.getSender().getLocalName());
 			if(!any_msg.getContent().equals("done")&&!any_msg.getOntology().equals("trigger_getState")){ //"flushea" mensajes de tipo done y de trigger para evitar bucles porque estos nadie los lee
 				myAgent.putBack(any_msg);  //en caso de no serlo, se devuelve al queue de mensajes ACL
@@ -218,7 +230,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 		}
 		//****************** Fin de etapa de actualización de replicas
 
-		//***************** 4) Etapa de ejecución de funtionality
+		//***************** 5) Etapa de ejecución de funtionality
 		ACLMessage msg = myAgent.receive(template);
 		receivedMsgs = manageReceivedMsg(msg);
 

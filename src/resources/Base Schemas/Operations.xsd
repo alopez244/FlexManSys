@@ -51,8 +51,8 @@
 			<xs:enumeration value="assembly"/>
 		</xs:restriction>
 	</xs:simpleType>
-	<xs:element name="action">
-		<xs:complexType>
+<!--	<xs:element name="action">-->
+		<xs:complexType name="Action">
 			<xs:sequence minOccurs="0">
 				<xs:element ref="consumable" minOccurs="0" maxOccurs="unbounded"/>
 			</xs:sequence>
@@ -61,5 +61,5 @@
 			<xs:attribute name="actionPos" type="xs:int" use="optional"/>
 			<xs:attribute name="description" type="xs:string" use="optional"/>
 		</xs:complexType>
-	</xs:element>
+<!--	</xs:element>-->
 </xs:schema>

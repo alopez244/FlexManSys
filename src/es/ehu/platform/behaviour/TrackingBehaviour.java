@@ -134,7 +134,7 @@ public class TrackingBehaviour extends SimpleBehaviour {
 					
 //					((AvailabilityFunctionality)myAgent.functionalityInstance).setState(msg.getContentObject());  //anterior
 					myAgent.msgFIFO.add((String) msg.getContent());
-					Acknowledge(msg);
+					myAgent.Acknowledge(msg, myAgent);
 					((AvailabilityFunctionality)myAgent.functionalityInstance).setState(msg.getContent());
 					LOGGER.debug(myAgent.cmpID+"("+((MWAgent) myAgent).getLocalName()+") < " + myAgent.cmpID+"("+msg.getSender().getLocalName()+"):"
 							+ "state("+stateClassName+")");
@@ -196,7 +196,7 @@ public class TrackingBehaviour extends SimpleBehaviour {
 			}
 
 			// TODO prueba para ver el cambio de estados --> luego borrar
-			System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo action del TrackingBehaviour");
+//			System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo action del TrackingBehaviour");
 			
 			LOGGER.exit();
 	}
@@ -210,9 +210,9 @@ public class TrackingBehaviour extends SimpleBehaviour {
 
 
 	}
-	public void Acknowledge(ACLMessage msg){
-		sendACLMessage(ACLMessage.CONFIRM,msg.getSender(),msg.getOntology(),msg.getConversationId(),msg.getContent());
-	}
+//	public void Acknowledge(ACLMessage msg){
+//		sendACLMessage(ACLMessage.CONFIRM,msg.getSender(),msg.getOntology(),msg.getConversationId(),msg.getContent());
+//	}
 	public void sendACLMessage(int performative, AID reciever, String ontology, String conversationId, String content) {
 		ACLMessage msg = new ACLMessage(performative); //envio del mensaje
 		msg.addReceiver(reciever);

@@ -93,12 +93,6 @@ public class Dom_Functionality{
         }
 
 
-
-    public void Acknowledge(ACLMessage msg, Agent agent){
-        sendACLMessage(ACLMessage.CONFIRM,msg.getSender(),msg.getOntology(),msg.getConversationId(),msg.getContent(),agent);
-    }
-
-
     }
 
 

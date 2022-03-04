@@ -42,8 +42,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private Boolean orderQueueFlag = false; // Flag que se activa cuando existen nuevas ordenes en cola para la maquina
     public static int convIDcnt=0;
     private AID gatewayAgentID =null;
-    private MessageTemplate echotemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-            MessageTemplate.MatchOntology("Acknowledge"));
+
     private MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
             MessageTemplate.MatchOntology("acl_error"));
 
@@ -218,7 +217,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
         if (input[0] != null) {
             ACLMessage msg = (ACLMessage) input[0];
-            Acknowledge(msg,myAgent);
+            myAgent.Acknowledge(msg,myAgent);
 
             if (msg.getContent().equals("All manufacturing plan ready to run")) {
 
@@ -678,7 +677,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     }
                 }
             } else {
-                System.out.println("No operations defined");
+                //System.out.println("No operations defined");
                 PLCmsgOut.put("Control_Flag_New_Service", false);
                 sendingFlag = false;
             }

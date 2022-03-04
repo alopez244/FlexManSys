@@ -76,7 +76,16 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
     public void action() {
         LOGGER.entry();
 
-        //****************** 1) Etapa de checkeo para mensajes retenidos por falta de disponibilidad de agentes
+
+        //****************** 1) Generación de acknowledges
+        ACLMessage msg_asking_confirmation=myAgent.receive(template);
+        if(msg_asking_confirmation!=null){ //si se recibe un mensaje que sea necesario contestar mandamos un acknowledge y volvemos a meter el mensaje a la cola
+            myAgent.Acknowledge(msg_asking_confirmation,myAgent);
+            myAgent.putBack(msg_asking_confirmation);
+        }
+        //****************** Fin de generación de acknowledge
+
+        //****************** 2) Etapa de checkeo para mensajes retenidos por falta de disponibilidad de agentes
         ACLMessage new_target= myAgent.receive(template2);
         if(new_target!=null){     //D&D avisa de que ya se puede vaciar el buffer de mensajes
             if(new_target.getContent().contains("batchagent")){ //nuevo agente batch disponble para registrar la trazabilidad.
@@ -103,7 +112,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         }
         //****************** Fin de etapa de checkeo para mensajes retenidos por falta de disponibilidad de agentes
 
-        //****************** 2) Etapa de checkeo de mensajes de acknowledge
+        //****************** 3) Etapa de checkeo de mensajes de acknowledge
         for(int i=0;i<myAgent.expected_msgs.size();i++){         //realiza el checkeo de mensajes de acknowledge
             Object[] exp_msg;
             exp_msg=myAgent.expected_msgs.get(i);
@@ -163,7 +172,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         }
         //****************** Fin de etapa de checkeo de mensajes de acknowledge
 
-        //***************** 3) Etapa de ejecución de funtionality
+        //***************** 4) Etapa de ejecución de funtionality
         ACLMessage msg = myAgent.receive(template);
         if (msg!=null) {
             //lo que haga en el running
@@ -174,7 +183,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         }
         //***************** Fin de etapa de ejecución de funtionality
 
-        //***************** 4) Etapa de muerte deliberada de Nodo
+        //***************** 5) Etapa de muerte deliberada de Nodo
         ACLMessage err_simulation = myAgent.receive(template3);
         if (err_simulation!=null) {
             System.out.println(err_simulation.getSender().getLocalName()+" politely asked to kill myself");
@@ -182,8 +191,8 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
             System.out.println(System.currentTimeMillis()); //timestamp para comparar tiempos entre muerte real y timestamp: ~12ms en PC
             System.exit(0); //mata al nodo completo
         }
-
         //***************** Fin de etapa de muerte deliberada de agente
+
         long t = manageBlockingTimes();
         if (msg == null&&myAgent.expected_msgs.size()==0) {
 //            LOGGER.debug("Block time: " + t);

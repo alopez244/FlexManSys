@@ -81,11 +81,13 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
     @Override
     public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData) {
         // approximation to the total amount of memory currently available for future allocated objects, measured in bytes
+        String seFirstTransition = (String)negExternalData[5];
         if(ListAttrib.contains((String)negExternalData[0])){
             long used_node=0; //Si en la lista de atributos ya existe el parent se devuelve un valor no competente para perder automáticamente.
             return used_node;
         }else{
-            return Runtime.getRuntime().freeMemory();
+                return Runtime.getRuntime().freeMemory();
+//            return Runtime.getRuntime().freeMemory();
         }
     }
 

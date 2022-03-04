@@ -510,6 +510,15 @@ public class MWAgent extends Agent {
             expected_msgs.add(ExpMsg);
         }
     }
+    public void Acknowledge(ACLMessage msg, Agent agent){
+        ACLMessage confirmation=new ACLMessage(ACLMessage.CONFIRM);
+        confirmation.setContent(msg.getContent());
+        confirmation.setOntology(msg.getOntology());
+        confirmation.setConversationId(msg.getConversationId());
+        confirmation.addReceiver(msg.getSender());
+        agent.send(confirmation);
+//        sendACLMessage(ACLMessage.CONFIRM,msg.getSender(),msg.getOntology(),msg.getConversationId(),msg.getContent(),agent);
+    }
     /**
      * Informa al middleware manager que la instancia de componente ha cambiado
      * de estado
