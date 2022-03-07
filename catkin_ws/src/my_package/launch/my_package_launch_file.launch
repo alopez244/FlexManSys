@@ -1,0 +1,15 @@
+<launch>
+   <!-- My Package Launch File -->
+   <!--<node pkg="my_package" type="symple.py" name="ObiWan" output="screen">
+   </node> -->
+   <!-- <node pkg="my_package" type="simple_topic_publisher.py" name="topic_publisher" output="screen">
+   </node> -->
+   <!-- <node pkg="my_package" type="simple_topic_publisher_gazebo.py" name="comandos_velocidad" output="screen">
+   </node> -->
+   <!-- <node pkg="my_package" type="simple_topic_subscriber.py" name="topic_subscriber" output="screen">
+   </node> -->
+   <!-- <node pkg="my_package" type="simple_topic_subscriber_gazebo.py" name="lectura_odometria" output="screen">
+   </node> -->
+   <node pkg="my_package" type="simple_subscriber_age_lecture.py" name="edad_kobuki" output="screen">
+   </node>
+</launch>

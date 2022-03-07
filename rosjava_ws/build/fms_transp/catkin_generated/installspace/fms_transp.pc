@@ -1,0 +1,8 @@
+prefix=/home/borjartime/IdeaProjects/FlexManSys/rosjava_ws/install
+
+Name: fms_transp
+Description: Description of fms_transp
+Version: 0.1.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

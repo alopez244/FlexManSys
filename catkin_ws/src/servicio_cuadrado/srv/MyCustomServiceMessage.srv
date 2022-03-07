@@ -1,0 +1,4 @@
+float64 radius # Distancia de cada lado del cuadrado
+int32 repetitions # Repeticiones de cada una de las vueltas
+---
+bool success # Se ha realizado el servicio o no

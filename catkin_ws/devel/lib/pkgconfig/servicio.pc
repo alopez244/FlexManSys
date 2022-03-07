@@ -1,0 +1,8 @@
+prefix=/home/borjartime/catkin_ws/devel
+
+Name: servicio
+Description: Description of servicio
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

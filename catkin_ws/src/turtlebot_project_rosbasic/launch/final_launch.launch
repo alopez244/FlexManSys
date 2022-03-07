@@ -1,0 +1,21 @@
+<launch>
+
+    <node pkg ="turtlebot_project_rosbasic"
+        type="final_laser.py"
+        name="laser_server"
+        output="screen">
+    </node>
+
+    <node pkg ="turtlebot_project_rosbasic"
+        type="final_main.py"
+        name="kobuki_salir_maze"
+        output="screen">
+    </node>
+
+    <node pkg ="turtlebot_project_rosbasic"
+        type="final_action_server.py"
+        name="odom_action_server"
+        output="screen">
+    </node>
+
+</launch>

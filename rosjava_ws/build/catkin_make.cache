@@ -1,0 +1,2 @@
+custom_messages:fms_transp:turtlebot_transport_flexmansys
+-DCATKIN_DEVEL_PREFIX=/home/borjartime/IdeaProjects/FlexManSys/rosjava_ws/devel -DCMAKE_INSTALL_PREFIX=/home/borjartime/IdeaProjects/FlexManSys/rosjava_ws/install -DCATKIN_WHITELIST_PACKAGES=custom_messages;fms_transp;turtlebot_transport_flexmansys -G Unix Makefiles

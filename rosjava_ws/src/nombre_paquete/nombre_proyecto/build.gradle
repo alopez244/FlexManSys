@@ -1,0 +1,74 @@
+/*
+ * Copyright (C) 2014 Borja Artime.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+/* This plugin is necessary for creating installDist tasks (i.e. executables) */
+apply plugin: 'application'
+mainClassName = 'org.ros.RosRun'
+
+/*
+ Examples of
+   1) dependencies from another project in this gradle stack.
+   2,3) open ranged dependencies from a maven repository.
+
+   Dependencies can be on external maven artifacts (such as rosjava_core
+   here) or on sibling subprojects. For rosjava maven artifact dependencies
+   it is a good idea to use open ranges on to
+   save continually updating these references, but it is recommended
+   to restrict this to the patch version number (e.g. [0.3,0.4) will
+   get the latest 0.3.x version) to avoid unknowingly
+   having api breaking changes usually associated with minor and major
+   version number changes.
+*/
+
+/*repositories {
+    maven {
+        //url "https://jade.tilab.com/maven/" 
+        //url  "https://mvnrepository.com/artifact/com.tilab.jade/jade"
+
+    }
+}  */
+
+dependencies {
+  //compile group: 'com.tilab.jade', name: 'jade', version: '4.5.0'
+  /* An external maven artifact dependency */
+  compile 'org.ros.rosjava_core:rosjava:[0.3,0.4)'
+  //compile 'org.ros.rosjava_messages:custom_messages:[0.1, 0.2)'
+  /* Example of a local subproject dependency */
+  /* compile project(':sibling_gradle_project') */
+
+  //Esto de abajo es el apanio de Oskar para lo de Tilab
+  compile files('lib/jade.jar')
+
+  // Esto es para hacer que detecte los mensajes no oficiales de ROS creados en el otro
+  // proyecto dentro del paquete que hemos creado.
+  compile project(':custom_messages')
+  compile group: 'org.ros.rosjava_messages', name: 'custom_messages', version: '0.0.0'
+  compile group: 'org.ros.rosjava_messages', name: 'turtlebot_transport_flexmansys', version: '0.0.0'
+  
+}
+
+///home/borjartime/rosjava_ws/devel/share/maven/com/github/rosjava/nombre_paquete/nombre_proyecto/0.1.0/nombre_proyecto-0.1.0.jar
+///home/borjartime/rosjava/src/rosjava_core/rosjava/build/libs/rosjava-0.3.7.jar
+///home/borjartime/rosjava_ws/src/nombre_paquete/nombre_proyecto/build/install/nombre_proyecto/lib/
+
+
+task cleanScripts(dependsOn: 'installDist') {
+  doLast {
+    file('build/scripts').deleteDir()
+  }
+}
+
+installDist.finalizedBy(cleanScripts)
