@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
+<xs:schema xmlns="RepositoryContent" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="RepositoryContent" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:redefine schemaLocation="TConcepts.xsd">
+		<!-- ========== APPLICATION ============= -->
+		<xs:complexType name="Application">
+			<xs:complexContent>
+				<xs:extension base="Application">
+					<xs:sequence>
+						<xs:element name="component" minOccurs="1" maxOccurs="unbounded">
+							<xs:complexType>
+								<xs:complexContent>
+									<xs:extension base="Component">
+										<xs:sequence>
+											<xs:element name="implementation" minOccurs="1" maxOccurs="unbounded">
+												<xs:complexType>
+													<xs:complexContent>
+														<xs:extension base="Implementation">
+															<xs:attribute name="ID" type="xs:string" use="required"/>
+														</xs:extension>
+													</xs:complexContent>
+												</xs:complexType>
+											</xs:element>
+										</xs:sequence>
+										<xs:attribute name="ID" type="xs:string" use="required"/>
+									</xs:extension>
+								</xs:complexContent>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="event" minOccurs="0" maxOccurs="unbounded">
+							<xs:complexType>
+								<xs:complexContent>
+									<xs:extension base="Event">
+										<xs:sequence>
+											<xs:element name="action" minOccurs="1" maxOccurs="unbounded">
+												<xs:complexType>
+													<xs:complexContent>
+														<xs:extension base="Action">
+															<xs:attribute name="ID" type="xs:string" use="required"/>
+														</xs:extension>
+													</xs:complexContent>
+												</xs:complexType>
+											</xs:element>
+										</xs:sequence>
+										<xs:attribute name="ID" type="xs:string" use="required"/>
+									</xs:extension>
+								</xs:complexContent>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute name="ID" type="xs:string" use="required"/>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+		<!-- ============= APPLICATIONSET =========== -->
+		<xs:complexType name="ApplicationSet">
+			<xs:complexContent>
+				<xs:extension base="ApplicationSet">
+					<xs:sequence>
+						<xs:element name="application" type="Application" minOccurs="1" maxOccurs="unbounded"/>
+					</xs:sequence>
+					<xs:attribute name="ID" type="xs:string" use="required"/>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:redefine>
+	<!--elements that can be validated-->
+	<xs:element name="applicationSet" type="ApplicationSet">
+		<xs:key name="App">
+			<xs:selector xpath="./application"/>
+			<xs:field xpath="@name"/>
+		</xs:key>
+		<xs:keyref name="refApp" refer="App">
+			<xs:selector xpath="./application/event/action"/>
+			<xs:field xpath="@target"/>
+		</xs:keyref>
+	</xs:element>
+</xs:schema>
