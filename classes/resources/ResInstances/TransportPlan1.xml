@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<transportPlan xmlns="transportPlan" id="TP_01" transport_id="T_01" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="transportPlan ./TransportPlan.xsd">
+</transportPlan>
