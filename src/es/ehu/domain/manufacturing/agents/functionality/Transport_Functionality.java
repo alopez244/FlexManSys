@@ -106,6 +106,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
         String cmd = "reg transport parent=system"+attribs;
 
         ACLMessage reply = null;
+
         try {
             reply = myAgent.sendCommand(cmd);
         } catch (Exception e) {
