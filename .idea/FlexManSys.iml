@@ -17,5 +17,6 @@
     <orderEntry type="library" name="gson-2.8.6" level="project" />
     <orderEntry type="library" name="OpenCSV" level="project" />
     <orderEntry type="library" name="unirest" level="project" />
+    <orderEntry type="library" name="http" level="project" />
   </component>
 </module>
