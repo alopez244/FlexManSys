@@ -1,71 +1,109 @@
-﻿     <?xml version="1.0" encoding="UTF-8"?>
-<!-- editado con XMLSpy v2018 rel. 2 (http://www.altova.com) por Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
-<xs:schema xmlns="RepositoryContent" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="RepositoryContent" elementFormDefault="qualified" attributeFormDefault="unqualified">
-	<xs:redefine schemaLocation="TConcepts.xsd">
-  <!-- ============= BATCH =========== -->	
-	<xs:complexType name="Batch">
-		<xs:complexContent>
-			<xs:extension base="Batch">
-				<xs:attribute name="ID" type="xs:string" use="required"/>
-				<xs:attribute name="isStartable" type="xs:string" use="required" fixed="true"/>
-      </xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-  <!-- ============= ORDER =========== -->
-	<xs:complexType name="Order">
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
+<xs:schema xmlns="Concepts" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="Concepts" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<!-- ========  Application TConcepts ======== -->
+	<xs:redefine schemaLocation="AppProperties.xsd">
+		<!-- 			Batch			-->
+		<xs:complexType name="Batch">
+			<xs:complexContent>
+				<xs:extension base="Batch">
+					<xs:sequence>
+						<xs:element ref="agent" minOccurs="0" maxOccurs="unbounded"/>
+					</xs:sequence>
+					<xs:attribute name="ID" type="xs:string" use="required"/>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+		<!-- 			Order			 -->
+		<xs:complexType name="Order">
 			<xs:complexContent>
 				<xs:extension base="Order">
 					<xs:sequence>
-						<xs:element name="batch"  type="Batch" minOccurs="1" maxOccurs="unbounded"/>
+						<xs:element name="batch" type="Batch" minOccurs="1" maxOccurs="unbounded"/>
+						<xs:element ref="agent" minOccurs="0" maxOccurs="unbounded"/>
 					</xs:sequence>
 					<xs:attribute name="ID" type="xs:string" use="required"/>
-					<xs:attribute name="isStartable" type="xs:string" use="required" fixed="true"/>
 				</xs:extension>
 			</xs:complexContent>
 		</xs:complexType>
-		<!-- ============= MANUFACTURING PLAN =========== -->
-		<xs:complexType name="ManufacturingPlan">
+		<!--			Manufacturing Plan			 -->
+		<xs:complexType name="MPlan">
 			<xs:complexContent>
-				<xs:extension base="ManufacturingPlan">
+				<xs:extension base="MPlan">
 					<xs:sequence>
 						<xs:element name="order" type="Order" minOccurs="1" maxOccurs="unbounded"/>
+						<xs:element ref="agent" minOccurs="0" maxOccurs="unbounded"/>
 					</xs:sequence>
 					<xs:attribute name="ID" type="xs:string" use="required"/>
-					<xs:attribute name="isStartable" type="xs:string" use="required" fixed="true"/>
+					<xs:attribute name="execution_phase" default="not_started">
+						<xs:simpleType>
+							<xs:restriction base="xs:string">
+								<xs:enumeration value="starting"/>
+								<xs:enumeration value="started"/>
+								<xs:enumeration value="not_started"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:attribute>
+					<xs:attribute name="execution_redundancy" type="xs:positiveInteger" default="1"/>
 				</xs:extension>
 			</xs:complexContent>
 		</xs:complexType>
-  </xs:redefine>
-	<!-- ==BASIC_SYSTEMMODEL CUSTOMIZATION -->
-<xs:complexType name="ProcNode">
-		<xs:attribute name="name" type="xs:string" use="required"/>
-		<xs:attribute name="ID" type="xs:string" use="required"/>
-	</xs:complexType>
+	</xs:redefine>
+	<!-- ========  Resource TConcepts ======== -->
+	<xs:redefine schemaLocation="ResProperties.xsd">
+		<!-- 			Resource Agent			 -->
+		<xs:complexType name="ResourceAgent">
+			<xs:complexContent>
+				<xs:extension base="ResourceAgent">
+					<xs:attribute name="id" type="xs:string" use="required"/>
+					<xs:attribute name="agentState" type="TState" use="required"/>
+					<xs:attribute name="ref_proc_node" type="xs:string" use="optional"/>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:redefine>
+	<xs:simpleType name="TState">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="boot"/>
+			<xs:enumeration value="end"/>
+			<xs:enumeration value="running"/>
+			<xs:enumeration value="tracking"/>
+			<xs:enumeration value="fault"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!-- ===== Application Agents ========= -->
+	<xs:element name="agent">
+		<xs:complexType>
+			<xs:attribute name="id" type="xs:NMTOKEN" use="required"/>
+			<xs:attribute name="agentState" type="TState" use="required"/>
+			<xs:attribute name="ref_proc_node" type="xs:string" use="optional"/>
+		</xs:complexType>
+	</xs:element>
 	<!-- Groups -->
 	<xs:group name="DomainApplications">
 		<xs:sequence>
 			<xs:annotation>
 				<xs:documentation>List of the extended system elements related to the application domain extended with isStartable attribute</xs:documentation>
 			</xs:annotation>
-			<xs:element name="manufacturingPlan" type="ManufacturingPlan" minOccurs="1" maxOccurs="unbounded"/>
+			<xs:element name="mPlan" type="MPlan" minOccurs="1" maxOccurs="unbounded"/>
 		</xs:sequence>
 	</xs:group>
 	<xs:group name="Resources">
 		<xs:sequence>
-		 <xs:annotation>
+			<xs:annotation>
 				<xs:documentation>List of domain dependand resources</xs:documentation>
 			</xs:annotation>
-			<xs:element name="procNode" type="ProcNode" minOccurs="1" maxOccurs="unbounded"/>
+			<xs:element name="resourceAgent" type="ResourceAgent" maxOccurs="unbounded"/>
 		</xs:sequence>
 	</xs:group>
-  <!-- ============= SYSTEM =========== -->
+	<!-- ============= SYSTEM =========== -->
 	<xs:complexType name="System">
 		<xs:sequence>
 			<xs:group ref="Resources" minOccurs="1" maxOccurs="1"/>
 			<xs:group ref="DomainApplications" minOccurs="1" maxOccurs="1"/>
 		</xs:sequence>
+		<xs:attribute name="name" type="xs:string" use="required"/>
 		<xs:attribute name="ID" type="xs:string" use="required"/>
 	</xs:complexType>
-	<!-- ==Root Element -->
 	<xs:element name="system" type="System"/>
 </xs:schema>

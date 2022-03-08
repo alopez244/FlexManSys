@@ -92,12 +92,12 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 myAgent.currentPos = javaTranspState.getCurrentPos();
             } else {
                 /* Si se recibe respuesta pero no es la adecuada, significa que el asset no está listo y no se puede continuar con el registro */
-                System.out.println("The asset is not ready to work.");
+                System.out.println("The asset is not ready to work. 11");
                 System.exit(0);
             }
         }else{
             /* Si no se recibe respuesta, significa que el asset no está listo y no se puede continuar con el registro */
-            System.out.println("The asset is not ready to work.");
+            System.out.println("The asset is not ready to work. 22");
             System.exit(0);
         }
 

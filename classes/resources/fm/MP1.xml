@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<manufacturingPlan xmlns="RepositoryContent" name="MP1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="RepositoryContent file:///C:/Users/Alejandro%20L%C3%B3pez/Documents/GitHub/FlexManSys/src/resources/fm/AppGenerator.xsd">
-	<order reference="O1_MP1" customer="Marga">
-		<batch reference="B1_O1_MP1" numberOfItems="6" refProductID="P_01"/>
-	</order>
-</manufacturingPlan>

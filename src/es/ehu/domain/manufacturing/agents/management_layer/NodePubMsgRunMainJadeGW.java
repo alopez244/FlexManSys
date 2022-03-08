@@ -26,12 +26,13 @@ public class NodePubMsgRunMainJadeGW extends AbstractNodeMain {
   public NodePubMsgRunMainJadeGW() {
     try {
       this.jadeInit();
-      this.rosInit();
+      //this.rosInit();
     } catch(Exception e) {
       System.out.println(e.getMessage());
     }
   }
 
+  /*
   private void rosInit() throws Exception {
     String host = InetAddressFactory.newNonLoopback().getHostName();
     String port = "11311";
@@ -45,7 +46,7 @@ public class NodePubMsgRunMainJadeGW extends AbstractNodeMain {
     NodeMain nodeMain = (NodeMain) this;
     NodeMainExecutor nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
     nodeMainExecutor.execute(nodeMain, nodeConfiguration);
-  }
+  } */
 
   private void jadeInit() throws Exception {
     Properties pp = new Properties();
@@ -59,7 +60,7 @@ public class NodePubMsgRunMainJadeGW extends AbstractNodeMain {
     String containerName = "GatewayContMsg1"; //TODO: Cambiar el nombre del contenedor para que dependa de a qué Kobuki se conecta
     pp.setProperty(Profile.CONTAINER_NAME, containerName);
 
-    JadeGateway.init("com.github.rosjava.fms_transp.turtlebot2.GWagentROSmsg", pp);
+    JadeGateway.init("es.ehu.domain.manufacturing.agents.management_layer.GWagentROSmsg", pp);
 
     StructCommandMsg command = new StructCommandMsg();
     command.setAction("init");

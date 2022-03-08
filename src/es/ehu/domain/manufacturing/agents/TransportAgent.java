@@ -19,12 +19,12 @@ public class TransportAgent extends DomResAgentTemplate{
     private static final long serialVersionUID = -214426101233212079L;
 
 
-    /* DECLARACIÓN DE VARIABLES */
+    /* DECLARACION DE VARIABLES */
 
-    /* Posición actual del transporte */
+    /* Posicion actual del transporte */
     public String currentPos;
 
-    /* Porcentaje de batería */
+    /* Porcentaje de bateria */
     public int battery;
 
     /* Listado de posiciones clave (punto de carga, almacen de material, entrada de material KUKA, salida material KUKA) */
@@ -34,7 +34,7 @@ public class TransportAgent extends DomResAgentTemplate{
     public ArrayList<ArrayList<ArrayList<String>>> transportPlan;
 
 
-    /* INICIALIZACIÓN DE VARIABLES */
+    /* INICIALIZACION DE VARIABLES */
 
     @Override
     protected MessageTemplate variableInitialization(Object[] arguments, Behaviour behaviour) {
@@ -65,7 +65,7 @@ public class TransportAgent extends DomResAgentTemplate{
 
         }
 
-        /* Por último, se especifica el tipo de funcionalidad (en este caso funcionalidad de transporte) */
+        /* Por ultimo, se especifica el tipo de funcionalidad (en este caso funcionalidad de transporte) */
         functionalityInstance = new Transport_Functionality();
         return null;
 
