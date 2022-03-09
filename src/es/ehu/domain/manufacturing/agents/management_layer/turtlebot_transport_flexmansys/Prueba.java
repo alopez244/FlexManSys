@@ -6,7 +6,9 @@ public interface Prueba extends org.ros.internal.message.Message {
   static final String _DEFINITION = "int32 numero_prueba\n\n";
 
   int getNumeroPrueba();
-  void setNumeroPrueba(int numero_prueba);
+  void setNumeroPrueba(int value);
+  //void setNumeroPrueba(String numero_prueba, int value);
+
 
 }
 

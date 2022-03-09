@@ -10,10 +10,9 @@ import org.ros.namespace.GraphName;
 import org.ros.node.*;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
+import org.ros.node.DefaultNodeMainExecutor;
 
 import java.net.URI;
-
-// Clases instanciadas
 
 // Mensajes ROS
 
@@ -86,30 +85,26 @@ public class NodePubMsgRunMainJadeGW extends AbstractNodeMain {
     // Estos son un tranpantojo
 
     //Publisher<transp_request> publisher1 = connectedNode.newPublisher("coordinateMsg", transp_request._TYPE);
-    //Publisher<std_msgs.String> publisher1 = connectedNode.newPublisher("coordinateMsg", std_msgs.String._TYPE);
+    Publisher<std_msgs.String> publisher1 = connectedNode.newPublisher("/flexmansys/coordenada/leonardo", std_msgs.String._TYPE);
     //Publisher<TransportUnitState> publisher1 = connectedNode.newPublisher("coordinateMsg", TransportUnitState._TYPE);
-
-    Publisher<Prueba> publisher1 = connectedNode.newPublisher("coordinateMsg", Prueba._TYPE);
+    //Publisher<Prueba> publisher1 = connectedNode.newPublisher("coordinateMsg", Prueba._TYPE);
 
 
     //TODO: Añadir suscriptores con tipos de mensaje adaptados a las estructuras que se proponen
 
-    Subscriber<transp_state> subscriber1 = connectedNode.newSubscriber("stateMsg", transp_state._TYPE);
+    //Subscriber<transp_state> subscriber1 = connectedNode.newSubscriber("stateMsg", transp_state._TYPE);
+    //Subscriber<TransportUnitState> subscriber1 = connectedNode.newSubscriber("stateMsg", TransportUnitState._TYPE);
+    Subscriber<Prueba> subscriber1 = connectedNode.newSubscriber("stateMsg", Prueba._TYPE);
     Subscriber<transp_results> subscriber2 = connectedNode.newSubscriber("resultsMsg", transp_results._TYPE);
 
-    subscriber1.addMessageListener(new MessageListener<transp_state>() {
+    subscriber1.addMessageListener(new MessageListener<Prueba>() {
 
       @Override
-      public void onNewMessage(transp_state stateMsg) {
+      public void onNewMessage(Prueba stateMsg) {
 
-        Integer battery = stateMsg.getBattery();
-        String currentPos = stateMsg.getCurrentPos();
-        Boolean assetLiveness = stateMsg.getAssetLiveness();
+        Integer Prueba = stateMsg.getNumeroPrueba();
 
-        StructTranspState javaTranspState = new StructTranspState();
-        javaTranspState.setBattery(battery);
-        javaTranspState.setCurrentPos(currentPos);
-        javaTranspState.setAssetLiveness(assetLiveness);
+        /*
 
         StructCommandMsg command = new StructCommandMsg();
         command.setAction("sendState");
@@ -120,6 +115,8 @@ public class NodePubMsgRunMainJadeGW extends AbstractNodeMain {
         } catch(Exception e) {
           System.out.println(e.getMessage());
         }
+
+         */
       }
     });
 
