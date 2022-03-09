@@ -197,7 +197,7 @@ public class REST_Test {
                     case "GET_Robot":
 
                         //Recibo la respuesta al get
-                        HttpResponse<JsonNode> get_Robot = Unirest.get("http://127.0.0.1:1880/State/TransportRobot").asJson();
+                        HttpResponse<JsonNode> get_Robot = Unirest.get("http://127.0.0.1:1880/State/TrasportRobot").asJson();
 
                         //Solo me quedo con el contenido si la comunicación ha sido corecta
                         if (get_Robot.getStatus() == 200) {
@@ -235,7 +235,7 @@ public class REST_Test {
                         String body = "{\n  \"Initial\": \"" + first + "\",\n  \"Final\": \"" + last + "\"\n}\n";
 
                         //Recibo la respuesta al post
-                        HttpResponse<JsonNode> post_Robot = Unirest.post("http://127.0.0.1:1880/Request/TransportRobot")
+                        HttpResponse<JsonNode> post_Robot = Unirest.post("http://127.0.0.1:1880/Request/TrasportRobot")
                                 .header("Content-type", "application/json")
                                 .body(body)
                                 .asJson();
