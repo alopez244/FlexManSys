@@ -1,0 +1,2 @@
+string transport_state
+bool transport_docked

@@ -1,0 +1,5 @@
+bool transport_in_dock
+string recovery_point
+float64 odom_x
+float64 odom_y
+float64 rotation

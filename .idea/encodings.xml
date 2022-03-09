@@ -14,6 +14,14 @@
     <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/agents/management_layer/fms_msgs/transp_results.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/agents/management_layer/fms_msgs/transp_state.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/agents/management_layer/ros" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/agents/management_layer/turtlebot_transport_flexmansys/fms_msgs/KobukiGeneral.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/agents/management_layer/turtlebot_transport_flexmansys/fms_msgs/KobukiObstacle.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/agents/management_layer/turtlebot_transport_flexmansys/fms_msgs/KobukiPosition.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/agents/management_layer/turtlebot_transport_flexmansys/fms_msgs/OdroidDate.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/agents/management_layer/turtlebot_transport_flexmansys/fms_msgs/TransportUnitState.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/agents/management_layer/turtlebot_transport_flexmansys/fms_msgs/transp_request.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/agents/management_layer/turtlebot_transport_flexmansys/fms_msgs/transp_results.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/agents/management_layer/turtlebot_transport_flexmansys/fms_msgs/transp_state.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/utilities/StructCommandMsg.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/utilities/StructTranspRequest.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/utilities/StructTranspResults.java" charset="UTF-8" />

@@ -1,12 +1,5 @@
 package es.ehu.domain.manufacturing.agents.management_layer;
 
-import es.ehu.domain.manufacturing.utilities.StructCommandMsg;
-import es.ehu.domain.manufacturing.utilities.StructTranspRequest;
-import es.ehu.domain.manufacturing.utilities.StructTranspResults;
-import es.ehu.domain.manufacturing.utilities.StructTranspState;
-import es.ehu.domain.manufacturing.agents.management_layer.fms_msgs.transp_request;
-import es.ehu.domain.manufacturing.agents.management_layer.fms_msgs.transp_results;
-import es.ehu.domain.manufacturing.agents.management_layer.fms_msgs.transp_state;
 import jade.core.Profile;
 import jade.util.leap.Properties;
 import jade.wrapper.gateway.JadeGateway;
@@ -20,12 +13,19 @@ import org.ros.node.topic.Subscriber;
 
 import java.net.URI;
 
-
 // Clases instanciadas
 
-import es.ehu.domain.manufacturing.utilities.StructTransportUnitState;
+// Mensajes ROS
+
 import es.ehu.domain.manufacturing.utilities.StructCommandMsg;
-import es.ehu.domain.manufacturing.agents.management_layer.GWagentROSmsg;
+import es.ehu.domain.manufacturing.utilities.StructTranspRequest;
+import es.ehu.domain.manufacturing.utilities.StructTranspResults;
+import es.ehu.domain.manufacturing.utilities.StructTranspState;
+
+import es.ehu.domain.manufacturing.agents.management_layer.fms_msgs.transp_results;
+import es.ehu.domain.manufacturing.agents.management_layer.fms_msgs.transp_state;
+import es.ehu.domain.manufacturing.agents.management_layer.turtlebot_transport_flexmansys.TransportUnitState;
+import es.ehu.domain.manufacturing.agents.management_layer.turtlebot_transport_flexmansys.Prueba;
 
 public class NodePubMsgRunMainJadeGW extends AbstractNodeMain {
 
@@ -87,6 +87,9 @@ public class NodePubMsgRunMainJadeGW extends AbstractNodeMain {
 
     //Publisher<transp_request> publisher1 = connectedNode.newPublisher("coordinateMsg", transp_request._TYPE);
     //Publisher<std_msgs.String> publisher1 = connectedNode.newPublisher("coordinateMsg", std_msgs.String._TYPE);
+    //Publisher<TransportUnitState> publisher1 = connectedNode.newPublisher("coordinateMsg", TransportUnitState._TYPE);
+
+    Publisher<Prueba> publisher1 = connectedNode.newPublisher("coordinateMsg", Prueba._TYPE);
 
 
     //TODO: Añadir suscriptores con tipos de mensaje adaptados a las estructuras que se proponen

@@ -8,6 +8,7 @@
 
 # modified environment variables
 export CMAKE_PREFIX_PATH="/home/borjartime/IdeaProjects/FlexManSys/devel:$CMAKE_PREFIX_PATH"
+export LD_LIBRARY_PATH="/home/borjartime/IdeaProjects/FlexManSys/devel/lib:$LD_LIBRARY_PATH"
 export PWD='/home/borjartime/IdeaProjects/FlexManSys/build'
 export ROSLISP_PACKAGE_DIRECTORIES="/home/borjartime/IdeaProjects/FlexManSys/devel/share/common-lisp:$ROSLISP_PACKAGE_DIRECTORIES"
 export ROS_MAVEN_DEPLOYMENT_REPOSITORY='/home/borjartime/IdeaProjects/FlexManSys/devel/share/maven'
