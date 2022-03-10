@@ -6,6 +6,7 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import es.ehu.domain.manufacturing.utilities.StructMessage;
 import jade.core.Profile;
+import jade.lang.acl.ACLMessage;
 import jade.util.leap.Properties;
 import jade.wrapper.ControllerException;
 import jade.wrapper.gateway.JadeGateway;
@@ -16,7 +17,8 @@ import java.util.Scanner;
 public class REST_Test_V2 {
 
     private boolean workingFlag;
-    private  String msg;
+    private String request;
+    private String response;
 
     public REST_Test_V2() {
 
@@ -35,17 +37,26 @@ public class REST_Test_V2 {
 
             //Dentro del while, se comprobará constantemente si se han recibido mensajes en el gatewayAgent
             try {
-               msg = jadeReceive();
+               request = jadeReceive();
             } catch (ControllerException | InterruptedException e) {
                 e.printStackTrace();
             }
 
-            if (msg != null) { //Si se ha recibido un mensaje, se procesa el servicio
+            if (request != null) { //Si se ha recibido un mensaje, se procesa el servicio
 
                 try {
-                    requestService_HTTP(msg);
+                    response = requestService_HTTP(request);
                 } catch (UnirestException e) {
                     e.printStackTrace();
+                }
+
+                if (response != null) {
+                    System.out.println(response);
+                    try {
+                        jadeSend(response);
+                    } catch (ControllerException | InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
 
             }
@@ -103,18 +114,40 @@ public class REST_Test_V2 {
         }
     }
 
-    private void requestService_HTTP (String cmd) throws UnirestException {
+    private void jadeSend(String response) throws ControllerException, InterruptedException {
+
+        //Se declara la estructura que se le va a pasar al GatewayAgent
+        StructMessage strMessage = new StructMessage();
+
+        //Se definen la acción (enviar), el contenido (response), y la performativa (inform)
+        strMessage.setAction("send");
+        strMessage.setMessage(response);
+        strMessage.setPerformative(ACLMessage.INFORM);
+
+        //Por último, se envía el mensaje
+        JadeGateway.execute(strMessage);
+    }
+
+    private String requestService_HTTP (String cmd) throws UnirestException {
+
+        //Primero inicializo las variables que voy a necesitar
+        String result = null;
+        String type;
+        Scanner in_1 = new Scanner(System.in);
+        Scanner in_2 = new Scanner(System.in);
+        String body;
+        String first;
+        String last;
+
+        //Después ejecuto el switch
         switch (cmd) {
             case "POST_Reset":
 
-                //Recibo la respuesta al post
+                //Recibo la respuesta
                 HttpResponse<JsonNode> post_Reset = Unirest.post("http://127.0.0.1:1880/Reset/ManufacturingStation").asJson();
 
-                if (post_Reset.getStatus() == 200) {
-                    System.out.println("The response received is:\n");
-                    System.out.println(post_Reset.getBody().toString());
-                }
-
+                //Solo me quedo con el contenido si la comunicación ha sido correcta
+                if (post_Reset.getStatus() == 200) result = post_Reset.getBody().toString();
                 break;
             case "GET_PA":
 
@@ -122,22 +155,17 @@ public class REST_Test_V2 {
                 HttpResponse<JsonNode> get_PA = Unirest.get("http://127.0.0.1:1880/State/ManufacturingStation/PA").asJson();
 
                 //Solo me quedo con el contenido si la comunicación ha sido corecta
-                if (get_PA.getStatus() == 200) {
-                    System.out.println("The response received is:\n");
-                    System.out.println(get_PA.getBody().toString());
-                }
+                if (get_PA.getStatus() == 200) result = get_PA.getBody().toString();
                 break;
-            case "POST_PA": {
+            case "POST_PA":
 
                 //Solicito al usuario del programa el valor de la referencia del producto
-                String type;
-                Scanner in_2 = new Scanner(System.in);
                 System.out.print("Please, introduce the Ref_Subproduct_Type: ");
-                type = in_2.nextLine();
+                type = in_1.nextLine();
                 System.out.println();
 
                 //Construyo el cuerpo del mensaje a enviar
-                String body = "{\n  \"Ref_Subproduct_Type\": \"" + type + "\"\n}\n";
+                body = "{\n  \"Ref_Subproduct_Type\": \"" + type + "\"\n}\n";
 
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_PA = Unirest.post("http://127.0.0.1:1880/Request/ManufacturingStation/PA")
@@ -146,34 +174,25 @@ public class REST_Test_V2 {
                         .asJson();
 
                 //Solo me quedo con el contenido si la comunicación ha sido corecta
-                if (post_PA.getStatus() == 200) {
-                    System.out.println("The response received is:\n");
-                    System.out.println(post_PA.getBody().toString());
-                }
+                if (post_PA.getStatus() == 200) result = post_PA.getBody().toString();
                 break;
-            }
             case "GET_PB":
 
                 //Recibo la respuesta al get
                 HttpResponse<JsonNode> get_PB = Unirest.get("http://127.0.0.1:1880/State/ManufacturingStation/PB").asJson();
 
                 //Solo me quedo con el contenido si la comunicación ha sido corecta
-                if (get_PB.getStatus() == 200) {
-                    System.out.println("The response received is:\n");
-                    System.out.println(get_PB.getBody().toString());
-                }
+                if (get_PB.getStatus() == 200) result = get_PB.getBody().toString();
                 break;
-            case "POST_PB": {
+            case "POST_PB":
 
                 //Solicito al usuario del programa el valor de la referencia del producto
-                String type;
-                Scanner in_2 = new Scanner(System.in);
                 System.out.print("Please, introduce the Ref_Subproduct_Type: ");
-                type = in_2.nextLine();
+                type = in_1.nextLine();
                 System.out.println();
 
                 //Construyo el cuerpo del mensaje a enviar
-                String body = "{\n  \"Ref_Subproduct_Type\": \"" + type + "\"\n}\n";
+                body = "{\n  \"Ref_Subproduct_Type\": \"" + type + "\"\n}\n";
 
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_PB = Unirest.post("http://127.0.0.1:1880/Request/ManufacturingStation/PB")
@@ -182,34 +201,25 @@ public class REST_Test_V2 {
                         .asJson();
 
                 //Solo me quedo con el contenido si la comunicación ha sido corecta
-                if (post_PB.getStatus() == 200) {
-                    System.out.println("The response received is:\n");
-                    System.out.println(post_PB.getBody().toString());
-                }
+                if (post_PB.getStatus() == 200) result = post_PB.getBody().toString();
                 break;
-            }
             case "GET_IA":
 
                 //Recibo la respuesta al get
                 HttpResponse<JsonNode> get_IA = Unirest.get("http://127.0.0.1:1880/State/ManufacturingStation/IA").asJson();
 
                 //Solo me quedo con el contenido si la comunicación ha sido corecta
-                if (get_IA.getStatus() == 200) {
-                    System.out.println("The response received is:\n");
-                    System.out.println(get_IA.getBody().toString());
-                }
+                if (get_IA.getStatus() == 200) result = get_IA.getBody().toString();
                 break;
-            case "POST_IA": {
+            case "POST_IA":
 
                 //Solicito al usuario del programa el valor de la referencia del producto
-                String type;
-                Scanner in_2 = new Scanner(System.in);
                 System.out.print("Please, introduce the Ref_Subproduct_Type: ");
-                type = in_2.nextLine();
+                type = in_1.nextLine();
                 System.out.println();
 
                 //Construyo el cuerpo del mensaje a enviar
-                String body = "{\n  \"Ref_Subproduct_Type\": \"" + type + "\"\n}\n";
+                body = "{\n  \"Ref_Subproduct_Type\": \"" + type + "\"\n}\n";
 
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_IA = Unirest.post("http://127.0.0.1:1880/Request/ManufacturingStation/IA")
@@ -218,34 +228,25 @@ public class REST_Test_V2 {
                         .asJson();
 
                 //Solo me quedo con el contenido si la comunicación ha sido corecta
-                if (post_IA.getStatus() == 200) {
-                    System.out.println("The response received is:\n");
-                    System.out.println(post_IA.getBody().toString());
-                }
+                if (post_IA.getStatus() == 200) result = post_IA.getBody().toString();
                 break;
-            }
             case "GET_IB":
 
                 //Recibo la respuesta al get
                 HttpResponse<JsonNode> get_IB = Unirest.get("http://127.0.0.1:1880/State/ManufacturingStation/IB").asJson();
 
                 //Solo me quedo con el contenido si la comunicación ha sido corecta
-                if (get_IB.getStatus() == 200) {
-                    System.out.println("The response received is:\n");
-                    System.out.println(get_IB.getBody().toString());
-                }
+                if (get_IB.getStatus() == 200) result = get_IB.getBody().toString();
                 break;
-            case "POST_IB": {
+            case "POST_IB":
 
                 //Solicito al usuario del programa el valor de la referencia del producto
-                String type;
-                Scanner in_2 = new Scanner(System.in);
                 System.out.print("Please, introduce the Ref_Subproduct_Type: ");
-                type = in_2.nextLine();
+                type = in_1.nextLine();
                 System.out.println();
 
                 //Construyo el cuerpo del mensaje a enviar
-                String body = "{\n  \"Ref_Subproduct_Type\": \"" + type + "\"\n}\n";
+                body = "{\n  \"Ref_Subproduct_Type\": \"" + type + "\"\n}\n";
 
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_IB = Unirest.post("http://127.0.0.1:1880/Request/ManufacturingStation/IB")
@@ -254,22 +255,15 @@ public class REST_Test_V2 {
                         .asJson();
 
                 //Solo me quedo con el contenido si la comunicación ha sido corecta
-                if (post_IB.getStatus() == 200) {
-                    System.out.println("The response received is:\n");
-                    System.out.println(post_IB.getBody().toString());
-                }
+                if (post_IB.getStatus() == 200) result = post_IB.getBody().toString();
                 break;
-            }
             case "GET_Robot":
 
                 //Recibo la respuesta al get
                 HttpResponse<JsonNode> get_Robot = Unirest.get("http://127.0.0.1:1880/State/TrasportRobot").asJson();
 
                 //Solo me quedo con el contenido si la comunicación ha sido corecta
-                if (get_Robot.getStatus() == 200) {
-                    System.out.println("The response received is:\n");
-                    System.out.println(get_Robot.getBody().toString());
-                }
+                if (get_Robot.getStatus() == 200) result = get_Robot.getBody().toString();
                 break;
             case "POST_Robot": {
 
@@ -285,20 +279,16 @@ public class REST_Test_V2 {
                 System.out.print(positions);
 
                 //Solicito al usuario del programa el valor de la referencia del producto
-                String first;
-                Scanner in_2 = new Scanner(System.in);
                 System.out.print("Please, introduce the first position: ");
-                first = in_2.nextLine();
+                first = in_1.nextLine();
                 System.out.println();
 
-                String last;
-                Scanner in_3 = new Scanner(System.in);
                 System.out.print("Please, introduce the final position: ");
-                last = in_3.nextLine();
+                last = in_2.nextLine();
                 System.out.println();
 
                 //Construyo el cuerpo del mensaje a enviar
-                String body = "{\n  \"Initial\": \"" + first + "\",\n  \"Final\": \"" + last + "\"\n}\n";
+                body = "{\n  \"Initial\": \"" + first + "\",\n  \"Final\": \"" + last + "\"\n}\n";
 
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_Robot = Unirest.post("http://127.0.0.1:1880/Request/TrasportRobot")
@@ -307,19 +297,15 @@ public class REST_Test_V2 {
                         .asJson();
 
                 //Solo me quedo con el contenido si la comunicación ha sido corecta
-                if (post_Robot.getStatus() == 200) {
-                    System.out.println("The response received is:\n");
-                    System.out.println(post_Robot.getBody().toString());
-                }
+                if (post_Robot.getStatus() == 200) result = post_Robot.getBody().toString();
                 break;
             }
-            case "exit":
-                System.out.println("Goodbye.");
-                break;
             default:
                 System.out.println("The service requested is incorrect.");
-                break;
         }
+
+        //Por último, devuelvo el resultado
+        return result;
     }
 
     public static void main(String[] args) {
