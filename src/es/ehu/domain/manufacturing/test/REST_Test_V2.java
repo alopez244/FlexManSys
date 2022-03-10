@@ -16,7 +16,6 @@ import java.util.Scanner;
 
 public class REST_Test_V2 {
 
-    private boolean workingFlag;
     private String request;
     private String response;
 
@@ -51,7 +50,7 @@ public class REST_Test_V2 {
                 }
 
                 if (response != null) {
-                    System.out.println(response);
+//                    System.out.println(response);
                     try {
                         jadeSend(response);
                     } catch (ControllerException | InterruptedException e) {
@@ -61,8 +60,6 @@ public class REST_Test_V2 {
 
             }
         }
-
-        //Desde el while habrá que gestionar la recepción y envío entre el gatewayAgent y el asset.
     }
 
     private void jadeInit() throws Exception {
@@ -88,30 +85,21 @@ public class REST_Test_V2 {
 
     private String jadeReceive() throws ControllerException, InterruptedException {
 
-        //Primero se comprueba si el asset está ocupado
-        if (!workingFlag){
-
-            //Si está libre, se invoca la acción receive del GatewayAgent para recibir posibles mensajes
+            //Se invoca la acción receive del GatewayAgent para recibir posibles mensajes
             StructMessage strMessage = new StructMessage();
             strMessage.setAction("receive");
             JadeGateway.execute(strMessage);
 
             //Se comprueba si hay un nuevo mensaje
             String msgFromGW;
-            if (strMessage.readNewData()) { //En caso afirmativo, se lee el mensaje y se pone el workingFlag a true
+            if (strMessage.readNewData()) { //En caso afirmativo, se lee el mensaje
                 msgFromGW = strMessage.readMessage();
-                workingFlag=true;
 
             } else { //En caso contrario, se devuelve null
                 msgFromGW = null;
             }
 
             return msgFromGW;
-
-        } else { //Si el asset está ocupado, no se pueden leer nuevos mensajes, se devuelve null
-
-            return null;
-        }
     }
 
     private void jadeSend(String response) throws ControllerException, InterruptedException {
