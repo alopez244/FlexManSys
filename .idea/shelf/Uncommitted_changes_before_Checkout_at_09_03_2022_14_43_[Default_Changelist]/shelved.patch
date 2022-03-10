@@ -1,0 +1,542 @@
+Index: classes/resources/ResInstances/UpdatedPlan5.xml
+===================================================================
+diff --git a/classes/resources/ResInstances/UpdatedPlan5.xml b/classes/resources/ResInstances/UpdatedPlan5.xml
+deleted file mode 100644
+--- a/classes/resources/ResInstances/UpdatedPlan5.xml	(revision 80bb80354de2820920673698f2657df32371e514)
++++ /dev/null	(revision 80bb80354de2820920673698f2657df32371e514)
+@@ -1,5 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<updatedPlan xmlns="updatedPlan" id="UP_01" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="updatedPlan ./UpdatedPlan.xsd">
+-		<station ref_id="51">
+-		</station>
+-</updatedPlan>
+Index: classes/resources/ResInstances/UpdatedPlan.xsd
+===================================================================
+diff --git a/classes/resources/ResInstances/UpdatedPlan.xsd b/classes/resources/ResInstances/UpdatedPlan.xsd
+deleted file mode 100644
+--- a/classes/resources/ResInstances/UpdatedPlan.xsd	(revision 80bb80354de2820920673698f2657df32371e514)
++++ /dev/null	(revision 80bb80354de2820920673698f2657df32371e514)
+@@ -1,43 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<!-- editado con XMLSpy v2020 sp1 (x64) (http://www.altova.com) por  (University of the Basque Country) -->
+-<!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
+-<xs:schema xmlns="updatedPlan" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="updatedPlan" elementFormDefault="qualified" attributeFormDefault="unqualified">
+-	<xs:redefine schemaLocation="../ListOfOperations.xsd">
+-		<xs:complexType name="Operation">
+-			<xs:complexContent>
+-				<xs:extension base="Operation">
+-					<xs:sequence>
+-						<xs:element name="Product">
+-							<xs:complexType>
+-								<xs:attribute name="productType" type="xs:string" use="optional"/>
+-								<xs:attribute name="palletIn" type="xs:string" use="optional"/>
+-							</xs:complexType>
+-						</xs:element>
+-					</xs:sequence>
+-					<xs:attribute name="order_ID" type="xs:string" use="required"/>
+-					<xs:attribute name="batch_ID" type="xs:string" use="required"/>
+-					<xs:attribute name="productType" type="xs:string" use="required"/>
+-					<xs:attribute name="item_ID" type="xs:string" use="required"/>
+-					<xs:attribute name="plannedStartTime" type="xs:string" use="required"/>
+-					<xs:attribute name="plannedFinishTime" type="xs:string" use="required"/>
+-				</xs:extension>
+-			</xs:complexContent>
+-		</xs:complexType>
+-	</xs:redefine>
+-	<xs:element name="station">
+-		<xs:complexType>
+-			<xs:choice minOccurs="0" maxOccurs="unbounded">
+-				<xs:element name="simple_operation" type="Operation"/>
+-			</xs:choice>
+-			<xs:attribute name="ref_id" type="xs:NMTOKEN" use="required"/>
+-		</xs:complexType>
+-	</xs:element>
+-	<xs:element name="updatedPlan">
+-		<xs:complexType>
+-			<xs:sequence>
+-				<xs:element ref="station" minOccurs="1" maxOccurs="unbounded"/>
+-			</xs:sequence>
+-			<xs:attribute name="id" type="xs:NMTOKEN" use="required"/>
+-		</xs:complexType>
+-	</xs:element>
+-</xs:schema>
+Index: classes/resources/ResInstances/Machine5.xml
+===================================================================
+diff --git a/classes/resources/ResInstances/Machine5.xml b/classes/resources/ResInstances/Machine5.xml
+deleted file mode 100644
+--- a/classes/resources/ResInstances/Machine5.xml	(revision 80bb80354de2820920673698f2657df32371e514)
++++ /dev/null	(revision 80bb80354de2820920673698f2657df32371e514)
+@@ -1,107 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<!-- editado con XMLSpy v2020 sp1 (x64) (http://www.altova.com) por  (University of the Basque Country) -->
+-<!-- edited with XMLSpy v2018 sp1 (http://www.altova.com) by Marga Marcos (Escuela de Ingeniería de Bilbao (UPV/EHU)) -->
+-<machine xmlns:st="station" xmlns:up="updatedPlan" xmlns="ManufacturingPlan" id="M_05" description="Machine 5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="ManufacturingPlan ./Machine.xsd">
+-	<station xmlns="station" id="ST_05" description="Station 1 has all the consumable materials (bearings, axes and covers)">
+-		<palletIn id="PI1_ST_05" xPos="80" yPos="80" zPos="50"/>
+-		<palletIn id="PI2_ST_05" xPos="520" yPos="80" zPos="50"/>
+-		<palletOut id="PO1_ST_05" xPos="620" yPos="380" zPos="50"/>
+-		<buffer id="B1_ST_05" description="Buffer 1 contains bearings" current="10" max="10" warning="5" xPos="220" yPos="580" zPos="40" consumable_id="LB">
+-			<consumable id="LB" description="Lower Bearing" type="bearing"/>
+-		</buffer>
+-		<buffer id="B2_ST_05" description="Buffer 2 contains bearings" current="10" max="10" warning="5" xPos="320" yPos="580" zPos="40" consumable_id="HB">
+-			<consumable id="HB" description="Higher Bearing" type="bearing"/>
+-		</buffer>
+-		<buffer id="B3_ST_05" description="Buffer 3 contains axes" current="10" max="10" warning="5" xPos="420" yPos="580" zPos="40" consumable_id="A">
+-			<consumable id="A" description="Shaft" type="axle"/>
+-		</buffer>
+-		<buffer id="B4_ST_05" description="Buffer 4 contains covers" current="10" max="10" warning="5" xPos="520" yPos="580" zPos="40" consumable_id="C">
+-			<consumable id="C" description="Cover" type="cover"/>
+-		</buffer>
+-		<tool id="T1_ST_05" type="gripper" changeoverT="00:15:00" description="Double gripper"/>
+-		<simple_operation id="1" executionTime="00:00:15">
+-			<action id="1" type="insert" actionPos="1" description="insert lower bearing">
+-				<consumable id="LB" description="Lower Bearing" type="bearing"/>
+-			</action>
+-		</simple_operation>
+-		<simple_operation id="2" executionTime="00:00:30">
+-			<action id="2" type="insert" actionPos="2" description="insert axis">
+-				<consumable id="A" description="Shaft" type="axle"/>
+-			</action>
+-			<action id="1" type="insert" actionPos="1" description="insert lower bearing">
+-				<consumable id="LB" description="Lower Bearing" type="bearing"/>
+-			</action>
+-		</simple_operation>
+-		<simple_operation id="3" executionTime="00:00:45">
+-			<action id="3" type="insert" actionPos="3" description="insert upper bearing">
+-				<consumable id="HB" description="Higher Bearing" type="bearing"/>
+-			</action>
+-			<action id="2" type="insert" actionPos="2" description="insert axis">
+-				<consumable id="A" description="Shaft" type="axle"/>
+-			</action>
+-			<action id="1" type="insert" actionPos="1" description="insert lower bearing">
+-				<consumable id="LB" description="Lower Bearing" type="bearing"/>
+-			</action>
+-		</simple_operation>
+-		<simple_operation id="4" executionTime="00:01:00">
+-			<action id="4" type="pick_and_place" actionPos="4" description="place cover">
+-				<consumable id="C" description="Cover" type="cover"/>
+-			</action>
+-			<action id="3" type="insert" actionPos="3" description="insert upper bearing">
+-				<consumable id="HB" description="Higher Bearing" type="bearing"/>
+-			</action>
+-			<action id="2" type="insert" actionPos="2" description="insert axis">
+-				<consumable id="A" description="Shaft" type="axle"/>
+-			</action>
+-			<action id="1" type="insert" actionPos="1" description="insert lower bearing">
+-				<consumable id="LB" description="Lower Bearing" type="bearing"/>
+-			</action>
+-		</simple_operation>
+-		<simple_operation id="5" executionTime="00:00:15">
+-			<action id="2" type="insert" actionPos="2" description="insert axis">
+-				<consumable id="A" description="Shaft" type="axle"/>
+-			</action>
+-		</simple_operation>
+-		<simple_operation id="6" executionTime="00:00:30">
+-			<action id="3" type="insert" actionPos="3" description="insert upper bearing">
+-				<consumable id="HB" description="Higher Bearing" type="bearing"/>
+-			</action>
+-			<action id="2" type="insert" actionPos="2" description="insert axis">
+-				<consumable id="A" description="Shaft" type="axle"/>
+-			</action>
+-		</simple_operation>
+-		<simple_operation id="7" executionTime="00:00:45">
+-			<action id="4" type="pick_and_place" actionPos="4" description="place cover">
+-				<consumable id="C" description="Cover" type="cover"/>
+-			</action>
+-			<action id="3" type="insert" actionPos="3" description="insert upper bearing">
+-				<consumable id="HB" description="Higher Bearing" type="bearing"/>
+-			</action>
+-			<action id="2" type="insert" actionPos="2" description="insert axis">
+-				<consumable id="A" description="Shaft" type="axle"/>
+-			</action>
+-		</simple_operation>
+-		<simple_operation id="8" executionTime="00:00:15">
+-			<action id="3" type="insert" actionPos="3" description="insert upper bearing">
+-				<consumable id="HB" description="Higher Bearing" type="bearing"/>
+-			</action>
+-		</simple_operation>
+-		<simple_operation id="9" executionTime="00:00:30">
+-			<action id="4" type="pick_and_place" actionPos="4" description="place cover">
+-				<consumable id="C" description="Cover" type="cover"/>
+-			</action>
+-			<action id="3" type="insert" actionPos="3" description="insert upper bearing">
+-				<consumable id="HB" description="Higher Bearing" type="bearing"/>
+-			</action>
+-		</simple_operation>
+-		<simple_operation id="10" executionTime="00:00:15">
+-			<action id="4" type="pick_and_place" actionPos="4" description="place cover">
+-				<consumable id="C" description="Cover" type="cover"/>
+-			</action>
+-		</simple_operation>
+-	</station>
+-	<up:updatedPlan id="UP_01">
+-		<up:station ref_id="ST_05">
+-		</up:station>
+-	</up:updatedPlan>
+-</machine>
+Index: classes/resources/AppInstances/MPlan7.xml
+===================================================================
+diff --git a/classes/resources/AppInstances/MPlan7.xml b/classes/resources/AppInstances/MPlan7.xml
+deleted file mode 100644
+--- a/classes/resources/AppInstances/MPlan7.xml	(revision 80bb80354de2820920673698f2657df32371e514)
++++ /dev/null	(revision 80bb80354de2820920673698f2657df32371e514)
+@@ -1,103 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<!-- editado con XMLSpy v2020 sp1 (x64) (http://www.altova.com) por  (University of the Basque Country) -->
+-<mPlan xmlns="ManufacturingPlan" name="MPlan2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="ManufacturingPlan ./ManufacturingPlan.xsd">
+-	<order reference="21">
+-		<batch reference="211" numberOfItems="5" refProductID="1">
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="21" batch_ID="211" item_ID="2111">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00">
+-					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-				</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>			
+-			</PlannedItem>
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="21" batch_ID="211" item_ID="2112">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00">
+-					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-				</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>			
+-			</PlannedItem>
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="21" batch_ID="211" item_ID="2113">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00">
+-					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-				</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>			
+-			</PlannedItem>
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="21" batch_ID="211" item_ID="2114">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-12-16T08:03:00" plannedFinishTime="2021-12-16T08:04:00">
+-					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:03:00" plannedFinishTime="2021-12-16T08:04:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:03:00" plannedFinishTime="2021-12-16T08:04:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:03:00" plannedFinishTime="2021-12-16T08:04:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:03:00" plannedFinishTime="2021-12-16T08:04:00"/>
+-				</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>			
+-			</PlannedItem>
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="21" batch_ID="211" item_ID="2115">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-12-16T08:04:00" plannedFinishTime="2021-12-16T08:05:00">
+-					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:04:00" plannedFinishTime="2021-12-16T08:05:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:04:00" plannedFinishTime="2021-12-16T08:05:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:04:00" plannedFinishTime="2021-12-16T08:05:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:04:00" plannedFinishTime="2021-12-16T08:05:00"/>
+-				</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>			
+-			</PlannedItem>
+-		</batch>
+-	</order>
+-	<order reference="22">
+-		<batch reference="221" numberOfItems="3" refProductID="1">
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="22" batch_ID="221" item_ID="2211">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="4" plannedStationId="41" plannedStartTime="2021-12-16T08:00:00"
+-			plannedFinishTime="2021-12-16T08:01:00">
+-				<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-			</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>
+-			</PlannedItem>
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="22" batch_ID="221" item_ID="2212">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="4" plannedStationId="41" plannedStartTime="2021-12-16T08:01:00"
+-			plannedFinishTime="2021-12-16T08:02:00">
+-				<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-			</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>
+-			</PlannedItem>
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="22" batch_ID="221" item_ID="2213">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="4" plannedStationId="41" plannedStartTime="2021-12-16T08:02:00"
+-			plannedFinishTime="2021-12-16T08:03:00">
+-				<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-			</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>
+-			</PlannedItem>
+-		</batch>
+-	</order>
+-</mPlan>
+\ No newline at end of file
+Index: classes/resources/AppInstances/MPlan8.xml
+===================================================================
+diff --git a/classes/resources/AppInstances/MPlan8.xml b/classes/resources/AppInstances/MPlan8.xml
+deleted file mode 100644
+--- a/classes/resources/AppInstances/MPlan8.xml	(revision 80bb80354de2820920673698f2657df32371e514)
++++ /dev/null	(revision 80bb80354de2820920673698f2657df32371e514)
+@@ -1,141 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<!-- editado con XMLSpy v2020 sp1 (x64) (http://www.altova.com) por  (University of the Basque Country) -->
+-<mPlan xmlns="ManufacturingPlan" name="MPlan2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="ManufacturingPlan ./ManufacturingPlan.xsd">
+-	<order reference="21">
+-		<batch reference="211" numberOfItems="5" refProductID="1">
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="21" batch_ID="211" item_ID="2111">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00">
+-					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-				</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>			
+-			</PlannedItem>
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="21" batch_ID="211" item_ID="2112">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00">
+-					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-				</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>			
+-			</PlannedItem>
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="21" batch_ID="211" item_ID="2113">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00">
+-					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-				</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>			
+-			</PlannedItem>
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="21" batch_ID="211" item_ID="2114">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-12-16T08:03:00" plannedFinishTime="2021-12-16T08:04:00">
+-					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:03:00" plannedFinishTime="2021-12-16T08:04:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:03:00" plannedFinishTime="2021-12-16T08:04:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:03:00" plannedFinishTime="2021-12-16T08:04:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:03:00" plannedFinishTime="2021-12-16T08:04:00"/>
+-				</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>			
+-			</PlannedItem>
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="21" batch_ID="211" item_ID="2115">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-12-16T08:04:00" plannedFinishTime="2021-12-16T08:05:00">
+-					<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:04:00" plannedFinishTime="2021-12-16T08:05:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:04:00" plannedFinishTime="2021-12-16T08:05:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:04:00" plannedFinishTime="2021-12-16T08:05:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:04:00" plannedFinishTime="2021-12-16T08:05:00"/>
+-				</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>			
+-			</PlannedItem>
+-		</batch>
+-	</order>
+-	<order reference="22">
+-		<batch reference="221" numberOfItems="3" refProductID="1">
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="22" batch_ID="221" item_ID="2211">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="4" plannedStationId="41" plannedStartTime="2021-12-16T08:00:00"
+-			plannedFinishTime="2021-12-16T08:01:00">
+-				<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-			</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>
+-			</PlannedItem>
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="22" batch_ID="221" item_ID="2212">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="4" plannedStationId="41" plannedStartTime="2021-12-16T08:01:00"
+-			plannedFinishTime="2021-12-16T08:02:00">
+-				<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-			</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>
+-			</PlannedItem>
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="22" batch_ID="221" item_ID="2213">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="4" plannedStationId="41" plannedStartTime="2021-12-16T08:02:00"
+-			plannedFinishTime="2021-12-16T08:03:00">
+-				<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-			</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>
+-			</PlannedItem>
+-		</batch>
+-		<batch reference="222" numberOfItems="3" refProductID="1">
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="22" batch_ID="222" item_ID="2221">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="5" plannedStationId="51" plannedStartTime="2021-12-16T08:00:00"
+-			plannedFinishTime="2021-12-16T08:01:00">
+-				<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:00:00" plannedFinishTime="2021-12-16T08:01:00"/>
+-			</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>
+-			</PlannedItem>
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="22" batch_ID="222" item_ID="2222">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="5" plannedStationId="51" plannedStartTime="2021-12-16T08:01:00"
+-			plannedFinishTime="2021-12-16T08:02:00">
+-				<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:01:00" plannedFinishTime="2021-12-16T08:02:00"/>
+-			</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>
+-			</PlannedItem>
+-			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="22" batch_ID="222" item_ID="2223">
+-				<simpleOperation id="4" description="insert_and_place" plannedMachineId="5" plannedStationId="51" plannedStartTime="2021-12-16T08:02:00"
+-			plannedFinishTime="2021-12-16T08:03:00">
+-				<action id="4" type="pick_and_place" actionPos="4" description="place cover" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-					<action id="3" type="insert" actionPos="3" description="insert upper bearing" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-					<action id="2" type="insert" actionPos="2" description="insert axis" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-					<action id="1" type="insert" actionPos="1" description="insert lower bearing" plannedStartTime="2021-12-16T08:02:00" plannedFinishTime="2021-12-16T08:03:00"/>
+-			</simpleOperation>
+-				<product productType="BB" description="Base (big product)" state="Planned">
+-					<rawMaterial id="BB" description="Base (big product)"/>
+-				</product>
+-			</PlannedItem>
+-		</batch>
+-	</order>
+-</mPlan>
+\ No newline at end of file
+Index: classes/resources/ResInstances/Station5.xml
+===================================================================
+diff --git a/classes/resources/ResInstances/Station5.xml b/classes/resources/ResInstances/Station5.xml
+deleted file mode 100644
+--- a/classes/resources/ResInstances/Station5.xml	(revision 80bb80354de2820920673698f2657df32371e514)
++++ /dev/null	(revision 80bb80354de2820920673698f2657df32371e514)
+@@ -1,99 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<station xmlns="station" id="51" description="Station 5 has all the consumable materials: bearings axes and covers" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="station ./Station.xsd">
+-	<palletIn id="PI1_ST_05" xPos="80" yPos="80" zPos="50"/>
+-	<palletIn id="PI2_ST_05" xPos="520" yPos="80" zPos="50"/>
+-	<palletOut id="PO1_ST_05" xPos="620" yPos="380" zPos="50"/>
+-	<buffer id="B1_ST_05" description="Buffer 1 contains bearings" current="10" max="10" warning="5" xPos="220" yPos="580" zPos="40" consumable_id="LB">
+-		<consumable id="LB" description="Lower Bearing" type="bearing"/>
+-	</buffer>
+-	<buffer id="B2_ST_05" description="Buffer 2 contains bearings" current="10" max="10" warning="5" xPos="320" yPos="580" zPos="40" consumable_id="HB">
+-		<consumable id="HB" description="Higher Bearing" type="bearing"/>
+-	</buffer>
+-	<buffer id="B3_ST_05" description="Buffer 3 contains axes" current="10" max="10" warning="5" xPos="420" yPos="580" zPos="40" consumable_id="A">
+-		<consumable id="A" description="Shaft" type="axle"/>
+-	</buffer>
+-	<buffer id="B4_ST_05" description="Buffer 4 contains covers" current="10" max="10" warning="5" xPos="520" yPos="580" zPos="40" consumable_id="C">
+-		<consumable id="C" description="Cover" type="cover"/>
+-	</buffer>
+-	<tool id="T1_ST_05" type="gripper" changeoverT="00:15:00" description="Double gripper"/>
+-	<simple_operation id="1" executionTime="00:00:15">
+-		<action id="1" type="insert" actionPos="1" description="insert lower bearing">
+-			<consumable id="LB" description="Lower Bearing" type="bearing"/>
+-		</action>
+-	</simple_operation>
+-	<simple_operation id="2" executionTime="00:00:30">
+-		<action id="2" type="insert" actionPos="2" description="insert axis">
+-			<consumable id="A" description="Shaft" type="axle"/>
+-		</action>
+-		<action id="1" type="insert" actionPos="1" description="insert lower bearing">
+-			<consumable id="LB" description="Lower Bearing" type="bearing"/>
+-		</action>
+-	</simple_operation>
+-	<simple_operation id="3" executionTime="00:00:45">
+-		<action id="3" type="insert" actionPos="3" description="insert upper bearing">
+-			<consumable id="HB" description="Higher Bearing" type="bearing"/>
+-		</action>
+-		<action id="2" type="insert" actionPos="2" description="insert axis">
+-			<consumable id="A" description="Shaft" type="axle"/>
+-		</action>
+-		<action id="1" type="insert" actionPos="1" description="insert lower bearing">
+-			<consumable id="LB" description="Lower Bearing" type="bearing"/>
+-		</action>
+-	</simple_operation>
+-	<simple_operation id="4" executionTime="00:01:00">
+-		<action id="4" type="pick_and_place" actionPos="4" description="place cover">
+-			<consumable id="C" description="Cover" type="cover"/>
+-		</action>
+-		<action id="3" type="insert" actionPos="3" description="insert upper bearing">
+-			<consumable id="HB" description="Higher Bearing" type="bearing"/>
+-		</action>
+-		<action id="2" type="insert" actionPos="2" description="insert axis">
+-			<consumable id="A" description="Shaft" type="axle"/>
+-		</action>
+-		<action id="1" type="insert" actionPos="1" description="insert lower bearing">
+-			<consumable id="LB" description="Lower Bearing" type="bearing"/>
+-		</action>
+-	</simple_operation>
+-	<simple_operation id="5" executionTime="00:00:15">
+-		<action id="2" type="insert" actionPos="2" description="insert axis">
+-			<consumable id="A" description="Shaft" type="axle"/>
+-		</action>
+-	</simple_operation>
+-	<simple_operation id="6" executionTime="00:00:30">
+-		<action id="3" type="insert" actionPos="3" description="insert upper bearing">
+-			<consumable id="HB" description="Higher Bearing" type="bearing"/>
+-		</action>
+-		<action id="2" type="insert" actionPos="2" description="insert axis">
+-			<consumable id="A" description="Shaft" type="axle"/>
+-		</action>
+-	</simple_operation>
+-	<simple_operation id="7" executionTime="00:00:45">
+-		<action id="4" type="pick_and_place" actionPos="4" description="place cover">
+-			<consumable id="C" description="Cover" type="cover"/>
+-		</action>
+-		<action id="3" type="insert" actionPos="3" description="insert upper bearing">
+-			<consumable id="HB" description="Higher Bearing" type="bearing"/>
+-		</action>
+-		<action id="2" type="insert" actionPos="2" description="insert axis">
+-			<consumable id="A" description="Shaft" type="axle"/>
+-		</action>
+-	</simple_operation>
+-	<simple_operation id="8" executionTime="00:00:15">
+-		<action id="3" type="insert" actionPos="3" description="insert upper bearing">
+-			<consumable id="HB" description="Higher Bearing" type="bearing"/>
+-		</action>
+-	</simple_operation>
+-	<simple_operation id="9" executionTime="00:00:30">
+-		<action id="4" type="pick_and_place" actionPos="4" description="place cover">
+-			<consumable id="C" description="Cover" type="cover"/>
+-		</action>
+-		<action id="3" type="insert" actionPos="3" description="insert upper bearing">
+-			<consumable id="HB" description="Higher Bearing" type="bearing"/>
+-		</action>
+-	</simple_operation>
+-	<simple_operation id="10" executionTime="00:00:15">
+-		<action id="4" type="pick_and_place" actionPos="4" description="place cover">
+-			<consumable id="C" description="Cover" type="cover"/>
+-		</action>
+-	</simple_operation>
+-</station>

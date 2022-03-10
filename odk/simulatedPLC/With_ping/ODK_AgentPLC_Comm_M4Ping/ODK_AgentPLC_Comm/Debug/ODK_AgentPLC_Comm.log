@@ -1,0 +1,22 @@
+﻿  ---- ODK Code Generator started ----
+  Parsing file ODK_AgentPLC_Comm.odk
+  Generating file ODK_Execution.cpp
+  Generating file ODK_Types.h
+  Generating file ODK_Functions.h
+  Generating file ODK_AgentPLC_Comm.scl
+  ---- ODK Code Generator finished ----
+  stdafx.cpp
+  dllmain.cpp
+  ODK_AgentPLC_Comm.cpp
+C:\Users\dgarcia129\Desktop\D\ODK_AgentPLC_Comm_M4Ping\ODK_AgentPLC_Comm\ODK_AgentPLC_Comm.cpp(211,46): warning C4805: '==': combinación no segura del tipo 'ODK_BOOL' y el tipo 'bool' en la operación
+C:\Users\dgarcia129\Desktop\D\ODK_AgentPLC_Comm_M4Ping\ODK_AgentPLC_Comm\ODK_AgentPLC_Comm.cpp(256,22): warning C4805: '==': combinación no segura del tipo 'const ODK_BOOL' y el tipo 'bool' en la operación
+C:\Users\dgarcia129\Desktop\D\ODK_AgentPLC_Comm_M4Ping\ODK_AgentPLC_Comm\ODK_AgentPLC_Comm.cpp(264,27): warning C4805: '==': combinación no segura del tipo 'const ODK_BOOL' y el tipo 'bool' en la operación
+C:\Users\dgarcia129\Desktop\D\ODK_AgentPLC_Comm_M4Ping\ODK_AgentPLC_Comm\ODK_AgentPLC_Comm.cpp(264,52): warning C4805: '==': combinación no segura del tipo 'const ODK_BOOL' y el tipo 'bool' en la operación
+C:\Users\dgarcia129\Desktop\D\ODK_AgentPLC_Comm_M4Ping\ODK_AgentPLC_Comm\ODK_AgentPLC_Comm.cpp(268,53): warning C4805: '==': combinación no segura del tipo 'const ODK_BOOL' y el tipo 'bool' en la operación
+  ODK_CpuReadData.cpp
+  ODK_CpuReadWriteData.cpp
+  ODK_StringHelper.cpp
+  Generando código...
+  ODK_Execution.cpp
+     Creando biblioteca C:\Users\dgarcia129\Desktop\D\ODK_AgentPLC_Comm_M4Ping\Debug\ODK_AgentPLC_Comm.lib y objeto C:\Users\dgarcia129\Desktop\D\ODK_AgentPLC_Comm_M4Ping\Debug\ODK_AgentPLC_Comm.exp
+  ODK_AgentPLC_Comm.vcxproj -> C:\Users\dgarcia129\Desktop\D\ODK_AgentPLC_Comm_M4Ping\Debug\ODK_AgentPLC_Comm.dll
