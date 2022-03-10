@@ -8,4 +8,3 @@
 
 # modified environment variables
 export PWD='/home/borjartime/IdeaProjects/FlexManSys/rosjava_ws/build'
-export ROS_PACKAGE_PATH='/home/borjartime/rosjava_ws/src:/home/borjartime/IdeaProjects/FlexManSys/rosjava_ws/src:/home/borjartime/rosjava_ws/src:/home/borjartime/rosjava/src:/opt/ros/kinetic/share'

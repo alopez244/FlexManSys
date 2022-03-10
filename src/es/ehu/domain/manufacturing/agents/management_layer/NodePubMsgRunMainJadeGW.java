@@ -65,7 +65,7 @@ public class NodePubMsgRunMainJadeGW extends AbstractNodeMain {
 
     NodeConfiguration nodeConfiguration = NodeConfiguration.newPrivate();
     nodeConfiguration.setMasterUri(masterURI);
-    nodeConfiguration.setNodeName("NodePubMsg");
+    nodeConfiguration.setNodeName("GWAgent");
 
     NodeMain nodeMain = (NodeMain) this;
     NodeMainExecutor nodeMainExecutor = DefaultNodeMainExecutor.newDefault();

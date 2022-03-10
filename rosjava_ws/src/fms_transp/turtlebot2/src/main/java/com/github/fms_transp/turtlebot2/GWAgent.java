@@ -13,6 +13,7 @@ import org.ros.node.topic.Publisher;
 import org.ros.concurrent.CancellableLoop;
 import org.ros.address.InetAddressFactory;
 import org.ros.node.DefaultNodeMainExecutor;
+import org.ros.node.*;
 
 // ******************* MESSAGES *************************
 
@@ -42,6 +43,7 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.wrapper.gateway.JadeGateway;
 import jade.util.leap.Properties;
 import jade.core.Profile;
+import org.ros.address.InetAddressFactory;
 
 import com.github.rosjava.fms_transp.turtlebot2.StructCommand;
 import com.github.rosjava.fms_transp.turtlebot2.StructTransportUnitState;
@@ -67,8 +69,9 @@ public class GWAgent extends AbstractNodeMain {
       //Inicializamos el apendice de agente de este nodo ROS instanciando la clase GWagentROS
       this.jadeInit();
 
-      //Al ejecutar el roscore antes que el GWAgent, no es necesario un rosinit
-      //this.rosInit();
+      //Al ejecutar el roscore antes que el GWAgent, no es necesario un rosinit, solo si no se hace
+      //un rosrun previo. Si se llama desde java en vez de rosrun, es necesario el ros.Init()
+      this.rosInit();
 
     }
     catch(Exception e) {
@@ -86,6 +89,12 @@ public class GWAgent extends AbstractNodeMain {
     // Definimos las propiedades de comunicacion entre los agentes
     Properties pp = new Properties();
     pp.setProperty(Profile.MAIN_HOST, host);
+    //pp.setProperty(Profile.MAIN_HOST, "10.109.11.45");
+
+    System.out.println("*********************");
+    System.out.println(host);
+    System.out.println("*********************");
+
     pp.setProperty(Profile.MAIN_PORT, port);
     pp.setProperty(Profile.LOCAL_PORT, port);
 
@@ -105,6 +114,21 @@ public class GWAgent extends AbstractNodeMain {
     command.setAction("init");
     JadeGateway.execute(command);
 
+  }
+
+  private void rosInit() throws Exception {
+    String host = InetAddressFactory.newNonLoopback().getHostName();
+    String port = "11311";
+    String masterURI_str = "http://" + host + ":" + port;
+    URI masterURI = new URI(masterURI_str);
+
+    NodeConfiguration nodeConfiguration = NodeConfiguration.newPrivate();
+    nodeConfiguration.setMasterUri(masterURI);
+    nodeConfiguration.setNodeName("GWAgent");
+
+    NodeMain nodeMain = (NodeMain) this;
+    NodeMainExecutor nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
+    nodeMainExecutor.execute(nodeMain, nodeConfiguration);
   }
 
   @Override
