@@ -501,7 +501,7 @@ public class MWAgent extends Agent {
             confirmation.setContent(msg.getContent());
             Date date = new Date();
             long instant = date.getTime();
-            instant=instant+1500; //añade una espera de 1.5 seg
+            instant=instant+2000; //añade una espera de 1.5 seg
             ExpMsg[1]=instant;
             AID receiver=(AID) itor.next();
             confirmation.addReceiver(receiver);

@@ -381,8 +381,8 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                     }
                     deserializedMessage = deserializeMsg(msg.getContent());
                     String batchNumber = deserializedMessage.get(0).get(0).get(3).get(0);
-                    while (!batch_to_take_down.equals("")) {
-                    } //espera al reseteo de la variable para escribir el batch (evita algunos bugs)
+//                    while (!batch_to_take_down.equals("")) {
+//                    } //espera al reseteo de la variable para escribir el batch (evita algunos bugs)
                     batch_to_take_down = batchNumber;
                     batchTraceability = addNewLevel(batchTraceability, deserializedMessage, false);
                 }

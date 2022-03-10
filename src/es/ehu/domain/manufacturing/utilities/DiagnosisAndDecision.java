@@ -98,11 +98,11 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                 }
                 for(int i=0; i<target_parents.length;i++){
                     ACLMessage target=sendCommand(myAgent,"get * parent="+target_parents[i]+" state=running",convID+String.valueOf(convIDCounter));
-//                    while(target.getContent().equals("")){ // es posible no tener una replica en running disponible por lo que hay que esperar hasta poder informarla
-//                        LOGGER.debug("Running replica not found for "+target_parents[i]+". Retrying.");
-//                        target=sendCommand(myAgent,"get * parent="+target_parents[i]+" state=running",convID+String.valueOf(convIDCounter));
-//                        Thread.sleep(1000);
-//                    }
+                    while(target.getContent().equals("")){ // es posible no tener una replica en running disponible por lo que hay que esperar hasta poder informarla
+                        LOGGER.debug("Running replica not found for "+target_parents[i]+". Retrying.");
+                        target=sendCommand(myAgent,"get * parent="+target_parents[i]+" state=running",convID+String.valueOf(convIDCounter));
+                        Thread.sleep(1000);
+                    }
                     sendACL(ACLMessage.INFORM,target.getContent(),"release_buffer",winner,myAgent);
                 }
                 restart_replica(parent_of_dead_SE.getContent()); //hay que generar una replica en tracking si es posible para mantener el numero de replicas constante
