@@ -4,6 +4,9 @@ import jade.core.Agent;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+
+import java.util.Scanner;
 
 public class REST_Test_Agent extends Agent {
 
@@ -15,22 +18,33 @@ public class REST_Test_Agent extends Agent {
 
         addBehaviour(new CyclicBehaviour() {
 
-            Integer i = 0;
+            String cmd = "";
 
             public void action() {
-                ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-                AID GWagentROS = new AID("ControlGatewayCont1", false);
-                msg.addReceiver(GWagentROS);
-                msg.setOntology("data");
-                msg.setConversationId("1234");
-                msg.setContent(i.toString());
-                send(msg);
-		i++;
 
+                //Introduzco el nombre de un servicio
+                Scanner in = new Scanner(System.in);
+                System.out.print("Please, introduce the name of the service you want to invoke, or the word exit to stop the test: ");
+                cmd = in.nextLine();
+                System.out.println();
+
+                //Envío el mensaje al GatewayAgent
+                ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+                AID GWagentHTTP = new AID("ControlGatewayContTest1", false);
+                msg.addReceiver(GWagentHTTP);
+                msg.setOntology("data");
+                msg.setContent(cmd);
+                send(msg);
+
+                //Recibo la respuesta y la imprimo
+                ACLMessage response = blockingReceive(MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+                System.out.println(response.getContent());
+
+                //Espero 5s antes de enviar el siguiente servicio
                 try {
                     Thread.sleep(5000);
                 } catch(Exception e) {
-                    ;
+                    e.printStackTrace();
                 }
             }
         });

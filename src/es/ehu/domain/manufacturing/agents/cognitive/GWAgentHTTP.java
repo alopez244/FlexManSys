@@ -21,23 +21,37 @@ public class GWAgentHTTP extends GatewayAgent {
         StructMessage command = (StructMessage) _command;
         String action = command.readAction();
 
-        if(action.equals("init")) {
+        switch (action) {
+            case "init":
 
-            //Se printea un mensaje por pantalla
-            System.out.println("--- GWagentHTTP init() command called.");
-        } else if (action.equals("receive")){
+                //Se printea un mensaje por pantalla
+                System.out.println("--- GWagentHTTP init() command called.");
+                break;
+            case "receive":
 
-            //Se comprueba si se ha recibido algún mensaje
-            if ( msgRecv != null ) {
+                //Se comprueba si se ha recibido algún mensaje
+                if (msgRecv != null) {
 
-                //En caso afirmativo, se guarda en la estructura de datos
-                command.setMessage(msgRecv);
-                command.setNewData(true);
-            } else {
+                    //En caso afirmativo, se guarda en la estructura de datos
+                    command.setMessage(msgRecv);
+                    command.setNewData(true);
+                    msgRecv = null;
+                } else {
 
-                //En caso negativo, se indica que no hay nuevos datos
-                command.setNewData(false);
-            }
+                    //En caso negativo, se indica que no hay nuevos datos
+                    command.setNewData(false);
+                }
+                break;
+            case "send":
+
+                //Se declara un nuevo mensaje ACL con la performativa y el contenido recibidos en la estructura
+                //También se definen el receptor (el agente que me escribió primero) y la ontología (assetdata)
+                ACLMessage msgToAgent = new ACLMessage(command.readPerformative());
+                msgToAgent.addReceiver(machineAgentName);
+                msgToAgent.setOntology("assetdata");
+                msgToAgent.setContent(command.readMessage());
+                send(msgToAgent);
+                break;
         }
 
         //Se ejecuta el método releaseCommand para finalizar la ejecución

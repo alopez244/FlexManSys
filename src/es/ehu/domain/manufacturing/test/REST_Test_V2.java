@@ -50,7 +50,6 @@ public class REST_Test_V2 {
                 }
 
                 if (response != null) {
-//                    System.out.println(response);
                     try {
                         jadeSend(response);
                     } catch (ControllerException | InterruptedException e) {
