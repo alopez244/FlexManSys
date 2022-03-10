@@ -1,5 +1,6 @@
 package es.ehu.domain.manufacturing.test;
 
+import com.google.gson.Gson;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
@@ -12,14 +13,15 @@ import jade.wrapper.ControllerException;
 import jade.wrapper.gateway.JadeGateway;
 import org.ros.address.InetAddressFactory;
 
+import java.util.HashMap;
 import java.util.Scanner;
 
-public class REST_Test_V2 {
+public class REST_Test_V3 {
 
     private String request;
     private String response;
 
-    public REST_Test_V2() {
+    public REST_Test_V3() {
 
         //Primero, las presentaciones (portada para el usuario)
         System.out.println("This is a Java Class acting as a gateway between ACL (FlexManSys Agents) and HTTP (IPB Demonstrator).\n");
@@ -119,15 +121,33 @@ public class REST_Test_V2 {
 
         //Primero inicializo las variables que voy a necesitar
         String result = null;
-        String type;
+        String service;
+        String paramName = "";
+        String paramValue = "";
         Scanner in_1 = new Scanner(System.in);
         Scanner in_2 = new Scanner(System.in);
         String body;
         String first;
         String last;
+        HashMap cmdHashMap;
+        HashMap paramHashMap;
+
+        //Después, transformo el mensaje recibido de vuelta en un HashMap
+        cmdHashMap = new Gson().fromJson(cmd, HashMap.class);
+
+        //Obtengo el tipo de servicio
+        service = cmdHashMap.get("Service").toString();
+
+        //Obtengo el nombre y valor de los parámetros
+//        String [] paramInfo = cmdHashMap.get("Parameters").toString().split("=");
+//        paramName = paramInfo[0];
+//        paramValue = paramInfo[1];
+
+        //Alternativa
+         body = (String) cmdHashMap.get("Parameters");
 
         //Después ejecuto el switch
-        switch (cmd) {
+        switch (service) {
             case "POST_Reset":
 
                 //Recibo la respuesta
@@ -146,13 +166,8 @@ public class REST_Test_V2 {
                 break;
             case "POST_PA":
 
-                //Solicito al usuario del programa el valor de la referencia del producto
-                System.out.print("Please, introduce the Ref_Subproduct_Type: ");
-                type = in_1.nextLine();
-                System.out.println();
-
                 //Construyo el cuerpo del mensaje a enviar
-                body = "{\n  \"Ref_Subproduct_Type\": \"" + type + "\"\n}\n";
+//                body = "{\n  \"" + paramName + "\": \"" + paramValue + "\"\n}\n";
 
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_PA = Unirest.post("http://127.0.0.1:1880/Request/ManufacturingStation/PA")
@@ -173,13 +188,8 @@ public class REST_Test_V2 {
                 break;
             case "POST_PB":
 
-                //Solicito al usuario del programa el valor de la referencia del producto
-                System.out.print("Please, introduce the Ref_Subproduct_Type: ");
-                type = in_1.nextLine();
-                System.out.println();
-
                 //Construyo el cuerpo del mensaje a enviar
-                body = "{\n  \"Ref_Subproduct_Type\": \"" + type + "\"\n}\n";
+                body = "{\n  \"" + paramName + "\": \"" + paramValue + "\"\n}\n";
 
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_PB = Unirest.post("http://127.0.0.1:1880/Request/ManufacturingStation/PB")
@@ -200,13 +210,8 @@ public class REST_Test_V2 {
                 break;
             case "POST_IA":
 
-                //Solicito al usuario del programa el valor de la referencia del producto
-                System.out.print("Please, introduce the Ref_Subproduct_Type: ");
-                type = in_1.nextLine();
-                System.out.println();
-
                 //Construyo el cuerpo del mensaje a enviar
-                body = "{\n  \"Ref_Subproduct_Type\": \"" + type + "\"\n}\n";
+                body = "{\n  \"" + paramName + "\": \"" + paramValue + "\"\n}\n";
 
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_IA = Unirest.post("http://127.0.0.1:1880/Request/ManufacturingStation/IA")
@@ -227,13 +232,8 @@ public class REST_Test_V2 {
                 break;
             case "POST_IB":
 
-                //Solicito al usuario del programa el valor de la referencia del producto
-                System.out.print("Please, introduce the Ref_Subproduct_Type: ");
-                type = in_1.nextLine();
-                System.out.println();
-
                 //Construyo el cuerpo del mensaje a enviar
-                body = "{\n  \"Ref_Subproduct_Type\": \"" + type + "\"\n}\n";
+                body = "{\n  \"" + paramName + "\": \"" + paramValue + "\"\n}\n";
 
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_IB = Unirest.post("http://127.0.0.1:1880/Request/ManufacturingStation/IB")
@@ -296,6 +296,6 @@ public class REST_Test_V2 {
     }
 
     public static void main(String[] args) {
-        REST_Test_V2 GW_ACL_HTTP= new REST_Test_V2();
+        REST_Test_V3 GW_ACL_HTTP= new REST_Test_V3();
     }
 }

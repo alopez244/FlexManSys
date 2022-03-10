@@ -34,12 +34,7 @@ public class GWAgentHTTP extends GatewayAgent {
 
                     //En caso afirmativo, se guarda en la estructura de datos
                     command.setMessage(msgRecv);
-                    command.setNewData(true);
                     msgRecv = null;
-                } else {
-
-                    //En caso negativo, se indica que no hay nuevos datos
-                    command.setNewData(false);
                 }
                 break;
             case "send":

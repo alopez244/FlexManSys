@@ -1,11 +1,13 @@
 package es.ehu.domain.manufacturing.test;
 
+import com.google.gson.Gson;
 import jade.core.Agent;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class REST_Test_Agent extends Agent {
@@ -18,22 +20,40 @@ public class REST_Test_Agent extends Agent {
 
         addBehaviour(new CyclicBehaviour() {
 
-            String cmd = "";
+            String service;
+            String parameters;
+            String msgContent;
+            HashMap msgHashMap = new HashMap();
+            HashMap paramHashMap = new HashMap();
 
             public void action() {
 
                 //Introduzco el nombre de un servicio
                 Scanner in = new Scanner(System.in);
-                System.out.print("Please, introduce the name of the service you want to invoke, or the word exit to stop the test: ");
-                cmd = in.nextLine();
+                System.out.print("Please, introduce the name of the service you want to invoke: ");
+                service = in.nextLine();
                 System.out.println();
+                msgHashMap.put("Service",service);
+
+                //Introduzco los parámetros que pueda necesitar
+                System.out.print("Please, introduce the name and value of the parameters you require for this service " +
+                        "(for example, Ref_Subproduct_Type=1234): ");
+                parameters = in.nextLine();
+                String[] parametersArray = parameters.split("=");
+                paramHashMap.put(parametersArray[0],parametersArray[1]);
+
+                parameters = new Gson().toJson(paramHashMap);
+
+                msgHashMap.put("Parameters",parameters);
+
+                msgContent = new Gson().toJson(msgHashMap);
 
                 //Envío el mensaje al GatewayAgent
                 ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
                 AID GWagentHTTP = new AID("ControlGatewayContTest1", false);
                 msg.addReceiver(GWagentHTTP);
                 msg.setOntology("data");
-                msg.setContent(cmd);
+                msg.setContent(msgContent);
                 send(msg);
 
                 //Recibo la respuesta y la imprimo
