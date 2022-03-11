@@ -1,4 +1,4 @@
-package es.ehu.domain.manufacturing.agents.cognitive;
+package es.ehu.domain.manufacturing.agents.managementLayer;
 
 import es.ehu.domain.manufacturing.utilities.StructMessage;
 import jade.core.AID;

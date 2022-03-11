@@ -3,7 +3,7 @@ package es.ehu.domain.manufacturing.agents.functionality;
 import es.ehu.domain.manufacturing.agents.TransportAgent;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.NegotiatingBehaviour;
-import es.ehu.platform.template.interfaces.AssetManagement;
+import es.ehu.domain.manufacturing.template.interfaces.AssetManagement;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.platform.utilities.Cmd;

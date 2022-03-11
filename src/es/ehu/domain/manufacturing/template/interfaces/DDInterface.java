@@ -1,4 +1,4 @@
-package es.ehu.platform.template.interfaces;
+package es.ehu.domain.manufacturing.template.interfaces;
 
 import jade.lang.acl.ACLMessage;
 

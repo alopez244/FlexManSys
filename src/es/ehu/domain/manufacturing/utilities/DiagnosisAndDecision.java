@@ -1,5 +1,5 @@
 package es.ehu.domain.manufacturing.utilities;
-import es.ehu.platform.template.interfaces.DDInterface;
+import es.ehu.domain.manufacturing.template.interfaces.DDInterface;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;

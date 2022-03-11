@@ -1,4 +1,4 @@
-package es.ehu.domain.manufacturing.agents.cognitive;
+package es.ehu.domain.manufacturing.agents.managementLayer;
 
 import com.google.gson.Gson;
 import com.mashape.unirest.http.HttpResponse;
