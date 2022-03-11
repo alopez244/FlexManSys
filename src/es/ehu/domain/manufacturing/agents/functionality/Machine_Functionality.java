@@ -38,6 +38,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private Boolean requestMaterial = false; // Flag que se activa cuando se necesita hacer una peticion de consumibles
     private Boolean orderQueueFlag = false; // Flag que se activa cuando existen nuevas ordenes en cola para la maquina
     private AID gatewayAgentID =null;
+    private Integer convIDcnt=0;
+    private String seId;
 
     private MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
             MessageTemplate.MatchOntology("acl_error"));
@@ -60,61 +62,76 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     /** Class name to switch on the agent */
     private String className;
 
-    /**
-     * Initialize the functional properties
-     *
-     * @return The name used for registering the agent in the MWM (or SM)
-     */
+
+    /* OPERACIONES DE INICIALIZACIÓN Y PUESTA EN MARCHA */
+
     @Override
     public Void init(MWAgent mwAgent) {
 
-        //First of all, the connection with the asset must be checked
-
-        //Later, if the previous condition is accomplished, the agent is registered
+        /* Se hace el cambio de tipo */
         this.myAgent = (MachineAgent) mwAgent;
         LOGGER.entry();
 
+        /* Se guarda el nombre del gatewayAgent con el que interactúa el agente */
         String machineName = myAgent.resourceName;
         Integer machineNumber = Integer.parseInt(machineName.split("_")[1]);
-        myAgent.gatewayAgentName = "ControlGatewayCont" + machineNumber.toString(); //Se genera el nombre del Gateway Agent con el que se tendrá que comunicar
-        //First, the Machine Model is read
+        myAgent.gatewayAgentName = "ControlGatewayCont" + machineNumber;
         gatewayAgentID = new AID(myAgent.gatewayAgentName, false);
 
-
-
+        /* Se leen los argumentos con los que se ha llamado al agente y se comprueba si tiene un id */
         String [] args = (String[]) myAgent.getArguments();
 
         for (int i=0; i<args.length; i++){
             if (args[i].toLowerCase().startsWith("id=")) return null;
         }
-        //******************************Checkeo del estado del GW y PLC. Agente maquina no iniciará hasta tenerlos disponibles
-//        sendACLMessage(16,gatewayAgentID,"ping","","",myAgent);
-//        ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 300);
-//        if(answer_gw==null){
-//            System.out.println("GW is not online. Start GW and repeat.");
-//            System.exit(0);
-//        }
-//
-//        sendACLMessage(16, gatewayAgentID, "check_asset","check_asset_on_boot_"+convIDcnt++,"ask_state",myAgent); //primero antes de nada debemos comprobar si el agente GW y el PLC están disponibles
-//        ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 300);
-//        if(answer!=null){
-//            if(!answer.getContent().equals("Working")&&!answer.getContent().equals("Not working")){
-//                System.out.println("PLC is not prepared to work.");
-//                System.exit(0); //si el PLC o el GW no están disponible no tiene sentido que iniciemos el agente máquina
-//            }else{
-//                System.out.println("PLC is "+answer.getContent());
-//            }
-//        }else{
-//            System.out.println("PLC is not prepared to work.");
-//            System.exit(0); //si el PLC o el GW no están disponible no tiene sentido que iniciemos el agente máquina
-//        }
-        //*************************************
-        //First, the machine attributes are included
+
+        /* En caso negativo, se trata del agente auxiliar y hay que realizar más acciones */
+        /* En primer lugar, hay que comprobar la conectividad con el asset en dos pasos: */
+        /* Paso 1: contacto con el gatewayAgent y espero respuesta (si no hay, no se puede continuar con el registro) */
+        sendACLMessage(16,gatewayAgentID,"ping","","",myAgent);
+        ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 300);
+        if(answer_gw==null){
+            System.out.println("GW is not online. Start GW and repeat.");
+            System.exit(0);
+        }
+
+        /* Paso 2: contacto con el asset a través del gatewayAgent y espero respuesta (si no hay, no se puede continuar con el registro) */
+        sendACLMessage(16, gatewayAgentID, "check_asset","check_asset_on_boot_"+convIDcnt++,"ask_state",myAgent); //primero antes de nada debemos comprobar si el agente GW y el PLC están disponibles
+        ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 300);
+        if(answer!=null){
+            if(!answer.getContent().equals("Working")&&!answer.getContent().equals("Not working")){
+                System.out.println("PLC is not prepared to work.");
+                System.exit(0); //si el asset o el gwAgent no están disponibles no tiene sentido que iniciemos el agente
+            }else{
+                System.out.println("PLC is "+answer.getContent());
+            }
+        }else{
+            System.out.println("PLC is not prepared to work.");
+            System.exit(0); //si el asset o el gwAgent no están disponible no tiene sentido que iniciemos el agente máquina
+        }
+
+        /* Si la comunicación con el asset es correcta, se procede a registrar el agente transporte en el SystemModelAgent */
+
+        /* Primero, se registra el listado de materiales disponibles en la estación */
+        int index = 0;
+        for (int i = 0; i < myAgent.resourceModel.size() - 1; i++) {
+            if (myAgent.resourceModel.get(i).get(0).get(0).equals("buffer")){
+                myAgent.availableMaterial.add(new HashMap<>());   //Se añaden niveles nuevos para poder ser rellenados con datos
+                myAgent.availableMaterial.get(index).put("consumable_id", myAgent.resourceModel.get(i).get(3).get(0));   // Valor de consumable_id
+                myAgent.availableMaterial.get(index).put("current", myAgent.resourceModel.get(i).get(3).get(1));   // Valor de piezas disponibles
+                myAgent.availableMaterial.get(index).put("max", myAgent.resourceModel.get(i).get(3).get(4));   // Valor de capacidad maxima
+                myAgent.availableMaterial.get(index).put("warning", myAgent.resourceModel.get(i).get(3).get(5));   // Valor de warning
+                index++;
+            }
+        }
+
+        /* Segundo, se leen los atributos necesarios del modelo */
         String attribs = "";
         for (int j = 0; j < myAgent.resourceModel.get(0).get(2).size(); j++){
             attribs += " "+myAgent.resourceModel.get(0).get(2).get(j)+"="+myAgent.resourceModel.get(0).get(3).get(j);
         }
-        //Secondly, the machine operations are appended to the attribs string
+
+        /* Tercero, se añaden las operaciones del asset al string de atributos */
         attribs = attribs + " simpleOperations=";
         for (int j = 0; j < myAgent.resourceModel.size(); j++){
             if (myAgent.resourceModel.get(j).get(0).get(0).startsWith("simple")){
@@ -133,10 +150,9 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 }
             }
         }
+
+        /* Cuarto, se envía el mensaje de registro */
         attribs=attribs.substring(0,attribs.length()-1);
-
-        //Thirdly, the ProcessNodeAgent is registered in the System Model
-
         String cmd = "reg machine parent=system"+attribs;
 
         ACLMessage reply = null;
@@ -145,51 +161,28 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         } catch (Exception e) {
             e.printStackTrace();
         }
-        String seId = reply.getContent();
 
-
-        LOGGER.info(myAgent.getLocalName()+" ("+cmd+")"+" > mwm < "+seId);
-
-//        Fourthly, the material available in the station is counted
-        int index = 0;
-        for (int i = 0; i < myAgent.resourceModel.size() - 1; i++) {
-            if (myAgent.resourceModel.get(i).get(0).get(0).equals("buffer")){
-                myAgent.availableMaterial.add(new HashMap<>());   //Se añaden niveles nuevos para poder ser rellenados con datos
-                myAgent.availableMaterial.get(index).put("consumable_id", myAgent.resourceModel.get(i).get(3).get(0));   // Valor de consumable_id
-                myAgent.availableMaterial.get(index).put("current", myAgent.resourceModel.get(i).get(3).get(1));   // Valor de piezas disponibles
-                myAgent.availableMaterial.get(index).put("max", myAgent.resourceModel.get(i).get(3).get(4));   // Valor de capacidad maxima
-                myAgent.availableMaterial.get(index).put("warning", myAgent.resourceModel.get(i).get(3).get(5));   // Valor de warning
-                index++;
-            }
-        }
-
-        //Finally, the MachineAgent is started.
+        seId = reply.getContent();
 
         try {
-            // Agent generation
+            /* Una vez registrado el agente máquina, es creado por el agente auxiliar, pasándole como argumento su id */
             className = myAgent.getClass().getName();
             String [] args2 = {"ID="+seId, "description=description" };
             args = ArrayUtils.addAll(args,args2);
             ((AgentController)myAgent.getContainerController().createNewAgent(seId,className, args)).start();
-
             Thread.sleep(1000);
         } catch (Exception e1) {
             e1.printStackTrace();
         }
 
-
-        //myAgent.initTransition = ControlBehaviour.RUNNING;
-
         return null;
-
         }
+
+
+    /* OPERACIONES DE ACTUALIZACIÓN DE LA LISTA DE TAREAS */
 
     @Override
     public Object execute(Object[] input) {
-
-//        try { Thread.sleep(5000);} catch (InterruptedException e) {e.printStackTrace();}  //con el buffer de mensajes esta espera es innecesaria
-
-        System.out.println("El agente recurso " + myAgent.getLocalName() + " ya esta en el metodo execute");
 
         if (input[0] != null) {
             ACLMessage msg = (ACLMessage) input[0];
@@ -199,64 +192,84 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
                 System.out.println("Ya estoy listo para empezar a hacer mis operaciones");
                 // La maquina y los agentes del plan ya estarian listos, pero habria que comprobar la hora de la operacion mas cercana
-                // Asi, si la maquina esta lista pero la operacion empieza en 30 minutos, la maquina tendra que esperar ese tiempo
+                // Así, si la maquina esta lista pero la operacion empieza en 30 minutos, la maquina tendra que esperar ese tiempo
                 // Si la maquina esta lista y la hora de la primera operacion ya ha pasado, podrá comenzar de seguido
 
             } else {
-                String[] allOperations = msg.getContent().split("&");
-                for (int i = 0; i < allOperations.length; i++) {
 
+                /* Se guardan en un array de String todas las posibles operaciones recibidas */
+                String[] allOperations = msg.getContent().split("&");
+
+                /* Se recorre el array para ir grabando las operaciones una a una*/
+                for (String singleOperation : allOperations) {
+
+                    /* Se declara un arraylist para guardar la información sobre cada operación recibida */
                     ArrayList<ArrayList<String>> operationInfo = new ArrayList<>();
 
-                    ArrayList<String> names = new ArrayList<>();
-                    ArrayList<String> values = new ArrayList<>();
+                    /* Se crean y se rellenan dos arraylist de string para la cabecera del listado de operaciones */
+                    ArrayList<String> elementName = new ArrayList<>();
+                    ArrayList<String> hierarchyLevel = new ArrayList<>();
+                    elementName.add("operation");
+                    hierarchyLevel.add("3");
 
-                    String[] AllInformation = allOperations[i].split(" ");
-                    for (String info : AllInformation) {
-                        String attrName = info.split("=")[0];
-                        String attrValue = info.split("=")[1];
+                    /* Se declaran dos arraylist de string en los que se guarda el nombre y el valor de los atributos */
+                    ArrayList<String> attNames = new ArrayList<>();
+                    ArrayList<String> attValues = new ArrayList<>();
 
-                        names.add(attrName);
-                        values.add(attrValue);
+                    /* Se guardan en un array de String todos los atributos de la operación */
+                    String[] allAttributes = singleOperation.split(" ");
+
+
+                    /* Se recorre el array para ir grabando los atributos uno a uno */
+                    for (String singleAttribute : allAttributes) {
+                        String attrName = singleAttribute.split("=")[0];
+                        String attrValue = singleAttribute.split("=")[1];
+
+                        /* Se separa el nombre del atributo de los valores */
+                        attNames.add(attrName);
+                        attValues.add(attrValue);
                     }
 
-                    ArrayList<String> aux = new ArrayList<>();
-                    ArrayList<String> aux2 = new ArrayList<>();
-                    aux.add("operation");
-                    aux2.add("3");
-                    operationInfo.add(0, aux);
-                    operationInfo.add(1, aux2);
-                    operationInfo.add(2, names);
-                    operationInfo.add(3, values);
-
+                    /* Por último, se rellena el arraylist operationInfo y se graba la operación en el plan del transporte */
+                    operationInfo.add(0, elementName);
+                    operationInfo.add(1, hierarchyLevel);
+                    operationInfo.add(2, attNames);
+                    operationInfo.add(3, attValues);
                     myAgent.machinePlan.add(operationInfo);
 
                 }
-
-                if(orderQueueFlag == false) {   //flags update to avoid order overlaps
-                    sendingFlag = true;
-                    orderQueueFlag = true;
-                }
             }
+            return LOGGER.exit("done");
+        } else {
+            return LOGGER.exit(null);
         }
-
-        return LOGGER.exit(null);
     }
 
-    @Override
-    public Void terminate(MWAgent myAgent) { return null;}
+
+    /* OPERACIONES DE NEGOCIADO DE ASIGNACIÓN DE TAREAS */
 
     @Override
     public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData) {
-        // TODO
-        // negExternalData --> batchAgentID, numOfItems
+
+        //TODO implementar el método. Para ello hay que:
+        //Leer la pila de tareas (obtener todas las operaciones pendientes)
+        //Estimar un valor de negociación en base a estas (hora estimada de inicio de la tarea)
+        //Devolver el valor obtenido
+
+        // Se van a recibir varios campos en el objeto negExternalData
+        //TODO definir qué parámetros van a hacer falta para esta negociación
         String seID = (String)negExternalData[0];
         String seNumOfItems = (String) negExternalData[1];
         int numItems = Integer.parseInt(seNumOfItems);
         String seOperationID = (String)negExternalData[2];
 
-        Random r = new Random();
-        return r.nextInt(1000)*numItems;
+        /* If redundante solo para confirmar que la petición se ajusta a un criterio que tenga sentido para el agente
+         *  Este if cobrará más sentido si en el futuro se consideran varios criterios posibles a elección del solicitante */
+        if (negCriterion.equals("shortestTime")){
+
+        }
+
+        return 0; /* Este 0 solo lo he puesto para que no de problemas al compilar, luego habrá que sustituirlo por lo que corresponda */
     }
 
     @Override
@@ -268,17 +281,28 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         String seNumOfItems = (String)negExternalData[1];
         String seOperationID = (String)negExternalData[2];
 
-        if (negReceivedValue<negScalarValue) return NegotiatingBehaviour.NEG_LOST; //pierde negociación
-        if ((negReceivedValue==negScalarValue) && !tieBreak ) return NegotiatingBehaviour.NEG_LOST; //empata negocicación pero no es quien fija desempate
+        /* Se comparan el valor propio y el valor recibido */
+        if (negReceivedValue<negScalarValue) return NegotiatingBehaviour.NEG_LOST; /* pierde la negociación */
+        if ((negReceivedValue==negScalarValue) && !tieBreak ) return NegotiatingBehaviour.NEG_LOST; /* empata la negociación pero no es quien fija el desempate */
 
-        LOGGER.info("es el ganador ("+negScalarValue+")");
-        if (!checkReplies) return NegotiatingBehaviour.NEG_PARTIAL_WON; // es ganador parcial, faltan negociaciones por finalizar
+        LOGGER.info("negotiation(id:"+conversationId+") partial winner "+myAgent.getLocalName()+"(value:"+negScalarValue+")");
+        if (!checkReplies) return NegotiatingBehaviour.NEG_PARTIAL_WON; /* es el ganador parcial, pero faltan negociaciones por finalizar */
 
+
+        if (!isPartialWinner) return NegotiatingBehaviour.NEG_LOST; /* Para ser el ganadores verdadero un agente tendrá que ser ganador parcial en cada momento */
+
+        /* El agente es el ganador final (ha ganado todas las comparaciones) */
         LOGGER.info("ejecutar "+sAction);
-
         Cmd action = new Cmd(sAction);
 
         if (action.cmd.equals("execute")) {
+
+            //TODO implementar las acciones que tiene que hacer el agente ganador. Para ello hay que:
+            //Encapsular la operación (u operaciones) recibida en un mensaje ACL e invocar el método Execute
+            //Una vez añadida la operación al plan, enviar un mensaje al agente que solicitó el servicio (machineAgentName)
+            //Este mensaje deberá informar de qué transporte ha ganado la negociación y el momento de entrega estimado (solo en caso de que las negociaciones se hagan en base a tiempos)
+
+
             operationsWithBatchAgents.put(seOperationID, seID);
 
             // Envio un mensaje al BatchAgent para avisarle de que soy el ganador para asociarme esa operacion
@@ -298,6 +322,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         }
 
         return NegotiatingBehaviour.NEG_WON;
+
     }
 
     public void sendDataToDevice() {
@@ -398,7 +423,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
                 PLCmsgOut.remove("Index");
                 String MessageContent = new Gson().toJson(PLCmsgOut);
-                AID gatewayAgentID = new AID(myAgent.gatewayAgentName, false);
                 ACLMessage msg_to_gw=sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "data", "PLCdata", MessageContent, myAgent);
 
                 myAgent.AddToExpectedMsgs(msg_to_gw);
@@ -658,6 +682,12 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             }
         }
     }
+
+
+    /* OPERACIONES DE FINALIZACIÓN DEL AGENTE MÁQUINA*/
+
+    @Override
+    public Void terminate(MWAgent myAgent) { return null;}
 
     protected Date getactualtime(){
         String actualTime;

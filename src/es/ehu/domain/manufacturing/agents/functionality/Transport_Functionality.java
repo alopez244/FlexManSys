@@ -155,7 +155,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 elementName.add("operation");
                 hierarchyLevel.add("2");
 
-                /* Se declaran dos arraylist de string en los que se guardas el nombre y el valor de los atributos */
+                /* Se declaran dos arraylist de string en los que se guarda el nombre y el valor de los atributos */
                 ArrayList<String> attNames = new ArrayList<>();
                 ArrayList<String> attValues = new ArrayList<>();
 
@@ -178,7 +178,6 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 operationInfo.add(2, attNames);
                 operationInfo.add(3, attValues);
                 myAgent.transportPlan.add(operationInfo);
-
             }
 
             return LOGGER.exit("done");
