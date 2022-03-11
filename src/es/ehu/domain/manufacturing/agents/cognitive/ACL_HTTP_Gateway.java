@@ -1,4 +1,4 @@
-package es.ehu.domain.manufacturing.test;
+package es.ehu.domain.manufacturing.agents.cognitive;
 
 import com.google.gson.Gson;
 import com.mashape.unirest.http.HttpResponse;
@@ -14,12 +14,12 @@ import jade.wrapper.gateway.JadeGateway;
 import org.ros.address.InetAddressFactory;
 import java.util.HashMap;
 
-public class REST_Test_V3 {
+public class ACL_HTTP_Gateway {
 
     private String request;
     private String response;
 
-    public REST_Test_V3(String assetName) {
+    public ACL_HTTP_Gateway(String assetName) {
 
         //Primero, las presentaciones (portada para el usuario)
         System.out.println("This is a Java Class acting as a gateway between ACL (FlexManSys Agents) and HTTP (IPB Demonstrator).\n");
@@ -248,6 +248,6 @@ public class REST_Test_V3 {
 
     public static void main(String[] args) {
         String assetName = args[0];
-        REST_Test_V3 GW_ACL_HTTP= new REST_Test_V3(assetName);
+        ACL_HTTP_Gateway GW_ACL_HTTP= new ACL_HTTP_Gateway(assetName);
     }
 }

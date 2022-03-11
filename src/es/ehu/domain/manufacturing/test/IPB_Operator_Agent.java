@@ -10,7 +10,7 @@ import jade.lang.acl.MessageTemplate;
 import java.util.HashMap;
 import java.util.Scanner;
 
-public class REST_Test_Agent extends Agent {
+public class IPB_Operator_Agent extends Agent {
 
     @Override
     protected void setup() {
@@ -20,26 +20,31 @@ public class REST_Test_Agent extends Agent {
 
         addBehaviour(new CyclicBehaviour() {
 
-            Object arguments [] = getArguments();
-            String assetName = (String) arguments[0];
+            String assetName;
             String service;
             String parameters;
             String msgContent;
             HashMap msgHashMap = new HashMap();
             HashMap paramHashMap = new HashMap();
+            boolean finish = false;
 
             public void action() {
 
-                //Introduzco el nombre de un servicio
+                //Introduzco el nombre del asset
                 Scanner in = new Scanner(System.in);
-                System.out.print("Please, introduce the name of the service you want to invoke: ");
-                service = in.nextLine();
+                System.out.print("Please, introduce the name of the asset you want to request a service: ");
+                assetName = in.nextLine();
+
+                //Introduzco el nombre de un servicio
+                System.out.print("Please, introduce the name of the service you want to invoke (GET/POST): ");
+                service = in.nextLine()+"_"+assetName;
                 System.out.println();
                 msgHashMap.put("Service",service);
 
                 //Introduzco los parámetros que pueda necesitar
                 System.out.print("Do you want to include  parameters? (Y/N): ");
                 boolean exit = in.nextLine().equalsIgnoreCase("N");
+                System.out.println();
 
                 while (!exit){
 
@@ -51,6 +56,7 @@ public class REST_Test_Agent extends Agent {
 
                     System.out.print("Do you want to include another parameter? (Y/N): ");
                     exit = in.nextLine().equalsIgnoreCase("N");
+                    System.out.println();
                 }
 
                 //Preparo el contenido del mensaje
@@ -58,27 +64,22 @@ public class REST_Test_Agent extends Agent {
                 msgHashMap.put("Parameters",parameters);
                 msgContent = new Gson().toJson(msgHashMap);
 
-                //Envío el mensaje al GatewayAgent
-                ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-                AID GWagentHTTP = new AID("ControlGatewayCont"+assetName, false);
-                msg.addReceiver(GWagentHTTP);
-                msg.setOntology("data");
-                msg.setContent(msgContent);
-                send(msg);
+                //Envío el mensaje al agente asociado a ese asset
+                ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+                AID IPB_Agent = new AID(assetName, false);
+                request.addReceiver(IPB_Agent);
+                request.setOntology("data");
+                request.setContent(msgContent);
+                send(request);
 
                 //Recibo la respuesta y la imprimo
-                ACLMessage response = blockingReceive(MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-                System.out.println(response.getContent());
-
-                //Espero 5s antes de enviar el siguiente servicio
-                try {
-                    Thread.sleep(5000);
-                } catch(Exception e) {
-                    e.printStackTrace();
+                ACLMessage response = receive(MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+                if (response != null){
+                    System.out.println("Results from service requested to "+response.getSender().getLocalName()+": ");
+                    System.out.println(response.getContent()+"\n");
                 }
             }
         });
-
     }
 
     @Override
@@ -89,4 +90,3 @@ public class REST_Test_Agent extends Agent {
         System.out.println("##### takeDown() #####");
     }
 }
-
