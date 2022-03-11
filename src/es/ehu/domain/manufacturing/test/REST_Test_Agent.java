@@ -20,6 +20,8 @@ public class REST_Test_Agent extends Agent {
 
         addBehaviour(new CyclicBehaviour() {
 
+            Object arguments [] = getArguments();
+            String assetName = (String) arguments[0];
             String service;
             String parameters;
             String msgContent;
@@ -36,7 +38,8 @@ public class REST_Test_Agent extends Agent {
                 msgHashMap.put("Service",service);
 
                 //Introduzco los parámetros que pueda necesitar
-                boolean exit=false;
+                System.out.print("Do you want to include  parameters? (Y/N): ");
+                boolean exit = in.nextLine().equalsIgnoreCase("N");
 
                 while (!exit){
 
@@ -50,15 +53,14 @@ public class REST_Test_Agent extends Agent {
                     exit = in.nextLine().equalsIgnoreCase("N");
                 }
 
+                //Preparo el contenido del mensaje
                 parameters = new Gson().toJson(paramHashMap);
-
                 msgHashMap.put("Parameters",parameters);
-
                 msgContent = new Gson().toJson(msgHashMap);
 
                 //Envío el mensaje al GatewayAgent
                 ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-                AID GWagentHTTP = new AID("ControlGatewayContTest1", false);
+                AID GWagentHTTP = new AID("ControlGatewayCont"+assetName, false);
                 msg.addReceiver(GWagentHTTP);
                 msg.setOntology("data");
                 msg.setContent(msgContent);

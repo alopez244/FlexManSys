@@ -19,14 +19,14 @@ public class REST_Test_V3 {
     private String request;
     private String response;
 
-    public REST_Test_V3() {
+    public REST_Test_V3(String assetName) {
 
         //Primero, las presentaciones (portada para el usuario)
         System.out.println("This is a Java Class acting as a gateway between ACL (FlexManSys Agents) and HTTP (IPB Demonstrator).\n");
 
         //Primero habrá que inicializar el gatewayAgent
         try {
-            this.jadeInit();
+            this.jadeInit(assetName);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -61,7 +61,7 @@ public class REST_Test_V3 {
         }
     }
 
-    private void jadeInit() throws Exception {
+    private void jadeInit(String assetName) throws Exception {
 
         //Se definen las propiedades que caracterizan al contenedor del GatewayAgent: IP, puerto y nombre del contenedor
         Properties pp = new Properties();
@@ -70,7 +70,7 @@ public class REST_Test_V3 {
         pp.setProperty(Profile.MAIN_HOST, host);
         pp.setProperty(Profile.MAIN_PORT, port);
         pp.setProperty(Profile.LOCAL_PORT, port);
-        String containerName = "GatewayContTest1"; //TODO: Cambiar el nombre del contenedor para que dependa de a qué Máquina se conecta
+        String containerName = "GatewayCont"+assetName;
         pp.setProperty(Profile.CONTAINER_NAME, containerName);
 
         //Se inicializa el GatewayAgent
@@ -247,6 +247,7 @@ public class REST_Test_V3 {
     }
 
     public static void main(String[] args) {
-        REST_Test_V3 GW_ACL_HTTP= new REST_Test_V3();
+        String assetName = args[0];
+        REST_Test_V3 GW_ACL_HTTP= new REST_Test_V3(assetName);
     }
 }
