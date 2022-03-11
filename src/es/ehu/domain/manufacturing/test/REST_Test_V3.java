@@ -12,9 +12,7 @@ import jade.util.leap.Properties;
 import jade.wrapper.ControllerException;
 import jade.wrapper.gateway.JadeGateway;
 import org.ros.address.InetAddressFactory;
-
 import java.util.HashMap;
-import java.util.Scanner;
 
 public class REST_Test_V3 {
 
@@ -122,15 +120,8 @@ public class REST_Test_V3 {
         //Primero inicializo las variables que voy a necesitar
         String result = null;
         String service;
-        String paramName = "";
-        String paramValue = "";
-        Scanner in_1 = new Scanner(System.in);
-        Scanner in_2 = new Scanner(System.in);
         String body;
-        String first;
-        String last;
         HashMap cmdHashMap;
-        HashMap paramHashMap;
 
         //Después, transformo el mensaje recibido de vuelta en un HashMap
         cmdHashMap = new Gson().fromJson(cmd, HashMap.class);
@@ -139,11 +130,6 @@ public class REST_Test_V3 {
         service = cmdHashMap.get("Service").toString();
 
         //Obtengo el nombre y valor de los parámetros
-//        String [] paramInfo = cmdHashMap.get("Parameters").toString().split("=");
-//        paramName = paramInfo[0];
-//        paramValue = paramInfo[1];
-
-        //Alternativa
          body = (String) cmdHashMap.get("Parameters");
 
         //Después ejecuto el switch
@@ -166,9 +152,6 @@ public class REST_Test_V3 {
                 break;
             case "POST_PA":
 
-                //Construyo el cuerpo del mensaje a enviar
-//                body = "{\n  \"" + paramName + "\": \"" + paramValue + "\"\n}\n";
-
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_PA = Unirest.post("http://127.0.0.1:1880/Request/ManufacturingStation/PA")
                         .header("Content-type", "application/json")
@@ -187,9 +170,6 @@ public class REST_Test_V3 {
                 if (get_PB.getStatus() == 200) result = get_PB.getBody().toString();
                 break;
             case "POST_PB":
-
-                //Construyo el cuerpo del mensaje a enviar
-                body = "{\n  \"" + paramName + "\": \"" + paramValue + "\"\n}\n";
 
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_PB = Unirest.post("http://127.0.0.1:1880/Request/ManufacturingStation/PB")
@@ -210,9 +190,6 @@ public class REST_Test_V3 {
                 break;
             case "POST_IA":
 
-                //Construyo el cuerpo del mensaje a enviar
-                body = "{\n  \"" + paramName + "\": \"" + paramValue + "\"\n}\n";
-
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_IA = Unirest.post("http://127.0.0.1:1880/Request/ManufacturingStation/IA")
                         .header("Content-type", "application/json")
@@ -232,9 +209,6 @@ public class REST_Test_V3 {
                 break;
             case "POST_IB":
 
-                //Construyo el cuerpo del mensaje a enviar
-                body = "{\n  \"" + paramName + "\": \"" + paramValue + "\"\n}\n";
-
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_IB = Unirest.post("http://127.0.0.1:1880/Request/ManufacturingStation/IB")
                         .header("Content-type", "application/json")
@@ -253,29 +227,6 @@ public class REST_Test_V3 {
                 if (get_Robot.getStatus() == 200) result = get_Robot.getBody().toString();
                 break;
             case "POST_Robot": {
-
-                String positions = "POST_Robot service available positions:\n"
-                        + " PA > In/Out position for the Punching Machine A.\n"
-                        + " PB > In/Out position for the Punching Machine B.\n"
-                        + " IA > In/Out position for the Indexing Machine A.\n"
-                        + " IB > In/Out position for the Indexing Machine B.\n"
-                        + " warehouse_1 > Position of the input warehouse on the left.\n"
-                        + " warehouse_2 > Position of the input warehouse on the right.\n"
-                        + " warehouse_3 > Position of the output warehouse on the left.\n"
-                        + " warehouse_4 > Position of the output warehouse on the right.\n\n";
-                System.out.print(positions);
-
-                //Solicito al usuario del programa el valor de la referencia del producto
-                System.out.print("Please, introduce the first position: ");
-                first = in_1.nextLine();
-                System.out.println();
-
-                System.out.print("Please, introduce the final position: ");
-                last = in_2.nextLine();
-                System.out.println();
-
-                //Construyo el cuerpo del mensaje a enviar
-                body = "{\n  \"Initial\": \"" + first + "\",\n  \"Final\": \"" + last + "\"\n}\n";
 
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_Robot = Unirest.post("http://127.0.0.1:1880/Request/TrasportRobot")

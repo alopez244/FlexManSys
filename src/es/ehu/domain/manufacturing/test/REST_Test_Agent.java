@@ -36,11 +36,19 @@ public class REST_Test_Agent extends Agent {
                 msgHashMap.put("Service",service);
 
                 //Introduzco los parámetros que pueda necesitar
-                System.out.print("Please, introduce the name and value of the parameters you require for this service " +
-                        "(for example, Ref_Subproduct_Type=1234): ");
-                parameters = in.nextLine();
-                String[] parametersArray = parameters.split("=");
-                paramHashMap.put(parametersArray[0],parametersArray[1]);
+                boolean exit=false;
+
+                while (!exit){
+
+                    System.out.print("Please, introduce the name and value of the parameters you require for this service " +
+                            "(for example, Ref_Subproduct_Type=1234): ");
+                    parameters = in.nextLine();
+                    String[] parametersArray = parameters.split("=");
+                    paramHashMap.put(parametersArray[0],parametersArray[1]);
+
+                    System.out.print("Do you want to include another parameter? (Y/N): ");
+                    exit = in.nextLine().equalsIgnoreCase("N");
+                }
 
                 parameters = new Gson().toJson(paramHashMap);
 
