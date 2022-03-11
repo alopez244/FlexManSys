@@ -4,93 +4,70 @@ import es.ehu.domain.manufacturing.agents.functionality.Transport_Functionality;
 import es.ehu.domain.manufacturing.template.DomResAgentTemplate;
 import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.ResourceAgentTemplate;
+import es.ehu.platform.utilities.XMLReader;
 import jade.core.behaviours.Behaviour;
 import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.HashMap;
-import java.util.Stack;
+import java.util.ArrayList;
 
 
-public class TransportAgent extends DomResAgentTemplate  {
+public class TransportAgent extends DomResAgentTemplate{
 
     static final Logger LOGGER = LogManager.getLogger(ResourceAgentTemplate.class.getName());
     private static final long serialVersionUID = -214426101233212079L;
 
 
-    /** String representing the services machine agent offers. */
-    public String TransportServices;
+    /* DECLARACION DE VARIABLES */
 
-    /* position x axis */
-    public float xPos;
+    /* Posicion actual del transporte */
+    public String currentPos;
 
-    /*position y axis */
-    public float yPos;
+    /* Porcentaje de bateria */
+    public int battery;
 
-    /*battery perc */
-    public float battery;
+    /* Listado de posiciones clave (punto de carga, almacen de material, entrada de material KUKA, salida material KUKA) */
+    public ArrayList<ArrayList<ArrayList<String>>> keyPosition;
 
-    /* HashMap to locate machines position, punto de carga, almacen de material, entrada de material KUKA, salida material KUKA.*/
-    public HashMap<String, String> keyLocalization = new HashMap<>();
+    /* Plan de transporte (listado de tareas a realizar, por ejemplo [A3,B6])   */
+    public ArrayList<ArrayList<ArrayList<String>>> transportPlan;
 
-    /* Stack to know works transport has to do eg.[A3,B6]   */
-    public Stack<String> pilaTareas = new Stack<String>();
+
+    /* INICIALIZACION DE VARIABLES */
 
     @Override
     protected MessageTemplate variableInitialization(Object[] arguments, Behaviour behaviour) {
 
         LOGGER.entry(arguments);
-        System.out.println("es.ehu.platform.template.ApplicationAgentTemplate.variableInitialization()");
+        System.out.println("es.ehu.domain.manufacturing.template.DomResAgentTemplate.variableInitialization()");
 
-
-
-        if ((arguments != null) && (arguments.length>=4)){//       introduce resourceName,resourceModel, xAxis,yAxis and battery.
+        /* Se leen los argumentos con los que se ha llamado al agente (nombre de recurso, localizaciones clave y plan de transporte) */
+        if ((arguments != null) && (arguments.length>=3)){
             this.resourceName=arguments[0].toString();
-            //this.xPos= (int) arguments[1];
-            this.xPos= Integer.valueOf((String) arguments[1]);
-            //this.yPos = (int) arguments[2] ;
-            this.yPos= Integer.valueOf((String) arguments[2]);
-            //this.battery = (int) arguments[3];
-            this.battery = Integer.valueOf((String) arguments[3]);
-
-
-           // TransportServices = arguments[4].toString();
-           // System.out.println("Resource name es "+this.resourceName);
-            //System.out.println("Position x es "+this.xPos);
-            //System.out.println("Position y es "+this.yPos);
-            //System.out.println("Battery percentageIñi is %"+this.battery);
-            //System.out.println("kontuz");
-
-            this.conversationId = "1";
-            keyLocalization.put("Punto de carga","A2");
-            keyLocalization.put("Almacen material","B4");
-            keyLocalization.put("Entrada KUKA","C1");
-            keyLocalization.put("Salida KUKA","D7");
-            System.out.println("Imprimir localization "+keyLocalization.get("Salida KUKA"));
-
-            pilaTareas.add("[A3,B5]");
-            /* XMLReader fileReader = new XMLReader();
-           try {
-                this.resourceModel = fileReader.readFile(arguments[4].toString());
+            XMLReader fileReader = new XMLReader();
+            try {
+                this.keyPosition = fileReader.readFile(arguments[1].toString());
             } catch (Exception e) {
-                System.out.println("Parse can not generate documents");
                 LOGGER.info("Parse can not generate documents");
                 this.initTransition = ControlBehaviour.STOP;
             }
-            */
+            try {
+                this.transportPlan = fileReader.readFile(arguments[2].toString());
+            } catch (Exception e) {
+                LOGGER.info("Parse can not generate documents");
+                this.initTransition = ControlBehaviour.STOP;
+            }
 
         } else {
             LOGGER.info("There are not sufficient arguments to start");
             this.initTransition = ControlBehaviour.STOP;
+
         }
-        //pruebas
 
-        //this.resourceName = arguments[0].toString();
-
+        /* Por ultimo, se especifica el tipo de funcionalidad (en este caso funcionalidad de transporte) */
         functionalityInstance = new Transport_Functionality();
-        return null;  // return LOGGER.exit(null); //
-
+        return null;
 
     }
     protected void takeDown() {
@@ -100,8 +77,6 @@ public class TransportAgent extends DomResAgentTemplate  {
             e.printStackTrace();
         }
     }
-
-
 }
 
 
