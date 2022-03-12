@@ -27,13 +27,13 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
     private ArrayList<ArrayList<String>> productInfo;
-    private HashMap<String, String> operationsWithBatchAgents = new HashMap<>();
     private HashMap PLCmsgIn = new HashMap(); // Estructura de datos que se envia al PLC
     private HashMap PLCmsgOut = new HashMap(); // Estructura de datos que se recibe del PLC
     private String BathcID = ""; // Variable que guarda el identificador del lote que se esta fabricando
     private Integer NumOfItems = 0; // Representa el numero de intems que se estan fabricando (todos perteneciente al mismo lote)
     private Integer machinePlanIndex = 0; // Indice dentro de la estructura de datos "MachinePlan" hasta donde se ha analizado
     private Boolean sendingFlag = false; // Flag que se activa solo cuando la maquina este preparado para recibir una nueva orden
+    private Boolean workInProgress = false;
     private Boolean matReqDone = false; // Flag que se mantiene activo desde que se hace la peticion de consumibles hasta que se reponen
     private Boolean requestMaterial = false; // Flag que se activa cuando se necesita hacer una peticion de consumibles
     private Boolean orderQueueFlag = false; // Flag que se activa cuando existen nuevas ordenes en cola para la maquina
@@ -299,11 +299,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
             //TODO implementar las acciones que tiene que hacer el agente ganador. Para ello hay que:
             //Encapsular la operación (u operaciones) recibida en un mensaje ACL e invocar el método Execute
-            //Una vez añadida la operación al plan, enviar un mensaje al agente que solicitó el servicio (machineAgentName)
-            //Este mensaje deberá informar de qué transporte ha ganado la negociación y el momento de entrega estimado (solo en caso de que las negociaciones se hagan en base a tiempos)
-
-
-            operationsWithBatchAgents.put(seOperationID, seID);
+            //Una vez añadida la operación al plan, enviar un mensaje al agente que solicitó el servicio
+            //Este mensaje deberá informar de qué transporte ha ganado la negociación y el momento de entrega estimado
 
             // Envio un mensaje al BatchAgent para avisarle de que soy el ganador para asociarme esa operacion
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
@@ -328,32 +325,14 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     public void sendDataToDevice() {
 
         String targets = "";
-        // Se reciben los mensajes ACL que corresponden al material que se ha repuesto
-        // El codigo implementado dentro de la condicion IF se encarga de añadir al contador de consumibles los nuevos consumibles que han sido repuestos
-        ACLMessage msg = myAgent.receive(template);
-        if (msg != null) {
-            myAgent.msgFIFO.add((String) msg.getContent());
-            ArrayList<ArrayList<String>> newConsumables = new ArrayList<>();
-            newConsumables.add(new ArrayList<>()); newConsumables.add(new ArrayList<>());
-            String content = msg.getContent();
-            String [] contentSplited = content.split(";");
-            for (int i = 0; i < contentSplited.length ; i++) {  //Se deserializa el mensaje y se guardan los datos en un arraylist
-                newConsumables.get(0).add(contentSplited[i].split(":")[0]);
-                newConsumables.get(1).add(contentSplited[i].split(":")[1]);
-            }
-            // bucle para sumar los nuevos consumibles en el contador de material
-            for (int i = 0; i < newConsumables.get(0).size(); i++){
-                for (int j = 0; j < myAgent.availableMaterial.size(); j++){
-                    if (newConsumables.get(0).get(i).equals(myAgent.availableMaterial.get(j).get("consumable_id"))) {
-                        Integer currentConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("current"));
-                        Integer addedconsumable = Integer.parseInt(newConsumables.get(1).get(i));
-                        myAgent.availableMaterial.get(j).put("current", Integer.toString(currentConsumable + addedconsumable));
-                    }
-                }
-            }
-            System.out.println("El transporte ha terminado de reponer el material pedido");
-            System.out.println(myAgent.availableMaterial);
-            matReqDone = false; // Una vez repuesto el material se resetea el flag
+        updateConsumableMaterials();
+
+        if (workInProgress != true){
+
+            /* Si el asset está libre, se comprueba si hay tareas en el plan
+             * La cabecera del modelo ocupa dos posiciones, por lo que para que haya tareas, el tamaño del modelo tiene que ser de 3 o más */
+
+
         }
 
         if(sendingFlag == true) {     //It is checked if the method is correctly activated and that orders do not overlap
@@ -688,6 +667,36 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
     @Override
     public Void terminate(MWAgent myAgent) { return null;}
+
+    private void updateConsumableMaterials (){
+        // Se reciben los mensajes ACL que corresponden al material que se ha repuesto
+        // El codigo implementado dentro de la condicion IF se encarga de añadir al contador de consumibles los nuevos consumibles que han sido repuestos
+        ACLMessage msg = myAgent.receive(template);
+        if (msg != null) {
+            myAgent.msgFIFO.add((String) msg.getContent());
+            ArrayList<ArrayList<String>> newConsumables = new ArrayList<>();
+            newConsumables.add(new ArrayList<>()); newConsumables.add(new ArrayList<>());
+            String content = msg.getContent();
+            String [] contentSplited = content.split(";");
+            for (int i = 0; i < contentSplited.length ; i++) {  //Se deserializa el mensaje y se guardan los datos en un arraylist
+                newConsumables.get(0).add(contentSplited[i].split(":")[0]);
+                newConsumables.get(1).add(contentSplited[i].split(":")[1]);
+            }
+            // bucle para sumar los nuevos consumibles en el contador de material
+            for (int i = 0; i < newConsumables.get(0).size(); i++){
+                for (int j = 0; j < myAgent.availableMaterial.size(); j++){
+                    if (newConsumables.get(0).get(i).equals(myAgent.availableMaterial.get(j).get("consumable_id"))) {
+                        Integer currentConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("current"));
+                        Integer addedconsumable = Integer.parseInt(newConsumables.get(1).get(i));
+                        myAgent.availableMaterial.get(j).put("current", Integer.toString(currentConsumable + addedconsumable));
+                    }
+                }
+            }
+            System.out.println("El transporte ha terminado de reponer el material pedido");
+            System.out.println(myAgent.availableMaterial);
+            matReqDone = false; // Una vez repuesto el material se resetea el flag
+        }
+    }
 
     protected Date getactualtime(){
         String actualTime;
