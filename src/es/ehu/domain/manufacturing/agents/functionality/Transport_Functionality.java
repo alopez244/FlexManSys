@@ -265,7 +265,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
             * La cabecera del modelo ocupa una posición, por lo que para que haya tareas, el tamaño del modelo tiene que ser de 2 o más */
             if (myAgent.transportPlan.size() >= 2) {
 
-                /* Se leen las posiciones de la primera operación del plan (el tercer elemento del plan) */
+                /* Se leen las posiciones de la primera operación del plan (el segundo elemento del plan) */
                 /* Recordatorio: del segundo elemento del modelo (primera operación), se obtiene el cuarto elemento (valores de sus atributos)...
                 y de se lee la primera posición que tiene (un string con todas las coordenadas) */
                 /* Las coordenadas están unidas por comas, y se separan para obtener el array de String que queremos enviar */

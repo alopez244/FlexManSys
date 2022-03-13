@@ -23,44 +23,55 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Machine_Functionality extends DomRes_Functionality implements BasicFunctionality, NegFunctionality, AssetManagement {
-    private boolean firstItemFlag=false;
+
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
-    private ArrayList<ArrayList<String>> productInfo;
+
+    private boolean firstItemFlag=false;
     private HashMap PLCmsgIn = new HashMap(); // Estructura de datos que se envia al PLC
     private HashMap PLCmsgOut = new HashMap(); // Estructura de datos que se recibe del PLC
-    private String BathcID = ""; // Variable que guarda el identificador del lote que se esta fabricando
+    private String BatchID = ""; // Variable que guarda el identificador del lote que se esta fabricando
     private Integer NumOfItems = 0; // Representa el numero de intems que se estan fabricando (todos perteneciente al mismo lote)
     private Integer machinePlanIndex = 0; // Indice dentro de la estructura de datos "MachinePlan" hasta donde se ha analizado
-    private Boolean sendingFlag = false; // Flag que se activa solo cuando la maquina este preparado para recibir una nueva orden
-    private Boolean workInProgress = false;
     private Boolean matReqDone = false; // Flag que se mantiene activo desde que se hace la peticion de consumibles hasta que se reponen
     private Boolean requestMaterial = false; // Flag que se activa cuando se necesita hacer una peticion de consumibles
+
+
+    private Boolean sendingFlag = false; // Flag que se activa solo cuando la maquina este preparado para recibir una nueva orden
+
+
     private Boolean orderQueueFlag = false; // Flag que se activa cuando existen nuevas ordenes en cola para la maquina
-    private AID gatewayAgentID =null;
     private Integer convIDcnt=0;
-    private String seId;
+
 
     private MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
             MessageTemplate.MatchOntology("acl_error"));
 
     private AID QoSID = new AID("QoSManagerAgent", false);
     public ArrayList<ACLMessage> posponed_msgs_to_batch=new ArrayList<ACLMessage>();
-    public ArrayList<ACLMessage> posponed_msgs_to_gw=new ArrayList<ACLMessage>();
-//    public static String state ="";
-//    public static boolean change_state=false;
-
 
 
     private MessageTemplate template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
             MessageTemplate.MatchOntology("data")),MessageTemplate.MatchConversationId("ProvidedConsumables"));;
 
-    /** Identifier of the agent. */
+
+
+
+    /* Agente que utiliza esta funcionalidad (se recibe como parámetro en diferentes métodos) */
     private MachineAgent myAgent;
 
+    /* Id del agente en el sistema*/
+    private String seId;
 
-    /** Class name to switch on the agent */
+    /* Nombre de la clase (para poder crear el agente máquina definitivo) */
     private String className;
+
+    /* Flag que se activa cuando el transporte esta trabajando */
+    private Boolean workInProgress = false;
+
+    /* Nombre del gatewayAgent con el que interactúa el agente */
+    private AID gatewayAgentID =null;
+
 
 
     /* OPERACIONES DE INICIALIZACIÓN Y PUESTA EN MARCHA */
@@ -329,41 +340,42 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
         if (workInProgress != true){
 
-            /* Si el asset está libre, se comprueba si hay tareas en el plan
-             * La cabecera del modelo ocupa dos posiciones, por lo que para que haya tareas, el tamaño del modelo tiene que ser de 3 o más */
-
-
-        }
-
-        if(sendingFlag == true) {     //It is checked if the method is correctly activated and that orders do not overlap
+            /* Primero se inicializan las variables necesarias */
             ArrayList<String> consumableList = new ArrayList<String>();
-            Boolean consumableShortage = false; // Flag que se activa cuando no hay material suficiente para realizar una nueva orden
             String serviceType;
 
-            if (myAgent.machinePlan.size() > 2) {   //checks that there are operations in the machine plan
-                PLCmsgOut = createOperationHashmap(myAgent.machinePlan, machinePlanIndex); //Looks for the operation to be manufactured in the machine plan
+            /* Si el asset está libre, se comprueba si hay tareas en el plan
+             * La cabecera del modelo ocupa dos posiciones, por lo que para que haya tareas, el tamaño del modelo tiene que ser de 3 o más */
+            if (myAgent.machinePlan.size() >= 3) {
+
+                /* Primero se prepara la estructura de datos que se va a enviar al gatewayAgent */
+                PLCmsgOut = createOperationHashMap(myAgent.machinePlan, machinePlanIndex);
+
+                /* Revisar si esto se puede (o se debe) meter en el método createOperationHashMap
+                * Se consulta directamente el tercer elemento del plan porque es donde está la primera operación */
+                PLCmsgOut.put("Id_Machine_Reference", Integer.parseInt(myAgent.machinePlan.get(2).get(3).get(0)));
+
+                /* Unido a esto, se guardan algunos datos de interés en variables que se usarán más tarde */
                 NumOfItems = (Integer) PLCmsgOut.get("Operation_No_of_Items");
-                BathcID = Integer.toString((Integer) PLCmsgOut.get("Id_Batch_Reference"));
-                for (int j = 0; j < myAgent.machinePlan.size(); j++) {  // saves the machine´s reference
-                    if (myAgent.machinePlan.get(j).get(0).get(0).equals("station")) {
-                        PLCmsgOut.put("Id_Machine_Reference", Integer.parseInt(myAgent.machinePlan.get(j).get(3).get(0)));
-                        break;
-                    }
-                }
-                // Knowing Ref_Service_Type, identification of the consumables that will be needed for manufacturing
-                serviceType = Integer.toString((Integer) PLCmsgOut.get("Operation_Ref_Service_Type"));
+                BatchID = Integer.toString((Integer) PLCmsgOut.get("Id_Batch_Reference"));
+
+                /* A continuación, se identifican los materiales consumibles necesarios para realizar la operación */
+                serviceType = String.valueOf(PLCmsgOut.get("Operation_Ref_Service_Type"));
                 consumableList = defineConsumableList(serviceType, myAgent.resourceModel);
 
-                // Se comprueba que se disponga de material suficiente para poder fabricar el lote
+                /* Se comprueba que se disponga de material suficiente para poder fabricar el lote */
                 for (int i = 0; i < myAgent.availableMaterial.size(); i++) {
                     if (consumableList.contains(myAgent.availableMaterial.get(i).get("consumable_id"))) {
                         if (Integer.parseInt(myAgent.availableMaterial.get(i).get("current")) < NumOfItems) {
-                            consumableShortage = true; // No hay material suficiente, por lo que se activa el flag para hacer una petición de material y añalizar operaciones en cola
+
+                            /* Meter aquí la petición de consumibles + la recepción de la respuesta */
+                            // No hay material suficiente, por lo que se activa el flag para hacer una petición de material y añalizar operaciones en cola
                         }
                     }
                 }
-                // Solo se envia la operación si hay material suficiente
-                if (!consumableShortage) {
+
+                /* Solo se envia la operación si hay material suficiente */
+
 
                     for(int j = 0 ; j < myAgent.machinePlan.size()&&firstItemFlag==false;j++) {    //Buscamos de todos los plannedStartTime el primero (se asume que estan ordenados)
                         if (myAgent.machinePlan.get(j).get(0).get(0).equals("operation")) {
@@ -371,9 +383,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                                 if (myAgent.machinePlan.get(j).get(2).get(k).equals("plannedStartTime")) {
                                     String starttime = myAgent.machinePlan.get(j).get(3).get(k);
                                     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"); //Se usa el formato XS:DateTime
-                                    SimpleDateFormat formatter2 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS"); //Se usa el formato con milisegundos agregados para mayor precision
                                     Date date2 = getactualtime();
-//                                    System.out.println("Hora actual: " + hora + ":" + minutos + ":" + segundos);
                                     Date date1 = null;
 
                                     try {
@@ -388,7 +398,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                                     }
                                     long diferencia = ((date2.getTime() - date1.getTime())); //calculamos el retraso en iniciar en milisegundos
                                     AID QoSID = new AID("QoSManagerAgent", false);
-                                    String content = BathcID;
+                                    String content = BatchID;
                                     String delay = String.valueOf(diferencia);
                                     content = content + "/" + delay;
                                     sendACLMessage(ACLMessage.INFORM, QoSID, "delay", "batch_delay", content, myAgent);
@@ -397,7 +407,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                             }
                         }
                     }
-                }
+
                 firstItemFlag = false;
 
                 PLCmsgOut.remove("Index");
@@ -405,50 +415,64 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 ACLMessage msg_to_gw=sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "data", "PLCdata", MessageContent, myAgent);
 
                 myAgent.AddToExpectedMsgs(msg_to_gw);
-
-                sendingFlag = false;
                 machinePlanIndex = 0;
 
-            } else { // en caso contrario, se analizan las operaciones en cola para poder ser enviados
-                System.out.println("El lote " + BathcID + " no se puede fabricar por falta de material");
-                machinePlanIndex = (Integer) PLCmsgOut.get("Index");
-                if (machinePlanIndex <= myAgent.machinePlan.size() - 1) {
-                    sendDataToDevice();
-                } else {
-                    System.out.println("No es posible fabricar ninguna orden en cola por falta de material");
-                    machinePlanIndex = 0;
-                    if (!matReqDone) { // Si aun no se ha hecho la petición de material se procede a hacerlo
-                        String neededMaterial = "";
-                        Integer neededConsumable = 0;
-                        for (int j = 0; j < myAgent.availableMaterial.size(); j++){ // Cálculo del material necesario para llenar el alimentador de piezas al maximo
-                            int currentConsumables = Integer.parseInt(myAgent.availableMaterial.get(j).get("current"));
-                            neededConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("max")) - currentConsumables;
-                            neededMaterial = neededMaterial.concat(myAgent.availableMaterial.get(j).get("consumable_id") + ":" + Integer.toString(neededConsumable) + ";");
-                        }
+                /* Por último, pongo el workInProgress a true*/
+                workInProgress=true;
 
-                        //Peticion negociacion entre los agentes transporte disponibles
-                        try {
-                            ACLMessage reply2 = sendCommand(myAgent, "get * category=transport", "TransportAgentID");
-                            if (reply2 != null) {   // If the id does not exist, it returns error
-                                targets = reply2.getContent();
-                            }
-                            String negotiationQuery = "localneg " + targets + " criterion=position action=" +
-                                    "supplyConsumables externaldata=" + neededMaterial + "," + myAgent.getLocalName();
-                            ACLMessage result = sendCommand(myAgent, negotiationQuery, "TransportAgentNeg");
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-
-                        matReqDone = true;
-                    }
-                }
             }
-        } else {
-            //System.out.println("No operations defined");
-            PLCmsgOut.put("Control_Flag_New_Service", false);
-            sendingFlag = false;
+        } else{
+            System.out.println("The asset is busy"); /* Dejar para debug, luego comentar o quitar*/
         }
+
+//        if(sendingFlag == true) {     //It is checked if the method is correctly activated and that orders do not overlap
+//            ArrayList<String> consumableList = new ArrayList<String>();
+//            Boolean consumableShortage = false; // Flag que se activa cuando no hay material suficiente para realizar una nueva orden
+//            String serviceType;
+//
+//            if (myAgent.machinePlan.size() > 2) {   //checks that there are operations in the machine plan
+//
+//
+//            } else { // en caso contrario, se analizan las operaciones en cola para poder ser enviados
+//                System.out.println("El lote " + BatchID + " no se puede fabricar por falta de material");
+//                machinePlanIndex = (Integer) PLCmsgOut.get("Index");
+//                if (machinePlanIndex <= myAgent.machinePlan.size() - 1) {
+//                    sendDataToDevice();
+//                } else {
+//                    System.out.println("No es posible fabricar ninguna orden en cola por falta de material");
+//                    machinePlanIndex = 0;
+//                    if (!matReqDone) { // Si aun no se ha hecho la petición de material se procede a hacerlo
+//                        String neededMaterial = "";
+//                        Integer neededConsumable = 0;
+//                        for (int j = 0; j < myAgent.availableMaterial.size(); j++){ // Cálculo del material necesario para llenar el alimentador de piezas al maximo
+//                            int currentConsumables = Integer.parseInt(myAgent.availableMaterial.get(j).get("current"));
+//                            neededConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("max")) - currentConsumables;
+//                            neededMaterial = neededMaterial.concat(myAgent.availableMaterial.get(j).get("consumable_id") + ":" + Integer.toString(neededConsumable) + ";");
+//                        }
+//
+//                        //Peticion negociacion entre los agentes transporte disponibles
+//                        try {
+//                            ACLMessage reply2 = sendCommand(myAgent, "get * category=transport", "TransportAgentID");
+//                            if (reply2 != null) {   // If the id does not exist, it returns error
+//                                targets = reply2.getContent();
+//                            }
+//                            String negotiationQuery = "localneg " + targets + " criterion=position action=" +
+//                                    "supplyConsumables externaldata=" + neededMaterial + "," + myAgent.getLocalName();
+//                            ACLMessage result = sendCommand(myAgent, negotiationQuery, "TransportAgentNeg");
+//
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
+//
+//                        matReqDone = true;
+//                    }
+//                }
+//            }
+//        } else {
+//            //System.out.println("No operations defined");
+//            PLCmsgOut.put("Control_Flag_New_Service", false);
+//            sendingFlag = false;
+//        }
 
     }
 
@@ -463,20 +487,19 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             }else{
                 System.out.println("<--Problem receiving the message");
             }
-//            LOGGER.debug("Received a confirmation message out of the timeout. Timeout might be increased.");
         }else{
             recvBatchInfo(msg2);   // sends item information to batch agent
             if(PLCmsgIn.containsKey("Control_Flag_Service_Completed")) {    //At least the first field is checked
                 if (PLCmsgIn.get("Control_Flag_Service_Completed").equals(true)) {  //If service has been completed, the operation is deleted from machine plan variable
 
-                    BathcID = String.valueOf(PLCmsgIn.get("Id_Batch_Reference"));
-                    BathcID = BathcID.split("\\.")[0];
+                    BatchID = String.valueOf(PLCmsgIn.get("Id_Batch_Reference"));
+                    BatchID = BatchID.split("\\.")[0];
 
                     for (int i = 0; i <myAgent.machinePlan.size(); i++){    //searching the expected batch to be manufactured in machine plan arraylist
                         for (int j = 0; j < myAgent.machinePlan.get(i).size(); j++){
                             if (myAgent.machinePlan.get(i).get(j).get(0).equals("operation")){
                                 if (NumOfItems != 0) {
-                                    if (myAgent.machinePlan.get(i).get(j + 3).get(3).equals(BathcID)) { //The manufactured batch is compared with the expected batch ***With new XML is trying to compare item ID with batch ID, get(4) changed to get(3)
+                                    if (myAgent.machinePlan.get(i).get(j + 3).get(3).equals(BatchID)) { //The manufactured batch is compared with the expected batch ***With new XML is trying to compare item ID with batch ID, get(4) changed to get(3)
                                         myAgent.machinePlan.remove(i);
                                         i--;
                                         NumOfItems--;   //only the references to the items that were expected to be manufactured are deleted, that's why it is counted how many remains to be deleted
@@ -608,9 +631,9 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             System.out.println(MessageContent);
 
             try {
-                BathcID = String.valueOf(PLCmsgIn.get("Id_Batch_Reference"));   //gets the batch reference from the received message
-                BathcID = BathcID.split("\\.")[0];
-                reply = sendCommand(myAgent, "get * reference=" + BathcID, "BatchAgentID");
+                BatchID = String.valueOf(PLCmsgIn.get("Id_Batch_Reference"));   //gets the batch reference from the received message
+                BatchID = BatchID.split("\\.")[0];
+                reply = sendCommand(myAgent, "get * reference=" + BatchID, "BatchAgentID");
                 //returns the id of the element that matches with the reference of the required batch
                 if (reply != null) {   // If the id does not exist, it returns error
                     myAgent.msgFIFO.add((String) reply.getContent());

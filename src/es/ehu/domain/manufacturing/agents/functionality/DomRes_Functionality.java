@@ -6,7 +6,7 @@ import java.util.List;
 
 public class DomRes_Functionality extends Dom_Functionality{
 
-    public HashMap createOperationHashmap(ArrayList<ArrayList<ArrayList<String>>> machinePlan, int index) {
+    public HashMap createOperationHashMap(ArrayList<ArrayList<ArrayList<String>>> machinePlan, int index) {
 
         ArrayList<String> auxiliar = new ArrayList<>();
         List<String> itemNumbers = new ArrayList<String>(); //to track each of the items that are added to the operation
