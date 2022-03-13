@@ -27,12 +27,11 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
 
-    private boolean firstItemFlag=false;
     private HashMap PLCmsgIn = new HashMap(); // Estructura de datos que se envia al PLC
     private HashMap PLCmsgOut = new HashMap(); // Estructura de datos que se recibe del PLC
     private String BatchID = ""; // Variable que guarda el identificador del lote que se esta fabricando
     private Integer NumOfItems = 0; // Representa el numero de intems que se estan fabricando (todos perteneciente al mismo lote)
-    private Integer machinePlanIndex = 0; // Indice dentro de la estructura de datos "MachinePlan" hasta donde se ha analizado
+
     private Boolean matReqDone = false; // Flag que se mantiene activo desde que se hace la peticion de consumibles hasta que se reponen
     private Boolean requestMaterial = false; // Flag que se activa cuando se necesita hacer una peticion de consumibles
 
@@ -338,7 +337,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             if (myAgent.machinePlan.size() >= 3) {
 
                 /* Primero se prepara la estructura de datos que se va a enviar al gatewayAgent */
-                PLCmsgOut = createOperationHashMap(myAgent.machinePlan, machinePlanIndex);
+                PLCmsgOut = createOperationHashMap(myAgent.machinePlan);
 
                 /* Unido a esto, se guardan algunos datos de interés en variables que se usarán más tarde */
                 NumOfItems = (Integer) PLCmsgOut.get("Operation_No_of_Items");
@@ -357,12 +356,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                             // No hay material suficiente, por lo que se activa el flag para hacer una petición de material y añalizar operaciones en cola
 
                             System.out.println("El lote " + BatchID + " no se puede fabricar por falta de material");
-                            machinePlanIndex = (Integer) PLCmsgOut.get("Index");
-                            if (machinePlanIndex <= myAgent.machinePlan.size() - 1) {
-                                sendDataToDevice();
-                            } else {
-                                System.out.println("No es posible fabricar ninguna orden en cola por falta de material");
-                                machinePlanIndex = 0;
+
+
                                 if (!matReqDone) { // Si aun no se ha hecho la petición de material se procede a hacerlo
                                     String neededMaterial = "";
                                     Integer neededConsumable = 0;
@@ -388,7 +383,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
                                     matReqDone = true;
                                 }
-                            }
+
 
                         }
                     }
@@ -428,7 +423,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 ACLMessage msg_to_gw=sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "data", "PLCdata", MessageContent, myAgent);
 
                 myAgent.AddToExpectedMsgs(msg_to_gw);
-                machinePlanIndex = 0;
 
                 /* Por último, pongo el workInProgress a true*/
                 workInProgress=true;

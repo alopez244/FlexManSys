@@ -5,7 +5,7 @@ import java.util.HashMap;
 
 public class DomRes_Functionality extends Dom_Functionality{
 
-    public HashMap createOperationHashMap(ArrayList<ArrayList<ArrayList<String>>> machinePlan, int index) {
+    public HashMap createOperationHashMap(ArrayList<ArrayList<ArrayList<String>>> machinePlan) {
 
         /* Hay una declaración e inicialización de variables */
         HashMap PLCmsgOut = new HashMap();
@@ -32,14 +32,12 @@ public class DomRes_Functionality extends Dom_Functionality{
                 if (machinePlan.get(i).get(3).get(3).equals(PLCmsgOut.get("Id_Batch_Reference").toString())){
                     NumOfItems++;
                     PLCmsgOut.put("Operation_No_of_Items", NumOfItems);
-                    index = i+1; //el índice apunta a la siguiente posición
 
-                } else { //Si el batch_id no coincide, solo hay que indicar que esta es la siguiente posición a mirar
-                    index = i;
+                } else { //Si el batch_id no coincide, se sale del bucle
+                    break;
                 }
             }
         }
-        PLCmsgOut.put("Index", index);
         return PLCmsgOut;
     }
 
