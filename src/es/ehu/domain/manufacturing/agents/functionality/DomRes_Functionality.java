@@ -2,63 +2,43 @@ package es.ehu.domain.manufacturing.agents.functionality;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 public class DomRes_Functionality extends Dom_Functionality{
 
     public HashMap createOperationHashMap(ArrayList<ArrayList<ArrayList<String>>> machinePlan, int index) {
 
-        ArrayList<String> auxiliar = new ArrayList<>();
-        List<String> itemNumbers = new ArrayList<String>(); //to track each of the items that are added to the operation
-        Boolean ItemContFlag = true;
-        Boolean newItem = false;
-        Boolean breakFlag = false;
+        /* Hay una declaración e inicialización de variables */
         HashMap PLCmsgOut = new HashMap();
-        String BathcID = "";
-        Integer NumOfItems = 0;
+        Integer NumOfItems = 1; //Al menos va a haber un item
 
-        for (int j = index; j < machinePlan.size(); j++) {  //Looks for the operation to be manufactured in the machine plan
-            for (int k = 0; k < machinePlan.get(j).size(); k++) {
-                auxiliar = machinePlan.get(j).get(k);
-                if (auxiliar.get(0).equals("operation")) {
-                    ArrayList<String> auxiliar2 = machinePlan.get(j).get(k + 3);
+        /* Queremos guardar la referencia de la máquina (el segundo elemento del plan) */
+        PLCmsgOut.put("Id_Machine_Reference", Integer.parseInt(machinePlan.get(1).get(3).get(0)));
 
-                    if (ItemContFlag == true) { //saves the information of the operation only when founds the first item, then just increments the item counter
-                        BathcID = auxiliar2.get(3);  //saves the information of the operation in PLCmsgOut   antes get 4 tras cambio en xml -> 3
-                        PLCmsgOut.put("Control_Flag_New_Service", true);
-                        PLCmsgOut.put("Id_Batch_Reference", Integer.parseInt(BathcID));
-                        PLCmsgOut.put("Id_Order_Reference", Integer.parseInt(auxiliar2.get(5))); //antes get 6 tras cambio en xml -> 5
-                        PLCmsgOut.put("Id_Ref_Subproduct_Type", Integer.parseInt(auxiliar2.get(6))); //antes get 7 tras cambio en xml -> 6
-                        PLCmsgOut.put("Operation_Ref_Service_Type", Integer.parseInt(auxiliar2.get(0)));
+        /* Queremos guardar los valores de algunos atributos de la tercera posición (primera operación) */
+        PLCmsgOut.put("Control_Flag_New_Service", true);
+        PLCmsgOut.put("Id_Batch_Reference", Integer.parseInt(machinePlan.get(2).get(3).get(3)));
+        PLCmsgOut.put("Id_Order_Reference", Integer.parseInt(machinePlan.get(2).get(3).get(5))); //antes get 6 tras cambio en xml -> 5
+        PLCmsgOut.put("Id_Ref_Subproduct_Type", Integer.parseInt(machinePlan.get(2).get(3).get(6))); //antes get 7 tras cambio en xml -> 6
+        PLCmsgOut.put("Operation_Ref_Service_Type", Integer.parseInt(machinePlan.get(2).get(3).get(0)));
+        PLCmsgOut.put("Operation_No_of_Items", NumOfItems);
 
-                        ItemContFlag = false;
-                    }
-                    // Se comprueba que el id del item no este registrado. En este caso, se añade el id a la lista y se activa el flag newItem para que sea contado
-                    if (!itemNumbers.contains(auxiliar2.get(4)) && auxiliar2.get(3).equals(BathcID)) { //se cambia get(5) por get(4) y get(4) por get(3)
-                        itemNumbers.add(auxiliar2.get(4)); //get(4) por get(3)
-                        newItem = true;     //the item is counted
-                    }
-                    //Si newItem esta a true y el batch ID concuerda con el esperado se incrementa el contador de piezas
-                    if (ItemContFlag == false && auxiliar2.get(3).equals(BathcID) && newItem == true) { //counts all the items with the same batch number
-                        NumOfItems++;
-                        newItem = false;
-                    }
-                    // Si se llega a una pieza que ya no pertene al lote que se esta contabilizando, se sale del bucle
-                    if (!itemNumbers.contains(auxiliar2.get(4)) && !auxiliar2.get(3).equals(BathcID)) {
-                        index = j; // Se guarda el indice para seguir contando desde ese punto en la siguiente llamada a la funcion
-                        breakFlag = true;
-                        break;
-                    }
+        /* Sé que tengo al menos un item, pero no sé si tengo más. Lo compruebo */
+        if (machinePlan.size()>=4) {
+
+            /* Ahora recorro el resto del plan para ir incrementando el número de items que pertenecen al batch */
+            for (int i = 3; i< machinePlan.size(); i++){
+
+                /* Si el batch_Id coincide, hay que incrementar el número de items */
+                if (machinePlan.get(i).get(3).get(3).equals(PLCmsgOut.get("Id_Batch_Reference").toString())){
+                    NumOfItems++;
+                    PLCmsgOut.put("Operation_No_of_Items", NumOfItems);
+                    index = i+1; //el índice apunta a la siguiente posición
+
+                } else { //Si el batch_id no coincide, solo hay que indicar que esta es la siguiente posición a mirar
+                    index = i;
                 }
             }
-            if (breakFlag) {
-                break;
-            }
         }
-        if (!breakFlag) {
-            index = machinePlan.size();
-        }
-        PLCmsgOut.put("Operation_No_of_Items", NumOfItems);
         PLCmsgOut.put("Index", index);
         return PLCmsgOut;
     }
