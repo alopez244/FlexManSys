@@ -22,6 +22,7 @@ public class GWagentROS extends GatewayAgent {
     private String msg_content = null;
     StructTransportUnitState TUS_object = new StructTransportUnitState();
     boolean TUS_object_flag = false;
+    public boolean TransportAgent_Init = false;
 
     @Override
     protected void processCommand(java.lang.Object _command) {
@@ -42,7 +43,7 @@ public class GWagentROS extends GatewayAgent {
         // Mostramos por pantalla que el agente GW ha sido inicializado
 
         System.out.println("***************************************************");
-        System.out.println("Se ha inicializado el GWAgent");
+        System.out.println("Se ha inicializado el ACLGWAgentROS");
 
         // La accion init no devuelve ningun contenido
 
@@ -73,23 +74,63 @@ public class GWagentROS extends GatewayAgent {
           // Mediante la accion "send", se indica al nodo ROS GWAgent, que a traves de su
           // apendice JADE GWagentROS, envie datos sobre el estado del transporte correspondiente.
 
+          /*
           ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
           //"TransportAgent" Nombre que se le da al inicializar el agente en la plataforma JADE
           AID TransportAgent = new AID("TransportAgent", false);
           msg.addReceiver(TransportAgent);
-          msg.setOntology("EstadoTransporte");
-          msg.setConversationId("1234");
+          msg.setOntology("asset_state");
+          msg.setConversationId("1234"); */
 
-          StructTransportUnitState TransportState = command.getTransport_state();
+          if ( TransportAgent_Init == false) {
 
-          // Convertimos el objeto TUS_object, de tipo StructTransportUnitState, e instanciado
-          // a TransportState a un formato de tipo JSON. Lo haremos mediante la ayuda de la
-          // liberia GSON.
+              ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+              //"TransportAgent" Nombre que se le da al inicializar el agente en la plataforma JADE
+              AID TransportAgent = new AID("auxma-local", false);
+              msg.addReceiver(TransportAgent);
+              msg.setOntology("asset_state");
+              msg.setConversationId("0");
 
-          Gson gson = new Gson();
-          msg.setContent(gson.toJson(TransportState));
+              StructTransportUnitState TransportState = command.getTransport_state();
 
-          send(msg);
+              // Convertimos el objeto TUS_object, de tipo StructTransportUnitState, e instanciado
+              // a TransportState a un formato de tipo JSON. Lo haremos mediante la ayuda de la
+              // liberia GSON.
+
+              Gson gson = new Gson();
+              msg.setContent(gson.toJson(TransportState));
+
+              send(msg);
+
+              ACLMessage answer = blockingReceive(MessageTemplate.MatchOntology("asset_checked"), 1000);
+
+              if (answer != null) {
+                  TransportAgent_Init = true;
+              }
+
+          }
+
+          else if (TransportAgent_Init == true) {
+
+              ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+              //"TransportAgent" Nombre que se le da al inicializar el agente en la plataforma JADE
+              AID TransportAgent = new AID("transport1", false);
+              //AID TransportAgent = new AID("TransportAgent1", false);
+              msg.addReceiver(TransportAgent);
+              msg.setOntology("current_asset_state");
+              msg.setConversationId("1234");
+
+              StructTransportUnitState TransportState = command.getTransport_state();
+
+              // Convertimos el objeto TUS_object, de tipo StructTransportUnitState, e instanciado
+              // a TransportState a un formato de tipo JSON. Lo haremos mediante la ayuda de la
+              // liberia GSON.
+
+              Gson gson = new Gson();
+              msg.setContent(gson.toJson(TransportState));
+
+              send(msg);
+          }
 
       }
 
@@ -108,8 +149,15 @@ public class GWagentROS extends GatewayAgent {
       MessageTemplate matchConversationID = MessageTemplate.MatchConversationId("1234");
 
       final MessageTemplate messageTemplate =  MessageTemplate.and(MessageTemplate.and(matchPerformative, matchOntology), matchConversationID);
+      /*
+      // Parametros de comunicacion ACL para el primer contacto con el Agent Transporte
+      MessageTemplate matchPerformative_Transp = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+      MessageTemplate matchOntology_Transp = MessageTemplate.MatchOntology("check_asset");
+      MessageTemplate matchConversationID_Transp = MessageTemplate.MatchConversationId("0");
 
-      addBehaviour(new CyclicBehaviour() {
+      final MessageTemplate messageTemplate_TransportAgent_Setup =  MessageTemplate.and(MessageTemplate.and(matchPerformative_Transp, matchOntology_Transp), matchConversationID_Transp);
+      */
+        addBehaviour(new CyclicBehaviour() {
 
         public void action() {
 
@@ -129,6 +177,24 @@ public class GWagentROS extends GatewayAgent {
         }
 
       });
+        /*
+
+        addBehaviour(new CyclicBehaviour() {
+
+            public void action() {
+
+                ACLMessage msg_Transp = receive(messageTemplate_TransportAgent_Setup);
+
+                if(msg_Transp != null) {
+
+                    System.out.println("Se ha realizado contacto con el agente Transporte");
+
+                }
+
+            }
+
+        }); */
+
 
     }
 }

@@ -104,7 +104,8 @@ public class ACLGWAgentROS extends AbstractNodeMain {
     pp.setProperty(Profile.LOCAL_PORT, port);
 
     // Creamos un contenedor, el cual por defecto en JADE anade "Control" al inicio
-    java.lang.String containerName = "ACLGatewayROS";
+    // Lo modificamos para T_01
+    java.lang.String containerName = "GatewayContT_01";
     pp.setProperty(Profile.CONTAINER_NAME, containerName);
 
     // Aqui es donde se instancia a la clase GWagentROS

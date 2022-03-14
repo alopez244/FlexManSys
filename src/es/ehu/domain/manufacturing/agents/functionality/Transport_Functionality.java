@@ -5,6 +5,7 @@ import es.ehu.domain.manufacturing.agents.TransportAgent;
 import es.ehu.domain.manufacturing.utilities.StructTranspRequest;
 import es.ehu.domain.manufacturing.utilities.StructTranspResults;
 import es.ehu.domain.manufacturing.utilities.StructTranspState;
+import es.ehu.domain.manufacturing.utilities.StructTransportUnitState;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.NegotiatingBehaviour;
 import es.ehu.platform.template.interfaces.AssetManagementFunctionality;
@@ -20,6 +21,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Objects;
+
 
 public class Transport_Functionality extends DomRes_Functionality implements BasicFunctionality, NegFunctionality, AssetManagementFunctionality {
 
@@ -57,6 +60,8 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
         LOGGER.entry();
 
         /* Se guarda el nombre del gatewayAgent con el que interactúa el agente */
+        /* myAgent.resourceName recoge el primer argumento de entrada en la ejecucion, por ejemplo: */
+        /* ControlGatewayContT_01 si T_01 es el argumento*/
         mwAgent.gatewayAgentName = "ControlGatewayCont"+myAgent.resourceName;
         gatewayAgentID = new AID(myAgent.gatewayAgentName, false);
 
@@ -71,38 +76,59 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
         /* En caso negativo, se trata del agente auxiliar y hay que realizar más acciones */
         /* En primer lugar, hay que comprobar la conectividad con el asset en dos pasos: */
         /* Paso 1: contacto con el gatewayAgent y espero respuesta (si no hay, no se puede continuar con el registro) */
-        sendACLMessage(ACLMessage.REQUEST,gatewayAgentID,"ping",myAgent.getLocalName()+"_"+ conversationId++,"",myAgent);
-        ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 300);
-        if(answer_gw==null){
-            System.out.println("GW is not online. Start GW and repeat.");
-            System.exit(0);
-        }
+        //sendACLMessage(ACLMessage.REQUEST,gatewayAgentID,"ping",myAgent.getLocalName()+"_"+ conversationId++,"",myAgent);
+        //ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 300);
+
+        /*if(answer_gw==null){
+        //    System.out.println("GW is not online. Start GW and repeat.");
+        //    System.exit(0);
+        }*/
 
         /* Paso 2: contacto con el asset a través del gatewayAgent y espero respuesta (si no hay, no se puede conitnuar con el registro) */
-        sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "check_asset",myAgent.getLocalName()+"_"+ conversationId++,"ask_state",myAgent);
-        ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 300);
+        //sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "check_asset",myAgent.getLocalName()+"_"+ conversationId++,"ask_state",myAgent);
+        //ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 300);
+
+        // Esperamos cuatro segundos a recibir mensajes por parte del ACLGWAgentROS
+        ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 4000);
+        sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "asset_checked","0",null,myAgent);
+
         if(answer!=null){
 
+            // Deserializamos los datos contenidos en answer, que corresponden a los datos
+            // del objeto TransportState desde el GWagentROS, que a su vez corresponden a TUS_object
+            // de la clase ACLGWAgentROS
             Gson gson = new Gson();
-            StructTranspState javaTranspState = gson.fromJson(answer.getContent(), StructTranspState.class);
 
-            if(javaTranspState.getassetLiveness()){
-                System.out.println("The asset is ready to work.");
+            //StructTranspState javaTranspState = gson.fromJson(answer.getContent(), StructTranspState.class);
+
+            StructTransportUnitState javaTranspState = gson.fromJson(answer.getContent(), StructTransportUnitState.class);
+
+            myAgent.ActualState = javaTranspState.getTransport_unit_state();
+
+            if(!Objects.equals(myAgent.ActualState, "NONE") && !Objects.equals(myAgent.ActualState, "ERROR") && !Objects.equals(myAgent.ActualState, "STOP")){
+                System.out.println("The asset is ready to work: " +myAgent.ActualState);
                 myAgent.battery = javaTranspState.getBattery();
-                myAgent.currentPos = javaTranspState.getCurrentPos();
+                myAgent.currentPos_X = javaTranspState.getOdom_x();
+                myAgent.currentPos_Y = javaTranspState.getOdom_y();
+                sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "asset_checked","0",null,myAgent);
+
             } else {
                 /* Si se recibe respuesta pero no es la adecuada, significa que el asset no está listo y no se puede continuar con el registro */
-                System.out.println("The asset is not ready to work. 11");
+                /* Para que la respuesta sea adecuada, el transporte debe de estar disponible para operar, es decir, que su estado debe de ser*/
+                /* diferente a NONE, STOP y ERROR */
+                System.out.println("The asset is not ready to work. Trasnport not ready.");
                 System.exit(0);
             }
         }else{
             /* Si no se recibe respuesta, significa que el asset no está listo y no se puede continuar con el registro */
-            System.out.println("The asset is not ready to work. 22");
+            System.out.println("The asset is not ready to work. No response from transport");
             System.exit(0);
         }
 
+        sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "asset_checked","0",null,myAgent);
+
         /* Si la comunicación con el asset es correcta, se procede a registrar el agente transporte en el SystemModelAgent */
-        String attribs = " battery="+ myAgent.battery + " currentPos="+myAgent.currentPos;
+        String attribs = " battery="+ myAgent.battery + " currentPos_X="+myAgent.currentPos_X + " currentPos_Y="+myAgent.currentPos_Y;
         String cmd = "reg transport parent=system"+attribs;
 
         ACLMessage reply = null;
@@ -115,6 +141,8 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
         seId = reply.getContent();
 
+        sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "asset_checked","0",null,myAgent);
+
         try {
             /* Una vez registrado el agente transporte, es creado por el agente auxiliar, pasándole como argumento su id */
             className = myAgent.getClass().getName();
@@ -125,6 +153,8 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
         } catch (Exception e1) {
             e1.printStackTrace();
         }
+
+        sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "asset_checked","0",null,myAgent);
 
         return null;
 
@@ -327,7 +357,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
             Gson gson = new Gson();
             StructTranspState javaTranspState = gson.fromJson(msg.getContent(), StructTranspState.class);
 
-            myAgent.battery = javaTranspState.getBattery();
+            myAgent.battery = (float) javaTranspState.getBattery();
             myAgent.currentPos = javaTranspState.getCurrentPos();
 
             /* Se actualiza el valor de estos parámetros en el SystemModelAgent */
@@ -354,7 +384,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
             /* En la primera parte se hace lo mismo*/
             //TODO: sacar la parte de código común a los dos casos a un método auxiliar
-            myAgent.battery = javaTranspResults.getBattery();
+            myAgent.battery = (float) javaTranspResults.getBattery();
             myAgent.currentPos = javaTranspResults.getCurrentPos();
             float initialTimeStamp = javaTranspResults.getInitial_timeStamp();
             float finalTimeStamp = javaTranspResults.getFinal_timeStamp();

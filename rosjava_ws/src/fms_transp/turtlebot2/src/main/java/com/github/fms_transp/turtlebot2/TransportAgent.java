@@ -27,7 +27,7 @@ public class TransportAgent extends Agent {
     protected void setup() {
 
         MessageTemplate matchPerformative = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
-        MessageTemplate matchOntology = MessageTemplate.MatchOntology("EstadoTransporte");
+        MessageTemplate matchOntology = MessageTemplate.MatchOntology("asset_state");
         MessageTemplate matchConversationID = MessageTemplate.MatchConversationId("1234");
 
         final MessageTemplate messageTemplate =  MessageTemplate.and(MessageTemplate.and(matchPerformative, matchOntology), matchConversationID);

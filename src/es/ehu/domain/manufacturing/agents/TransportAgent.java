@@ -23,9 +23,11 @@ public class TransportAgent extends DomResAgentTemplate{
 
     /* Posicion actual del transporte */
     public String currentPos;
+    public Double currentPos_X;
+    public Double currentPos_Y;
 
     /* Porcentaje de bateria */
-    public int battery;
+    public Float battery;
 
     /* Listado de posiciones clave (punto de carga, almacen de material, entrada de material KUKA, salida material KUKA) */
     public ArrayList<ArrayList<ArrayList<String>>> keyPosition;
