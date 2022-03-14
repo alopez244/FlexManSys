@@ -304,11 +304,11 @@ bool JNIinit(void) {
 	JavaVMInitArgs vm_args;	
 
 	typedef jint(JNICALL* pCreateJavaVM)(JavaVM**, void**, void*);
-	HINSTANCE hInstance = LoadLibrary(L"C:\\Program Files (x86)\\Java\\jre1.8.0_271\\bin\\client\\jvm.dll");
+	HINSTANCE hInstance = LoadLibrary(L"C:\\Program Files (x86)\\Java\\jre1.8.0_321\\bin\\client\\jvm.dll");
 	pCreateJavaVM CreateJavaVM = (pCreateJavaVM)GetProcAddress(hInstance, "JNI_CreateJavaVM");
 
-	//options[0].optionString = "-Djava.class.path=C:\\Users\\aabadia004\\IdeaProjects\\FlexManSys\\classes;C:\\Users\\aabadia004\\Documents\\java\\libraries\\jade\\lib\\jade.jar;C:\\Users\\aabadia004\\Documents\\Java\\libraries\\gson\\gson-2.8.6.jar;C:\\Users\\aabadia004\\Documents\\Java\\libraries\\commons collections\\commons-collections4-4.4.jar";
-	options[0].optionString = "-Djava.class.path=C:\\Users\\dgarcia129\\IdeaProjects\\FlexManSys\\classes;C:\\Users\\dgarcia129\\Documents\\Java\\Libraries\\jade.jar;C:\\Users\\dgarcia129\\Documents\\Java\\Libraries\\gson-2.8.6.jar;C:\\Users\\dgarcia129\\Documents\\Java\\Libraries\\commons-collections4-4.4.jar";
+	options[0].optionString = "-Djava.class.path=C:\\FLEXMANSYScv\\FlexManSys\\classes;C:\\Users\\alopez244\\Documents\\Java\\libraries\\jade\\lib\\jade.jar;C:\\Users\\alopez244\\Documents\\Java\\libraries\\gson\\gson-2.8.6.jar;C:\\Users\\alopez244\\Documents\\Java\\libraries\\commons collections\\commons-collections4-4.4.jar";
+	//options[0].optionString = "-Djava.class.path=C:\\Users\\dgarcia129\\IdeaProjects\\FlexManSys\\classes;C:\\Users\\dgarcia129\\Documents\\Java\\Libraries\\jade.jar;C:\\Users\\dgarcia129\\Documents\\Java\\Libraries\\gson-2.8.6.jar;C:\\Users\\dgarcia129\\Documents\\Java\\Libraries\\commons-collections4-4.4.jar";
 	//options[0].optionString = "-Djava.class.path=C:\\FlexManSys\\classes;C:\\Users\\dgarcia129\\Documents\\Java\\Libraries\\jade-4.3.jar;C:\\Users\\dgarcia129\\Documents\\Java\\Libraries\\gson-2.8.6.jar;C:\\Users\\dgarcia129\\Documents\\Java\\Libraries\\commons-collections4-4.4.jar";
 	memset(&vm_args, 0, sizeof(vm_args));
 	vm_args.version = JNI_VERSION_1_6;
@@ -322,7 +322,7 @@ bool JNIinit(void) {
 		return false;
 	}
 	//The class that contains the necessary functions is searched for
-	cls = env->FindClass("es/ehu/domain/manufacturing/agents/cognitive/ExternalJADEgw");
+	cls = env->FindClass("es/ehu/domain/manufacturing/agents/managementLayer/ACL_ODK_Gateway");
 	if (cls == NULL) {
 		ODK_TRACE("--Error finding the class");
 		return false;

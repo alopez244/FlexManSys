@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <updatedPlan xmlns="updatedPlan" id="UP_01" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="updatedPlan ./UpdatedPlan.xsd">
 		<station ref_id="11">
-			<simple_operation order_ID="" batch_ID="" productType="" item_ID="" plannedStartTime=""
-							  plannedFinishTime="">
-				<Product/>
-			</simple_operation>
 		</station>
 </updatedPlan>

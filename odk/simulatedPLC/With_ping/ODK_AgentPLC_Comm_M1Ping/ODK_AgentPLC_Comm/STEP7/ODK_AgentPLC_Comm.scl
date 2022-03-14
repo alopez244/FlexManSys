@@ -3,7 +3,7 @@ FUNCTION_BLOCK "ODK_AgentPLC_Comm_Load"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 2.5.1
-//at Tue March 8 10:01:04 2022
+//at Mon March 14 20:14:05 2022
 //max. number of parallel calls into this ODK application is: 3
 //*************************************************************
   VAR_INPUT 
@@ -50,7 +50,7 @@ FUNCTION_BLOCK "ODK_AgentPLC_Comm_Unload"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 205.100.101.18
-//at Tue March 8 10:01:04 2022
+//at Mon March 14 20:14:05 2022
 //max. number of parallel calls into this ODK application is: 3
 //*************************************************************
   VAR_INPUT 
@@ -94,7 +94,7 @@ TYPE "ODK_AgentPLC_Commcontrol_flags"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 205.100.101.18
-//at Tue March 8 10:01:04 2022
+//at Mon March 14 20:14:05 2022
 //********************************************************
   STRUCT
     "Control_Flag_New_Service" : BOOL;
@@ -107,7 +107,7 @@ TYPE "ODK_AgentPLC_Commagent2plc"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 205.100.101.18
-//at Tue March 8 10:01:04 2022
+//at Mon March 14 20:14:05 2022
 //********************************************************
   STRUCT
     "Id_Machine_Reference" : UDINT;
@@ -123,7 +123,7 @@ TYPE "ODK_AgentPLC_Commplc2agent"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 205.100.101.18
-//at Tue March 8 10:01:04 2022
+//at Mon March 14 20:14:05 2022
 //********************************************************
   STRUCT
     "Id_Machine_Reference" : UDINT;
@@ -143,7 +143,7 @@ FUNCTION_BLOCK "ODK_AgentPLC_ComminitAgent"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 205.100.101.18
-//at Tue March 8 10:01:04 2022
+//at Mon March 14 20:14:05 2022
 //max. number of parallel calls into this ODK application is: 3
 //*************************************************************
   VAR_INPUT
@@ -191,7 +191,7 @@ FUNCTION_BLOCK "ODK_AgentPLC_CommSampleWrite"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 205.100.101.18
-//at Tue March 8 10:01:04 2022
+//at Mon March 14 20:14:05 2022
 //max. number of parallel calls into this ODK application is: 3
 //*************************************************************
 //Agent Init
@@ -285,7 +285,7 @@ FUNCTION_BLOCK "ODK_AgentPLC_CommSampleRead"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 205.100.101.18
-//at Tue March 8 10:01:04 2022
+//at Mon March 14 20:14:05 2022
 //max. number of parallel calls into this ODK application is: 3
 //*************************************************************
   VAR_INPUT
@@ -381,7 +381,7 @@ FUNCTION_BLOCK "ODK_AgentPLC_CommsendConf"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 205.100.101.18
-//at Tue March 8 10:01:04 2022
+//at Mon March 14 20:14:05 2022
 //max. number of parallel calls into this ODK application is: 3
 //*************************************************************
   VAR_INPUT
@@ -429,7 +429,7 @@ FUNCTION_BLOCK "ODK_AgentPLC_Commreturnstate"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 205.100.101.18
-//at Tue March 8 10:01:04 2022
+//at Mon March 14 20:14:05 2022
 //max. number of parallel calls into this ODK application is: 3
 //*************************************************************
 //sends a confirmation message to agent
@@ -494,7 +494,7 @@ FUNCTION_BLOCK "ODK_AgentPLC_Comm_GetTrace"
 VERSION : 0.1
 //This block is AUTO GENERATED - DO NOT MODIFY this block!
 //Created by ODK_CodeGenerator version 205.100.101.18
-//at Tue March 8 10:01:04 2022
+//at Mon March 14 20:14:05 2022
 //max. number of parallel calls into this ODK application is: 3
 //*************************************************************
   VAR_INPUT

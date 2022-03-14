@@ -21,12 +21,14 @@ public class ACL_ODK_Gateway {
        // String host = "192.168.187.130";              // host of Iñigo PC
 
 //        String host = "192.168.249.1";              // host of Diego PC
-        String host = "192.168.137.17";  //where is GUI
+//        String host = "192.168.137.17";             //where is GUI
+        String host = "192.168.206.1";             //host of Alejandro PC at IPB
 
         //String localHost = "192.168.187.130";              //Local host of PLC
 
 //        String localHost = "192.168.249.1";              //Local host for PLC Diego
-        String localHost = "192.168.137.17";   //where the GW is executing
+//        String localHost = "192.168.137.17";   //where the GW is executing
+        String localHost = "192.168.206.1";      //where the GW is executing
 
         String port = "1099";                   //Port on which the agent manager is running
 
@@ -38,7 +40,7 @@ public class ACL_ODK_Gateway {
 
         String containerName = "GatewayCont" + machineID;   // se define el nombre del contenedor donde se inicializara el agente
         pp.setProperty(Profile.CONTAINER_NAME, containerName);      //-->Name ControlGatewayContX
-        JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);    //Gateway Agent Initialization, must define package directory
+        JadeGateway.init("es.ehu.domain.manufacturing.agents.managementLayer.GWAgentODK",pp);    //Gateway Agent Initialization, must define package directory
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("init");
         try {
@@ -55,12 +57,15 @@ public class ACL_ODK_Gateway {
         //String host = "192.168.187.130";              // host of Alejandro PC
 
 //        String host = "192.168.249.1";              // host of Diego PC
-        String host = "192.168.137.17";             //host testing PC
+//        String host = "192.168.137.17";             //host testing PC
+          String host = "192.168.206.1";             //host of Alejandro PC at IPB
 
 //        String localHost = "192.168.2.3";              //Local host of PLC
-//
+
 //        String localHost = "192.168.249.1";              //Local host of Diego PLC
-        String localHost = "192.168.137.17";        //Local host testing PLC
+//        String localHost = "192.168.137.17";        //Local host testing PLC
+        String localHost = "192.168.206.1";             //Local host of Alejandro PC at IPB
+
 
         String port = "1099";                   //Port on which the agent manager is running
 

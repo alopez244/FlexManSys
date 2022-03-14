@@ -97,13 +97,13 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <AdditionalIncludeDirectories>C:\Users\dgarcia129\Desktop\D\ODK_AgentPLC_Comm_M1Ping\ODK_AgentPLC_Comm;C:\mqtt\paho-c;C:\mqtt\paho-cpp;C:\Program Files (x86)\Java\jdk1.8.0_271\include\win32;C:\Program Files (x86)\Java\jdk1.8.0_271\include;./src_cg_priv/;./src_odk_helpers/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\FLEXMANSYScv\FlexManSys\odk\simulatedPLC\With_ping\ODK_AgentPLC_Comm_M1Ping\ODK_AgentPLC_Comm;C:\mqtt\paho-c;C:\mqtt\paho-cpp;C:\Program Files (x86)\Java\jdk1.8.0_321\include\win32;C:\Program Files (x86)\Java\jdk1.8.0_321\include;./src_cg_priv/;./src_odk_helpers/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>C:\Program Files (x86)\Java\jdk1.8.0_271\lib\jvm.lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>C:\Program Files (x86)\Java\jdk1.8.0_271\lib\jvm.lib;C:\mqtt\paho-c\lib\paho-mqtt3a.lib;C:\mqtt\paho-c\lib\paho-mqtt3c.lib;C:\mqtt\paho-cpp\lib\paho-mqttpp3-static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Program Files (x86)\Java\jdk1.8.0_321\lib\jvm.lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>C:\Program Files (x86)\Java\jdk1.8.0_321\lib\jvm.lib;C:\mqtt\paho-c\lib\paho-mqtt3a.lib;C:\mqtt\paho-c\lib\paho-mqtt3c.lib;C:\mqtt\paho-cpp\lib\paho-mqttpp3-static.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>"$(ProgramFiles)\Siemens\Automation\ODK1500S\V2.5\bin\ODK_CodeGenerator.exe" /V /S "$(ProjectDir)"</Command>

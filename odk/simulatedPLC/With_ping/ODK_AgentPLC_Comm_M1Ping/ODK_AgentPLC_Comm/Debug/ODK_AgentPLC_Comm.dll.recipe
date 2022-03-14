@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>C:\Users\dgarcia129\Desktop\D\ODK_AgentPLC_Comm_M1Ping\Debug\ODK_AgentPLC_Comm.dll</FullPath>
+      <FullPath>C:\FLEXMANSYScv\FlexManSys\odk\simulatedPLC\With_ping\ODK_AgentPLC_Comm_M1Ping\Debug\ODK_AgentPLC_Comm.dll</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />
