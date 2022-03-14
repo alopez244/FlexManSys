@@ -74,7 +74,7 @@ public class ACL_HTTP_Gateway {
         pp.setProperty(Profile.CONTAINER_NAME, containerName);
 
         //Se inicializa el GatewayAgent
-        JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgentHTTP", pp);
+        JadeGateway.init("es.ehu.domain.manufacturing.agents.managementLayer.GWAgentHTTP", pp);
 
         //Se ejecuta el comando init para garantizar el arranque del GatewayAgent
         StructMessage strMessage = new StructMessage();

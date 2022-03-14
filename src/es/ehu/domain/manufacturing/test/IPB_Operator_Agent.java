@@ -72,12 +72,12 @@ public class IPB_Operator_Agent extends Agent {
                 request.setContent(msgContent);
                 send(request);
 
-                //Recibo la respuesta y la imprimo
-                ACLMessage response = receive(MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-                if (response != null){
-                    System.out.println("Results from service requested to "+response.getSender().getLocalName()+": ");
-                    System.out.println(response.getContent()+"\n");
-                }
+//                //Recibo la respuesta y la imprimo
+//                ACLMessage response = receive(MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+//                if (response != null){
+//                    System.out.println("Results from service requested to "+response.getSender().getLocalName()+": ");
+//                    System.out.println(response.getContent()+"\n");
+//                }
             }
         });
     }
