@@ -7,6 +7,7 @@ import es.ehu.domain.manufacturing.utilities.StructTranspResults;
 import es.ehu.domain.manufacturing.utilities.StructTranspState;
 import es.ehu.domain.manufacturing.utilities.StructTransportUnitState;
 import es.ehu.platform.MWAgent;
+import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.behaviour.NegotiatingBehaviour;
 import es.ehu.platform.template.interfaces.AssetManagementFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
@@ -166,6 +167,9 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
     @Override
     public Object execute(Object[] input) {
 
+        System.out.println("**********************************");
+        System.out.println("JEJEJEJ");
+
         if (input[0] != null) {
             ACLMessage msg = (ACLMessage) input[0];
             Acknowledge(msg,myAgent);
@@ -219,6 +223,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
     }
 
 
+
     /* OPERACIONES DE NEGOCIADO DE ASIGNACIÓN DE TAREAS */
 
     @Override
@@ -228,6 +233,9 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
         //Leer la pila de tareas (obtener todas las coordenadas)
         //Estimar un valor de negociación en base a estas (tiempo o distancia, preferiblemente tiempo)
         //Devolver el valor obtenido
+
+        System.out.println("**********************************");
+        System.out.println(negAction);
 
         /* Se van a recibir dos campos en el objeto negExternalData:
         *  En el primer campo, se recibirá la operación (u operaciones) que tendrá que añadir a su pila el transporte ganador
@@ -355,10 +363,11 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
             /* Si se trata de un mensaje de confirmación, se tiene que procesar con la estructura "StructTranspState" */
             Gson gson = new Gson();
-            StructTranspState javaTranspState = gson.fromJson(msg.getContent(), StructTranspState.class);
+            StructTransportUnitState javaTranspState = gson.fromJson(msg.getContent(), StructTransportUnitState.class);
 
-            myAgent.battery = (float) javaTranspState.getBattery();
-            myAgent.currentPos = javaTranspState.getCurrentPos();
+            myAgent.battery = javaTranspState.getBattery();
+            myAgent.currentPos_X = javaTranspState.getOdom_x();
+            myAgent.currentPos_Y = javaTranspState.getOdom_y();
 
             /* Se actualiza el valor de estos parámetros en el SystemModelAgent */
             String cmd = "set "+seId+" battery="+ myAgent.battery;
@@ -369,25 +378,36 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 e.printStackTrace();
             }
 
-            cmd = "set "+seId+" currentPos="+ myAgent.currentPos;
+            cmd = "set "+seId+" currentPos_X="+ myAgent.currentPos_X;
             try {
                 reply = myAgent.sendCommand(cmd);
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
+            cmd = "set "+seId+" currentPos_Y="+ myAgent.currentPos_Y;
+            try {
+                reply = myAgent.sendCommand(cmd);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
 
         } else if (msg.getPerformative() == ACLMessage.INFORM){
 
             /* Si se trata de un mensaje con información, se tiene que procesar con la estructura "StructTranspResults" */
             Gson gson = new Gson();
-            StructTranspResults javaTranspResults = gson.fromJson(msg.getContent(), StructTranspResults.class);
+            StructTransportUnitState javaTranspResults = gson.fromJson(msg.getContent(), StructTransportUnitState.class);
+
 
             /* En la primera parte se hace lo mismo*/
             //TODO: sacar la parte de código común a los dos casos a un método auxiliar
-            myAgent.battery = (float) javaTranspResults.getBattery();
-            myAgent.currentPos = javaTranspResults.getCurrentPos();
-            float initialTimeStamp = javaTranspResults.getInitial_timeStamp();
-            float finalTimeStamp = javaTranspResults.getFinal_timeStamp();
+
+            myAgent.battery = javaTranspResults.getBattery();
+            myAgent.currentPos_X = javaTranspResults.getOdom_x();
+            myAgent.currentPos_Y = javaTranspResults.getOdom_y();
+            float initialTimeStamp = javaTranspResults.getSeconds();
+            float finalTimeStamp = javaTranspResults.getSeconds();
 
             /* Se actualiza el valor de estos parámetros en el SystemModelAgent */
             String cmd = "set "+seId+" battery="+ myAgent.battery;
@@ -398,7 +418,14 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 e.printStackTrace();
             }
 
-            cmd = "set "+seId+" currentPos="+ myAgent.currentPos;
+            cmd = "set "+seId+" currentPos_X="+ myAgent.currentPos_X;
+            try {
+                reply = myAgent.sendCommand(cmd);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            cmd = "set "+seId+" currentPos_Y="+ myAgent.currentPos_Y;
             try {
                 reply = myAgent.sendCommand(cmd);
             } catch (Exception e) {

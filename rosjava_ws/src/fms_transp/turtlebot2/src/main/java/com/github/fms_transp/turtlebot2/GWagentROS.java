@@ -117,7 +117,8 @@ public class GWagentROS extends GatewayAgent {
               AID TransportAgent = new AID("transport1", false);
               //AID TransportAgent = new AID("TransportAgent1", false);
               msg.addReceiver(TransportAgent);
-              msg.setOntology("current_asset_state");
+              msg.setOntology("assetdata");
+              //msg.setOntology("negotiation");
               msg.setConversationId("1234");
 
               StructTransportUnitState TransportState = command.getTransport_state();
