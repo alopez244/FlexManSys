@@ -4,140 +4,93 @@ import es.ehu.domain.manufacturing.utilities.StructMessage;
 import jade.core.Profile;
 import jade.lang.acl.ACLMessage;
 import jade.util.leap.Properties;
+import jade.wrapper.ControllerException;
 import jade.wrapper.gateway.JadeGateway;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class ACL_ODK_Gateway {
 
-    public static void agentInit(String machineID){
+    public static void agentInit(String assetName) throws UnknownHostException {
 
-        redirectOutput();
-        System.out.println("->Java Agent Init");
-//        String host = "127.0.0.1";              //Local host IP)
-       // String host = "192.168.187.130";              // host of Iñigo PC
+        //A continuación, se definen el resto de parámetros que van a hacer falta para crear el gatewayAgent
+        String localHostName = InetAddress.getLocalHost().getHostName();
+        InetAddress addressses[] = InetAddress.getAllByName(localHostName);
+        String host = "10.253.59.133";             //host of Alejandro PC at IPB
+        String port = "1099";
+        String containerName = "GatewayCont"+assetName;
 
-//        String host = "192.168.249.1";              // host of Diego PC
-//        String host = "192.168.137.17";             //where is GUI
-//        String host = "192.168.206.1";             //host of Alejandro PC at IPB
-        String host = "10.253.59.30";             //host of Alejandro PC at IPB
+        //Se declara un bucle para iterar sobre todas las IPs que se han obtenido en el array addresses[]
+        for (int i=0;i< addressses.length;i++){
+            if (addressses[i] instanceof Inet4Address){
 
+                String localHost[] = String.valueOf(addressses[i]).split("/");
 
-        //String localHost = "192.168.187.130";              //Local host of PLC
+                //Se definen las propiedades que caracterizan al contenedor del GatewayAgent:  puerto y nombre del contenedor
+                Properties pp = new Properties();
+                pp.setProperty(Profile.LOCAL_HOST, localHost[localHost.length-1]); //Dirección IP del gatewayAgent
+                pp.setProperty(Profile.MAIN_HOST, localHost[localHost.length-1]); //Dirección IP de la plataforma de agentes (JADE)
+                pp.setProperty(Profile.MAIN_PORT, port); //Puerto de acceso del gatewayAgent
+                pp.setProperty(Profile.LOCAL_PORT, port); //Puerto de acceso de la plataforma de agentes (JADE)
+                pp.setProperty(Profile.CONTAINER_NAME, containerName); //Nombre del contenedor
 
-//        String localHost = "192.168.249.1";              //Local host for PLC Diego
-//        String localHost = "192.168.137.17";   //where the GW is executing
-        String localHost = "10.253.59.30";      //where the GW is executing
+                //Se inicializa el GatewayAgent de la clase correspondiente
+                JadeGateway.init("es.ehu.domain.manufacturing.agents.managementLayer.GWAgentHTTP", pp);
 
-        String port = "1099";                   //Port on which the agent manager is running
-
-        Properties pp = new Properties();
-        pp.setProperty(Profile.MAIN_HOST, host);
-        pp.setProperty(Profile.LOCAL_HOST, localHost);//comentar para pc unico
-        pp.setProperty(Profile.MAIN_PORT, port);
-        pp.setProperty(Profile.LOCAL_PORT, port);
-
-        String containerName = "GatewayCont" + machineID;   // se define el nombre del contenedor donde se inicializara el agente
-        pp.setProperty(Profile.CONTAINER_NAME, containerName);      //-->Name ControlGatewayContX
-        JadeGateway.init("es.ehu.domain.manufacturing.agents.managementLayer.GWAgentODK",pp);    //Gateway Agent Initialization, must define package directory
-        StructMessage strMessage = new StructMessage();
-        strMessage.setAction("init");
-        try {
-            JadeGateway.execute(strMessage);    // calls processCommand method of Gateway Agent
-        } catch(Exception e) {
-            e.printStackTrace();
+                //Se ejecuta el comando init para garantizar el arranque del GatewayAgent
+                StructMessage strMessage = new StructMessage();
+                strMessage.setAction("init");
+                try {
+                    JadeGateway.execute(strMessage);
+                    break;
+                } catch (ControllerException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
-        System.out.println("<-Java Agent Init");
     }
 
-    //Function to send ACL messages by receiving a String that is added in the message.
-    public static void send(String msgOut) {  //Sends the data String that has been given
-        System.out.println("->Java Send");
-        //String host = "192.168.187.130";              // host of Alejandro PC
 
-//        String host = "192.168.249.1";              // host of Diego PC
-//        String host = "192.168.137.17";             //host testing PC
-          String host = "10.253.59.30";             //host of Alejandro PC at IPB
+    public static String recv() throws ControllerException, InterruptedException {
 
-//        String localHost = "192.168.2.3";              //Local host of PLC
-
-//        String localHost = "192.168.249.1";              //Local host of Diego PLC
-//        String localHost = "192.168.137.17";        //Local host testing PLC
-        String localHost = "10.253.59.30";             //Local host of Alejandro PC at IPB
-
-
-        String port = "1099";                   //Port on which the agent manager is running
-
-        Properties pp = new Properties();
-        pp.setProperty(Profile.MAIN_HOST, host);
-        pp.setProperty(Profile.LOCAL_HOST, localHost);//comentar para pc unico
-        pp.setProperty(Profile.MAIN_PORT, port);
-        pp.setProperty(Profile.LOCAL_PORT, port);
-
-        String containerName = "GatewayCont1";   // se define el nombre del contenedor donde se inicializara el agente
-        pp.setProperty(Profile.CONTAINER_NAME, containerName);      //-->Name ControlGatewayContX
-        //JadeGateway.init("es.ehu.domain.manufacturing.agents.cognitive.GWAgent",pp);    //Gateway Agent Initialization, must define package directory
-        StructMessage strMessage = new StructMessage();
-        strMessage.setAction("send");
-        strMessage.setMessage(msgOut);
-        //Test
-
-        if(msgOut.contains("Received")){    // Depending of the message type (confirmation or data exchanging) the performative will be different
-            strMessage.setPerformative(ACLMessage.CONFIRM);  // Performative = CONFIRM
-        } else {
-            strMessage.setPerformative(ACLMessage.INFORM); // Performative = REQUEST
-        }
-        System.out.println("--Sended message: " + strMessage.readMessage());
-
-        try {
-            JadeGateway.execute(strMessage);    // calls processCommand method of Gateway Agent
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
-        System.out.println("<-Java Send");
-    }
-
-    //Function for reading the data received in ACL messages
-    public static String recv() {    // Agent -->  ROS (Kobuki)
-
-        String recvMsg;
+        //Se invoca la acción receive del GatewayAgent para recibir posibles mensajes
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("receive");
-        try {
-            JadeGateway.execute(strMessage);
-        } catch(Exception e) {
-            System.out.println(e);
-        }
+        JadeGateway.execute(strMessage);
+
+        //Se comprueba si hay un nuevo mensaje
+        String msgFromGW;
         if(strMessage.readNewData()){
-            recvMsg=strMessage.readMessage();
-            System.out.println("--Received: " + recvMsg);
+            msgFromGW =strMessage.readMessage();
         }else{
-            System.out.println("--No answer");
-            recvMsg="";
+            msgFromGW ="";
         }
-        System.out.println("<-Java recv");
-        return recvMsg;
+        return msgFromGW;
     }
 
-    //Modifica la direccon de Sistem.out, teniendo las trazas en un fichero en lugar de por terminal.
-    public static void redirectOutput(){
-        // Create a log directory
-        File directoryLogs = new File("C:");
-        directoryLogs.mkdirs();
-        try {
-            // Create a log file
-            File fileLog = new File(directoryLogs, "debugFile.txt");
-            fileLog.createNewFile();
-            // Create a stream to to the log file
-            FileOutputStream f = new FileOutputStream(fileLog);
-            System.setOut(new PrintStream(f));
-        } catch (IOException e) {
-            e.printStackTrace();
+
+    public static void send(String msgOut) throws ControllerException, InterruptedException {
+
+        //Se declara la estructura que se le va a pasar al GatewayAgent
+        StructMessage strMessage = new StructMessage();
+
+        //Se definen la acción (enviar) y el contenido (response)
+        strMessage.setAction("send");
+        strMessage.setMessage(msgOut);
+
+        //Se define la performativa dependiendo del tipo de mensaje recibido (mensaje de confirmación o de resultados)
+        if(msgOut.contains("Received")){
+            strMessage.setPerformative(ACLMessage.CONFIRM);
+        } else {
+            strMessage.setPerformative(ACLMessage.INFORM);
         }
+
+        //Por último, se envía el mensaje
+        JadeGateway.execute(strMessage);
     }
+
 
     public static boolean askstate(){  //pide al PLC su estado
         StructMessage strMessage = new StructMessage();
@@ -161,7 +114,7 @@ public class ACL_ODK_Gateway {
         StructMessage strMessage = new StructMessage();
             strMessage.setAction("rcv_state");
             strMessage.setMessage(state);
-            strMessage.setPerformative(7);
+            strMessage.setPerformative(ACLMessage.INFORM);
             try {
                 JadeGateway.execute(strMessage);
             } catch(Exception e) {
@@ -169,5 +122,4 @@ public class ACL_ODK_Gateway {
             }
             System.out.println("--Received: " + state);
     }
-
 }

@@ -88,30 +88,30 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             if (args[i].toLowerCase().startsWith("id=")) return null;
         }
 
-//		/* En caso negativo, se trata del agente auxiliar y hay que realizar más acciones */
-//		/* En primer lugar, hay que comprobar la conectividad con el asset en dos pasos: */
-//		/* Paso 1: contacto con el gatewayAgent y espero respuesta (si no hay, no se puede continuar con el registro) */
-//		sendACLMessage(16,gatewayAgentID,"ping","","",myAgent);
-//		ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 300);
-//		if(answer_gw==null){
-//			System.out.println("GW is not online. Start GW and repeat.");
-//			System.exit(0);
-//		}
-//
-//		/* Paso 2: contacto con el asset a través del gatewayAgent y espero respuesta (si no hay, no se puede continuar con el registro) */
-//		sendACLMessage(16, gatewayAgentID, "check_asset","check_asset_on_boot_"+convIDcnt++,"ask_state",myAgent); //primero antes de nada debemos comprobar si el agente GW y el PLC están disponibles
-//		ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 300);
-//		if(answer!=null){
-//			if(!answer.getContent().equals("Working")&&!answer.getContent().equals("Not working")){
-//				System.out.println("PLC is not prepared to work.");
-//				System.exit(0); //si el asset o el gwAgent no están disponibles no tiene sentido que iniciemos el agente
-//			}else{
-//				System.out.println("PLC is "+answer.getContent());
-//			}
-//		}else{
-//			System.out.println("PLC is not prepared to work.");
-//			System.exit(0); //si el asset o el gwAgent no están disponible no tiene sentido que iniciemos el agente máquina
-//		}
+		/* En caso negativo, se trata del agente auxiliar y hay que realizar más acciones */
+		/* En primer lugar, hay que comprobar la conectividad con el asset en dos pasos: */
+		/* Paso 1: contacto con el gatewayAgent y espero respuesta (si no hay, no se puede continuar con el registro) */
+		sendACLMessage(ACLMessage.REQUEST,gatewayAgentID,"ping","","",myAgent);
+		ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 300);
+		if(answer_gw==null){
+			System.out.println("GW is not online. Start GW and repeat.");
+			System.exit(0);
+		}
+
+		/* Paso 2: contacto con el asset a través del gatewayAgent y espero respuesta (si no hay, no se puede continuar con el registro) */
+		sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "check_asset","check_asset_on_boot_"+convIDcnt++,"ask_state",myAgent); //primero antes de nada debemos comprobar si el agente GW y el PLC están disponibles
+		ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 300);
+		if(answer!=null){
+			if(!answer.getContent().equals("Working")&&!answer.getContent().equals("Not working")){
+				System.out.println("PLC is not prepared to work.");
+				System.exit(0); //si el asset o el gwAgent no están disponibles no tiene sentido que iniciemos el agente
+			}else{
+				System.out.println("PLC is "+answer.getContent());
+			}
+		}else{
+			System.out.println("PLC is not prepared to work.");
+			System.exit(0); //si el asset o el gwAgent no están disponible no tiene sentido que iniciemos el agente máquina
+		}
 
         /* Si la comunicación con el asset es correcta, se procede a registrar el agente transporte en el SystemModelAgent */
 
