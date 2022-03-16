@@ -50,6 +50,9 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
     /* Identificador de la conversación iniciada por el agente transporte */
     private int conversationId = 0;
 
+    /* Flag que permite conocer si el transporte ha vuelto de Operative a Active */
+    private boolean TransportOperative = false;
+
 
     /* OPERACIONES DE INICIALIZACIÓN Y PUESTA EN MARCHA */
 
@@ -298,7 +301,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
     public void sendDataToDevice() {
 
         /* En primer lugar se comprueba si el transporte está realizando alguna operación (workInProgress=TRUE) */
-        if (workInProgress !=true){
+        if (!workInProgress){
 
             /* Si el transporte está libre, se comprueba si hay tareas en el plan
             * La cabecera del modelo ocupa una posición, por lo que para que haya tareas, el tamaño del modelo tiene que ser de 2 o más */
@@ -358,18 +361,25 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
     @Override
     public void rcvDataFromDevice(ACLMessage msg) {
 
-        /* Se recibe el mensaje del gatewayAgent y se filtra por performativa*/
-        if (msg.getPerformative() == ACLMessage.CONFIRM){
+        /* Se recibe el mensaje del gatewayAgent y se filtra por estado del transporte*/
 
-            /* Si se trata de un mensaje de confirmación, se tiene que procesar con la estructura "StructTranspState" */
-            Gson gson = new Gson();
-            StructTransportUnitState javaTranspState = gson.fromJson(msg.getContent(), StructTransportUnitState.class);
+        Gson gson = new Gson();
+        StructTransportUnitState javaTranspState = gson.fromJson(msg.getContent(), StructTransportUnitState.class);
+
+        myAgent.ActualState = javaTranspState.getTransport_unit_state();
+
+        if (!Objects.equals(myAgent.ActualState, "ACTIVE")){
+
+            // El transporte o bien se encuentra en un estado que no puede operar o bien se encuentra operando
+            // Enviamos al SMA la informacion que proviene desde el transporte
+
+            System.out.println("NOT ACTIVE");
 
             myAgent.battery = javaTranspState.getBattery();
             myAgent.currentPos_X = javaTranspState.getOdom_x();
             myAgent.currentPos_Y = javaTranspState.getOdom_y();
 
-            /* Se actualiza el valor de estos parámetros en el SystemModelAgent */
+            // Se actualiza el valor de estos parámetros en el SystemModelAgent
             String cmd = "set "+seId+" battery="+ myAgent.battery;
             ACLMessage reply = null;
             try {
@@ -392,67 +402,39 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 e.printStackTrace();
             }
 
+            if (myAgent.ActualState.equals("OPERATIVE")){
 
-        } else if (msg.getPerformative() == ACLMessage.INFORM){
+                // El transporte esta en operacion, este flag permitira saber cuando el transporte ha vuelto a estado
+                // ACTIVE habiendo estado en operacion anteriormente
 
-            /* Si se trata de un mensaje con información, se tiene que procesar con la estructura "StructTranspResults" */
-            Gson gson = new Gson();
-            StructTransportUnitState javaTranspResults = gson.fromJson(msg.getContent(), StructTransportUnitState.class);
+                TransportOperative = true;
+                System.out.println("El transporte comenzo una tarea");
 
-
-            /* En la primera parte se hace lo mismo*/
-            //TODO: sacar la parte de código común a los dos casos a un método auxiliar
-
-            myAgent.battery = javaTranspResults.getBattery();
-            myAgent.currentPos_X = javaTranspResults.getOdom_x();
-            myAgent.currentPos_Y = javaTranspResults.getOdom_y();
-            float initialTimeStamp = javaTranspResults.getSeconds();
-            float finalTimeStamp = javaTranspResults.getSeconds();
-
-            /* Se actualiza el valor de estos parámetros en el SystemModelAgent */
-            String cmd = "set "+seId+" battery="+ myAgent.battery;
-            ACLMessage reply = null;
-            try {
-                reply = myAgent.sendCommand(cmd);
-            } catch (Exception e) {
-                e.printStackTrace();
             }
 
-            cmd = "set "+seId+" currentPos_X="+ myAgent.currentPos_X;
-            try {
-                reply = myAgent.sendCommand(cmd);
-            } catch (Exception e) {
-                e.printStackTrace();
+        } else if (myAgent.ActualState.equals("ACTIVE")){
+
+            // El transporte o bien acaba de terminar una operacion o bien esta listo para operar y recibir tareas
+            System.out.println("ACTIVE");
+
+            if (TransportOperative){
+
+                // El transporte ha efectuado su tarea correctamente, ha vuelto al estado ACTIVE, esto indica que
+                // el transporte esta preparado para recibir nuevas tareas.
+
+
+                TransportOperative = false;
+                System.out.println("El transporte termino su tarea");
+
             }
 
-            cmd = "set "+seId+" currentPos_Y="+ myAgent.currentPos_Y;
-            try {
-                reply = myAgent.sendCommand(cmd);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            /* Después, se informa a la máquina que solicitó el servicio de que este ha sido completado */
-            //TODO: enviar un mensaje de confirmación de servicio realizado al machine agent que corresponda (hablar en la reunión)
-
-            /* Primero se obtienen los nombres del agente que solicitó el servicio y del agente que recibe el servicio */
-            AID serviceRequester = new AID(myAgent.transportPlan.get(1).get(3).get(1), false);
-            AID serviceReceiver = new AID(myAgent.transportPlan.get(1).get(3).get(2), false);
-
-            /* Se envía un mensaje al solicitante del servicio */
-            sendACLMessage(ACLMessage.INFORM,serviceRequester,"data",myAgent.getLocalName()+"_"+ conversationId++,"initialTimeStamp="+ initialTimeStamp +" finalTimeStamp="+finalTimeStamp,myAgent);
-
-            /* Se comprueba si el solicitante y el receptor del servicio son distintos agentes, para enviar un segundo mensaje si es necesario */
-            if (serviceReceiver != serviceRequester){
-                sendACLMessage(ACLMessage.INFORM,serviceReceiver,"data",myAgent.getLocalName()+"_"+ conversationId++,"initialTimeStamp="+ initialTimeStamp +" finalTimeStamp="+finalTimeStamp,myAgent);
-            }
-
-            /* Se continúa eliminando esta tarea del plan (la primera tarea de la lista ocupa la segunda posición del submodelo) */
-            myAgent.transportPlan.remove(1);
-
-            /* Por último, se resetea el flag para indicar que el transaporte ha quedado libre*/
-            workInProgress=false;
         }
+
+
+
+
+
+
     }
 
 
@@ -461,4 +443,113 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
     @Override
     public Void terminate(MWAgent myAgent) {return null;}
 }
+
+
+/*
+
+public void rcvDataFromDevice(ACLMessage msg) {
+
+      if (msg.getPerformative() == ACLMessage.CONFIRM){
+
+            // Si se trata de un mensaje de confirmación, se tiene que procesar con la estructura "StructTranspState"
+Gson gson = new Gson();
+    StructTransportUnitState javaTranspState = gson.fromJson(msg.getContent(), StructTransportUnitState.class);
+
+            myAgent.battery = javaTranspState.getBattery();
+                    myAgent.currentPos_X = javaTranspState.getOdom_x();
+                    myAgent.currentPos_Y = javaTranspState.getOdom_y();
+
+                    // Se actualiza el valor de estos parámetros en el SystemModelAgent
+                    String cmd = "set "+seId+" battery="+ myAgent.battery;
+                    ACLMessage reply = null;
+                    try {
+                    reply = myAgent.sendCommand(cmd);
+                    } catch (Exception e) {
+                    e.printStackTrace();
+                    }
+
+                    cmd = "set "+seId+" currentPos_X="+ myAgent.currentPos_X;
+                    try {
+                    reply = myAgent.sendCommand(cmd);
+                    } catch (Exception e) {
+                    e.printStackTrace();
+                    }
+
+                    cmd = "set "+seId+" currentPos_Y="+ myAgent.currentPos_Y;
+                    try {
+                    reply = myAgent.sendCommand(cmd);
+                    } catch (Exception e) {
+                    e.printStackTrace();
+                    }
+
+
+                    } else if (msg.getPerformative() == ACLMessage.INFORM){
+
+                    // Si se trata de un mensaje con información, se tiene que procesar con la estructura "StructTranspResults"
+                    Gson gson = new Gson();
+                    StructTransportUnitState javaTranspResults = gson.fromJson(msg.getContent(), StructTransportUnitState.class);
+
+
+        // En la primera parte se hace lo mismo
+        //TOD O: sacar la parte de código común a los dos casos a un método auxiliar
+
+        myAgent.battery = javaTranspResults.getBattery();
+        myAgent.currentPos_X = javaTranspResults.getOdom_x();
+        myAgent.currentPos_Y = javaTranspResults.getOdom_y();
+        float initialTimeStamp = javaTranspResults.getSeconds();
+        float finalTimeStamp = javaTranspResults.getSeconds();
+
+        // Se actualiza el valor de estos parámetros en el SystemModelAgent
+        String cmd = "set "+seId+" battery="+ myAgent.battery;
+        ACLMessage reply = null;
+        try {
+        reply = myAgent.sendCommand(cmd);
+        } catch (Exception e) {
+        e.printStackTrace();
+        }
+
+        cmd = "set "+seId+" currentPos_X="+ myAgent.currentPos_X;
+        try {
+        reply = myAgent.sendCommand(cmd);
+        } catch (Exception e) {
+        e.printStackTrace();
+        }
+
+        cmd = "set "+seId+" currentPos_Y="+ myAgent.currentPos_Y;
+        try {
+        reply = myAgent.sendCommand(cmd);
+        } catch (Exception e) {
+        e.printStackTrace();
+        }
+
+        // Después, se informa a la máquina que solicitó el servicio de que este ha sido completado
+        //TOD O: enviar un mensaje de confirmación de servicio realizado al machine agent que corresponda (hablar en la reunión)
+
+           // myAgent.ActualState = javaTranspResults.getTransport_unit_state();
+
+            while (myAgent.ActualState != "ACTIVE"){
+
+            }
+
+        // Primero se obtienen los nombres del agente que solicitó el servicio y del agente que recibe el servicio
+        AID serviceRequester = new AID(myAgent.transportPlan.get(1).get(3).get(1), false);
+        AID serviceReceiver = new AID(myAgent.transportPlan.get(1).get(3).get(2), false);
+
+        // Se envía un mensaje al solicitante del servicio
+        sendACLMessage(ACLMessage.INFORM,serviceRequester,"data",myAgent.getLocalName()+"_"+ conversationId++,"initialTimeStamp="+ initialTimeStamp +" finalTimeStamp="+finalTimeStamp,myAgent);
+
+        // Se comprueba si el solicitante y el receptor del servicio son distintos agentes, para enviar un segundo mensaje si es necesario
+        if (serviceReceiver != serviceRequester){
+        sendACLMessage(ACLMessage.INFORM,serviceReceiver,"data",myAgent.getLocalName()+"_"+ conversationId++,"initialTimeStamp="+ initialTimeStamp +" finalTimeStamp="+finalTimeStamp,myAgent);
+        }
+
+        // Se continúa eliminando esta tarea del plan (la primera tarea de la lista ocupa la segunda posición del submodelo)
+        myAgent.transportPlan.remove(1);
+
+        // Por último, se resetea el flag para indicar que el transaporte ha quedado libre
+        workInProgress=false;
+        }
+        }
+
+ */
 

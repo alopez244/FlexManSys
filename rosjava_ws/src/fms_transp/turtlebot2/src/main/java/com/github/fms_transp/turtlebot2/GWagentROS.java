@@ -113,6 +113,7 @@ public class GWagentROS extends GatewayAgent {
           else if (TransportAgent_Init == true) {
 
               ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+              //ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
               //"TransportAgent" Nombre que se le da al inicializar el agente en la plataforma JADE
               AID TransportAgent = new AID("transport1", false);
               //AID TransportAgent = new AID("TransportAgent1", false);
