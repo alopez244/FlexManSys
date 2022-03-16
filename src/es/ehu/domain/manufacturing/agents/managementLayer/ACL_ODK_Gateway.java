@@ -16,21 +16,21 @@ public class ACL_ODK_Gateway {
 
         //A continuación, se definen el resto de parámetros que van a hacer falta para crear el gatewayAgent
         String localHostName = InetAddress.getLocalHost().getHostName();
-        InetAddress addressses[] = InetAddress.getAllByName(localHostName);
+        InetAddress[] addressses = InetAddress.getAllByName(localHostName);
         String host = "10.253.59.133";             //host of Alejandro PC at IPB
         String port = "1099";
         String containerName = "GatewayCont"+machineID;
 
         //Se declara un bucle para iterar sobre todas las IPs que se han obtenido en el array addresses[]
-        for (int i=0;i< addressses.length;i++){
-            if (addressses[i] instanceof Inet4Address){
+        for (InetAddress addresss : addressses) {
+            if (addresss instanceof Inet4Address) {
 
-                String localHost[] = String.valueOf(addressses[i]).split("/");
+                String[] localHost = String.valueOf(addresss).split("/");
 
                 //Se definen las propiedades que caracterizan al contenedor del GatewayAgent:  puerto y nombre del contenedor
                 Properties pp = new Properties();
-                pp.setProperty(Profile.LOCAL_HOST, localHost[localHost.length-1]); //Dirección IP del gatewayAgent
-                pp.setProperty(Profile.MAIN_HOST, localHost[localHost.length-1]); //Dirección IP de la plataforma de agentes (JADE)
+                pp.setProperty(Profile.LOCAL_HOST, localHost[localHost.length - 1]); //Dirección IP del gatewayAgent
+                pp.setProperty(Profile.MAIN_HOST, localHost[localHost.length - 1]); //Dirección IP de la plataforma de agentes (JADE)
                 pp.setProperty(Profile.MAIN_PORT, port); //Puerto de acceso del gatewayAgent
                 pp.setProperty(Profile.LOCAL_PORT, port); //Puerto de acceso de la plataforma de agentes (JADE)
                 pp.setProperty(Profile.CONTAINER_NAME, containerName); //Nombre del contenedor
@@ -61,7 +61,7 @@ public class ACL_ODK_Gateway {
 
         //Se comprueba si hay un nuevo mensaje
         String msgFromGW;
-        if(strMessage.readNewData()){ //En caso afirmativo, se lee el mensaje
+        if (strMessage.readMessage() != null) { //En caso afirmativo, se lee el mensaje
             msgFromGW =strMessage.readMessage();
         }else{ //En caso contrario, se devuelve ""
             msgFromGW ="";
@@ -99,7 +99,7 @@ public class ACL_ODK_Gateway {
         JadeGateway.execute(strMessage);
 
         //Se comprueba si hay un nuevo mensaje
-        if(strMessage.readNewData()){ //En caso afirmativo, se devuelve TRUE
+        if (strMessage.readMessage() != null) { //En caso afirmativo, se devuelve TRUE
             return true;
         }else{ //En caso contrario, se devuelve FALSE
             return false;

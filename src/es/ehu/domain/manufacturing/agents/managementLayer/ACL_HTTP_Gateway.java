@@ -71,19 +71,19 @@ public class ACL_HTTP_Gateway {
 
         //A continuación, se definen el resto de parámetros que van a hacer falta para crear el gatewayAgent
         String localHostName = InetAddress.getLocalHost().getHostName();
-        InetAddress addressses[] = InetAddress.getAllByName(localHostName);
+        InetAddress[] addressses = InetAddress.getAllByName(localHostName);
         String port = "1099";
         String containerName = "GatewayCont"+assetName;
 
         //Se declara un bucle para iterar sobre todas las IPs que se han obtenido en el array addresses[]
-        for (int i=0;i< addressses.length;i++){
-            if (addressses[i] instanceof Inet4Address){
+        for (InetAddress addresss : addressses) {
+            if (addresss instanceof Inet4Address) {
 
-                String localHost[] = String.valueOf(addressses[i]).split("/");
+                String[] localHost = String.valueOf(addresss).split("/");
 
                 //Se definen las propiedades que caracterizan al contenedor del GatewayAgent:  puerto y nombre del contenedor
                 Properties pp = new Properties();
-                pp.setProperty(Profile.LOCAL_HOST, localHost[localHost.length-1]); //Dirección IP del gatewayAgent
+                pp.setProperty(Profile.LOCAL_HOST, localHost[localHost.length - 1]); //Dirección IP del gatewayAgent
                 pp.setProperty(Profile.MAIN_HOST, host); //Dirección IP de la plataforma de agentes (JADE)
                 pp.setProperty(Profile.MAIN_PORT, port); //Puerto de acceso del gatewayAgent
                 pp.setProperty(Profile.LOCAL_PORT, port); //Puerto de acceso de la plataforma de agentes (JADE)

@@ -12,10 +12,17 @@ public class GWAgentHTTP extends GatewayAgent {
     public String msgRecv;
     public String msgRecvState;
     public AID machineAgentName;
-    public AID stateasker;
+    public AID stateRequester;
 
     @Override
     protected void processCommand(Object _command) {
+
+        //Se comprueba si el objeto recibido es del tipo esperado
+        System.out.println("-->Gateway processes execute");
+        if(!(_command instanceof StructMessage)){
+            System.out.println("---Error, unexpected type");
+            releaseCommand(_command);
+        }
 
         //Se procesa la estructura recibida al invocar el agente y se lee la acción a realizar
         StructMessage command = (StructMessage) _command;
@@ -59,18 +66,19 @@ public class GWAgentHTTP extends GatewayAgent {
         super.setup();
 
         //Se definen tres templates: uno para el ping (se comprueba si el gatewayAgent está vivo)
-        MessageTemplate templatePing = MessageTemplate.and(MessageTemplate.MatchOntology("ping"),
-                MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+        MessageTemplate templatePing = MessageTemplate.and(
+                MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchOntology("ping"));
 
         //Un segundo template para comprobar el estado del asset
-        MessageTemplate templateCheckAsset = MessageTemplate.and(MessageTemplate.MatchOntology("check_asset"),
-                MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+        MessageTemplate templateCheckAsset = MessageTemplate.and(
+                MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchOntology("check_asset"));
 
         //Y un tercero para el intercambio normal de mensajes
         MessageTemplate templateWork = MessageTemplate.and(
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchOntology("data"));
 
         addBehaviour(new CyclicBehaviour() {
+
             public void action() {
 
                 //Se procesa cualquier mensaje
@@ -95,7 +103,7 @@ public class GWAgentHTTP extends GatewayAgent {
                         //Si se ha recibido un mensaje de este tipo, se guarda el contenido del mensaje
                         // También se guarda el AID del solicitante
                         msgRecvState = msg.getContent();
-                        stateasker= msg.getSender();
+                        stateRequester = msg.getSender();
 
                     } else if (templateWork.match(msg)){
 

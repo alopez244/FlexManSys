@@ -6,145 +6,149 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.wrapper.gateway.GatewayAgent;
-import org.apache.commons.collections4.queue.CircularFifoQueue;
 
 public class GWAgentODK extends GatewayAgent {
 
     public String msgRecv;
+    public String msgRecvState;
     public AID machineAgentName;
-    public static final int bufferSize =6;
-    private String stateasker="";
-    CircularFifoQueue msgInFIFO = new CircularFifoQueue(bufferSize);
-    CircularFifoQueue msgInFIFO2 = new CircularFifoQueue(bufferSize);
+    public AID stateRequester;
 
+    protected void processCommand(java.lang.Object _command) {
 
-
-    protected void processCommand(java.lang.Object command) {   //this method will be executed when the externalJAde class executes the command JadeGateway.execute
+        //Se comprueba si el objeto recibido es del tipo esperado
         System.out.println("-->Gateway processes execute");
-        if(!(command instanceof StructMessage)){
+        if(!(_command instanceof StructMessage)){
             System.out.println("---Error, unexpected type");
-            releaseCommand(command);
-        }
-        StructMessage msgStruct = (StructMessage) command;
-        String action = msgStruct.readAction();
-        if(action.equals("receive")) {     // JadeGateway.execute command was called for new message reading (Agent -> PLC)
-            System.out.println("---GW, recv function");
-            msgRecv = (String) msgInFIFO.poll();    //reads the oldest message from FIFO
-            if ( msgRecv != null ) {
-                System.out.println("---GW, new message to read");
-                ((StructMessage) command).setMessage(msgRecv);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
-                ((StructMessage) command).setNewData(true);
-            } else {
-                ((StructMessage) command).setNewData(false);
-                System.out.println("---GW, message queue is empty");
-            }
-        } else if(action.equals("send")) {      // JadeGateway.execute command was called for new message sending (PLC -> Agent)
-            System.out.println("---Gateway send command");
-            ACLMessage msgToAgent = new ACLMessage(msgStruct.readPerformative()); //reads the performative saved in StructMessage data structure
-            msgToAgent.addReceiver(machineAgentName);   //for a correct data exchanging, agent must send a message to the PLC first
-            msgToAgent.setOntology("assetdata");
-            msgToAgent.setConversationId("PLCdata");
-            msgToAgent.setContent(msgStruct.readMessage()); //reads the message saved in StructMessage data structure
-            send(msgToAgent);
-        } else if(action.equals("init")) {      // JadeGateway.execute command was called for new message sending (PLC -> Agent)
-            System.out.println("---Gateway init command");
-            System.out.println("---Hello, I am a Gateway Agent");
-
-        } else if(action.equals("ask_state")){
-            msgRecv = (String) msgInFIFO2.poll();    //reads the oldest message from FIFO
-            if ( msgRecv != null ) {
-                System.out.println("---Someone asked to check asset state");
-                ((StructMessage) command).setMessage(msgRecv);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
-                ((StructMessage) command).setNewData(true);
-            } else {
-                ((StructMessage) command).setNewData(false);
-                System.out.println("---State checking queue is empty");
-            }
-
-        }else if(action.equals("rcv_state")) {
-            System.out.println("---Asset answered with his state");
-            AID ID=new AID(stateasker,false);
-            ACLMessage msg = new ACLMessage(msgStruct.readPerformative());
-            msg.addReceiver(ID);
-            msg.setOntology("asset_state");
-            msg.setContent(msgStruct.readMessage());
-            send(msg);
-
-        }else {
-            System.out.println("---GW, recv function");
-            msgRecv = (String) msgInFIFO.poll();    //reads the oldest message from FIFO
-            if ( msgRecv != null ) {
-                System.out.println("---GW, new message to read");
-                ((StructMessage) command).setMessage(msgRecv);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
-                ((StructMessage) command).setNewData(true);
-            } else {
-                ((StructMessage) command).setNewData(false);
-                System.out.println("---GW, message queue is empty");
-            }
+            releaseCommand(_command);
         }
 
-        System.out.println("<--Gateway processes execute");
+        //Se procesa la estructura recibida al invocar el agente y se lee la acción a realizar
+        StructMessage command = (StructMessage) _command;
+        String action = command.readAction();
+
+        switch (action) {
+            case "init":
+
+                //Se printea un mensaje por pantalla
+                System.out.println("--- GWagentHTTP init() command called.");
+                break;
+
+            case "receive":
+
+                //Se comprueba si se ha recibido algún mensaje
+                if (msgRecv != null) {
+
+                    //En caso afirmativo, se guarda en la estructura de datos
+                    command.setMessage(msgRecv);
+                    msgRecv = null;
+                }
+                break;
+
+            case "send":
+
+                //Se declara un nuevo mensaje ACL con la performativa y el contenido recibidos en la estructura
+                //También se definen el receptor (el agente que me escribió primero) y la ontología (assetdata)
+                ACLMessage msgToAgent = new ACLMessage(command.readPerformative());
+                msgToAgent.addReceiver(machineAgentName);
+                msgToAgent.setOntology("assetdata");
+                msgToAgent.setContent(command.readMessage());
+                send(msgToAgent);
+                break;
+
+            case "ask_state":
+
+                //Se comprueba si se ha recibido algún mensaje
+                if (msgRecvState != null) {
+
+                    //En caso afirmativo, se guarda en la estructura de datos
+                    command.setMessage(msgRecvState);
+                    msgRecvState = null;
+                }
+                break;
+
+            case "rcv_state":
+
+                //Se declara un nuevo mensaje ACL con la performativa y el contenido recibidos en la estructura
+                //También se definen el receptor (el agente que me escribió primero) y la ontología (assetdata)
+                ACLMessage msgToAgentState = new ACLMessage(command.readPerformative());
+                msgToAgentState.addReceiver(stateRequester);
+                msgToAgentState.setOntology("asset_state");
+                msgToAgentState.setContent(command.readMessage());
+                send(msgToAgentState);
+                break;
+        }
+
+        //Se ejecuta el método releaseCommand para finalizar la ejecución
         releaseCommand(command);
     }
 
     public void setup() {
-        MessageTemplate template = MessageTemplate.and(
+
+        super.setup();
+
+        //Se definen tres templates: uno para el ping (se comprueba si el gatewayAgent está vivo)
+        MessageTemplate templatePing = MessageTemplate.and(
+                MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchOntology("ping"));
+
+        //Un segundo template para comprobar el estado del asset
+        MessageTemplate templateCheckAsset = MessageTemplate.and(
+                MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchOntology("check_asset"));
+
+        //Y un tercero para el intercambio normal de mensajes
+        MessageTemplate templateWork = MessageTemplate.and(
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchOntology("data"));
-        MessageTemplate templateping = MessageTemplate.and(MessageTemplate.MatchOntology("ping"),
-                MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
-        MessageTemplate checkasset = MessageTemplate.and(MessageTemplate.MatchOntology("check_asset"),
-                MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
 
 
         addBehaviour(new CyclicBehaviour() {
 
             public void action() {
-                System.out.println("Entering CyclicBehaviour");
 
-                ACLMessage ping = receive(templateping);
+                //Se procesa cualquier mensaje
+                ACLMessage msg = receive();
 
-                if(ping!=null) {  //ping normal
-                    ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
-                    reply.addReceiver(ping.getSender());
-                    reply.setOntology(ping.getOntology());
-                    reply.setContent("Alive");
-                    System.out.println(ping.getSender().getLocalName()+" sent a ping. Answering.");
-                    send(reply);
-                }
-                ACLMessage check_asset_state=receive(checkasset);
-                if(check_asset_state!=null) { //consulta al PLC su estado
-                    if(msgInFIFO2.isAtFullCapacity()) {
-                        System.out.println("buffer full, old message lost");
+                //Se comprueba si se ha recibido algún mensaje o no
+                if (msg != null){
+
+                    //Si hay mensaje, se establecen las acciones a realizar dependiendo del tipo de mensaje
+                    if (templatePing.match(msg)){
+
+                        //Si se ha recibido un mensaje de este tipo, se responde al ping
+                        ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
+                        reply.addReceiver(msg.getSender());
+                        reply.setOntology(msg.getOntology());
+                        reply.setContent("Alive");
+                        System.out.println(msg.getSender().getLocalName()+" sent a ping. Answering.");
+                        send(reply);
+
+                    } else if (templateCheckAsset.match(msg)){
+
+                        //Si se ha recibido un mensaje de este tipo, se guarda el contenido del mensaje
+                        // También se guarda el AID del solicitante
+                        msgRecvState = msg.getContent();
+                        stateRequester = msg.getSender();
+
+                    } else if (templateWork.match(msg)){
+
+                        //Si se ha recibido un mensaje de este tipo, se responde con un acknowledge
+                        ACLMessage ack=new ACLMessage(ACLMessage.CONFIRM);
+                        ack.setOntology(msg.getOntology());
+                        ack.setConversationId(msg.getConversationId());
+                        ack.setContent(msg.getContent());
+                        ack.addReceiver(msg.getSender());
+                        send(ack);
+
+                        // Además, se guardan el contenido del mensaje y el AID de la máquina
+                        msgRecv=msg.getContent();
+                        machineAgentName = msg.getSender();
+
                     }
-                    msgInFIFO2.add((String) check_asset_state.getContent()); //adds the message to be send in the buffer (max capacity = 6)
-                    stateasker= check_asset_state.getSender().getLocalName();
-                }
+                } else { //Si no hay mensaje, se bloquea el agente
 
-                ACLMessage msgToFIFO = receive(template);
-
-               if (msgToFIFO != null) {
-
-                    System.out.println("GWagent, message received from Machine Agent");
-                    machineAgentName = msgToFIFO.getSender();//saves the sender ID for a later reply
-                    ACLMessage ack=new ACLMessage(ACLMessage.CONFIRM);
-                    ack.setOntology(msgToFIFO.getOntology());
-                    ack.setConversationId(msgToFIFO.getConversationId());
-                    ack.setContent(msgToFIFO.getContent());
-                    ack.addReceiver(msgToFIFO.getSender());
-                    send(ack);
-                    System.out.println("MachineAgentName :"+machineAgentName);
-
-                    if(msgInFIFO.isAtFullCapacity()) {
-                        System.out.println("buffer full, old message lost");
-                    }
-                    msgInFIFO.add((String) msgToFIFO.getContent()); //adds the message to be send in the buffer (max capacity = 6)
-                } else {
-                    System.out.println("Block the agent");
                     block();
                 }
             }
         });
-        super.setup();
     }
 
 }
