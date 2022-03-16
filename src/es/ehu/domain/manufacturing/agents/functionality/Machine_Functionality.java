@@ -44,12 +44,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     public ArrayList<ACLMessage> posponed_msgs_to_batch=new ArrayList<ACLMessage>();
 
 
-    private MessageTemplate template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-            MessageTemplate.MatchOntology("data")),MessageTemplate.MatchConversationId("ProvidedConsumables"));;
-
-
-
-
     /* Agente que utiliza esta funcionalidad (se recibe como parámetro en diferentes métodos) */
     private MachineAgent myAgent;
 
@@ -316,9 +310,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
     public void sendDataToDevice() {
 
-        System.out.println("He entrado en el método clave");
-
-        updateConsumableMaterials();
+       updateConsumableMaterials();
 
         if (workInProgress != true){
 
@@ -410,7 +402,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             if(msgFromAsset.get("Received").equals(true)){
                 System.out.println("<--Asset reception confirmation");
             }else{
-                System.out.println("<--Problem receiving the message");
+                System.out.println("<--Problem receiving the message"); //Aquí se debería de informar de que el asset no está disponible
             }
         }else{
 
@@ -443,16 +435,21 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
     // El metodo recvBatchInfo se encarga de enviar al agente batch la informacion con la trazabilidad de cada item fabricado
     public void recvBatchInfo(ACLMessage msg) {
-        myAgent.msgFIFO.add((String) msg.getContent());
-        ACLMessage reply = null;
 
+        /* No sé qué uso tiene ahora mismo esta FIFO, pero este mensaje se está guardando dos veces, ¿no? */
+        myAgent.msgFIFO.add(msg.getContent());
+
+        /* Declaración de variables */
+        ACLMessage reply;
         ArrayList<String> actionList = new ArrayList<String>(); // Lista de acciones que componen el servicio actual
         ArrayList<String> consumableList = new ArrayList<String>(); // Lista de consumibles que se utilizan para el servicio actual
         String  batchName = "";// Nombre del batch agent al que se le enviara el mensaje
-        ArrayList<String> batchlist= new ArrayList<String>(); //nombres de los batch que deben recibir mensajes, replicas o no
         String neededMaterial = ""; // String que contendra  ID + cantidad de consumibles para hacer la peticion a los transportes
-        Integer neededConsumable = 0; // variable que se utiliza para contar los consumibles necesarios (max - current)
-        HashMap msgToBatch = new HashMap(); // Estructura de datos que se enviara al agente batch
+        Integer neededConsumable; // variable que se utiliza para contar los consumibles necesarios (max - current)
+        HashMap msgToBatch; // Estructura de datos que se enviara al agente batch
+
+        /* Hay un problema. Los datos numéricos a veces vienen con .0 */
+        /* Aquí se plantea una solución para arreglar eso. ¿No debería hacerse más abajo? */
 
         // Se crea el array list con las keys que se necesitaran para eliminar el .0 de los datos que se pasen de a tipo string
         ArrayList<String> replace = new ArrayList<String>( Arrays.asList("Id_Machine_Reference", "Id_Order_Reference", "Id_Batch_Reference", "Id_Ref_Subproduct_Type", "Id_Item_Number") );
@@ -649,6 +646,9 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
         /* Se reciben los mensajes ACL que corresponden al material que se ha repuesto (se recibe al terminar el servicio) */
         /* Se actualizan los contadores de consumibles */
+        MessageTemplate template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                MessageTemplate.MatchOntology("data")),MessageTemplate.MatchConversationId("ProvidedConsumables"));
+
         ACLMessage msg = myAgent.receive(template);
         if (msg != null) {
             myAgent.msgFIFO.add(msg.getContent());
