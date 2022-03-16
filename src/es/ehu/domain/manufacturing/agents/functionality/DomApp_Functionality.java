@@ -308,7 +308,7 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
 
         LOGGER.info("es el ganador ("+negScalarValue+")");
         if (!checkReplies) return NegotiatingBehaviour.NEG_PARTIAL_WON; // es ganador parcial, faltan negociaciones por finalizar
-
+        if (!isPartialWinner) return NegotiatingBehaviour.NEG_LOST;
         LOGGER.info("ejecutar "+sAction);
 
         Cmd action = new Cmd(sAction);

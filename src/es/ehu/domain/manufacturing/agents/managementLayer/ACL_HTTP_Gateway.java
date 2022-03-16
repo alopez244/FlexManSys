@@ -116,7 +116,6 @@ public class ACL_HTTP_Gateway {
             String msgFromGW;
             if (strMessage.readMessage() != null) { //En caso afirmativo, se lee el mensaje
                 msgFromGW = strMessage.readMessage();
-
             } else { //En caso contrario, se devuelve null
                 msgFromGW = null;
             }

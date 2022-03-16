@@ -77,29 +77,61 @@ public class AgentToCSVgw {
 
 
                 if(agent.getKey().contains("mplanagent")||agent.getKey().contains("orderagent")||agent.getKey().contains("batchagent")){
+
                     agentname=agent.getKey();
                     t1 = agent.getValue().get("NegotiationTime");  //justo antes de que se pida inicio en pnode
                     t2 = agent.getValue().get("CreationTime");
                     t3 = agent.getValue().get("ExecutionTime");
                     t4 = agent.getValue().get("FinishTime");
                     node = agent.getValue().get("Node");
+
+                    String taux0=null;
+                    //checkea si es un agente que es de recuperación
+                    for(Map.Entry<String, HashMap<String, HashMap<String, String>>> parentErr : ParentResultsErr.entrySet()) {
+                        for (Map.Entry<String, HashMap<String, String>> agentErr : parentErr.getValue().entrySet()) {
+                            if(agentErr.getKey().equals(agent.getKey())){
+                                if(agentErr.getValue().get("RedundancyRecovery")!=null){ //en caso de ser un agente recuperado de reduncancia no tiene sentido usar t0
+                                    for (Map.Entry<String, HashMap<String, String>> agentErr_t2 : parentErr.getValue().entrySet()) {
+                                        if(agentErr_t2.getValue().get("DeadAgentConfirmation")!=null){
+                                            taux0=agentErr_t2.getValue().get("DeadAgentConfirmation");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     if(!t0.equals("")){
-                        String schedTime = String.valueOf((Double.valueOf(t1)-Double.valueOf(t0))/1000);
+                        String schedTime ="";
+                        if(taux0==null){
+                            schedTime = String.valueOf((Double.valueOf(t1)-Double.valueOf(t0))/1000);
+                        }else{
+                            schedTime = String.valueOf((Double.valueOf(t1)-Double.valueOf(taux0))/1000);
+                        }
                         String bootTime = String.valueOf((Double.valueOf(t2)-Double.valueOf(t1))/1000);
                         String execTime = String.valueOf((Double.valueOf(t3)-Double.valueOf(t2))/1000);
-                        String deploymentTime = String.valueOf((Double.valueOf(t3)-Double.valueOf(t0))/1000);
+                        String deploymentTime="";
+                        if(taux0==null){
+                            deploymentTime = String.valueOf((Double.valueOf(t3)-Double.valueOf(t0))/1000);
+                        }else{
+                            deploymentTime = String.valueOf((Double.valueOf(t3)-Double.valueOf(taux0))/1000);
+                        }
                         String LiveTime="Lost";
                         if(t4!=null){
                             LiveTime = String.valueOf((Double.valueOf(t4)-Double.valueOf(t3))/1000);
                         }else{
                             t4="Lost";
                         }
-
+                        String [] data_raw =null;
                         //Generamos el array en el que metemos todos los datos sin restas y lo añadimos donde corresponde
-                        String [] data_raw = new String[] {parent.getKey(), agentname,node, t0, t1, t2, t3, t4};
+                        if(taux0==null){
+                            data_raw = new String[] {parent.getKey(), agentname,node, t0, t1, t2, t3, t4};
+                        }else{
+                            data_raw = new String[] {parent.getKey(), agentname,node, taux0, t1, t2, t3, t4};
+                        }
+
                         testResultsCSV_raw.add(data_raw);
 
-                        //Generamos el aerray en el que metemos todos los datos con restas y lo añadimos donde corresponde
                         String[] data = new String[] {parent.getKey(), agentname,node,schedTime,bootTime,execTime,deploymentTime, LiveTime};
                         testResultsCSV.add(data);
                     }else{
@@ -324,7 +356,7 @@ public class AgentToCSVgw {
                 ConfirmationTime = String.valueOf((Double.valueOf(t2)-Double.valueOf(t1))/1000);
             }
             String FuntionalityRecoveryTime ="";
-            if(!t3.equals("")&&!t0.equals("")){
+            if(!t3.equals("")&&!t1.equals("")){
                 FuntionalityRecoveryTime = String.valueOf((Double.valueOf(t3)-Double.valueOf(t1))/1000);
             }
             String SystemRecoveryTime="";

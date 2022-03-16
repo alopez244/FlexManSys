@@ -6,21 +6,20 @@ import jade.lang.acl.ACLMessage;
 import jade.util.leap.Properties;
 import jade.wrapper.ControllerException;
 import jade.wrapper.gateway.JadeGateway;
-
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 public class ACL_ODK_Gateway {
 
-    public static void agentInit(String assetName) throws UnknownHostException {
+    public static void agentInit(String machineID) throws UnknownHostException {
 
         //A continuación, se definen el resto de parámetros que van a hacer falta para crear el gatewayAgent
         String localHostName = InetAddress.getLocalHost().getHostName();
         InetAddress addressses[] = InetAddress.getAllByName(localHostName);
         String host = "10.253.59.133";             //host of Alejandro PC at IPB
         String port = "1099";
-        String containerName = "GatewayCont"+assetName;
+        String containerName = "GatewayCont"+machineID;
 
         //Se declara un bucle para iterar sobre todas las IPs que se han obtenido en el array addresses[]
         for (int i=0;i< addressses.length;i++){
@@ -37,7 +36,7 @@ public class ACL_ODK_Gateway {
                 pp.setProperty(Profile.CONTAINER_NAME, containerName); //Nombre del contenedor
 
                 //Se inicializa el GatewayAgent de la clase correspondiente
-                JadeGateway.init("es.ehu.domain.manufacturing.agents.managementLayer.GWAgentHTTP", pp);
+                JadeGateway.init("es.ehu.domain.manufacturing.agents.managementLayer.GWAgentODK", pp);
 
                 //Se ejecuta el comando init para garantizar el arranque del GatewayAgent
                 StructMessage strMessage = new StructMessage();
@@ -62,11 +61,12 @@ public class ACL_ODK_Gateway {
 
         //Se comprueba si hay un nuevo mensaje
         String msgFromGW;
-        if(strMessage.readNewData()){
+        if(strMessage.readNewData()){ //En caso afirmativo, se lee el mensaje
             msgFromGW =strMessage.readMessage();
-        }else{
+        }else{ //En caso contrario, se devuelve ""
             msgFromGW ="";
         }
+
         return msgFromGW;
     }
 
@@ -91,35 +91,32 @@ public class ACL_ODK_Gateway {
         JadeGateway.execute(strMessage);
     }
 
+    public static boolean askstate() throws ControllerException, InterruptedException {
 
-    public static boolean askstate(){  //pide al PLC su estado
+        //Se ejecuta el comando init para garantizar el arranque del GatewayAgent
         StructMessage strMessage = new StructMessage();
         strMessage.setAction("ask_state");
-        try {
-            JadeGateway.execute(strMessage);
-        } catch(Exception e) {
-            System.out.println(e);
-        }
-        if(strMessage.readNewData()){
-            System.out.println("--Asked asset state");
+        JadeGateway.execute(strMessage);
+
+        //Se comprueba si hay un nuevo mensaje
+        if(strMessage.readNewData()){ //En caso afirmativo, se devuelve TRUE
             return true;
-        }else{
-            System.out.println("--No answer");
+        }else{ //En caso contrario, se devuelve FALSE
             return false;
         }
     }
 
-    public static void rcvstate(String state){ //recibe estado del PLC
+    public static void rcvstate(String state) throws ControllerException, InterruptedException { //recibe estado del PLC
 
+        //Se declara la estructura que se le va a pasar al GatewayAgent
         StructMessage strMessage = new StructMessage();
-            strMessage.setAction("rcv_state");
-            strMessage.setMessage(state);
-            strMessage.setPerformative(ACLMessage.INFORM);
-            try {
-                JadeGateway.execute(strMessage);
-            } catch(Exception e) {
-                System.out.println(e);
-            }
-            System.out.println("--Received: " + state);
+
+        //Se definen la acción (enviar), el contenido (response), y la performativa (inform)
+        strMessage.setAction("rcv_state");
+        strMessage.setMessage(state);
+        strMessage.setPerformative(ACLMessage.INFORM);
+
+        //Por último, se envía el mensaje
+        JadeGateway.execute(strMessage);
     }
 }

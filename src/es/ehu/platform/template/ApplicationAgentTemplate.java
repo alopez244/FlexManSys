@@ -70,7 +70,8 @@ public class ApplicationAgentTemplate extends MWAgent {
     behaviourFSM.registerTransition(ST_BOOT, ControlBehaviour.ST_RUNNING, ControlBehaviour.RUNNING, new String[] { ST_BOOT });
     behaviourFSM.registerTransition(ST_BOOT, ControlBehaviour.ST_TRACKING, ControlBehaviour.TRACKING, new String[] { ST_BOOT });
     behaviourFSM.registerTransition(ST_BOOT, ControlBehaviour.ST_STOP, ControlBehaviour.STOP, new String[] { ST_BOOT });
-    
+    behaviourFSM.registerTransition(ST_BOOT, ControlBehaviour.ST_WAITINGFORDECISION, ControlBehaviour.WAITINGFORDECISION, new String[] { ST_BOOT });
+
     behaviourFSM.registerTransition(ControlBehaviour.ST_RUNNING, ControlBehaviour.ST_STOP, ControlBehaviour.STOP, new String[] { ControlBehaviour.ST_RUNNING });
     behaviourFSM.registerTransition(ControlBehaviour.ST_RUNNING, ControlBehaviour.ST_WAITINGFORDECISION, ControlBehaviour.WAITINGFORDECISION, new String[] { ControlBehaviour.ST_RUNNING });
     
