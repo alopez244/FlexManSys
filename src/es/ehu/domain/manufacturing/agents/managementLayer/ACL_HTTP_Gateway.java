@@ -11,7 +11,9 @@ import jade.lang.acl.ACLMessage;
 import jade.util.leap.Properties;
 import jade.wrapper.ControllerException;
 import jade.wrapper.gateway.JadeGateway;
-import org.ros.address.InetAddressFactory;
+
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.util.HashMap;
 
 public class ACL_HTTP_Gateway {
@@ -19,14 +21,14 @@ public class ACL_HTTP_Gateway {
     private String request;
     private String response;
 
-    public ACL_HTTP_Gateway(String assetName) {
+    public ACL_HTTP_Gateway(String[] args) {
 
-        //Primero, las presentaciones (portada para el usuario)
+        //Antes de empezar, las presentaciones (portada para el usuario)
         System.out.println("This is a Java Class acting as a gateway between ACL (FlexManSys Agents) and HTTP (IPB Demonstrator).\n");
 
         //Primero habrá que inicializar el gatewayAgent
         try {
-            this.jadeInit(assetName);
+            this.jadeInit(args);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -61,25 +63,46 @@ public class ACL_HTTP_Gateway {
         }
     }
 
-    private void jadeInit(String assetName) throws Exception {
+    private void jadeInit(String[] args) throws Exception {
 
-        //Se definen las propiedades que caracterizan al contenedor del GatewayAgent: IP, puerto y nombre del contenedor
-        Properties pp = new Properties();
-        String host = InetAddressFactory.newNonLoopback().getHostName();
+        //Primero, se leen los argumentos recibidos en la invocación de la clase
+        String assetName = args[0];
+        String host = args[1];
+
+        //A continuación, se definen el resto de parámetros que van a hacer falta para crear el gatewayAgent
+        String localHostName = InetAddress.getLocalHost().getHostName();
+        InetAddress addressses[] = InetAddress.getAllByName(localHostName);
         String port = "1099";
-        pp.setProperty(Profile.MAIN_HOST, host);
-        pp.setProperty(Profile.MAIN_PORT, port);
-        pp.setProperty(Profile.LOCAL_PORT, port);
         String containerName = "GatewayCont"+assetName;
-        pp.setProperty(Profile.CONTAINER_NAME, containerName);
 
-        //Se inicializa el GatewayAgent
-        JadeGateway.init("es.ehu.domain.manufacturing.agents.managementLayer.GWAgentHTTP", pp);
+        //Se declara un bucle para iterar sobre todas las IPs que se han obtenido en el array addresses[]
+        for (int i=0;i< addressses.length;i++){
+            if (addressses[i] instanceof Inet4Address){
 
-        //Se ejecuta el comando init para garantizar el arranque del GatewayAgent
-        StructMessage strMessage = new StructMessage();
-        strMessage.setAction("init");
-        JadeGateway.execute(strMessage);
+                String localHost[] = String.valueOf(addressses[i]).split("/");
+
+                //Se definen las propiedades que caracterizan al contenedor del GatewayAgent:  puerto y nombre del contenedor
+                Properties pp = new Properties();
+                pp.setProperty(Profile.LOCAL_HOST, localHost[localHost.length-1]); //Dirección IP del gatewayAgent
+                pp.setProperty(Profile.MAIN_HOST, host); //Dirección IP de la plataforma de agentes (JADE)
+                pp.setProperty(Profile.MAIN_PORT, port); //Puerto de acceso del gatewayAgent
+                pp.setProperty(Profile.LOCAL_PORT, port); //Puerto de acceso de la plataforma de agentes (JADE)
+                pp.setProperty(Profile.CONTAINER_NAME, containerName); //Nombre del contenedor
+
+                //Se inicializa el GatewayAgent de la clase correspondiente
+                JadeGateway.init("es.ehu.domain.manufacturing.agents.managementLayer.GWAgentHTTP", pp);
+
+                //Se ejecuta el comando init para garantizar el arranque del GatewayAgent
+                StructMessage strMessage = new StructMessage();
+                strMessage.setAction("init");
+                try {
+                    JadeGateway.execute(strMessage);
+                    break;
+                } catch (ControllerException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     private String jadeReceive() throws ControllerException, InterruptedException {
@@ -247,7 +270,7 @@ public class ACL_HTTP_Gateway {
     }
 
     public static void main(String[] args) {
-        String assetName = args[0];
-        ACL_HTTP_Gateway GW_ACL_HTTP= new ACL_HTTP_Gateway(assetName);
+
+        ACL_HTTP_Gateway GW_ACL_HTTP= new ACL_HTTP_Gateway(args);
     }
 }
