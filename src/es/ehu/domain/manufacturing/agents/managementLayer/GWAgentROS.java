@@ -1,155 +1,96 @@
 package es.ehu.domain.manufacturing.agents.managementLayer;
 
-import es.ehu.domain.manufacturing.utilities.StructMessage;
+import es.ehu.domain.manufacturing.utilities.StructCommandMsg;
+import es.ehu.domain.manufacturing.utilities.StructTranspState;
+import es.ehu.domain.manufacturing.utilities.StructTranspResults;
+import com.google.gson.Gson;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.wrapper.gateway.GatewayAgent;
-import org.apache.commons.collections4.queue.CircularFifoQueue;
-
-public class GWAgentROS extends GatewayAgent {  //ROS
 
 
-    public Boolean workingFlag = false; //Flag que se activa cuando el transporte esta trabajando.
-    public String msgRecv;
-    public AID TransportAgentName;
-    public static final int bufferSize = 6;
-    CircularFifoQueue msgInFIFO = new CircularFifoQueue(bufferSize);
+public class GWAgentROS extends GatewayAgent {
 
+    private String JSONmsg_content = null;
+    private AID TransportAgentName = null;
+    private int conversationId = 0;
 
-    protected void processCommand(java.lang.Object command) { //The method is called each time a request to process a command is received from the JSP Gateway. receive strmessage
+    @Override
+    protected void processCommand(Object _command) {
+        StructCommandMsg command = (StructCommandMsg) _command;
+        String action = command.getAction();
 
+        if(action.equals("init")) {
+            System.out.println("--- GWagentROS init() command called.");
+            System.out.println("--- Hi, I am a Gateway Agent!");
 
-        //ROSJADEgw gw =new ROSJADEgw(this);
-        System.out.println("-->Gateway processes execute");
-        if (!(command instanceof StructMessage)) {
-            System.out.println("---Error, unexpected type");
-            releaseCommand(command);
-        }
-        StructMessage msgStruct = (StructMessage) command;
-        String action = msgStruct.readAction();
-        if (action.equals("receive")) {     // JadeGateway.execute command was called for new message reading (Agent -> PLC)
-            System.out.println("---GW, recv function");
-            //msgRecv = (String) msgInFIFO.peek();
-            msgRecv = (String) msgInFIFO.poll(); //reads the oldest message from FIFO ,ACL message
+        } else if(action.equals("recv")) {
+            if(JSONmsg_content != null) {
+                System.out.println("--- The Gateway Agent is returning the message.");
 
-            if (msgRecv != null) {
-                System.out.println("---GW, new message to read");
-                ((StructMessage) command).setMessage(msgRecv);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
-                ((StructMessage) command).setNewData(true);
-                workingFlag=true;
+                //TODO: Cambiar el tipo de mensaje que se procesa (tiene que ser un request)
+                Gson gson = new Gson();
+                StructTranspState javaTranspState = gson.fromJson(JSONmsg_content, StructTranspState.class);
+                ((StructCommandMsg) command).setContent(javaTranspState);
 
+                JSONmsg_content = null;
             } else {
-                ((StructMessage) command).setNewData(false);
-                System.out.println("---GW, message queue is empty, no new message, please send a new one ");
+                System.out.println("--- The Gateway Agent has no message to return.");
             }
-        } else if (action.equals("send")) {
+        } else if(action.equals("sendState")) {
+            System.out.println("--- The Gateway Agent is reporting a state message to the TransportAgent.");
+            ACLMessage msgToTransportAgent = new ACLMessage(ACLMessage.CONFIRM);
+            msgToTransportAgent.addReceiver(TransportAgentName);
+            msgToTransportAgent.setOntology("data");
+            msgToTransportAgent.setConversationId(String.valueOf(conversationId++));
 
-           //KOBUKI ha contestado, enviar mensaje al TransportAgent
+            Gson gson = new Gson();
+            StructTranspState javaTranspState = (StructTranspState) command.getContent();
+            msgToTransportAgent.setContent( gson.toJson(javaTranspState));
 
-            workingFlag=false; // ha terminado de trabajar
-            System.out.println("---Gateway send command ojo");
-            ACLMessage msgToAgent = new ACLMessage(msgStruct.readPerformative()); //reads the performative saved in StructMessage data structure
-            msgToAgent.addReceiver(TransportAgentName);
-            msgToAgent.setOntology("data");
-            msgToAgent.setConversationId(msgToAgent.getConversationId()); //numbers
-            msgToAgent.setContent(msgStruct.readMessage()); // Confirmation y bateria  reads the message saved in StructMessage data structure
-            send(msgToAgent);
-            System.out.println("Mensaje enviado ACL enviado al transport Agent LOOOL"+ msgToAgent.getContent());
+            send(msgToTransportAgent);
+        } else if(action.equals("sendResults")) {
+            System.out.println("--- The Gateway Agent is reporting a results message to the TransportAgent.");
+            ACLMessage msgToTransportAgent = new ACLMessage(ACLMessage.INFORM);
+            msgToTransportAgent.addReceiver(TransportAgentName);
+            msgToTransportAgent.setOntology("data");
+            msgToTransportAgent.setConversationId(String.valueOf(conversationId++));
 
-        } else if (action.equals("init")) {
-            System.out.println("En init");
-            System.out.println("---Gateway init command called");
-            System.out.println("---Hello, I am a Gateway Agent");
-        }else{ //Check if any msg is received
-            System.out.println("---Gateway recv function");
-            msgRecv = (String) msgInFIFO.poll();    //reads the oldest message from FIFO
-            if ( msgRecv != null ) {
-                System.out.println("---GW, new message to read");
-                ((StructMessage) command).setMessage(msgRecv);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
-                ((StructMessage) command).setNewData(true);
-            } else {
-                ((StructMessage) command).setNewData(false);
-                System.out.println("---GW, message queue is empty");
-            }
+            Gson gson = new Gson();
+            StructTranspResults javaTranspResults = (StructTranspResults) command.getContent();
+            msgToTransportAgent.setContent( gson.toJson(javaTranspResults));
+
+            send(msgToTransportAgent);
         }
 
-        System.out.println("<--Gateway processes execute");
         releaseCommand(command);
     }
 
+    @Override
+    public void setup() {
+        super.setup();
 
-    protected void setup(){ //agent already registered and is able to send and receive messages. Necessary to add behaviour in order to to anything.
+        MessageTemplate matchPerformative = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+        MessageTemplate matchOntology = MessageTemplate.MatchOntology("data");
+        final MessageTemplate messageTemplate =  MessageTemplate.and(matchPerformative, matchOntology);
 
-        System.out.println("En GWAgentRos");
-        MessageTemplate template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.or(
-                MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
-                MessageTemplate.MatchOntology("data")),MessageTemplate.MatchConversationId("1"));
-        // MENSAJE DESDE TRANSPORT AGENT
-
-        addBehaviour(new CyclicBehaviour() { //keep executing constantly
-
+        addBehaviour(new CyclicBehaviour() {
             public void action() {
-
-                //System.out.println("Entering CyclicBehaviour");
-                ACLMessage msgToFIFO = receive(template); //recivir mensaje desde Transport Agent
-                if (msgToFIFO != null) {
-                    System.out.println("GWagent, message received from Transport Agent");
-
-                    TransportAgentName = msgToFIFO.getSender();//saves the sender ID for a later reply
-                    if(msgInFIFO.isAtFullCapacity()) {
-                        System.out.println("buffer full, old message lost");
-                    }
-                    if(!msgInFIFO.isEmpty()){
-                        if (!msgInFIFO.peek().equals(msgToFIFO)){
-                            msgInFIFO.add((String) msgToFIFO.getContent());
-                            System.out.println("Queriendo enviar");
-                            //ROSJADEgw.send(msgToFIFO.getContent());
-                        }
-                    }else {
-
-                        msgInFIFO.add((String) msgToFIFO.getContent());
-                    }
-                    //msgInFIFO.add((String) msgToFIFO.getContent());//adds the message to be send in the buffer (max capacity = 6) ex. [A5,B4]
-                     // safe ACL message in FIFO
-                    // comprobar con flag que no haya tarea trabajando, flag.Instanciar rosjadeGW , llamar a recv, que leerea tarea del FIFO
-                    // de GWAgentROS, y lo publicara.
-                    /*
-
-                    if (workingFlag!=true){
-                        System.out.println("Preparando mensaje para ser publicado");
-
-                        ROSJADEgw.recv();
-
-
-                    }else{
-                        System.out.println("Kobuki is working now");
-                    }
-
-                     */
-
+                ACLMessage msg = receive(messageTemplate);
+                if(msg != null) {
+                    System.out.println("--- The Gateway Agent has received a message from TA!");
+                    JSONmsg_content = msg.getContent();
+                    TransportAgentName =msg.getSender();
                 } else {
-                    //System.out.println("Block the agent");
+                    System.out.println("--- No messages from TA. The Gateway Agent is blocking.");
                     block();
                 }
             }
         });
-        super.setup();
     }
-
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 

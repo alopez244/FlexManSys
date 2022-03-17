@@ -13,6 +13,7 @@ public class GWAgentODK extends GatewayAgent {
     public String msgRecvState;
     public AID machineAgentName;
     public AID stateRequester;
+    public Integer performative;
 
     protected void processCommand(java.lang.Object _command) {
 
@@ -47,9 +48,16 @@ public class GWAgentODK extends GatewayAgent {
 
             case "send":
 
-                //Se declara un nuevo mensaje ACL con la performativa y el contenido recibidos en la estructura
+                //Se define la performativa dependiendo del tipo de mensaje recibido (mensaje de confirmación o de resultados)
+                if(command.readMessage().contains("Received")){
+                    performative=ACLMessage.CONFIRM;
+                } else {
+                    performative=ACLMessage.INFORM;
+                }
+
+                //Se declara un nuevo mensaje ACL con el contenido recibido en la estructura
                 //También se definen el receptor (el agente que me escribió primero) y la ontología (assetdata)
-                ACLMessage msgToAgent = new ACLMessage(command.readPerformative());
+                ACLMessage msgToAgent = new ACLMessage(performative);
                 msgToAgent.addReceiver(machineAgentName);
                 msgToAgent.setOntology("assetdata");
                 msgToAgent.setContent(command.readMessage());
@@ -69,9 +77,9 @@ public class GWAgentODK extends GatewayAgent {
 
             case "rcv_state":
 
-                //Se declara un nuevo mensaje ACL con la performativa y el contenido recibidos en la estructura
+                //Se declara un nuevo mensaje ACL con el contenido recibido en la estructura
                 //También se definen el receptor (el agente que me escribió primero) y la ontología (assetdata)
-                ACLMessage msgToAgentState = new ACLMessage(command.readPerformative());
+                ACLMessage msgToAgentState = new ACLMessage(ACLMessage.INFORM);
                 msgToAgentState.addReceiver(stateRequester);
                 msgToAgentState.setOntology("asset_state");
                 msgToAgentState.setContent(command.readMessage());

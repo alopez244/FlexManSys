@@ -106,10 +106,9 @@ public class REST_Test_V2 {
         //Se declara la estructura que se le va a pasar al GatewayAgent
         StructMessage strMessage = new StructMessage();
 
-        //Se definen la acción (enviar), el contenido (response), y la performativa (inform)
+        //Se definen la acción (enviar) y el contenido (response)
         strMessage.setAction("send");
         strMessage.setMessage(response);
-        strMessage.setPerformative(ACLMessage.INFORM);
 
         //Por último, se envía el mensaje
         JadeGateway.execute(strMessage);

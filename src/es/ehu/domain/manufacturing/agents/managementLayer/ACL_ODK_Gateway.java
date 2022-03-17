@@ -80,13 +80,6 @@ public class ACL_ODK_Gateway {
         strMessage.setAction("send");
         strMessage.setMessage(msgOut);
 
-        //Se define la performativa dependiendo del tipo de mensaje recibido (mensaje de confirmación o de resultados)
-        if(msgOut.contains("Received")){
-            strMessage.setPerformative(ACLMessage.CONFIRM);
-        } else {
-            strMessage.setPerformative(ACLMessage.INFORM);
-        }
-
         //Por último, se envía el mensaje
         JadeGateway.execute(strMessage);
     }
@@ -111,10 +104,9 @@ public class ACL_ODK_Gateway {
         //Se declara la estructura que se le va a pasar al GatewayAgent
         StructMessage strMessage = new StructMessage();
 
-        //Se definen la acción (enviar), el contenido (response), y la performativa (inform)
+        //Se definen la acción (enviar)y el contenido (response)
         strMessage.setAction("rcv_state");
         strMessage.setMessage(state);
-        strMessage.setPerformative(ACLMessage.INFORM);
 
         //Por último, se envía el mensaje
         JadeGateway.execute(strMessage);

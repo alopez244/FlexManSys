@@ -2,7 +2,6 @@ package es.ehu.domain.manufacturing.agents.functionality;
 
 import com.google.gson.Gson;
 import es.ehu.domain.manufacturing.agents.MachineAgent;
-import es.ehu.domain.manufacturing.behaviour.AssetManagementBehaviour;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.NegotiatingBehaviour;
 import es.ehu.domain.manufacturing.template.interfaces.AssetManagement;
@@ -10,7 +9,6 @@ import es.ehu.platform.template.interfaces.BasicFunctionality;
 import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.platform.utilities.Cmd;
 import jade.core.AID;
-import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.wrapper.AgentController;
@@ -397,24 +395,34 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         /* Se transforma el mensaje recibido en un HashMap */
         this.msgFromAsset = new Gson().fromJson(results.getContent(), HashMap.class);
 
-        /* Si es un mensaje de confirmación se printea el resultado */
+       /* Una vez, se tiene el mensaje, se comprueba qué tipo de mensaje es */
         if(msgFromAsset.containsKey("Received")){
+
+            /* Si es un mensaje de confirmación se printea el resultado */
             if(msgFromAsset.get("Received").equals(true)){
                 System.out.println("<--Asset reception confirmation");
             }else{
                 System.out.println("<--Problem receiving the message"); //Aquí se debería de informar de que el asset no está disponible
             }
-        }else{
+        }else if(msgFromAsset.containsKey("Control_Flag_Item_Completed")){
 
-            /* En caso contrario, se procesan los resultados */
-            recvBatchInfo(results);   // Método para enviar los resultados al BatchAgent correspondiente
+            /* Si se trata de un mensaje con contenido, se responde con un mensaje que confirme la recepción */
+            HashMap confirmation = new HashMap();
+            confirmation.put("Received", true);
+            sendACLMessage(7, gatewayAgentID,"", "", new Gson().toJson(confirmation), myAgent);
 
-            /* Si se ha terminado el servicio, se eliminan las operaciones del plan de máquina */
-            if(msgFromAsset.containsKey("Control_Flag_Service_Completed")) {
+            /* Se comprueba si el mensaje contiene resultados evaluando el flag de item completado */
+            if (msgFromAsset.get("Control_Flag_Item_Completed").equals(true)){
+
+                /* A continuación, se procesan los resultados */
+                recvBatchInfo();   // Método para enviar los resultados al BatchAgent correspondiente
+
+                /* Se comprueba si el mensaje corresponde a la última pieza del lote evaluando el flag de servicio completo */
                 if (msgFromAsset.get("Control_Flag_Service_Completed").equals(true)) {
 
+                    /* Si se ha terminado el servicio, se eliminan las operaciones del plan de máquina */
                     BatchID = String.valueOf(msgFromAsset.get("Id_Batch_Reference"));
-                    BatchID = BatchID.split("\\.")[0];
+                    BatchID = BatchID.split("\\.")[0]; //REVISAR ESTO
 
                     /* Apunto siempre a la posición 2 (primera operación), y voy borrando hasta que no quedan items */
                     while (NumOfItems != 0){
@@ -434,173 +442,159 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     }
 
     // El metodo recvBatchInfo se encarga de enviar al agente batch la informacion con la trazabilidad de cada item fabricado
-    public void recvBatchInfo(ACLMessage msg) {
+    public void recvBatchInfo() {
 
-        /* No sé qué uso tiene ahora mismo esta FIFO, pero este mensaje se está guardando dos veces, ¿no? */
-        myAgent.msgFIFO.add(msg.getContent());
-
-        /* Declaración de variables */
+       /* Declaración de variables */
         ACLMessage reply;
         ArrayList<String> actionList = new ArrayList<String>(); // Lista de acciones que componen el servicio actual
         ArrayList<String> consumableList = new ArrayList<String>(); // Lista de consumibles que se utilizan para el servicio actual
         String  batchName = "";// Nombre del batch agent al que se le enviara el mensaje
         String neededMaterial = ""; // String que contendra  ID + cantidad de consumibles para hacer la peticion a los transportes
         Integer neededConsumable; // variable que se utiliza para contar los consumibles necesarios (max - current)
-        HashMap msgToBatch; // Estructura de datos que se enviara al agente batch
 
         /* Hay un problema. Los datos numéricos a veces vienen con .0 */
         /* Aquí se plantea una solución para arreglar eso. ¿No debería hacerse más abajo? */
+        /* Vaaaaaaaaaaaaaaaaale, esto es por la conversión a HashMap */
+        /* Hace falta convertir todos los double en integer */
 
         // Se crea el array list con las keys que se necesitaran para eliminar el .0 de los datos que se pasen de a tipo string
-        ArrayList<String> replace = new ArrayList<String>( Arrays.asList("Id_Machine_Reference", "Id_Order_Reference", "Id_Batch_Reference", "Id_Ref_Subproduct_Type", "Id_Item_Number") );
+        ArrayList<String> replace = new ArrayList<>(Arrays.asList("Id_Machine_Reference", "Id_Order_Reference", "Id_Batch_Reference", "Id_Ref_Subproduct_Type", "Id_Item_Number"));
 
-        msgToBatch = new Gson().fromJson(msg.getContent(), HashMap.class);  //Data type conversion Json->Hashmap class
+        for (int i = 0; i < replace.size(); i++) {  //for loop to remove the .0 of the data that contains the keys defined in replace variable
+            String newValue = String.valueOf(msgFromAsset.get(replace.get(i)));
+            newValue = newValue.split("\\.")[0];
+            msgFromAsset.remove(replace.get(i));
+            msgFromAsset.put(replace.get(i), newValue);
+        }
 
-        if(msgToBatch.containsKey("Control_Flag_Item_Completed")) {
-            if (msgToBatch.get("Control_Flag_Item_Completed").equals(true)) {   //checks if the item has been manufactured
+        if (msgFromAsset.get("Control_Flag_Service_Completed").equals(false)) {
+            msgFromAsset.remove("Data_Service_Time_Stamp");    //remove unnecessary data from message
+        }
 
-                // Se extraen los datos necesarios del mensaje recibido
-                // Cada mensaje contiene informacion del item fabricado
-                String itemNumber = String.valueOf(msgToBatch.get("Id_Item_Number"));
-                String batchNumber = String.valueOf(msgToBatch.get("Id_Batch_Reference"));
-                String idItem = batchNumber + itemNumber; //Se compone el ID del item. Ejemplo -> batchNumber = 121 + itemNumber = 2 -> itemID = 1212
-                msgToBatch.put("Id_Item_Number", itemNumber);
+        msgFromAsset.remove("Control_Flag_Service_Completed");    //remove unnecessary data from message
+        msgFromAsset.remove("Control_Flag_Item_Completed");   //remove unnecessary data from message
 
-                // Al haber recibido el mensaje desde la maquina, se envia el mensaje de confirmacion
-                HashMap confirmation = new HashMap();
-                confirmation.put("Received", true);
+        /* ESTA PARTE TAMPOCO TIENE QUE IR AQUÍ, NO TIENE NADA QUE VER CON EL ENVÍO DEL MENSAJE AL BATCH */
 
-                sendACLMessage(7, gatewayAgentID,"", "", new Gson().toJson(confirmation), myAgent); //Send confirmation message to PLC
+        String ServiceType = (String) msgFromAsset.get("Id_Ref_Service_Type");
+        ServiceType = ServiceType.split("\\.")[0];
 
-                for (int i = 0; i < replace.size(); i++) {  //for loop to remove the .0 of the data that contains the keys defined in replace variable
-                    String newValue = String.valueOf(msgToBatch.get(replace.get(i)));
-                    newValue = newValue.split("\\.")[0];
-                    msgToBatch.remove(replace.get(i));
-                    msgToBatch.put(replace.get(i), newValue);
+        //Bucle for para identificar las acciones que se han completado conociendo Ref_Service_Type
+        for (int j = 0; j < myAgent.resourceModel.size(); j++) {  // Knowing Ref_Service_Type, identification of the actions of each item
+            if (myAgent.resourceModel.get(j).get(0).get(0).equals("simple_operation")) {
+                if (myAgent.resourceModel.get(j).get(3).get(1).equals(ServiceType)) {
+                    for (int k = j + 1; k < myAgent.resourceModel.size(); k++)  {
+                        if (myAgent.resourceModel.get(k).get(0).get(0).equals("action")){
+                            actionList.add(myAgent.resourceModel.get(k).get(3).get(2)); // When actions are identified, they are added to a new variable
+                            consumableList.add(myAgent.resourceModel.get(k+1).get(3).get(1)); //The used consumable is saved to later discount it
+                        } else if (myAgent.resourceModel.get(k).get(0).get(0).equals("simple_operation")) {
+                            break;
+                        }
+                    }
                 }
+            }
+        }
 
-                if (msgToBatch.get("Control_Flag_Service_Completed").equals(false)) {
-                    msgToBatch.remove("Data_Service_Time_Stamp");    //remove unnecessary data from message
-                }
+        /* ESTA PARTE NO TIENE QUE IR AQUÍ, NO TIENE NADA QUE VER CON EL ENVÍO DEL MENSAJE AL BATCH */
+        // Se restan los consumibles utilizados y se comparan con el valor de warning para pedir más material
+        for (int i = 0; i < consumableList.size(); i++){
+            for (int j = 0; j < myAgent.availableMaterial.size(); j++){
+                if (myAgent.availableMaterial.get(j).get("consumable_id").equals(consumableList.get(i))){
+                    int currentConsumables = Integer.parseInt(myAgent.availableMaterial.get(j).get("current"));
+                    currentConsumables--; //una vez identificado el nombre del consumible deseado, se descuenta
+                    myAgent.availableMaterial.get(j).put("current", Integer.toString(currentConsumables));
+                    int warningConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("warning"));
+                    if (currentConsumables <= warningConsumable && !matReqDone){
+                        neededConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("max")) - currentConsumables;
+                        neededMaterial = neededMaterial.concat(myAgent.availableMaterial.get(j).get("consumable_id") + ":" + Integer.toString(neededConsumable) + ";");
+                        requestMaterial = true;
+                    }
 
-                msgToBatch.remove("Control_Flag_Service_Completed");    //remove unnecessary data from message
-                msgToBatch.remove("Control_Flag_Item_Completed");   //remove unnecessary data from message
-                String ServiceType = String.valueOf(msgToBatch.get("Id_Ref_Service_Type"));
-                ServiceType = ServiceType.split("\\.")[0];
-
-                //Bucle for para identificar las acciones que se han completado conociendo Ref_Service_Type
-                for (int j = 0; j < myAgent.resourceModel.size(); j++) {  // Knowing Ref_Service_Type, identification of the actions of each item
-                    if (myAgent.resourceModel.get(j).get(0).get(0).equals("simple_operation")) {
-                        if (myAgent.resourceModel.get(j).get(3).get(1).equals(ServiceType)) {
-                            for (int k = j + 1; k < myAgent.resourceModel.size(); k++)  {
-                                if (myAgent.resourceModel.get(k).get(0).get(0).equals("action")){
-                                    actionList.add(myAgent.resourceModel.get(k).get(3).get(2)); // When actions are identified, they are added to a new variable
-                                    consumableList.add(myAgent.resourceModel.get(k+1).get(3).get(1)); //The used consumable is saved to later discount it
-                                } else if (myAgent.resourceModel.get(k).get(0).get(0).equals("simple_operation")) {
-                                    break;
-                                }
+                    // Se inicia el proceso de peticion siempre y cuando el flag requestMaterial este activado y se haya comprobado el estado de los cuatro tipos de consumibles
+                    if (i == consumableList.size()-1 && requestMaterial) {
+                        //Se lanza la negociacion para decidir cual sera el transporte que reponga el material
+                        try {
+                            String targets = "";
+                            ACLMessage reply2 = sendCommand(myAgent, "get * category=transport", "TransportAgentID");
+                            if (reply2 != null) {   // If the id does not exist, it returns error
+                                targets = reply2.getContent();
                             }
+                            String negotiationQuery = "localneg " + targets + " criterion=position action=" +
+                                    "supplyConsumables externaldata=" + neededMaterial + "," + myAgent.getLocalName();
+                            ACLMessage result = sendCommand(myAgent, negotiationQuery, "TransportAgentNeg");
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
+
+                        neededMaterial = ""; // Una vez hecha la peticion, se reinicializa la variable
+                        matReqDone = true; // Flag que señala si la peticion de material se ha realizado
+                        requestMaterial = false; // Una vez hecha la peticion se desactiva el flag
                     }
                 }
             }
-            // Se restan los consumibles utilizados y se comparan con el valor de warning para pedir más material
-            for (int i = 0; i < consumableList.size(); i++){
-                for (int j = 0; j < myAgent.availableMaterial.size(); j++){
-                    if (myAgent.availableMaterial.get(j).get("consumable_id").equals(consumableList.get(i))){
-                        int currentConsumables = Integer.parseInt(myAgent.availableMaterial.get(j).get("current"));
-                        currentConsumables--; //una vez identificado el nombre del consumible deseado, se descuenta
-                        myAgent.availableMaterial.get(j).put("current", Integer.toString(currentConsumables));
-                        int warningConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("warning"));
-                        if (currentConsumables <= warningConsumable && !matReqDone){
-                            neededConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("max")) - currentConsumables;
-                            neededMaterial = neededMaterial.concat(myAgent.availableMaterial.get(j).get("consumable_id") + ":" + Integer.toString(neededConsumable) + ";");
-                            requestMaterial = true;
-                        }
+        }
+        System.out.println(myAgent.availableMaterial);
 
-                        // Se inicia el proceso de peticion siempre y cuando el flag requestMaterial este activado y se haya comprobado el estado de los cuatro tipos de consumibles
-                        if (i == consumableList.size()-1 && requestMaterial) {
-                            //Se lanza la negociacion para decidir cual sera el transporte que reponga el material
-                            try {
-                                String targets = "";
-                                ACLMessage reply2 = sendCommand(myAgent, "get * category=transport", "TransportAgentID");
-                                if (reply2 != null) {   // If the id does not exist, it returns error
-                                    targets = reply2.getContent();
-                                }
-                                String negotiationQuery = "localneg " + targets + " criterion=position action=" +
-                                        "supplyConsumables externaldata=" + neededMaterial + "," + myAgent.getLocalName();
-                                ACLMessage result = sendCommand(myAgent, negotiationQuery, "TransportAgentNeg");
 
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
+        msgFromAsset.remove("Id_Ref_Service_Type");   // when all actions are identified, the Ref_Service_Type data is unnecessary
+        msgFromAsset.put("Id_Action_Type", actionList);   // Actions are added to the message
+        String MessageContent = new Gson().toJson(msgFromAsset);  //creates the message to be send
+        System.out.println(MessageContent);
 
-                            neededMaterial = ""; // Una vez hecha la peticion, se reinicializa la variable
-                            matReqDone = true; // Flag que señala si la peticion de material se ha realizado
-                            requestMaterial = false; // Una vez hecha la peticion se desactiva el flag
-                        }
+        try {
+            BatchID = String.valueOf(msgFromAsset.get("Id_Batch_Reference"));   //gets the batch reference from the received message
+            BatchID = BatchID.split("\\.")[0];
+            reply = sendCommand(myAgent, "get * reference=" + BatchID, "BatchAgentID");
+            //returns the id of the element that matches with the reference of the required batch
+            if (reply != null) {   // If the id does not exist, it returns error
+                myAgent.msgFIFO.add(reply.getContent());
+                batchName = reply.getContent();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        /* ESTA PARTE SE TIENE QUE QUEDAR AQUÍ DENTRO PORQUE TRABAJA CON EL MENSAJE PARA EL BATCH */
+        /* Envío de mensajes que hayan quedado pendientes porque no había un batchAgent en running disponible */
+        try {
+            posponed_msgs_to_batch= myAgent.msg_buffer.get(batchName);
+            if(posponed_msgs_to_batch==null){ //si no se encuentra el parent en el listado de mensajes postpuestos entonces el receptor ha confirmado la recepcion de todos los mensajes hasta ahora. Todoo OK.
+                ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + batchName +" state=running", "BatchAgentID");
+                if (running_replica != null) {
+                    String batchAgentName = running_replica.getContent();
+                    AID batchAgentID = new AID(batchAgentName, false);
+                    if(!running_replica.getContent().equals("")){   //encontrada replica en running para este batch
+                        ACLMessage msg_to_batchagent=sendACLMessage(ACLMessage.INFORM, batchAgentID, "data", "PLCdata", MessageContent, myAgent);
+                        myAgent.AddToExpectedMsgs(msg_to_batchagent);
+
+                    }else{    //No encontrada replica en running para este batch. Puede que otro agente lo haya denunciado previamente o que el batch aun no se haya iniciado
+                        posponed_msgs_to_batch = new ArrayList<ACLMessage>();
+                        ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.INFORM);
+                        msg_to_buffer.setConversationId("PLCdata");
+                        msg_to_buffer.setContent(MessageContent);
+                        msg_to_buffer.setOntology("data");
+                        posponed_msgs_to_batch.add(msg_to_buffer);
+                        myAgent.msg_buffer.put(batchName,posponed_msgs_to_batch); //guardamos el mensaje hasta que el D&D me informe de que ya tenemos disponible otro receptor
                     }
                 }
-            }
-            System.out.println(myAgent.availableMaterial);
-
-            msgToBatch.remove("Id_Ref_Service_Type");   // when all actions are identified, the Ref_Service_Type data is unnecessary
-            msgToBatch.put("Id_Action_Type", actionList);   // Actions are added to the message
-            String MessageContent = new Gson().toJson(msgToBatch);  //creates the message to be send
-            System.out.println(MessageContent);
-
-            try {
-                BatchID = String.valueOf(msgFromAsset.get("Id_Batch_Reference"));   //gets the batch reference from the received message
-                BatchID = BatchID.split("\\.")[0];
-                reply = sendCommand(myAgent, "get * reference=" + BatchID, "BatchAgentID");
-                //returns the id of the element that matches with the reference of the required batch
-                if (reply != null) {   // If the id does not exist, it returns error
-                    myAgent.msgFIFO.add((String) reply.getContent());
-                    batchName = reply.getContent();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            try {
-                posponed_msgs_to_batch= myAgent.msg_buffer.get(batchName);
-                if(posponed_msgs_to_batch==null){ //si no se encuentra el parent en el listado de mensajes postpuestos entonces el receptor ha confirmado la recepcion de todos los mensajes hasta ahora. Todoo OK.
-                    ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + batchName +" state=running", "BatchAgentID");
-                    if (running_replica != null) {
-                        String batchAgentName = running_replica.getContent();
-                        AID batchAgentID = new AID(batchAgentName, false);
-                        if(!running_replica.getContent().equals("")){   //encontrada replica en running para este batch
-                            ACLMessage msg_to_batchagent=sendACLMessage(ACLMessage.INFORM, batchAgentID, "data", "PLCdata", MessageContent, myAgent);
-                            myAgent.AddToExpectedMsgs(msg_to_batchagent);
-
-                        }else{    //No encontrada replica en running para este batch. Puede que otro agente lo haya denunciado previamente o que el batch aun no se haya iniciado
-                            posponed_msgs_to_batch = new ArrayList<ACLMessage>();
-                            ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.INFORM);
-                            msg_to_buffer.setConversationId("PLCdata");
-                            msg_to_buffer.setContent(MessageContent);
-                            msg_to_buffer.setOntology("data");
-                            posponed_msgs_to_batch.add(msg_to_buffer);
-                            myAgent.msg_buffer.put(batchName,posponed_msgs_to_batch); //guardamos el mensaje hasta que el D&D me informe de que ya tenemos disponible otro receptor
-                        }
-                    }
-                }else{  //habia algun mensaje pendiente de envíar a un receptor aun no definido
+            }else{  //habia algun mensaje pendiente de envíar a un receptor aun no definido
 //                        posponed_msgs_to_batch=new ArrayList<ACLMessage>();
-                    System.out.println("Added message to buffer:\nContent: "+MessageContent+"\nTo: "+batchName);
-                    ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.INFORM);
-                    msg_to_buffer.setConversationId("PLCdata");
-                    msg_to_buffer.setContent(MessageContent);
-                    msg_to_buffer.setOntology("data");
-                    posponed_msgs_to_batch.add(msg_to_buffer);
-                    myAgent.msg_buffer.put(batchName,posponed_msgs_to_batch);
+                System.out.println("Added message to buffer:\nContent: "+MessageContent+"\nTo: "+batchName);
+                ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.INFORM);
+                msg_to_buffer.setConversationId("PLCdata");
+                msg_to_buffer.setContent(MessageContent);
+                msg_to_buffer.setOntology("data");
+                posponed_msgs_to_batch.add(msg_to_buffer);
+                myAgent.msg_buffer.put(batchName,posponed_msgs_to_batch);
 
-                    ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + batchName +" state=running", "BatchAgentID");
-                    if(!running_replica.getContent().equals("")){ //nos aseguramos de que el receptor aun no exista. Si existe ya, vaciamos el cajón con un automensaje.
-                        sendACLMessage(7, myAgent.getAID(), "release_buffer","new_replica_detected",running_replica.getContent(),myAgent);
-                    }
+                ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + batchName +" state=running", "BatchAgentID");
+                if(!running_replica.getContent().equals("")){ //nos aseguramos de que el receptor aun no exista. Si existe ya, vaciamos el cajón con un automensaje.
+                    sendACLMessage(7, myAgent.getAID(), "release_buffer","new_replica_detected",running_replica.getContent(),myAgent);
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
