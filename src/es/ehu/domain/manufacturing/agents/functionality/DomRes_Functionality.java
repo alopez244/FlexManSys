@@ -40,23 +40,4 @@ public class DomRes_Functionality extends Dom_Functionality{
         }
         return PLCmsgOut;
     }
-
-    public ArrayList<String> defineConsumableList(String serviceType, ArrayList<ArrayList<ArrayList<String>>> resourceModel) {
-        ArrayList<String> consumableList = new ArrayList<String>();
-        for (int l = 0; l < resourceModel.size(); l++) {
-            if (resourceModel.get(l).get(0).get(0).equals("simple_operation")) {
-                if (resourceModel.get(l).get(3).get(1).equals(serviceType)) {
-                    for (int m = l + 1; m < resourceModel.size(); m++)  {
-                        if (resourceModel.get(m).get(0).get(0).equals("consumable")){
-                            consumableList.add(resourceModel.get(m).get(3).get(1)); //The used consumable is saved
-                        } else if (resourceModel.get(m).get(0).get(0).equals("simple_operation")) {
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        return consumableList;
-    }
-
 }
