@@ -305,14 +305,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
     public void sendDataToDevice() {
 
+        /* Primero se comprueba si se han recibido actualizaciones de material */
        updateConsumableMaterials();
 
         if (workInProgress != true){
-
-            /* Primero se inicializan las variables necesarias */
-            ArrayList<String> actionList;
-            ArrayList<String> consumableList;
-            String serviceType;
 
             /* Si el asset está libre, se comprueba si hay tareas en el plan
              * La cabecera del modelo ocupa dos posiciones, por lo que para que haya tareas, el tamaño del modelo tiene que ser de 3 o más */
@@ -325,16 +321,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 NumOfItems = (Integer) msgToAsset.get("Operation_No_of_Items");
                 BatchID = Integer.toString((Integer) msgToAsset.get("Id_Batch_Reference"));
 
-                serviceType = String.valueOf(msgToAsset.get("Operation_Ref_Service_Type"));
-
                 /* A continuación, se identifican los materiales consumibles necesarios para realizar la operación */
+                String serviceType = String.valueOf(msgToAsset.get("Operation_Ref_Service_Type"));
                 Object [] actionsConsumables = defineAction_And_ConsumableList(serviceType,myAgent.resourceModel);
-                consumableList = (ArrayList<String>) actionsConsumables[1]; // Lista de consumibles que se utilizan para el servicio actual
-
-//                /* Aquí se comprueba el listado de materiales, ¿Debería ser solo el consumable list? */
-//                for (int i = 0; i < consumableList.size(); i++){
-//
-//                }
+                ArrayList<String> consumableList = (ArrayList<String>) actionsConsumables[1]; // Lista de consumibles que se utilizan para el servicio actual
 
                 /* Se comprueba que se disponga de material suficiente para poder fabricar el lote */
                 for (int i = 0; i < myAgent.availableMaterial.size(); i++) {
@@ -348,39 +338,12 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
                             /* Si no hay consumibles suficientes ni hay una petición en curso, se solicita */
                             requestConsumableMaterials();
-
                         }
                     }
                 }
-
 
                 /* Antes de enviar la operación, se notifica el delay existente respecto a lo planificado */
-                /* Buscamos el atributo plannedStartTime */
-                for (int k = 0; k < myAgent.machinePlan.get(2).get(2).size(); k++) {
-                    if (myAgent.machinePlan.get(2).get(2).get(k).equals("plannedStartTime")) {
-                        String startTime = myAgent.machinePlan.get(2).get(3).get(k);
-                        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"); //Se usa el formato XS:DateTime
-                        Date date2 = getactualtime();
-                        Date date1 = null;
-
-                        try {
-                            date1 = formatter.parse(startTime); /* ¿Nos podríamos evitar esto cambiando el formato de los modelos? */
-
-                        } catch (ParseException e) {
-                            System.out.println("ERROR dando formato a una fecha");
-                            e.printStackTrace();
-                        }
-                        while (date1.after(date2)) { //Se queda actualizando la fecha hasta que se alcance la fecha definida en el plan de fabricación
-                            date2 = getactualtime();
-                        }
-                        long diferencia = ((date2.getTime() - date1.getTime())); //calculamos el retraso en iniciar en milisegundos
-                        AID QoSID = new AID("QoSManagerAgent", false);
-                        String content = BatchID;
-                        String delay = String.valueOf(diferencia);
-                        content = content + "/" + delay;
-                        sendACLMessage(ACLMessage.INFORM, QoSID, "delay", "batch_delay", content, myAgent);
-                    }
-                }
+                calculateDelay();
 
                 /* Finalmente, se envía la operación al GatewayAgent (se guarda en el buzón por si acaso) */
                 String MessageContent = new Gson().toJson(msgToAsset);
@@ -427,9 +390,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 /* Se eliminan los decimales de los valores numéricos */
                 removeDecimals();
 
-                String serviceType = String.valueOf(msgFromAsset.get("Id_Ref_Service_Type"));
-
                 /* A continuación, se identifican los materiales consumibles utilizados para realizar la operación */
+                String serviceType = String.valueOf(msgFromAsset.get("Id_Ref_Service_Type"));
                 Object [] actionsConsumables = defineAction_And_ConsumableList(serviceType,myAgent.resourceModel);
                 ArrayList<String> actionList = (ArrayList<String>) actionsConsumables[0]; // Lista de acciones que componen el servicio actual
                 ArrayList<String> consumableList = (ArrayList<String>) actionsConsumables[1]; // Lista de consumibles que se utilizan para el servicio actual
@@ -500,7 +462,44 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         }
     }
 
-    // El metodo recvBatchInfo se encarga de enviar al agente batch la informacion con la trazabilidad de cada item fabricado
+
+    /* OPERACIONES DE FINALIZACIÓN DEL AGENTE MÁQUINA*/
+
+    @Override
+    public Void terminate(MWAgent myAgent) { return null;}
+
+    /* MÉTODOS AUXILIARES */
+
+    private void calculateDelay() {
+
+        /* Buscamos el atributo plannedStartTime */
+        for (int k = 0; k < myAgent.machinePlan.get(2).get(2).size(); k++) {
+            if (myAgent.machinePlan.get(2).get(2).get(k).equals("plannedStartTime")) {
+                String startTime = myAgent.machinePlan.get(2).get(3).get(k);
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"); //Se usa el formato XS:DateTime
+                Date date2 = getactualtime();
+                Date date1 = null;
+
+                try {
+                    date1 = formatter.parse(startTime); /* ¿Nos podríamos evitar esto cambiando el formato de los modelos? */
+
+                } catch (ParseException e) {
+                    System.out.println("ERROR dando formato a una fecha");
+                    e.printStackTrace();
+                }
+                while (date1.after(date2)) { //Se queda actualizando la fecha hasta que se alcance la fecha definida en el plan de fabricación
+                    date2 = getactualtime();
+                }
+                long diferencia = ((date2.getTime() - date1.getTime())); //calculamos el retraso en iniciar en milisegundos
+                AID QoSID = new AID("QoSManagerAgent", false);
+                String content = BatchID;
+                String delay = String.valueOf(diferencia);
+                content = content + "/" + delay;
+                sendACLMessage(ACLMessage.INFORM, QoSID, "delay", "batch_delay", content, myAgent);
+            }
+        }
+    }
+
     public void recvBatchInfo(String messageContent) {
 
         ACLMessage reply;
@@ -517,7 +516,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             e.printStackTrace();
         }
 
-        /* ESTA PARTE SE TIENE QUE QUEDAR AQUÍ DENTRO PORQUE TRABAJA CON EL MENSAJE PARA EL BATCH */
         /* Envío de mensajes que hayan quedado pendientes porque no había un batchAgent en running disponible */
         try {
             posponed_msgs_to_batch= myAgent.msg_buffer.get(batchName);
@@ -559,14 +557,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             e.printStackTrace();
         }
     }
-
-
-    /* OPERACIONES DE FINALIZACIÓN DEL AGENTE MÁQUINA*/
-
-    @Override
-    public Void terminate(MWAgent myAgent) { return null;}
-
-    /* MÉTODOS AUXILIARES */
 
     private void requestConsumableMaterials() {
 
