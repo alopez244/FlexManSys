@@ -440,68 +440,25 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     /* Se comprueba si en el arraylist de materiales consumibles tenemos el consumible de esta posición del availableMaterial */
                     if (consumableList.contains(myAgent.availableMaterial.get(i).get("consumable_id"))) {
 
-                        //CASI LO TIENES YA!
-                    }
-                }
+                        /* Se obtienen los consumibles actuales y se descuenta 1 (se acaba de consumir uno para hacer el servicio) */
+                        int currentConsumables = Integer.parseInt(myAgent.availableMaterial.get(i).get("current"));
+                        currentConsumables--; //una vez identificado el nombre del consumible deseado, se descuenta
+                        myAgent.availableMaterial.get(i).put("current", Integer.toString(currentConsumables));
 
+                        /* Se obtiene el valor de alerta */
+                        int warningConsumable = Integer.parseInt(myAgent.availableMaterial.get(i).get("warning"));
 
-                /* ESTA PARTE TAMPOCO TIENE QUE IR AQUÍ, NO TIENE NADA QUE VER CON EL ENVÍO DEL MENSAJE AL BATCH */
-                // Se restan los consumibles utilizados y se comparan con el valor de warning para pedir más material
-                String neededMaterial = ""; // String que contendra  ID + cantidad de consumibles para hacer la peticion a los transportes
-                Integer neededConsumable; // variable que se utiliza para contar los consumibles necesarios (max - current)
+                        /* Se comprueba si quedan menos consumibles que los recomendables */
+                        if (currentConsumables <= warningConsumable && !matReqDone){
 
-                /* Aquí se recorre el listado de materiales que se han consumido */
-                for (int i = 0; i < consumableList.size(); i++){
-
-                    /* Aquí se itera sobre cada posición del availableMaterial */
-                    for (int j = 0; j < myAgent.availableMaterial.size(); j++){
-
-                        /* Se comparan uno a uno */
-                        if (myAgent.availableMaterial.get(j).get("consumable_id").equals(consumableList.get(i))){
-
-                            /* Se obtienen los consumibles actuales y se descuenta 1 (se acaba de consumir uno para hacer el servicio) */
-                            int currentConsumables = Integer.parseInt(myAgent.availableMaterial.get(j).get("current"));
-                            currentConsumables--; //una vez identificado el nombre del consumible deseado, se descuenta
-                            myAgent.availableMaterial.get(j).put("current", Integer.toString(currentConsumables));
-
-                            /* Se obtiene el valor de alerta */
-                            int warningConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("warning"));
-
-                            /* Se comprueba si quedan menos consumibles que los recomendables */
-                            if (currentConsumables <= warningConsumable && !matReqDone){
-                                neededConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("max")) - currentConsumables;
-                                neededMaterial = neededMaterial.concat(myAgent.availableMaterial.get(j).get("consumable_id") + ":" + Integer.toString(neededConsumable) + ";");
-
-                            }
-
-                            // Se inicia el proceso de peticion siempre y cuando el flag requestMaterial este activado y se haya comprobado el estado de los cuatro tipos de consumibles
-                            if (i == consumableList.size()-1) {
-                                //Se lanza la negociacion para decidir cual sera el transporte que reponga el material
-                                try {
-                                    String targets = "";
-                                    ACLMessage reply2 = sendCommand(myAgent, "get * category=transport", "TransportAgentID");
-                                    if (reply2 != null) {   // If the id does not exist, it returns error
-                                        targets = reply2.getContent();
-                                    }
-                                    String negotiationQuery = "localneg " + targets + " criterion=position action=" +
-                                            "supplyConsumables externaldata=" + neededMaterial + "," + myAgent.getLocalName();
-                                    ACLMessage result = sendCommand(myAgent, negotiationQuery, "TransportAgentNeg");
-
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-
-                                neededMaterial = ""; // Una vez hecha la peticion, se reinicializa la variable
-                                matReqDone = true; // Flag que señala si la peticion de material se ha realizado
-                            }
+                            /* Si no hay consumibles suficientes ni hay una petición en curso, se solicita */
+                            requestConsumableMaterials();
                         }
                     }
                 }
 
-                msgFromAsset.put("Id_Action_Type", actionList);   // Actions are added to the message
-
-                System.out.println(myAgent.availableMaterial);
-
+                /* Se añaden al mensaje las acciones asociadas al servicio realizado */
+                msgFromAsset.put("Id_Action_Type", actionList);
 
                 /* Aquí se elimina de la estructura del mensaje recibida toda la información que no interesa al BatchAgent
                 *  Tal vez este código acabe dentro del recvBatchInfo, ya veremos */
@@ -519,7 +476,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
                 /* A continuación, se envían los resultados al BatchAgent */
                 recvBatchInfo(messageContent);   // Método para enviar los resultados al BatchAgent correspondiente
-
 
                 /* Se comprueba si el mensaje corresponde a la última pieza del lote evaluando el flag de servicio completo */
                 if (serviceCompleted) {
@@ -640,6 +596,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         }
 
         matReqDone = true;
+        System.out.println(myAgent.availableMaterial);
 
         /* ¿Bloqueo aquí el agente hasta recibir los consumibles o dónde espero?
          *  De momento, se va a quedar donde está (al principio del método) */
@@ -727,7 +684,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
         return result;
     }
-
 
     protected Date getactualtime(){
         String actualTime;
