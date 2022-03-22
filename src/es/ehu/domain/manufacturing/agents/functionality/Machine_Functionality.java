@@ -346,11 +346,11 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     if (consumableList.contains(myAgent.availableMaterial.get(i).get("consumable_id"))) {
 
                         /* Se consulta si el número actual de consumibles (current) es inferior al número de items a fabricar */
-                        /* También se comprueba si no hay una petición de material en marcha */
-                        if (Integer.parseInt(myAgent.availableMaterial.get(i).get("current")) < NumOfItems && !materialRequest) {
+                        if (Integer.parseInt(myAgent.availableMaterial.get(i).get("current")) < NumOfItems) {
 
-                            /* Si no hay consumibles suficientes ni hay una petición en curso, se solicitan */
-                            requestConsumableMaterials(methodName);
+                            /* Se comprueba si hay alguna petición de material en marcha */
+                            /* Si no hay ninguna petición en curso, se solicita el material necesario */
+                            if (!materialRequest) requestConsumableMaterials(methodName);
                         }
                     }
                 }
@@ -429,10 +429,11 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         int warningConsumable = Integer.parseInt(myAgent.availableMaterial.get(i).get("warning"));
 
                         /* Se comprueba si quedan menos consumibles que los recomendables */
-                        if (currentConsumables <= warningConsumable && !materialRequest){
+                        if (currentConsumables <= warningConsumable){
 
-                            /* Si no hay consumibles suficientes ni hay una petición en curso, se solicita */
-                            requestConsumableMaterials(methodName);
+                            /* Se comprueba si hay alguna petición de material en marcha */
+                            /* Si no hay ninguna petición en curso, se solicita el material necesario */
+                            if (!materialRequest) requestConsumableMaterials(methodName);
                         }
                     }
                 }
