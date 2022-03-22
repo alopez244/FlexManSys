@@ -11,7 +11,6 @@ import es.ehu.platform.utilities.Cmd;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.wrapper.AgentController;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -60,7 +59,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private HashMap msgFromAsset = new HashMap();
 
     /* Lista de mensajes ACL que se están guardando para enviar al batchAgent cuando corresponda */
-    public ArrayList<ACLMessage> posponed_msgs_to_batch=new ArrayList<ACLMessage>();
+    public ArrayList<ACLMessage> posponed_msgs_to_batch= new ArrayList<>();
 
 
     /* OPERACIONES DE INICIALIZACIÓN Y PUESTA EN MARCHA */
@@ -84,8 +83,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         /* Se leen los argumentos con los que se ha llamado al agente y se comprueba si tiene un id */
         String [] args = (String[]) myAgent.getArguments();
 
-        for (int i=0; i<args.length; i++){
-            if (args[i].toLowerCase().startsWith("id=")) return null;
+        for (String arg : args) {
+            if (arg.toLowerCase().startsWith("id=")) return null;
         }
 
 		/* En caso negativo, se trata del agente auxiliar y hay que realizar más acciones */
@@ -130,33 +129,33 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         }
 
         /* Segundo, se leen los atributos necesarios del modelo */
-        String attribs = "";
+        StringBuilder attribs = new StringBuilder();
         for (int j = 0; j < myAgent.resourceModel.get(0).get(2).size(); j++){
-            attribs += " "+myAgent.resourceModel.get(0).get(2).get(j)+"="+myAgent.resourceModel.get(0).get(3).get(j);
+            attribs.append(" ").append(myAgent.resourceModel.get(0).get(2).get(j)).append("=").append(myAgent.resourceModel.get(0).get(3).get(j));
         }
 
         /* Tercero, se añaden las operaciones del asset al string de atributos */
-        attribs = attribs + " simpleOperations=";
+        attribs.append(" simpleOperations=");
         for (int j = 0; j < myAgent.resourceModel.size(); j++){
             if (myAgent.resourceModel.get(j).get(0).get(0).startsWith("simple")){
                 for (int k = 0; k < myAgent.resourceModel.get(j).get(2).size();k++){
-                    if (myAgent.resourceModel.get(j).get(2).get(k).startsWith("id")) attribs += myAgent.resourceModel.get(j).get(3).get(k)+",";
+                    if (myAgent.resourceModel.get(j).get(2).get(k).startsWith("id")) attribs.append(myAgent.resourceModel.get(j).get(3).get(k)).append(",");
                 }
             }
         }
-        attribs=attribs.substring(0,attribs.length()-1);
+        attribs = new StringBuilder(attribs.substring(0, attribs.length() - 1));
 
-        attribs = attribs + " complexOperations=";
+        attribs.append(" complexOperations=");
         for (int j = 0; j < myAgent.resourceModel.size(); j++){
             if (myAgent.resourceModel.get(j).get(0).get(0).startsWith("complex")){
                 for (int k = 0; k < myAgent.resourceModel.get(j).get(2).size();k++){
-                    if (myAgent.resourceModel.get(j).get(2).get(k).startsWith("id")) attribs += myAgent.resourceModel.get(j).get(3).get(k)+",";
+                    if (myAgent.resourceModel.get(j).get(2).get(k).startsWith("id")) attribs.append(myAgent.resourceModel.get(j).get(3).get(k)).append(",");
                 }
             }
         }
 
         /* Cuarto, se envía el mensaje de registro */
-        attribs=attribs.substring(0,attribs.length()-1);
+        attribs = new StringBuilder(attribs.substring(0, attribs.length() - 1));
         String cmd = "reg machine parent=system"+attribs;
 
         ACLMessage reply = null;
@@ -323,7 +322,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         /* Primero se comprueba si se han recibido actualizaciones de material */
         updateConsumableMaterials();
 
-        if (workInProgress != true){
+        if (!workInProgress){
 
             /* Si el asset está libre, se comprueba si hay tareas en el plan
              * La cabecera del modelo ocupa dos posiciones, por lo que para que haya tareas, el tamaño del modelo tiene que ser de 3 o más */
@@ -512,7 +511,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 }
                 long diferencia = ((date2.getTime() - date1.getTime())); //calculamos el retraso en iniciar en milisegundos
                 AID QoSID = new AID("QoSManagerAgent", false);
-                String content = Integer.toString((Integer) msgToAsset.get("Id_Batch_Reference"));;
+                String content = Integer.toString((Integer) msgToAsset.get("Id_Batch_Reference"));
                 String delay = String.valueOf(diferencia);
                 content = content + "/" + delay;
                 sendACLMessage(ACLMessage.INFORM, QoSID, "delay",
@@ -553,7 +552,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         myAgent.AddToExpectedMsgs(msg_to_batchagent);
 
                     }else{    //No encontrada replica en running para este batch. Puede que otro agente lo haya denunciado previamente o que el batch aun no se haya iniciado
-                        posponed_msgs_to_batch = new ArrayList<ACLMessage>();
+                        posponed_msgs_to_batch = new ArrayList<>();
                         ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.INFORM);
                         msg_to_buffer.setConversationId(myAgent.getLocalName()+"_"+methodName+"_"+conversationId++);
                         msg_to_buffer.setContent(messageContent);
@@ -585,7 +584,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private void requestConsumableMaterials(String methodName) {
 
         String neededMaterial = "";
-        Integer neededConsumable = 0;
+        Integer neededConsumable;
 
         /* Se calcula el material necesario para llenar cada uno de los buffer de piezas al maximo */
         for (int j = 0; j < myAgent.availableMaterial.size(); j++){
@@ -632,11 +631,11 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             newConsumables.add(new ArrayList<>()); newConsumables.add(new ArrayList<>());
             String content = msg.getContent();
             String [] contentSplited = content.split(";");
-            for (int i = 0; i < contentSplited.length ; i++) {
+            for (String s : contentSplited) {
 
                 /* Se deserializa el mensaje y se guardan los datos en un arraylist */
-                newConsumables.get(0).add(contentSplited[i].split(":")[0]);
-                newConsumables.get(1).add(contentSplited[i].split(":")[1]);
+                newConsumables.get(0).add(s.split(":")[0]);
+                newConsumables.get(1).add(s.split(":")[1]);
             }
 
             /* Bucle para sumar los nuevos consumibles en el contador de material */
@@ -661,17 +660,17 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         // Se crea el array list con las keys que se necesitaran para eliminar el .0 de los datos que se pasen de a tipo string
         ArrayList<String> replace = new ArrayList<>(Arrays.asList("Id_Machine_Reference", "Id_Order_Reference", "Id_Batch_Reference", "Id_Ref_Subproduct_Type", "Id_Item_Number","Id_Ref_Service_Type"));
 
-        for (int i = 0; i < replace.size(); i++) {  //for loop to remove the .0 of the data that contains the keys defined in replace variable
-            String newValue = String.valueOf(msgFromAsset.get(replace.get(i)));
+        for (String s : replace) {  //for loop to remove the .0 of the data that contains the keys defined in replace variable
+            String newValue = String.valueOf(msgFromAsset.get(s));
             newValue = newValue.split("\\.")[0];
-            msgFromAsset.put(replace.get(i), newValue);
+            msgFromAsset.put(s, newValue);
         }
     }
 
     public Object[] defineAction_And_ConsumableList(String serviceType) {
 
-        ArrayList<String> actionList = new ArrayList<String>();
-        ArrayList<String> consumableList = new ArrayList<String>();
+        ArrayList<String> actionList = new ArrayList<>();
+        ArrayList<String> consumableList = new ArrayList<>();
         for (int j = 0; j < myAgent.resourceModel.size(); j++) {
 
             /* Se itera elemento a elemento hasta encontrar algún servicio (simple_operation) */
