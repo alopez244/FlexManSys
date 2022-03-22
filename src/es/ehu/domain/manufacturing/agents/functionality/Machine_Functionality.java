@@ -49,6 +49,9 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     /* Número de items que hay que fabricar en el servicio actual */
     private Integer NumOfItems = 0;
 
+    /* Flag que indica si hay material suficiente para realizar el servicio que corresponde en cada momento */
+    private Boolean materialAvailable = true;
+
     /* Flag que indica si hay una petición de reponer materiales en marcha */
     private Boolean materialRequest = false;
 
@@ -325,8 +328,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         if (!workInProgress){
 
             /* Si el asset está libre, se comprueba si hay tareas en el plan
-             * La cabecera del modelo ocupa dos posiciones, por lo que para que haya tareas, el tamaño del modelo tiene que ser de 3 o más */
-            if (myAgent.machinePlan.size() >= 3) {
+             * La cabecera del modelo ocupa dos posiciones, por lo que para que haya tareas, el tamaño del modelo tiene que ser de 3 o más
+             * Además, se comprueba el flag de disponibilidad de material
+             * Si está a false, implica que ya sabemos que no hay materiales suficientes como para completar el servicio actual */
+            if (myAgent.machinePlan.size() >= 3 && materialAvailable) {
 
                 /* Primero se prepara la estructura de datos que se va a enviar al gatewayAgent */
                 msgToAsset = createOperationHashMap(myAgent.machinePlan);
@@ -346,26 +351,34 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     if (consumableList.contains(myAgent.availableMaterial.get(i).get("consumable_id"))) {
 
                         /* Se consulta si el número actual de consumibles (current) es inferior al número de items a fabricar */
-                        if (Integer.parseInt(myAgent.availableMaterial.get(i).get("current")) < NumOfItems) {
+                        if (Integer.parseInt(myAgent.availableMaterial.get(i).get("current")) < 12) {
+
+                            /* Se indica que no hay materiales suficientes para realizar este servicio */
+                            materialAvailable = false;
 
                             /* Se comprueba si hay alguna petición de material en marcha */
                             /* Si no hay ninguna petición en curso, se solicita el material necesario */
-                            if (!materialRequest) requestConsumableMaterials(methodName);
+                            if (!materialRequest) {
+                                requestConsumableMaterials(methodName);
+                                break;
+                            }
                         }
                     }
                 }
 
-                /* Antes de enviar la operación, se notifica el delay existente respecto a lo planificado */
-                calculateDelay(methodName);
+                if (materialAvailable){
+                    /* Antes de enviar la operación, se notifica el delay existente respecto a lo planificado */
+                    calculateDelay(methodName);
 
-                /* Finalmente, se envía la operación al GatewayAgent (se guarda en el buzón por si acaso) */
-                String MessageContent = new Gson().toJson(msgToAsset);
-                ACLMessage msg_to_gw=sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "data",
-                        myAgent.getLocalName()+"_"+methodName+"_"+conversationId++, MessageContent, myAgent);
-                myAgent.AddToExpectedMsgs(msg_to_gw);
+                    /* Finalmente, se envía la operación al GatewayAgent (se guarda en el buzón por si acaso) */
+                    String MessageContent = new Gson().toJson(msgToAsset);
+                    ACLMessage msg_to_gw=sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "data",
+                            myAgent.getLocalName()+"_"+methodName+"_"+conversationId++, MessageContent, myAgent);
+                    myAgent.AddToExpectedMsgs(msg_to_gw);
 
-                /* Por último, pongo el workInProgress a true*/
-                workInProgress=true;
+                    /* Por último, pongo el workInProgress a true*/
+                    workInProgress=true;
+                }
             }
         } else{
             /* System.out.println("The asset is busy"); /* Dejar para debug, luego comentar o quitar*/
@@ -433,7 +446,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
                             /* Se comprueba si hay alguna petición de material en marcha */
                             /* Si no hay ninguna petición en curso, se solicita el material necesario */
-                            if (!materialRequest) requestConsumableMaterials(methodName);
+                            if (!materialRequest) {
+                                requestConsumableMaterials(methodName);
+                                break;
+                            }
                         }
                     }
                 }
@@ -612,10 +628,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         }
 
         materialRequest = true;
-        System.out.println(myAgent.availableMaterial);
-
-        /* ¿Bloqueo aquí el agente hasta recibir los consumibles o dónde espero?
-         *  De momento, se va a quedar donde está (al principio del método sendDataToDevice) */
     }
 
     private void updateConsumableMaterials (){
@@ -650,8 +662,11 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 }
             }
 
-            /* Una vez repuesto el material se resetea el flag */
+            /* Una vez repuesto el material se resetea el flag de petición de materiales */
             materialRequest = false;
+
+            /* También se resetea el flag que indica que tenemos materiales */
+            materialAvailable = true;
         }
     }
 
