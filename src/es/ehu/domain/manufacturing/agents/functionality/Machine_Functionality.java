@@ -15,7 +15,6 @@ import jade.wrapper.AgentController;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -25,19 +24,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
 
-    private HashMap msgFromAsset = new HashMap(); // Estructura de datos que se envia al PLC
-    private HashMap msgToAsset = new HashMap(); // Estructura de datos que se recibe del PLC
-    private String BatchID = ""; // Variable que guarda el identificador del lote que se esta fabricando
-    private Integer NumOfItems = 0; // Representa el numero de intems que se estan fabricando (todos perteneciente al mismo lote)
-
-    private Boolean matReqDone = false; // Flag que se mantiene activo desde que se hace la peticion de consumibles hasta que se reponen
-
-
-    private Integer convIDcnt=0;
-
-
-    public ArrayList<ACLMessage> posponed_msgs_to_batch=new ArrayList<ACLMessage>();
-
+    /* DECLARACIÓN DE VARIABLES */
 
     /* Agente que utiliza esta funcionalidad (se recibe como parámetro en diferentes métodos) */
     private MachineAgent myAgent;
@@ -54,11 +41,35 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     /* Nombre del gatewayAgent con el que interactúa el agente */
     private AID gatewayAgentID =null;
 
+    /* Identificador de la conversación iniciada por el agente transporte */
+    private Integer conversationId =0;
+
+    /* Identificador del lote que se está procesando */
+    private String BatchID = "";
+
+    /* Número de items que hay que fabricar en el servicio actual */
+    private Integer NumOfItems = 0;
+
+    /* Flag que indica si hay una petición de reponer materiales en marcha */
+    private Boolean materialRequest = false;
+
+    /* Estructura de datos que se envía al asset */
+    private HashMap msgToAsset = new HashMap();
+
+    /* Estructura de datos que se recibe del asset */
+    private HashMap msgFromAsset = new HashMap();
+
+    /* Lista de mensajes ACL que se están guardando para enviar al batchAgent cuando corresponda */
+    public ArrayList<ACLMessage> posponed_msgs_to_batch=new ArrayList<ACLMessage>();
+
 
     /* OPERACIONES DE INICIALIZACIÓN Y PUESTA EN MARCHA */
 
     @Override
     public Void init(MWAgent mwAgent) {
+
+        /* Se obtiene el nombre del método (se utilizará en el conversationId) */
+        String methodName = new Machine_Functionality() {}.getClass().getEnclosingMethod().getName();
 
         /* Se hace el cambio de tipo */
         this.myAgent = (MachineAgent) mwAgent;
@@ -80,7 +91,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 		/* En caso negativo, se trata del agente auxiliar y hay que realizar más acciones */
 		/* En primer lugar, hay que comprobar la conectividad con el asset en dos pasos: */
 		/* Paso 1: contacto con el gatewayAgent y espero respuesta (si no hay, no se puede continuar con el registro) */
-		sendACLMessage(ACLMessage.REQUEST,gatewayAgentID,"ping","","",myAgent);
+		sendACLMessage(ACLMessage.REQUEST,gatewayAgentID,"ping",
+                myAgent.getLocalName()+"_"+methodName+"_"+conversationId++,"",myAgent);
 		ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 300);
 		if(answer_gw==null){
 			System.out.println("GW is not online. Start GW and repeat.");
@@ -88,7 +100,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 		}
 
 		/* Paso 2: contacto con el asset a través del gatewayAgent y espero respuesta (si no hay, no se puede continuar con el registro) */
-		sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "check_asset","check_asset_on_boot_"+convIDcnt++,"ask_state",myAgent); //primero antes de nada debemos comprobar si el agente GW y el PLC están disponibles
+		sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "check_asset",
+                myAgent.getLocalName()+"_"+methodName+"_"+conversationId++,"ask_state",myAgent);
 		ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 300);
 		if(answer!=null){
 			if(!answer.getContent().equals("Working")&&!answer.getContent().equals("Not working")){
@@ -103,7 +116,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 		}
 
         /* Si la comunicación con el asset es correcta, se procede a registrar el agente transporte en el SystemModelAgent */
-
         /* Primero, se registra el listado de materiales disponibles en la estación */
         int index = 0;
         for (int i = 0; i < myAgent.resourceModel.size() - 1; i++) {
@@ -154,6 +166,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             e.printStackTrace();
         }
 
+        /* Finalmente, se obtiene el Id que el SystemModelAgent ha asignado al nuevo agente */
         seId = reply.getContent();
 
         try {
@@ -161,7 +174,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             className = myAgent.getClass().getName();
             String [] args2 = {"ID="+seId, "description=description" };
             args = ArrayUtils.addAll(args,args2);
-            ((AgentController)myAgent.getContainerController().createNewAgent(seId,className, args)).start();
+            myAgent.getContainerController().createNewAgent(seId,className, args).start();
             Thread.sleep(1000);
         } catch (Exception e1) {
             e1.printStackTrace();
@@ -201,7 +214,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
                 /* Se guardan en un array de String todos los atributos de la operación */
                 String[] allAttributes = singleOperation.split(" ");
-
 
                 /* Se recorre el array para ir grabando los atributos uno a uno */
                 for (String singleAttribute : allAttributes) {
@@ -305,8 +317,11 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
     public void sendDataToDevice() {
 
+        /* Se obtiene el nombre del método (se utilizará en el conversationId) */
+        String methodName = new Machine_Functionality() {}.getClass().getEnclosingMethod().getName();
+
         /* Primero se comprueba si se han recibido actualizaciones de material */
-       updateConsumableMaterials();
+        updateConsumableMaterials();
 
         if (workInProgress != true){
 
@@ -317,14 +332,13 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 /* Primero se prepara la estructura de datos que se va a enviar al gatewayAgent */
                 msgToAsset = createOperationHashMap(myAgent.machinePlan);
 
-                /* Unido a esto, se guardan algunos datos de interés en variables que se usarán más tarde */
-                NumOfItems = (Integer) msgToAsset.get("Operation_No_of_Items");
-                BatchID = Integer.toString((Integer) msgToAsset.get("Id_Batch_Reference"));
-
                 /* A continuación, se identifican los materiales consumibles necesarios para realizar la operación */
                 String serviceType = String.valueOf(msgToAsset.get("Operation_Ref_Service_Type"));
-                Object [] actionsConsumables = defineAction_And_ConsumableList(serviceType,myAgent.resourceModel);
-                ArrayList<String> consumableList = (ArrayList<String>) actionsConsumables[1]; // Lista de consumibles que se utilizan para el servicio actual
+                Object [] actionsConsumables = defineAction_And_ConsumableList(serviceType);
+                ArrayList<String> consumableList = (ArrayList<String>) actionsConsumables[1];
+
+                /* Unido a esto, se consulta el número de items que hay que procesar en este servicio */
+                NumOfItems = (Integer) msgToAsset.get("Operation_No_of_Items");
 
                 /* Se comprueba que se disponga de material suficiente para poder fabricar el lote */
                 for (int i = 0; i < myAgent.availableMaterial.size(); i++) {
@@ -333,32 +347,36 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     if (consumableList.contains(myAgent.availableMaterial.get(i).get("consumable_id"))) {
 
                         /* Se consulta si el número actual de consumibles (current) es inferior al número de items a fabricar */
-                        /* Se comprueba si no hay una petición de material en marcha */
-                        if (Integer.parseInt(myAgent.availableMaterial.get(i).get("current")) < NumOfItems && !matReqDone) {
+                        /* También se comprueba si no hay una petición de material en marcha */
+                        if (Integer.parseInt(myAgent.availableMaterial.get(i).get("current")) < NumOfItems && !materialRequest) {
 
-                            /* Si no hay consumibles suficientes ni hay una petición en curso, se solicita */
-                            requestConsumableMaterials();
+                            /* Si no hay consumibles suficientes ni hay una petición en curso, se solicitan */
+                            requestConsumableMaterials(methodName);
                         }
                     }
                 }
 
                 /* Antes de enviar la operación, se notifica el delay existente respecto a lo planificado */
-                calculateDelay();
+                calculateDelay(methodName);
 
                 /* Finalmente, se envía la operación al GatewayAgent (se guarda en el buzón por si acaso) */
                 String MessageContent = new Gson().toJson(msgToAsset);
-                ACLMessage msg_to_gw=sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "data", "PLCdata", MessageContent, myAgent);
+                ACLMessage msg_to_gw=sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "data",
+                        myAgent.getLocalName()+"_"+methodName+"_"+conversationId++, MessageContent, myAgent);
                 myAgent.AddToExpectedMsgs(msg_to_gw);
 
                 /* Por último, pongo el workInProgress a true*/
                 workInProgress=true;
             }
         } else{
-            System.out.println("The asset is busy"); /* Dejar para debug, luego comentar o quitar*/
+            /* System.out.println("The asset is busy"); /* Dejar para debug, luego comentar o quitar*/
         }
     }
 
     public void rcvDataFromDevice(ACLMessage results) {
+
+        /* Se obtiene el nombre del método (se utilizará en el conversationId) */
+        String methodName = new Machine_Functionality() {}.getClass().getEnclosingMethod().getName();
 
         myAgent.msgFIFO.add(results.getContent());
 
@@ -379,7 +397,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             /* Si se trata de un mensaje con contenido, se responde con un mensaje que confirme la recepción */
             HashMap confirmation = new HashMap();
             confirmation.put("Received", true);
-            sendACLMessage(7, gatewayAgentID,"", "", new Gson().toJson(confirmation), myAgent);
+            sendACLMessage(7, gatewayAgentID,"",
+                    myAgent.getLocalName()+"_"+methodName+"_"+conversationId++, new Gson().toJson(confirmation), myAgent);
 
             /* Se comprueba si el mensaje contiene resultados evaluando el flag de item completado */
             if (msgFromAsset.get("Control_Flag_Item_Completed").equals(true)){
@@ -392,7 +411,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
                 /* A continuación, se identifican los materiales consumibles utilizados para realizar la operación */
                 String serviceType = String.valueOf(msgFromAsset.get("Id_Ref_Service_Type"));
-                Object [] actionsConsumables = defineAction_And_ConsumableList(serviceType,myAgent.resourceModel);
+                Object [] actionsConsumables = defineAction_And_ConsumableList(serviceType);
                 ArrayList<String> actionList = (ArrayList<String>) actionsConsumables[0]; // Lista de acciones que componen el servicio actual
                 ArrayList<String> consumableList = (ArrayList<String>) actionsConsumables[1]; // Lista de consumibles que se utilizan para el servicio actual
 
@@ -411,10 +430,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         int warningConsumable = Integer.parseInt(myAgent.availableMaterial.get(i).get("warning"));
 
                         /* Se comprueba si quedan menos consumibles que los recomendables */
-                        if (currentConsumables <= warningConsumable && !matReqDone){
+                        if (currentConsumables <= warningConsumable && !materialRequest){
 
                             /* Si no hay consumibles suficientes ni hay una petición en curso, se solicita */
-                            requestConsumableMaterials();
+                            requestConsumableMaterials(methodName);
                         }
                     }
                 }
@@ -433,11 +452,11 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
 
                 /* Aquí se pasa a String el contenido del mensaje que se le va a enviar al BatchAgent */
-                String messageContent = new Gson().toJson(msgFromAsset);  //creates the message to be send
-                System.out.println(messageContent);
+                String messageContent = new Gson().toJson(msgFromAsset);
+                /* System.out.println(messageContent); */
 
                 /* A continuación, se envían los resultados al BatchAgent */
-                recvBatchInfo(messageContent);   // Método para enviar los resultados al BatchAgent correspondiente
+                recvBatchInfo(messageContent,methodName);   // Método para enviar los resultados al BatchAgent correspondiente
 
                 /* Se comprueba si el mensaje corresponde a la última pieza del lote evaluando el flag de servicio completo */
                 if (serviceCompleted) {
@@ -468,9 +487,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     @Override
     public Void terminate(MWAgent myAgent) { return null;}
 
+
     /* MÉTODOS AUXILIARES */
 
-    private void calculateDelay() {
+    private void calculateDelay(String methodName) {
 
         /* Buscamos el atributo plannedStartTime */
         for (int k = 0; k < myAgent.machinePlan.get(2).get(2).size(); k++) {
@@ -492,21 +512,23 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 }
                 long diferencia = ((date2.getTime() - date1.getTime())); //calculamos el retraso en iniciar en milisegundos
                 AID QoSID = new AID("QoSManagerAgent", false);
-                String content = BatchID;
+                String content = Integer.toString((Integer) msgToAsset.get("Id_Batch_Reference"));;
                 String delay = String.valueOf(diferencia);
                 content = content + "/" + delay;
-                sendACLMessage(ACLMessage.INFORM, QoSID, "delay", "batch_delay", content, myAgent);
+                sendACLMessage(ACLMessage.INFORM, QoSID, "delay",
+                        myAgent.getLocalName()+"_"+methodName+"_"+conversationId++, content, myAgent);
             }
         }
     }
 
-    public void recvBatchInfo(String messageContent) {
+    public void recvBatchInfo(String messageContent, String methodName) {
 
         ACLMessage reply;
         String  batchName = "";// Nombre del batch agent al que se le enviara el mensaje
         try {
             BatchID = String.valueOf(msgFromAsset.get("Id_Batch_Reference"));   //gets the batch reference from the received message
-            reply = sendCommand(myAgent, "get * reference=" + BatchID, "BatchAgentID");
+            reply = sendCommand(myAgent, "get * reference=" + BatchID,
+                    myAgent.getLocalName()+"_"+methodName+"_"+conversationId++);
             //returns the id of the element that matches with the reference of the required batch
             if (reply != null) {   // If the id does not exist, it returns error
                 myAgent.msgFIFO.add(reply.getContent());
@@ -520,18 +542,20 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         try {
             posponed_msgs_to_batch= myAgent.msg_buffer.get(batchName);
             if(posponed_msgs_to_batch==null){ //si no se encuentra el parent en el listado de mensajes postpuestos entonces el receptor ha confirmado la recepcion de todos los mensajes hasta ahora. Todoo OK.
-                ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + batchName +" state=running", "BatchAgentID");
+                ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + batchName +" state=running",
+                        myAgent.getLocalName()+"_"+methodName+"_"+conversationId++);
                 if (running_replica != null) {
                     String batchAgentName = running_replica.getContent();
                     AID batchAgentID = new AID(batchAgentName, false);
                     if(!running_replica.getContent().equals("")){   //encontrada replica en running para este batch
-                        ACLMessage msg_to_batchagent=sendACLMessage(ACLMessage.INFORM, batchAgentID, "data", "PLCdata", messageContent, myAgent);
+                        ACLMessage msg_to_batchagent=sendACLMessage(ACLMessage.INFORM, batchAgentID, "data",
+                                myAgent.getLocalName()+"_"+methodName+"_"+conversationId++, messageContent, myAgent);
                         myAgent.AddToExpectedMsgs(msg_to_batchagent);
 
                     }else{    //No encontrada replica en running para este batch. Puede que otro agente lo haya denunciado previamente o que el batch aun no se haya iniciado
                         posponed_msgs_to_batch = new ArrayList<ACLMessage>();
                         ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.INFORM);
-                        msg_to_buffer.setConversationId("PLCdata");
+                        msg_to_buffer.setConversationId(myAgent.getLocalName()+"_"+methodName+"_"+conversationId++);
                         msg_to_buffer.setContent(messageContent);
                         msg_to_buffer.setOntology("data");
                         posponed_msgs_to_batch.add(msg_to_buffer);
@@ -539,18 +563,18 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     }
                 }
             }else{  //habia algun mensaje pendiente de envíar a un receptor aun no definido
-//                        posponed_msgs_to_batch=new ArrayList<ACLMessage>();
                 System.out.println("Added message to buffer:\nContent: "+messageContent+"\nTo: "+batchName);
                 ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.INFORM);
-                msg_to_buffer.setConversationId("PLCdata");
+                msg_to_buffer.setConversationId(myAgent.getLocalName()+"_"+methodName+"_"+conversationId++);
                 msg_to_buffer.setContent(messageContent);
                 msg_to_buffer.setOntology("data");
                 posponed_msgs_to_batch.add(msg_to_buffer);
                 myAgent.msg_buffer.put(batchName,posponed_msgs_to_batch);
 
-                ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + batchName +" state=running", "BatchAgentID");
+                ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + batchName +" state=running",
+                        myAgent.getLocalName()+"_"+methodName+"_"+conversationId++);
                 if(!running_replica.getContent().equals("")){ //nos aseguramos de que el receptor aun no exista. Si existe ya, vaciamos el cajón con un automensaje.
-                    sendACLMessage(7, myAgent.getAID(), "release_buffer","new_replica_detected",running_replica.getContent(),myAgent);
+                    sendACLMessage(7, myAgent.getAID(), "release_buffer",myAgent.getLocalName()+"_"+ conversationId++,running_replica.getContent(),myAgent);
                 }
             }
         } catch (Exception e) {
@@ -558,7 +582,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         }
     }
 
-    private void requestConsumableMaterials() {
+    private void requestConsumableMaterials(String methodName) {
 
         String neededMaterial = "";
         Integer neededConsumable = 0;
@@ -573,23 +597,25 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         //Peticion negociacion entre los agentes transporte disponibles
         try {
             String targets = "";
-            ACLMessage reply2 = sendCommand(myAgent, "get * category=transport", "TransportAgentID");
+            ACLMessage reply2 = sendCommand(myAgent, "get * category=transport",
+                    myAgent.getLocalName()+"_"+methodName+"_"+conversationId++);
             if (reply2 != null) {   // If the id does not exist, it returns error
                 targets = reply2.getContent();
             }
             String negotiationQuery = "localneg " + targets + " criterion=position action=" +
                     "supplyConsumables externaldata=" + neededMaterial + "," + myAgent.getLocalName();
-            ACLMessage result = sendCommand(myAgent, negotiationQuery, "TransportAgentNeg");
+            ACLMessage result = sendCommand(myAgent, negotiationQuery,
+                    myAgent.getLocalName()+"_"+methodName+"_"+conversationId++);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        matReqDone = true;
+        materialRequest = true;
         System.out.println(myAgent.availableMaterial);
 
         /* ¿Bloqueo aquí el agente hasta recibir los consumibles o dónde espero?
-         *  De momento, se va a quedar donde está (al principio del método) */
+         *  De momento, se va a quedar donde está (al principio del método sendDataToDevice) */
     }
 
     private void updateConsumableMaterials (){
@@ -625,7 +651,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             }
 
             /* Una vez repuesto el material se resetea el flag */
-            matReqDone = false;
+            materialRequest = false;
         }
     }
 
@@ -642,7 +668,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         }
     }
 
-    public Object[] defineAction_And_ConsumableList(String serviceType, ArrayList<ArrayList<ArrayList<String>>> resourceModel) {
+    public Object[] defineAction_And_ConsumableList(String serviceType) {
 
         ArrayList<String> actionList = new ArrayList<String>();
         ArrayList<String> consumableList = new ArrayList<String>();
