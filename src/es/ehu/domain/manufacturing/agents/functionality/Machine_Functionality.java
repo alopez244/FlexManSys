@@ -59,7 +59,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private HashMap msgToAsset = new HashMap();
 
     /* Estructura de datos que se recibe del asset */
-    private HashMap msgFromAsset = new HashMap();
+    private HashMap<String,Object> msgFromAsset = new HashMap<>();
 
     /* Lista de mensajes ACL que se están guardando para enviar al batchAgent cuando corresponda */
     public ArrayList<ACLMessage> posponed_msgs_to_batch= new ArrayList<>();
@@ -419,7 +419,11 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 boolean serviceCompleted = (boolean) msgFromAsset.get("Control_Flag_Service_Completed");
 
                 /* Se eliminan los decimales de los valores numéricos */
-                removeDecimals();
+                for(Map.Entry<String,Object> item : msgFromAsset.entrySet()){
+                    if (item.getValue() instanceof Double){
+                        msgFromAsset.put(item.getKey(), String.valueOf(Math.round((Double) item.getValue())));
+                    }
+                }
 
                 /* A continuación, se identifican los materiales consumibles utilizados para realizar la operación */
                 String serviceType = String.valueOf(msgFromAsset.get("Id_Ref_Service_Type"));
@@ -667,19 +671,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
             /* También se resetea el flag que indica que tenemos materiales */
             materialAvailable = true;
-        }
-    }
-
-    private void removeDecimals() {
-
-        /* Método para quitarle los decimales a los datos numéricos */
-        // Se crea el array list con las keys que se necesitaran para eliminar el .0 de los datos que se pasen de a tipo string
-        ArrayList<String> replace = new ArrayList<>(Arrays.asList("Id_Machine_Reference", "Id_Order_Reference", "Id_Batch_Reference", "Id_Ref_Subproduct_Type", "Id_Item_Number","Id_Ref_Service_Type"));
-
-        for (String s : replace) {  //for loop to remove the .0 of the data that contains the keys defined in replace variable
-            String newValue = String.valueOf(msgFromAsset.get(s));
-            newValue = newValue.split("\\.")[0];
-            msgFromAsset.put(s, newValue);
         }
     }
 
