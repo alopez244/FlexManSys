@@ -334,7 +334,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             if (myAgent.machinePlan.size() >= 3 && materialAvailable) {
 
                 /* Primero se prepara la estructura de datos que se va a enviar al gatewayAgent */
-                msgToAsset = createOperationHashMap(myAgent.machinePlan);
+                createOperationHashMap();
 
                 /* A continuación, se identifican los materiales consumibles necesarios para realizar la operación */
                 String serviceType = String.valueOf(msgToAsset.get("Operation_Ref_Service_Type"));
@@ -683,7 +683,41 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         }
     }
 
-    public Object[] defineAction_And_ConsumableList(String serviceType) {
+    private void createOperationHashMap() {
+
+        /* Se declara una variable para indicar el número de items a realizar en el servicio (mínimo 1) */
+        Integer NumOfItems = 1;
+
+        /* Queremos guardar la referencia de la máquina (el segundo elemento del plan) */
+        msgToAsset.put("Id_Machine_Reference", Integer.parseInt(myAgent.machinePlan.get(1).get(3).get(0)));
+
+        /* Queremos guardar los valores de algunos atributos de la tercera posición (primera operación) */
+        msgToAsset.put("Control_Flag_New_Service", true);
+        msgToAsset.put("Id_Batch_Reference", Integer.parseInt(myAgent.machinePlan.get(2).get(3).get(3)));
+        msgToAsset.put("Id_Order_Reference", Integer.parseInt(myAgent.machinePlan.get(2).get(3).get(5))); //antes get 6 tras cambio en xml -> 5
+        msgToAsset.put("Id_Ref_Subproduct_Type", Integer.parseInt(myAgent.machinePlan.get(2).get(3).get(6))); //antes get 7 tras cambio en xml -> 6
+        msgToAsset.put("Operation_Ref_Service_Type", Integer.parseInt(myAgent.machinePlan.get(2).get(3).get(0)));
+        msgToAsset.put("Operation_No_of_Items", NumOfItems);
+
+        /* Sé que tengo al menos un item, pero no sé si tengo más. Lo compruebo */
+        if (myAgent.machinePlan.size()>=4) {
+
+            /* Ahora recorro el resto del plan para ir incrementando el número de items que pertenecen al batch */
+            for (int i = 3; i< myAgent.machinePlan.size(); i++){
+
+                /* Si el batch_Id coincide, hay que incrementar el número de items */
+                if (myAgent.machinePlan.get(i).get(3).get(3).equals(msgToAsset.get("Id_Batch_Reference").toString())){
+                    NumOfItems++;
+                    msgToAsset.put("Operation_No_of_Items", NumOfItems);
+
+                } else { //Si el batch_id no coincide, se sale del bucle
+                    break;
+                }
+            }
+        }
+    }
+
+    private Object[] defineAction_And_ConsumableList(String serviceType) {
 
         ArrayList<String> actionList = new ArrayList<>();
         ArrayList<String> consumableList = new ArrayList<>();
