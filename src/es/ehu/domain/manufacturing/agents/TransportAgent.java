@@ -22,6 +22,9 @@ public class TransportAgent extends DomResAgentTemplate{
 
     /* DECLARACION DE VARIABLES */
 
+    /* Nombre del transporte */
+    public String transport_unit_name;
+
     /* Posicion actual del transporte */
     public String currentPos;
     public Double currentPos_X;

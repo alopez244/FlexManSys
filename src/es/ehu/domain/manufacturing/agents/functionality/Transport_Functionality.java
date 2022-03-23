@@ -367,13 +367,38 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
         StructTransportUnitState javaTranspState = gson.fromJson(msg.getContent(), StructTransportUnitState.class);
 
         myAgent.ActualState = javaTranspState.getTransport_unit_state();
+        myAgent.transport_unit_name = javaTranspState.getTransport_unit_name();
 
         if (!Objects.equals(myAgent.ActualState, "ACTIVE")){
 
-            // El transporte o bien se encuentra en un estado que no puede operar o bien se encuentra operando
-            // Enviamos al SMA la informacion que proviene desde el transporte
+            /* El transporte o bien se encuentra en un estado que no puede operar o bien se encuentra operando */
+            /* Enviamos al SMA la informacion que proviene desde el transporte */
 
-            System.out.println("NOT ACTIVE");
+            /* Antes de considerar al transporte como operable, verificamos que ha llevado a cabo su etapa de
+            /* calibracion. En caso de no estar calibrado, se le envia el comando de calibracion */
+
+            if (Objects.equals(myAgent.ActualState, "IDLE") || (Objects.equals(myAgent.ActualState, "CALIBRATION"))){
+
+                if (Objects.equals(myAgent.ActualState, "IDLE")) {
+
+                    sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "ComandoCoordenada", "1234", "X", myAgent);
+                    myAgent.ActualState = javaTranspState.getTransport_unit_state();
+                    System.out.println(myAgent.transport_unit_name + " Transport needs calibration");
+
+                }
+
+                else if (Objects.equals(myAgent.ActualState, "CALIBRATION")){
+
+                    myAgent.ActualState = javaTranspState.getTransport_unit_state();
+                    System.out.println(myAgent.transport_unit_name + " Transport is calibrating");
+
+                    // TODO: Verificar si el transporte entra al estado "FREEWAY" durante su calibracion
+
+                }
+
+            }
+
+            System.out.println(myAgent.transport_unit_name + " Transport isn't active");
 
             myAgent.battery = javaTranspState.getBattery();
             myAgent.currentPos_X = javaTranspState.getOdom_x();
@@ -408,14 +433,14 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 // ACTIVE habiendo estado en operacion anteriormente
 
                 TransportOperative = true;
-                System.out.println("El transporte comenzo una tarea");
+                System.out.println(myAgent.transport_unit_name + " Transport started a new task");
 
             }
 
         } else if (myAgent.ActualState.equals("ACTIVE")){
 
             // El transporte o bien acaba de terminar una operacion o bien esta listo para operar y recibir tareas
-            System.out.println("ACTIVE");
+            System.out.println(myAgent.transport_unit_name + " Transport is active");
 
             if (TransportOperative){
 
@@ -424,7 +449,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
 
                 TransportOperative = false;
-                System.out.println("El transporte termino su tarea");
+                System.out.println(myAgent.transport_unit_name + " Transport ended his task");
 
             }
 

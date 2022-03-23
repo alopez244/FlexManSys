@@ -264,8 +264,8 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                             negMsg = new MsgNegotiation((Iterator<AID>) msg.getAllReceiver(), conversationId, cmd.attribs.get("action"), cmd.attribs.get("criterion"),
                                     externaldata.nextElement().toString(), externaldata.nextElement().toString());
                             if(negMsg.getTargets().length<=1){
-                                actionValue=actionValue_temp;
-                                switch (aNegFunctionality.checkNegotiation(conversationId, cmd.attribs.get("action"), 15000,
+                                actionValue=actionValue_temp; // antes el negReceivedValue era 15000
+                                switch (aNegFunctionality.checkNegotiation(conversationId, cmd.attribs.get("action"), 0,
                                         1, true, true, true, negMsg.getExternalData()[0], negMsg.getExternalData()[1])) {
 
                                     case NEG_LOST: //he perdido la negociación
