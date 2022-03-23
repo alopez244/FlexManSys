@@ -351,7 +351,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     if (consumableList.contains(myAgent.availableMaterial.get(i).get("consumable_id"))) {
 
                         /* Se consulta si el número actual de consumibles (current) es inferior al número de items a fabricar */
-                        if (Integer.parseInt(myAgent.availableMaterial.get(i).get("current")) < 12) {
+                        if (Integer.parseInt(myAgent.availableMaterial.get(i).get("current")) < NumOfItems) {
 
                             /* Se indica que no hay materiales suficientes para realizar este servicio */
                             materialAvailable = false;
