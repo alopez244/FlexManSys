@@ -83,6 +83,7 @@ public class MPlanInterpreter {
 
         String masterAttributes = "";
         String machineId = null;
+        String parameters = "";
 
         for (int i = 0; i < roughPlan.size(); i++) {
             if (roughPlan.get(i).get(0).get(0).equals("PlannedItem")) {
@@ -92,9 +93,9 @@ public class MPlanInterpreter {
                     if (attribsToFind.contains(roughPlan.get(i).get(2).get(m)))
                         masterAttributes = masterAttributes + roughPlan.get(i).get(2).get(m) + "=" + roughPlan.get(i).get(3).get(m) + " ";
                 }
-            }
-            else if (roughPlan.get(i).get(0).get(0).contains("Operation")) {
+            } else if (roughPlan.get(i).get(0).get(0).contains("Operation")) {
 
+                parameters = "";
                 // Se obtiene el nombre del agente al que hay que enviar el mensaje con la información de las operaciones
                 // Para ello, se obtiene el atributo plannedStationId de la operación, y se utiliza para consultar al SMA
                 for (int z = 0; z < roughPlan.get(i).get(2).size(); z++) {
@@ -118,8 +119,30 @@ public class MPlanInterpreter {
                         else
                             machinesWithAllOpInfo.put(machineId, machinesWithAllOpInfo.get(machineId) + roughPlan.get(i).get(2).get(j) + "=" + roughPlan.get(i).get(3).get(j) + " ");
                 }
+
+                // Se comprueba si hay atributos. Para ello, se recorre el roughPlan a partir de la siguiente posición
+                // Se rompe el bucle cuando se encuentre un elemento que no sea ni una acción ni un parámetro
+                for (int w = i+1; w < roughPlan.size(); w++){
+                    if (roughPlan.get(w).get(0).get(0).contains("parameter")){
+
+                        //Si es el primer parámetro (si el elemento anterior no es un paráemtro), añado la cabecera
+                        if (!roughPlan.get(w-1).get(0).get(0).contains("parameter")){
+                            parameters="parameters=";
+                        }
+
+                        //Se obtienen los parámetros y se concatenan
+                        parameters=parameters+roughPlan.get(w).get(3).get(0)+":"+roughPlan.get(w).get(3).get(1)+",";
+                    } else if (!roughPlan.get(w).get(0).get(0).contains("action")&&!roughPlan.get(w).get(0).get(0).contains("parameter")){
+                        break;
+                    }
+                }
+
                 //Después de guardar los atributos de interés del elemento Operation, se guardan los atributos recogidos del elemento PlannedItem
-                machinesWithAllOpInfo.put(machineId, machinesWithAllOpInfo.get(machineId) + masterAttributes + "&");
+                if (!parameters.equals("")){
+                    parameters = parameters.substring(0,parameters.length()-1);
+                }
+                machinesWithAllOpInfo.put(machineId, machinesWithAllOpInfo.get(machineId) + masterAttributes + parameters + "&");
+
 
             }
         }

@@ -690,6 +690,23 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         msgToAsset.put("Operation_Ref_Service_Type", Integer.parseInt(myAgent.machinePlan.get(2).get(3).get(0)));
         msgToAsset.put("Operation_No_of_Items", NumOfItems);
 
+        /* Compruebo si tengo parámetros (de momento asumo que son los mismos parámetros para todos los items porque son el mismo servicio)
+         * Eso implica que tiene que haber 8 atributos (los 7 fijos más uno adicional que son los parámetros) */
+        if (myAgent.machinePlan.get(2).get(3).size()>=8){
+
+            /* Voy a darle el formato de hashMap a los parámetros (se puede discutir si esto tiene que ir en otro sitio) */
+            String parameters = myAgent.machinePlan.get(2).get(3).get(7);
+            String [] parametersArray = parameters.split(",");
+            HashMap<String,String> parametersHashMap = new HashMap<>();
+            for (int i=0; i<parametersArray.length; i++){
+                String [] parameterSplitted = parametersArray[i].split(":");
+                parametersHashMap.put(parameterSplitted[0],parameterSplitted[1]);
+            }
+
+            /* Una vez que se ha rellenado el hashMap, se añade al mensaje */
+            msgToAsset.put("Operation_Parameters",new Gson().toJson(parametersHashMap));
+        }
+
         /* Sé que tengo al menos un item, pero no sé si tengo más. Lo compruebo */
         if (myAgent.machinePlan.size()>=4) {
 
