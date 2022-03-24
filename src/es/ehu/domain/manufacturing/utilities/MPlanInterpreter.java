@@ -1,12 +1,10 @@
 package es.ehu.domain.manufacturing.utilities;
 
-import com.sun.org.apache.xerces.internal.xs.ItemPSVI;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
-import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
@@ -82,13 +80,13 @@ public class MPlanInterpreter {
         attribsToFind.add("plannedFinishTime");
         attribsToFind.add("plannedStartTime");
         attribsToFind.add("productType");
-        attribsToFind.add("type");
 
         String masterAttributes = "";
         String machineId = null;
 
         for (int i = 0; i < roughPlan.size(); i++) {
             if (roughPlan.get(i).get(0).get(0).equals("PlannedItem")) {
+                // Si un elemento es de tipo PlannedItem, se recuperan los atributos que interesan (attribsToFind) y se guardan en la variable masterAttributes
                 masterAttributes = "";
                 for (int m = 0; m < roughPlan.get(i).get(2).size(); m++) {
                     if (attribsToFind.contains(roughPlan.get(i).get(2).get(m)))
@@ -97,7 +95,8 @@ public class MPlanInterpreter {
             }
             else if (roughPlan.get(i).get(0).get(0).contains("Operation")) {
 
-                // Get machine ID
+                // Se obtiene el nombre del agente al que hay que enviar el mensaje con la información de las operaciones
+                // Para ello, se obtiene el atributo plannedStationId de la operación, y se utiliza para consultar al SMA
                 for (int z = 0; z < roughPlan.get(i).get(2).size(); z++) {
                     if (roughPlan.get(i).get(2).get(z).equals("plannedStationId")) {
                         ACLMessage reply = null;
@@ -111,7 +110,7 @@ public class MPlanInterpreter {
                         }
                     }
                 }
-                // Añadimos las informacion que se le va a enviar a las maquinas
+                // Se termina la búsqueda de los atributos que nos interesan (attribsToFind) mirando en los atributos del elemento Operation
                 for (int j = 0; j < roughPlan.get(i).get(2).size(); j++) {
                     if (attribsToFind.contains(roughPlan.get(i).get(2).get(j)))
                         if (machinesWithAllOpInfo.get(machineId) == null)
@@ -119,6 +118,7 @@ public class MPlanInterpreter {
                         else
                             machinesWithAllOpInfo.put(machineId, machinesWithAllOpInfo.get(machineId) + roughPlan.get(i).get(2).get(j) + "=" + roughPlan.get(i).get(3).get(j) + " ");
                 }
+                //Después de guardar los atributos de interés del elemento Operation, se guardan los atributos recogidos del elemento PlannedItem
                 machinesWithAllOpInfo.put(machineId, machinesWithAllOpInfo.get(machineId) + masterAttributes + "&");
 
             }
