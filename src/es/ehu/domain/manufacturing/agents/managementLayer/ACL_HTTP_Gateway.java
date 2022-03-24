@@ -15,11 +15,14 @@ import jade.wrapper.gateway.JadeGateway;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.HashMap;
+import java.util.Map;
 
 public class ACL_HTTP_Gateway {
 
     private String request;
     private String response;
+    private String assetName;
+    private String host;
 
     public ACL_HTTP_Gateway(String[] args) {
 
@@ -66,8 +69,8 @@ public class ACL_HTTP_Gateway {
     private void jadeInit(String[] args) throws Exception {
 
         //Primero, se leen los argumentos recibidos en la invocación de la clase
-        String assetName = args[0];
-        String host = args[1];
+        assetName = args[0];
+        host = args[1];
 
         //A continuación, se definen el resto de parámetros que van a hacer falta para crear el gatewayAgent
         String localHostName = InetAddress.getLocalHost().getHostName();
@@ -141,17 +144,32 @@ public class ACL_HTTP_Gateway {
         //Primero inicializo las variables que voy a necesitar
         String result = null;
         String service;
-        String body;
-        HashMap cmdHashMap;
+        HashMap<String,String> body = new HashMap<>();
+        HashMap<String,Object> cmdHashMap = new HashMap<>();
 
         //Después, transformo el mensaje recibido de vuelta en un HashMap
         cmdHashMap = new Gson().fromJson(cmd, HashMap.class);
 
-        //Obtengo el tipo de servicio
-        service = cmdHashMap.get("Service").toString();
+        //Se eliminan los decimales de los valores numéricos
+        for(Map.Entry<String,Object> item : cmdHashMap.entrySet()){
+            if (item.getValue() instanceof Double){
+                cmdHashMap.put(item.getKey(), String.valueOf(Math.round((Double) item.getValue())));
+            }
+        }
+
+
+        //Obtengo el tipo de servicio y compruebo qué tipo de petición es (0=GET,1=POST)
+        service = cmdHashMap.get("Operation_Ref_Service_Type").toString();
+        if (service.equals("0")){
+            service="GET_";
+        } else if (service.equals("1")){
+            service="POST_";
+        }
+
+        service=service+assetName;
 
         //Obtengo el nombre y valor de los parámetros
-         body = (String) cmdHashMap.get("Parameters");
+//         body = (String) cmdHashMap.get("Parameters");
 
         //Después ejecuto el switch
         switch (service) {
@@ -173,10 +191,14 @@ public class ACL_HTTP_Gateway {
                 break;
             case "POST_PA":
 
+                //Obtengo el nombre y el valor de los parámetros
+                body.put("Ref_Subproduct_Type", String.valueOf(cmdHashMap.get("Id_Ref_Subproduct_Type")));
+                String bodyJson = new Gson().toJson(body);
+
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_PA = Unirest.post("http://127.0.0.1:1880/Request/ManufacturingStation/PA")
                         .header("Content-type", "application/json")
-                        .body(body)
+                        .body(bodyJson)
                         .asJson();
 
                 //Solo me quedo con el contenido si la comunicación ha sido corecta

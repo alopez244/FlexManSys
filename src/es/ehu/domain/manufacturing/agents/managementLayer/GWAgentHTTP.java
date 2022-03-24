@@ -18,7 +18,6 @@ public class GWAgentHTTP extends GatewayAgent {
     protected void processCommand(Object _command) {
 
         //Se comprueba si el objeto recibido es del tipo esperado
-        System.out.println("-->Gateway processes execute");
         if(!(_command instanceof StructMessage)){
             System.out.println("---Error, unexpected type");
             releaseCommand(_command);
