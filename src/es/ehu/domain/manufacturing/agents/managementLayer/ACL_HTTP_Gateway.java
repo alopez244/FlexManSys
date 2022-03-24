@@ -168,9 +168,6 @@ public class ACL_HTTP_Gateway {
 
         service=service+assetName;
 
-        //Obtengo el nombre y valor de los parámetros
-//         body = (String) cmdHashMap.get("Parameters");
-
         //Después ejecuto el switch
         switch (service) {
             case "POST_Reset":
@@ -214,10 +211,14 @@ public class ACL_HTTP_Gateway {
                 break;
             case "POST_PB":
 
+                //Obtengo el nombre y el valor de los parámetros
+                body.put("Ref_Subproduct_Type", String.valueOf(cmdHashMap.get("Id_Ref_Subproduct_Type")));
+                bodyJson = new Gson().toJson(body);
+
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_PB = Unirest.post("http://127.0.0.1:1880/Request/ManufacturingStation/PB")
                         .header("Content-type", "application/json")
-                        .body(body)
+                        .body(bodyJson)
                         .asJson();
 
                 //Solo me quedo con el contenido si la comunicación ha sido corecta
@@ -233,10 +234,14 @@ public class ACL_HTTP_Gateway {
                 break;
             case "POST_IA":
 
+                //Obtengo el nombre y el valor de los parámetros
+                body.put("Ref_Subproduct_Type", String.valueOf(cmdHashMap.get("Id_Ref_Subproduct_Type")));
+                bodyJson = new Gson().toJson(body);
+
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_IA = Unirest.post("http://127.0.0.1:1880/Request/ManufacturingStation/IA")
                         .header("Content-type", "application/json")
-                        .body(body)
+                        .body(bodyJson)
                         .asJson();
 
                 //Solo me quedo con el contenido si la comunicación ha sido corecta
@@ -252,10 +257,14 @@ public class ACL_HTTP_Gateway {
                 break;
             case "POST_IB":
 
+                //Obtengo el nombre y el valor de los parámetros
+                body.put("Ref_Subproduct_Type", String.valueOf(cmdHashMap.get("Id_Ref_Subproduct_Type")));
+                bodyJson = new Gson().toJson(body);
+
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_IB = Unirest.post("http://127.0.0.1:1880/Request/ManufacturingStation/IB")
                         .header("Content-type", "application/json")
-                        .body(body)
+                        .body(bodyJson)
                         .asJson();
 
                 //Solo me quedo con el contenido si la comunicación ha sido corecta
@@ -271,10 +280,13 @@ public class ACL_HTTP_Gateway {
                 break;
             case "POST_Robot": {
 
+                //Obtengo el nombre y el valor de los parámetros
+                String robotBody = String.valueOf(cmdHashMap.get("Operation_Parameters"));
+
                 //Recibo la respuesta al post
                 HttpResponse<JsonNode> post_Robot = Unirest.post("http://127.0.0.1:1880/Request/TrasportRobot")
                         .header("Content-type", "application/json")
-                        .body(body)
+                        .body(robotBody)
                         .asJson();
 
                 //Solo me quedo con el contenido si la comunicación ha sido corecta

@@ -3,7 +3,7 @@
 	<order reference="11">
 		<batch reference="111" numberOfItems="1" refProductID="1">
 			<PlannedItem productType="1" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="111" item_ID="1111">
-				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-11-05T11:20:00" plannedFinishTime="2021-11-05T11:21:00">
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2021-11-05T11:20:00" plannedFinishTime="2021-11-05T11:20:15">
 				</simpleOperation>
 				<product productType="BB" description="Base (big product)" state="Planned">
 					<rawMaterial id="BB" description="Base (big product)"/>
