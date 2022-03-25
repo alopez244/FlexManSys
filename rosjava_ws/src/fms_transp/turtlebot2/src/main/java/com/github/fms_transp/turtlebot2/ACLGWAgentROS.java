@@ -68,7 +68,16 @@ import com.github.rosjava.fms_transp.turtlebot2.GWagentROS;
 
 public class ACLGWAgentROS extends AbstractNodeMain {
 
-  public ACLGWAgentROS() {
+  public String TransportName;
+  public String TransportGateway;
+
+  public String PubTopicName;
+  public String SubTopicName;
+
+  public ACLGWAgentROS(String Transport, String Gateway) {
+
+    TransportName = Transport;
+    TransportGateway = Gateway;
 
     try {
       //Inicializamos el apendice de agente de este nodo ROS instanciando la clase GWagentROS
@@ -96,16 +105,14 @@ public class ACLGWAgentROS extends AbstractNodeMain {
     pp.setProperty(Profile.MAIN_HOST, host);
     //pp.setProperty(Profile.MAIN_HOST, "10.109.11.45");
 
-    System.out.println("*********************");
-    System.out.println(host);
-    System.out.println("*********************");
-
     pp.setProperty(Profile.MAIN_PORT, port);
     pp.setProperty(Profile.LOCAL_PORT, port);
 
     // Creamos un contenedor, el cual por defecto en JADE anade "Control" al inicio
-    // Lo modificamos para T_01
-    java.lang.String containerName = "GatewayContT_01";
+    // Lo modificamos para T_01, T_02, T_03 o T_04, segun lo especificado en el arranque del agente de transporte
+
+    //java.lang.String containerName = "GatewayContT_01";
+    java.lang.String containerName = "GatewayCont"+TransportGateway;
     pp.setProperty(Profile.CONTAINER_NAME, containerName);
 
     // Aqui es donde se instancia a la clase GWagentROS
@@ -130,7 +137,8 @@ public class ACLGWAgentROS extends AbstractNodeMain {
 
     NodeConfiguration nodeConfiguration = NodeConfiguration.newPrivate();
     nodeConfiguration.setMasterUri(masterURI);
-    nodeConfiguration.setNodeName("GWAgent");
+    String NodeName = "ACLGWAgentROS_"+TransportName;
+    nodeConfiguration.setNodeName(NodeName);
 
     NodeMain nodeMain = (NodeMain) this;
     NodeMainExecutor nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
@@ -145,22 +153,60 @@ public class ACLGWAgentROS extends AbstractNodeMain {
 
   }
 
-  @Override
+    @Override
   public void onStart(ConnectedNode connectedNode) {
 
     // Para poder mostrar datos por pantalla
 
     final Log log = connectedNode.getLog();
 
-    // Definimos el publicista en el nodo de coordenadas
+    switch (TransportName){
 
-    final Publisher<std_msgs.String> publisher =
-            connectedNode.newPublisher("/flexmansys/coordenada/leonardo", std_msgs.String._TYPE);
+      case "LEONARDO":
 
-    // Definimos la suscripcion al nodo de estado del transporte leonardo
+        PubTopicName = "/flexmansys/coordenada/leonardo";
+        SubTopicName = "/flexmansys/state/leonardo";
 
-    final Subscriber<turtlebot_transport_flexmansys.TransportUnitState> subscriber = connectedNode.newSubscriber(
-            "/flexmansys/state/leonardo", turtlebot_transport_flexmansys.TransportUnitState._TYPE);
+        break;
+
+      case "RAPHAEL":
+
+        PubTopicName = "/flexmansys/coordenada/raphael";
+        SubTopicName = "/flexmansys/state/raphael";
+
+        break;
+
+      case "DONATELLO":
+
+        PubTopicName = "/flexmansys/coordenada/donatello";
+        SubTopicName = "/flexmansys/state/donatello";
+
+        break;
+
+      case "MICHELANGELO":
+
+        PubTopicName = "/flexmansys/coordenada/michelangelo";
+        SubTopicName = "/flexmansys/state/michelangelo";
+
+        break;
+
+      default:
+
+       System.out.println("************************************************************");
+       System.out.println("Transporte no reconocido, compruebe el argumento introducido");
+       System.out.println("************************************************************");
+
+       break;
+
+    }
+
+      final Publisher<std_msgs.String> publisher =
+              connectedNode.newPublisher(PubTopicName, std_msgs.String._TYPE);
+
+      // Definimos la suscripcion al nodo de estado del transporte leonardo
+
+      final Subscriber<turtlebot_transport_flexmansys.TransportUnitState> subscriber = connectedNode.newSubscriber(
+              SubTopicName, turtlebot_transport_flexmansys.TransportUnitState._TYPE);
 
       connectedNode.executeCancellableLoop(new CancellableLoop() {
 
@@ -349,7 +395,21 @@ public class ACLGWAgentROS extends AbstractNodeMain {
     }
 
   public static void main(String[] args) {
-    ACLGWAgentROS GWAgentObject = new ACLGWAgentROS();
+
+    // Los argumentos de entrada, son los siguientes y en este orden:
+    // arg[0]: Nombre del transporte (e.g: LEONARDO,RAPHAEL,...)
+    // arg[1]: Numero de Gateway (e.g: T_01,T_02,...) Se corresponde al numero de agente de transporte.
+
+    String TransportUnitName = args[0];
+    String TransportGatewayNumber = args[1];
+
+    ACLGWAgentROS GWAgentObject = new ACLGWAgentROS(TransportUnitName,TransportGatewayNumber);
+    System.out.println("***********************************************************************");
+    System.out.println("Se ha solicitado el arranque del Gateway del transporte: " + args [0]);
+    System.out.println("El transporte tendra el Gateway respectivo: " + args [1]);
+    System.out.println("***********************************************************************");
+
+
   }
 
   }

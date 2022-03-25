@@ -392,7 +392,48 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                     myAgent.ActualState = javaTranspState.getTransport_unit_state();
                     System.out.println(myAgent.transport_unit_name + " Transport is calibrating");
 
-                    // TODO: Verificar si el transporte entra al estado "FREEWAY" durante su calibracion
+                }
+
+            }
+
+            if (Objects.equals(myAgent.ActualState, "RECOVERY")){
+
+                // TODO: Notificar que el transporte ha encontrado un obstaculo en el camino al SMA
+
+                myAgent.ActualState = javaTranspState.getTransport_unit_state();
+                myAgent.cameraObstacle = javaTranspState.getDetected_obstacle_camera();
+                myAgent.bumperObstacle = javaTranspState.getDetected_obstacle_bumper();
+
+                if (TransportOperative) {
+
+                    /* EL transporte ha entrado a RECOVERY desde OPERATIVE */
+
+
+                    System.out.println(myAgent.transport_unit_name + " Transport needs assistance, obstacle detected during operation");
+
+                    if (!myAgent.cameraObstacle && !myAgent.bumperObstacle){
+
+                        /* Si ya no se detectan obstaculos segun la camara y el parachoques, la persona operaria ha retirado el obstaculo, via libre*/
+
+                        sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "ComandoCoordenada", "1234", "FREEWAY", myAgent);
+
+                    }
+
+                }
+
+                else {
+
+                    /* EL transporte ha entrado a RECOVERY desde CALIBRATION */
+
+                    System.out.println(myAgent.transport_unit_name + " Transport needs assistance, obstacle detected during calibration");
+
+                    if (!myAgent.cameraObstacle && !myAgent.bumperObstacle){
+
+                        /* Si ya no se detectan obstaculos segun la camara y el parachoques, la persona operaria ha retirado el obstaculo, via libre*/
+
+                        sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "ComandoCoordenada", "1234", "FREEWAY", myAgent);
+
+                    }
 
                 }
 
@@ -447,18 +488,12 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 // El transporte ha efectuado su tarea correctamente, ha vuelto al estado ACTIVE, esto indica que
                 // el transporte esta preparado para recibir nuevas tareas.
 
-
                 TransportOperative = false;
                 System.out.println(myAgent.transport_unit_name + " Transport ended his task");
 
             }
 
         }
-
-
-
-
-
 
     }
 

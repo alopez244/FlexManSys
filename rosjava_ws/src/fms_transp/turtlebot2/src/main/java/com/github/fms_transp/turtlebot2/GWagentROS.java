@@ -21,8 +21,12 @@ public class GWagentROS extends GatewayAgent {
 
     private String msg_content = null;
     StructTransportUnitState TUS_object = new StructTransportUnitState();
-    boolean TUS_object_flag = false;
+
+    public boolean TUS_object_flag = false;
     public boolean TransportAgent_Init = false;
+
+    public String TransportGatewayContainer;
+    public String TransportAgentAID;
 
     @Override
     protected void processCommand(java.lang.Object _command) {
@@ -44,6 +48,7 @@ public class GWagentROS extends GatewayAgent {
 
         System.out.println("***************************************************");
         System.out.println("Se ha inicializado el ACLGWAgentROS");
+        System.out.println("***************************************************");
 
         // La accion init no devuelve ningun contenido
 
@@ -114,8 +119,7 @@ public class GWagentROS extends GatewayAgent {
 
               ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
               //ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
-              //"TransportAgent" Nombre que se le da al inicializar el agente en la plataforma JADE
-              AID TransportAgent = new AID("transport1", false);
+              AID TransportAgent = new AID(TransportAgentAID, false);
               //AID TransportAgent = new AID("TransportAgent1", false);
               msg.addReceiver(TransportAgent);
               msg.setOntology("assetdata");
@@ -151,14 +155,51 @@ public class GWagentROS extends GatewayAgent {
       MessageTemplate matchConversationID = MessageTemplate.MatchConversationId("1234");
 
       final MessageTemplate messageTemplate =  MessageTemplate.and(MessageTemplate.and(matchPerformative, matchOntology), matchConversationID);
-      /*
-      // Parametros de comunicacion ACL para el primer contacto con el Agent Transporte
-      MessageTemplate matchPerformative_Transp = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
-      MessageTemplate matchOntology_Transp = MessageTemplate.MatchOntology("check_asset");
-      MessageTemplate matchConversationID_Transp = MessageTemplate.MatchConversationId("0");
 
-      final MessageTemplate messageTemplate_TransportAgent_Setup =  MessageTemplate.and(MessageTemplate.and(matchPerformative_Transp, matchOntology_Transp), matchConversationID_Transp);
-      */
+      // Para obtener el nombre del contenedor JADE en el que se situa el GWAgent
+
+        jade.core.Location location = this.here();
+        TransportGatewayContainer = location.getName();
+
+        switch (TransportGatewayContainer){
+
+            case "GatewayContT_01":
+
+                TransportAgentAID = "transport1";
+
+                break;
+
+            case "GatewayContT_02":
+
+                TransportAgentAID = "transport2";
+
+                break;
+
+            case "GatewayContT_03":
+
+                TransportAgentAID = "transport3";
+
+                break;
+
+            case "GatewayContT_04":
+
+                TransportAgentAID = "transport4";
+
+                break;
+
+            default:
+
+                System.out.println("************************************************************");
+                System.out.println("Contenedor reconocido, compruebe el argumento introducido a ACLGWAgentROS");
+                System.out.println("************************************************************");
+
+                break;
+
+        }
+
+
+
+
         addBehaviour(new CyclicBehaviour() {
 
         public void action() {
@@ -179,24 +220,6 @@ public class GWagentROS extends GatewayAgent {
         }
 
       });
-        /*
-
-        addBehaviour(new CyclicBehaviour() {
-
-            public void action() {
-
-                ACLMessage msg_Transp = receive(messageTemplate_TransportAgent_Setup);
-
-                if(msg_Transp != null) {
-
-                    System.out.println("Se ha realizado contacto con el agente Transporte");
-
-                }
-
-            }
-
-        }); */
-
 
     }
 }

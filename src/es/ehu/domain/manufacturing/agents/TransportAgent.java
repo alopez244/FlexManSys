@@ -33,6 +33,10 @@ public class TransportAgent extends DomResAgentTemplate{
     /* Porcentaje de bateria */
     public Float battery;
 
+    /* Flags de presencia de obstaculo */
+    public boolean bumperObstacle;
+    public boolean cameraObstacle;
+
     /* Listado de posiciones clave (punto de carga, almacen de material, entrada de material KUKA, salida material KUKA) */
     public ArrayList<ArrayList<ArrayList<String>>> keyPosition;
 
@@ -90,25 +94,6 @@ public class TransportAgent extends DomResAgentTemplate{
 
     }
 
-    /* EJECUCION NORMAL AGENTE TRANSPORTE */
-
-    /*
-    public void setup() {
-
-        addBehaviour(new CyclicBehaviour() {
-
-            public void action() {
-
-                    System.out.println("**********************************");
-                    System.out.println("HOLA");
-                    //block();
-
-            }
-
-
-        });
-    }
-    */
 
     /* MUERTE AGENTE TRANSPORTE */
 
