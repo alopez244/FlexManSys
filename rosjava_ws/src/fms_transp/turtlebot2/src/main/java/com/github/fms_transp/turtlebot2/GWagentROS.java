@@ -87,7 +87,7 @@ public class GWagentROS extends GatewayAgent {
           msg.setOntology("asset_state");
           msg.setConversationId("1234"); */
 
-          if ( TransportAgent_Init == false) {
+          if (TransportAgent_Init == false) {
 
               ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
               //"TransportAgent" Nombre que se le da al inicializar el agente en la plataforma JADE
@@ -190,7 +190,7 @@ public class GWagentROS extends GatewayAgent {
             default:
 
                 System.out.println("************************************************************");
-                System.out.println("Contenedor reconocido, compruebe el argumento introducido a ACLGWAgentROS");
+                System.out.println("Contenedor no reconocido, compruebe el argumento introducido a ACLGWAgentROS");
                 System.out.println("************************************************************");
 
                 break;

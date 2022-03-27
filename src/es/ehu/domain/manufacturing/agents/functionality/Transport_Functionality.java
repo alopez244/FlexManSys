@@ -81,18 +81,19 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
         /* En primer lugar, hay que comprobar la conectividad con el asset en dos pasos: */
         /* Paso 1: contacto con el gatewayAgent y espero respuesta (si no hay, no se puede continuar con el registro) */
         //sendACLMessage(ACLMessage.REQUEST,gatewayAgentID,"ping",myAgent.getLocalName()+"_"+ conversationId++,"",myAgent);
-        //ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 300);
+        //sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "ping","0",null,myAgent);
+        //ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 1000);
 
-        /*if(answer_gw==null){
+        //if(answer_gw==null){
         //    System.out.println("GW is not online. Start GW and repeat.");
         //    System.exit(0);
-        }*/
+        //}
 
         /* Paso 2: contacto con el asset a través del gatewayAgent y espero respuesta (si no hay, no se puede conitnuar con el registro) */
         //sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "check_asset",myAgent.getLocalName()+"_"+ conversationId++,"ask_state",myAgent);
         //ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 300);
 
-        // Esperamos cuatro segundos a recibir mensajes por parte del ACLGWAgentROS
+        // Esperamos cuatro segundos a recibir mensajes por parte del ACLGWAgentROS para verificar que esta vivo
         ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 4000);
         sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "asset_checked","0",null,myAgent);
 
@@ -303,9 +304,15 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
         /* En primer lugar se comprueba si el transporte está realizando alguna operación (workInProgress=TRUE) */
         if (!workInProgress){
 
+            // Si entramos aqui, el Transporte se encuentra libre y sin un plan asignado
+
+            System.out.println("1");
+
             /* Si el transporte está libre, se comprueba si hay tareas en el plan
             * La cabecera del modelo ocupa una posición, por lo que para que haya tareas, el tamaño del modelo tiene que ser de 2 o más */
             if (myAgent.transportPlan.size() >= 2) {
+
+                System.out.println("2");
 
                 /* Se leen las posiciones de la primera operación del plan (el tercer elemento del plan) */
                 /* Recordatorio: del segundo elemento del modelo (primera operación), se obtiene el cuarto elemento (valores de sus atributos)...
@@ -327,6 +334,8 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                         /* Compruebo si la posición i del array allPositions coincide con la posición j de keyPosition */
                         if (myAgent.keyPosition.get(0).get(2).get(j).equals(allPositions[i])){
 
+                            System.out.println("3");
+
                             /* Si coinciden, obtengo la coordenada */
                             allCoordinates[i]=myAgent.keyPosition.get(0).get(3).get(j);
                         }
@@ -345,16 +354,24 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 /* Después, se prepara el mensaje y se envía al gatewayAgent */
                 sendACLMessage(ACLMessage.REQUEST,gatewayAgentID,"data",myAgent.getLocalName()+"_"+ conversationId++, String.valueOf(gson),myAgent);
 
+                System.out.println("4");
+
                 /* Por último, pongo el workInProgress a true*/
                 workInProgress=true;
 
             } else { /* Si el transporte está libre y además no tiene tareas asignadas, debe volver a la estación de carga */
 
-                //TODO: Enviar un mensaje al transporte para hacer que vuelva al puesto de carga (hablar en la reunión)
+                System.out.println("5");
 
+                //Si no tiene ninguna tarea mas asignada, el transporte debe de volver a su estacion de carga
+
+                sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "ComandoCoordenada", "1234", "DOCK", myAgent);
+                System.out.println(myAgent.transport_unit_name + " Transport going to docking station");
             }
         }else{
-            System.out.println("The asset is busy"); /* Dejar para debug, luego comentar o quitar*/
+
+            /* Dejar para debug, luego comentar o quitar*/
+            System.out.println(myAgent.transport_unit_name + " Transport has a plan");
         }
     }
 
@@ -398,7 +415,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
             if (Objects.equals(myAgent.ActualState, "RECOVERY")){
 
-                // TODO: Notificar que el transporte ha encontrado un obstaculo en el camino al SMA
+                // Futuro TODO: Notificar que el transporte ha encontrado un obstaculo en el camino al SMA para poder retirarlo
 
                 myAgent.ActualState = javaTranspState.getTransport_unit_state();
                 myAgent.cameraObstacle = javaTranspState.getDetected_obstacle_camera();
@@ -473,8 +490,22 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 // El transporte esta en operacion, este flag permitira saber cuando el transporte ha vuelto a estado
                 // ACTIVE habiendo estado en operacion anteriormente
 
+                if (!TransportOperative){
+
+                    // Cuando entre por primera vez a Operative, el flag TransportOperative sera false, por lo
+                    // que se aprovecha a recoger el momento exacto en el que empieza a llevar a cabo la tarea
+                    // que le ha hecho entrar al transporte al estado de Operative.
+
+                    myAgent.hour = javaTranspState.getHour();
+                    myAgent.minute = javaTranspState.getMinute();
+                    myAgent.seconds = javaTranspState.getSeconds();
+
+                    myAgent.initialTimeStamp = myAgent.hour + ":" + myAgent.minute + ":" + myAgent.seconds + " h";
+
+                }
+
                 TransportOperative = true;
-                System.out.println(myAgent.transport_unit_name + " Transport started a new task");
+                System.out.println(myAgent.transport_unit_name + " Transport started a new task at " + myAgent.initialTimeStamp);
 
             }
 
@@ -483,13 +514,60 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
             // El transporte o bien acaba de terminar una operacion o bien esta listo para operar y recibir tareas
             System.out.println(myAgent.transport_unit_name + " Transport is active");
 
+            // Se actualiza el valor de estos parámetros en el SystemModelAgent
+            String cmd = "set "+seId+" battery="+ myAgent.battery;
+            ACLMessage reply = null;
+            try {
+                reply = myAgent.sendCommand(cmd);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            cmd = "set "+seId+" currentPos_X="+ myAgent.currentPos_X;
+            try {
+                reply = myAgent.sendCommand(cmd);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            cmd = "set "+seId+" currentPos_Y="+ myAgent.currentPos_Y;
+            try {
+                reply = myAgent.sendCommand(cmd);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
             if (TransportOperative){
 
                 // El transporte ha efectuado su tarea correctamente, ha vuelto al estado ACTIVE, esto indica que
                 // el transporte esta preparado para recibir nuevas tareas.
 
-                TransportOperative = false;
                 System.out.println(myAgent.transport_unit_name + " Transport ended his task");
+
+                AID serviceRequester = new AID(myAgent.transportPlan.get(1).get(3).get(1), false);
+                AID serviceReceiver = new AID(myAgent.transportPlan.get(1).get(3).get(2), false);
+
+                myAgent.hour = javaTranspState.getHour();
+                myAgent.minute = javaTranspState.getMinute();
+                myAgent.seconds = javaTranspState.getSeconds();
+
+                myAgent.finalTimeStamp = myAgent.hour + ":" + myAgent.minute + ":" + myAgent.seconds + " h";
+                System.out.println(myAgent.transport_unit_name + " Transport ended his task at " + myAgent.finalTimeStamp);
+
+                // Se envía un mensaje al solicitante del servicio
+                sendACLMessage(ACLMessage.INFORM,serviceRequester,"data",myAgent.getLocalName()+"_"+ conversationId++,"initialTimeStamp="+ myAgent.initialTimeStamp +" finalTimeStamp="+ myAgent.finalTimeStamp,myAgent);
+
+                // Se comprueba si el solicitante y el receptor del servicio son distintos agentes, para enviar un segundo mensaje si es necesario
+                if (serviceReceiver != serviceRequester){
+                    sendACLMessage(ACLMessage.INFORM,serviceReceiver,"data",myAgent.getLocalName()+"_"+ conversationId++,"initialTimeStamp="+ myAgent.initialTimeStamp +" finalTimeStamp="+myAgent.finalTimeStamp,myAgent);
+                }
+
+                // Se continúa eliminando esta tarea del plan (la primera tarea de la lista ocupa la segunda posición del submodelo)
+                myAgent.transportPlan.remove(1);
+
+                // Por último, se resetea el flag para indicar que el transaporte ha quedado libre
+                workInProgress = false;
+                TransportOperative = false;
 
             }
 

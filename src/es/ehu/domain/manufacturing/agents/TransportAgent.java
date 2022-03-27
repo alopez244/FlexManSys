@@ -37,6 +37,14 @@ public class TransportAgent extends DomResAgentTemplate{
     public boolean bumperObstacle;
     public boolean cameraObstacle;
 
+    /* Variables de tiempo*/
+    public String initialTimeStamp;
+    public String finalTimeStamp;
+
+    public int hour;
+    public int minute;
+    public int seconds;
+
     /* Listado de posiciones clave (punto de carga, almacen de material, entrada de material KUKA, salida material KUKA) */
     public ArrayList<ArrayList<ArrayList<String>>> keyPosition;
 
@@ -95,7 +103,7 @@ public class TransportAgent extends DomResAgentTemplate{
     }
 
 
-    /* MUERTE AGENTE TRANSPORTE */
+    /* FINALIZACION AGENTE TRANSPORTE */
 
     protected void takeDown() {
         try {
