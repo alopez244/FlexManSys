@@ -344,25 +344,38 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
                 /* Declaro la estructura en la que voy a formatear el mensaje */
                 StructTranspRequest javaTranspRequest = new StructTranspRequest();
-
                 javaTranspRequest.setTask(allCoordinates);
 
                 /* Ahora se formatea la estructura a json*/
-                Gson gson = new Gson();
-                gson.toJson(javaTranspRequest);
+                // EL tamanio de la estructura de Json parece ser demasiado grande, hay problemas de lectura en el
+                // GatewayAgent, se propone pasar las posiciones del string allCoordinates de una a una
+                //Gson gson_request = new Gson();
+                //gson_request.toJson(javaTranspRequest);
 
                 /* Después, se prepara el mensaje y se envía al gatewayAgent */
-                sendACLMessage(ACLMessage.REQUEST,gatewayAgentID,"data",myAgent.getLocalName()+"_"+ conversationId++, String.valueOf(gson),myAgent);
+                //sendACLMessage(ACLMessage.REQUEST,gatewayAgentID,"data",myAgent.getLocalName()+"_"+ conversationId++, String.valueOf(gson),myAgent);
 
-                System.out.println("4");
+                /* Se define el numero de coordenadas del TransportPlan correspondiente a pasar al transporte */
+
+                // Se envia previamente la cantidad de tareas que se van a recibir
+                sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "PlanCoordenadas", "1234", String.valueOf(allCoordinates.length), myAgent);
+
+                for (int i = 0; i < allCoordinates.length; i++) {
+
+                    sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "PlanCoordenadas", "1234", allCoordinates[i], myAgent);
+
+                }
+
+                /* Indicamos al transporte que el numero de coordenadas */
+
+                sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "PlanCoordenadas", "1234", "END", myAgent);
 
                 /* Por último, pongo el workInProgress a true*/
                 workInProgress=true;
 
-            } else { /* Si el transporte está libre y además no tiene tareas asignadas, debe volver a la estación de carga */
+            } else {
 
-                System.out.println("5");
-
+                /* Si el transporte está libre y además no tiene tareas asignadas, debe volver a la estación de carga */
                 //Si no tiene ninguna tarea mas asignada, el transporte debe de volver a su estacion de carga
 
                 sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "ComandoCoordenada", "1234", "DOCK", myAgent);
@@ -415,7 +428,8 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
             if (Objects.equals(myAgent.ActualState, "RECOVERY")){
 
-                // Futuro TODO: Notificar que el transporte ha encontrado un obstaculo en el camino al SMA para poder retirarlo
+                // A futuro faltaria notificar que el transporte ha encontrado un obstaculo en el camino al SMA
+                // para que un operario proceda a retirar el obstaculo
 
                 myAgent.ActualState = javaTranspState.getTransport_unit_state();
                 myAgent.cameraObstacle = javaTranspState.getDetected_obstacle_camera();
@@ -424,7 +438,6 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 if (TransportOperative) {
 
                     /* EL transporte ha entrado a RECOVERY desde OPERATIVE */
-
 
                     System.out.println(myAgent.transport_unit_name + " Transport needs assistance, obstacle detected during operation");
 

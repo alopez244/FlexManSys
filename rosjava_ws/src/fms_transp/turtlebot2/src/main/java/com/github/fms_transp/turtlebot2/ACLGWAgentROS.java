@@ -374,6 +374,7 @@ public class ACLGWAgentROS extends AbstractNodeMain {
              // para obtener convertir a formato JSON.  es decir, una especie de string que
              // cuenta con una estructura tipo diccionario estilo python.
              command.setTransport_state(TUS_object);
+             command.setTransport_machine_state(TUS_object.getTransport_unit_state());
 
             try {
               JadeGateway.execute(command);

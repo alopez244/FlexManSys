@@ -14,6 +14,7 @@ public class StructCommand {
     private String content;
     private StructTransportUnitState transport_state;
     private java.lang.Object content_state;
+    private String transport_machine_state;
 
     public StructCommand() {}
 
@@ -21,10 +22,12 @@ public class StructCommand {
     public void setContent (String _content) { this.content = _content; }
     public void setTransport_state (StructTransportUnitState _transport_state) { this.transport_state = _transport_state; }
     public void setContent_state (java.lang.Object _content_state) { this.content_state = _content_state; }
+    public void setTransport_machine_state (String _transport_machine_state) { this.transport_machine_state = _transport_machine_state; }
 
     public String getAction () { return this.action; }
     public String getContent () { return this.content; }
     public StructTransportUnitState getTransport_state () { return this.transport_state; }
     public java.lang.Object getContent_state () { return this.content_state; }
+    public String getTransport_machine_state () {return this.transport_machine_state;}
 
 }
