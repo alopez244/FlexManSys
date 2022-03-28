@@ -25,12 +25,12 @@ public class ExternalJADEgw {
        // String host = "192.168.187.130";              // host of Iñigo PC
 
 //        String host = "192.168.249.1";              // host of Diego PC
-        String host = "192.168.137.17";  //where is GUI
+        String host = "192.168.1.100";  //where is GUI
 
         //String localHost = "192.168.187.130";              //Local host of PLC
 
 //        String localHost = "192.168.249.1";              //Local host for PLC Diego
-        String localHost = "192.168.137.17";   //where the GW is executing
+        String localHost = "192.168.1.100";   //where the GW is executing
 
         String port = "1099";                   //Port on which the agent manager is running
 
@@ -59,12 +59,12 @@ public class ExternalJADEgw {
         //String host = "192.168.187.130";              // host of Alejandro PC
 
 //        String host = "192.168.249.1";              // host of Diego PC
-        String host = "192.168.137.17";             //host testing PC
+        String host = "192.168.1.100";             //host testing PC
 
 //        String localHost = "192.168.2.3";              //Local host of PLC
 //
 //        String localHost = "192.168.249.1";              //Local host of Diego PLC
-        String localHost = "192.168.137.17";        //Local host testing PLC
+        String localHost = "192.168.1.100";        //Local host testing PLC
 
         String port = "1099";                   //Port on which the agent manager is running
 

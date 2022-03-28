@@ -11,6 +11,7 @@ public class StructMessage {
     private HashMap<String,HashMap<String,HashMap<String,String>>> testResults;
     private HashMap<String,HashMap<String,HashMap<String,String>>> testResultsApp;
     private HashMap<String,HashMap<String,HashMap<String,String>>> testResultsErr;
+    private HashMap<String,HashMap<String,HashMap<String,String>>> testResultsNeg;
 
 
     public StructMessage() {
@@ -34,6 +35,8 @@ public class StructMessage {
     }
 
     public void setTestResultsErr(HashMap _resultsErr) { this.testResultsErr = _resultsErr; }
+
+    public void setTestResultsNeg(HashMap _resultsNeg) { this.testResultsNeg = _resultsNeg; }
 
     public void setPerformative(int _performative) {
         this.performative = _performative;
@@ -61,6 +64,10 @@ public class StructMessage {
 
     public HashMap readTestResultsApp() {
         return this.testResultsApp;
+    }
+
+    public HashMap readTestResultsNeg() {
+        return this.testResultsNeg;
     }
 
     public boolean readNewData() {

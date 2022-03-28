@@ -505,6 +505,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                                 myAgent.AddToExpectedMsgs(msg_to_batchagent);
 
                             }else{    //No encontrada replica en running para este batch. Puede que otro agente lo haya denunciado previamente o que el batch aun no se haya iniciado
+
                                 posponed_msgs_to_batch = new ArrayList<ACLMessage>();
                                 ACLMessage msg_to_buffer=new ACLMessage(ACLMessage.INFORM);
                                 msg_to_buffer.setConversationId("PLCdata");

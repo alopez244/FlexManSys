@@ -298,6 +298,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                         break;
 
                                     case NEG_WON: //he ganado la negociación y termina correctamente
+
                                         ACLMessage inform_winner = new ACLMessage(ACLMessage.INFORM);
                                         inform_winner.setOntology(ONT_NEGOTIATE);
                                         inform_winner.setConversationId(conversationId);
@@ -377,6 +378,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                                 inform_winner.addReceiver(id);
                                             }
                                         }
+
                                         myAgent.send(inform_winner);
                                         busy = false;
 //                                negotiationRuntime.remove(conversationId); // borrar negotiationRuntime

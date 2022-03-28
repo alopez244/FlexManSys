@@ -41,6 +41,8 @@ public class AgentToCSVgw {
 
         HashMap<String, HashMap<String, HashMap<String, String>>> ParentResultsErr = (HashMap<String, HashMap<String, HashMap<String, String>>>) resultsArray [2];
 
+        HashMap<String, HashMap<String, HashMap<String, String>>> ParentResultsNeg = (HashMap<String, HashMap<String, HashMap<String, String>>>) resultsArray [3];
+
 
 //        HashMap<String, HashMap<String, String>> testResultsApp = (HashMap<String, HashMap<String, String>>) resultsArray [1];
 
@@ -59,7 +61,7 @@ public class AgentToCSVgw {
         testResultsCSV.add(new String[]{"Parent","Agent","Node","SchedulingTime (t1-t0)","BootTime (t2-t1)","ExecutionTime (t3-t2)","DeploymentTime (t3-t0)","LiveTime (t4-t3)"});
 
         //Itero todas las posiciones del HasMap de componentes
-        String t0="", t1="", t2="", t3="",t4="";
+        String t0="", t1="", t2="", t3="",t4="",t5="",t6="", t7="", t8="", t9="";
         for(Map.Entry<String, HashMap<String, HashMap<String, String>>> parent : ParentResults.entrySet()){
             if(parent.getKey().contains("mplan")){
                 t0=parent.getValue().get("planner").get("DeploymentRequestTime");
@@ -311,9 +313,17 @@ public class AgentToCSVgw {
             t2="";
             t3="";
             t4="";
+
+
             String agentname = " ";
 
+            String DetectionTime ="";
+            String ConfirmationTime ="";
+            String FuntionalityRecoveryTime ="";
+            String SystemRecoveryTime="";
+
             for (Map.Entry<String, HashMap<String, String>> agentErr : parentErr.getValue().entrySet()){
+
                 String ta0="";
                 String ta1="";
                 String ta2="";
@@ -343,26 +353,29 @@ public class AgentToCSVgw {
                         ta4=t4;
                     }
 
+
                     String [] data_raw = new String[] {parentErr.getKey(), agentname, ta0, ta1, ta2, ta3, ta4}; //Los datos raw se escriben por agente
                     testResultsErrCSV_raw.add(data_raw);
                 }
             }
-            String DetectionTime ="";
+
             if(!t1.equals("")&&!t0.equals("")){
                 DetectionTime = String.valueOf((Double.valueOf(t1)-Double.valueOf(t0))/1000);
             }
-            String ConfirmationTime ="";
+
             if(!t2.equals("")&&!t1.equals("")){
                 ConfirmationTime = String.valueOf((Double.valueOf(t2)-Double.valueOf(t1))/1000);
             }
-            String FuntionalityRecoveryTime ="";
+
             if(!t3.equals("")&&!t1.equals("")){
                 FuntionalityRecoveryTime = String.valueOf((Double.valueOf(t3)-Double.valueOf(t1))/1000);
             }
-            String SystemRecoveryTime="";
+
             if(!t4.equals("")&&!t1.equals("")){
                 SystemRecoveryTime = String.valueOf((Double.valueOf(t4)-Double.valueOf(t1))/1000);
             }
+
+
             //Generamos el array en el que metemos todos los datos sin restas y lo añadimos donde corresponde
 
 
@@ -393,6 +406,112 @@ public class AgentToCSVgw {
         }
 
 
+        //-----HASHMAP DE TIEMPOS DE CÁLCULO-----//
+
+        //Declaro la lista raw (tiempos sin restar)
+        List<String[]> testResultsNegCSV_raw = new ArrayList<>();
+
+        //Declaro la lista final (tiempos restados)
+        List<String[]> testResultsNegCSV = new ArrayList<>();
+
+        //Añado la cabecera raw
+        testResultsNegCSV_raw.add(new String[] {"Parent","Agent","t0_MemoryCalcStart","t1_MemoryCalcFinish","t2_CPUCalcStart","t3_CPUCalcFinish","t4_StartSendState","t5_GetStateDone","t6_MsgSentDone","t7_AcknowledgeGenerated"});
+
+        //Añado la cabecera final
+        testResultsNegCSV.add(new String[]{"Parent","Agent","MemoryCalcTime (t1-t0)","CPUCalcTime (t3-t2)","GetStateInterval (t5-t4)","MsgSendInterval (t6-t5)","AckGererationInterva (t7-t6)"});
+
+        //Itero todas las posiciones del HasMap de componentes
+
+        for(Map.Entry<String, HashMap<String, HashMap<String, String>>> parentNeg : ParentResultsNeg.entrySet()){
+            String agentname = " ";
+            for (Map.Entry<String, HashMap<String, String>> agentNeg : parentNeg.getValue().entrySet()){
+                t0="";
+                t1="";
+                t2="";
+                t3="";
+                t4="";
+                t5="";
+                t6="";
+                t7="";
+
+                String MemoryCalcTime ="";
+                String CPUCalcTime ="";
+                String GetStateInterval ="";
+                String MsgSendInterval ="";
+                String AckGererationInterval ="";
+                System.out.println(agentNeg.getKey());
+//                if(agentNeg.getKey().contains("mplanagent")||agentNeg.getKey().contains("orderagent")||agentNeg.getKey().contains("batchagent")){
+                    agentname=agentNeg.getKey();
+                    if(agentNeg.getValue().get("MemoryCalcStart")!=null){
+                        t0 = agentNeg.getValue().get("MemoryCalcStart");
+                    }
+                    if(agentNeg.getValue().get("MemoryCalcFinish")!=null){
+                        t1 = agentNeg.getValue().get("MemoryCalcFinish");  //QoS recibe la denuncia
+                    }
+                    if(agentNeg.getValue().get("CPUCalcStart")!=null){
+                        t2 = agentNeg.getValue().get("CPUCalcStart"); //D&D recibe confirmacion del QoS
+                    }
+                    if(agentNeg.getValue().get("CPUCalcFinish")!=null){
+                        t3 = agentNeg.getValue().get("CPUCalcFinish");  //El sistema ya puede funcionar (si procede)
+                    }
+                    if(agentNeg.getValue().get("StartSendState")!=null){
+                        t4 = agentNeg.getValue().get("StartSendState");  //El sistema ya puede funcionar (si procede)
+                    }
+                    if(agentNeg.getValue().get("GetStateDone")!=null){
+                        t5 = agentNeg.getValue().get("GetStateDone");  //El sistema ya puede funcionar (si procede)
+                    }
+                    if(agentNeg.getValue().get("MsgSentDone")!=null){
+                        t6 = agentNeg.getValue().get("MsgSentDone");  //El sistema ya puede funcionar (si procede)
+                    }
+                    if(agentNeg.getValue().get("AcknowledgeGenerated")!=null){
+                        t7 = agentNeg.getValue().get("AcknowledgeGenerated");  //El sistema ya puede funcionar (si procede)
+                    }
+
+                    String [] data_raw = new String[] {parentNeg.getKey(), agentname, t0, t1, t2, t3,t4,t5,t6,t7}; //Los datos raw se escriben por agente
+                    testResultsNegCSV_raw.add(data_raw);
+
+                    if(!t1.equals("")&&!t0.equals("")){
+                        MemoryCalcTime = String.valueOf((Double.valueOf(t1)-Double.valueOf(t0))/1000);
+                    }
+
+                    if(!t3.equals("")&&!t2.equals("")){
+                        CPUCalcTime = String.valueOf((Double.valueOf(t3)-Double.valueOf(t2))/1000);
+                    }
+                    if(!t5.equals("")&&!t4.equals("")){
+                        GetStateInterval = String.valueOf((Double.valueOf(t5)-Double.valueOf(t4))/1000);
+                    }
+                    if(!t6.equals("")&&!t5.equals("")){
+                        MsgSendInterval = String.valueOf((Double.valueOf(t6)-Double.valueOf(t5))/1000);
+                    }
+                    if(!t7.equals("")&&!t6.equals("")){
+                        AckGererationInterval  = String.valueOf((Double.valueOf(t7)-Double.valueOf(t6))/1000);
+                    }
+
+
+                    String[] data = new String[] {parentNeg.getKey(), agentname,MemoryCalcTime,CPUCalcTime,GetStateInterval, MsgSendInterval, AckGererationInterval};
+                    testResultsNegCSV.add(data);
+
+//                }
+            }
+        }
+        //Ruta al fichero raw (sin restas)
+        String NegCalcRawPath = "C:/FlexManSys/timestamps/NegCalc_raw.csv";
+        //Ruta al fichero final (con restas)
+        String NegCalcPath = "C:/FlexManSys/timestamps/NegCalc.csv";
+
+        //Ahora se escribe el tiempo de despliegue para los tres componentes
+        try {
+            CSVWriter writeNegCalc_raw = new CSVWriter(new FileWriter(NegCalcRawPath));
+            writeNegCalc_raw.writeAll(testResultsNegCSV_raw);
+            writeNegCalc_raw.close();
+
+            CSVWriter writeNegCalc = new CSVWriter(new FileWriter(NegCalcPath));
+            writeNegCalc.writeAll(testResultsNegCSV);
+            writeNegCalc.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static Object[] printData (){
@@ -400,13 +519,14 @@ public class AgentToCSVgw {
         HashMap<String, HashMap<String, HashMap<String, String>>> testResultsHM = new HashMap<>();
         HashMap<String, HashMap<String, HashMap<String, String>>> testResultsAppHM = new HashMap<>();
         HashMap<String, HashMap<String, HashMap<String, String>>> testResultsErrHM = new HashMap<>();
+        HashMap<String, HashMap<String, HashMap<String, String>>> testResultsNegHM = new HashMap<>();
         Properties pp = new Properties();
 
 //        pp.setProperty(Profile.MAIN_HOST, "192.168.249.1");
-        pp.setProperty(Profile.MAIN_HOST, "192.168.137.17");
+        pp.setProperty(Profile.MAIN_HOST, "192.168.1.100");
 
 //        pp.setProperty(Profile.LOCAL_HOST, "192.168.249.1");
-        pp.setProperty(Profile.LOCAL_HOST, "192.168.137.17");
+        pp.setProperty(Profile.LOCAL_HOST, "192.168.1.100");
 
         pp.setProperty(Profile.MAIN_PORT, "1099");
         pp.setProperty(Profile.LOCAL_PORT, "1099");
@@ -427,18 +547,21 @@ public class AgentToCSVgw {
             testResultsHM = strMessage.readTestResults();
             testResultsAppHM = strMessage.readTestResultsApp();
             testResultsErrHM = strMessage.readTestResultsErr();
+            testResultsNegHM = strMessage.readTestResultsNeg();
 
         } else {
             System.out.println("--No answer");
             testResultsHM = null;
             testResultsAppHM = null;
             testResultsErrHM = null;
+            testResultsNegHM = null;
         }
 
-        Object[] result = new Object[3];
+        Object[] result = new Object[4];
         result[0] = testResultsHM;
         result[1] = testResultsAppHM;
         result[2] = testResultsErrHM;
+        result[3] = testResultsNegHM;
         return result;
     }
 
@@ -446,10 +569,10 @@ public class AgentToCSVgw {
 
         Properties pp = new Properties();
 //        pp.setProperty(Profile.MAIN_HOST, "192.168.249.1");
-        pp.setProperty(Profile.MAIN_HOST, "192.168.137.17");
+        pp.setProperty(Profile.MAIN_HOST, "192.168.1.100");
 
 //        pp.setProperty(Profile.LOCAL_HOST, "192.168.249.1");
-        pp.setProperty(Profile.LOCAL_HOST, "192.168.137.17");
+        pp.setProperty(Profile.LOCAL_HOST, "192.168.1.100");
 
         pp.setProperty(Profile.MAIN_PORT, "1099");
         pp.setProperty(Profile.LOCAL_PORT, "1099");

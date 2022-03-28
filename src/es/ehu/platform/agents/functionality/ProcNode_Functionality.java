@@ -14,6 +14,7 @@ import es.ehu.platform.template.interfaces.*;
 import es.ehu.platform.utilities.Cmd;
 import es.ehu.platform.behaviour.*;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 
 public class ProcNode_Functionality implements BasicFunctionality, NegFunctionality{
@@ -27,6 +28,9 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
     private String ListAttrib="";
     private boolean firstime=true;
     private int TMSTMP_cnt=0;
+    private Timestamp T_Calc_start;
+    private Timestamp T_Calc_finish;
+
 
     @Override
     public Void init(MWAgent myAgent) {
@@ -80,13 +84,18 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
 
     @Override
     public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData) {
+        T_Calc_start = new Timestamp(System.currentTimeMillis());
         // approximation to the total amount of memory currently available for future allocated objects, measured in bytes
         String seFirstTransition = (String)negExternalData[5];
         if(ListAttrib.contains((String)negExternalData[0])){
             long used_node=0; //Si en la lista de atributos ya existe el parent se devuelve un valor no competente para perder automáticamente.
+            T_Calc_finish = new Timestamp(System.currentTimeMillis());
             return used_node;
         }else{
-                return Runtime.getRuntime().freeMemory();
+
+            long memory=Runtime.getRuntime().freeMemory();
+            T_Calc_finish = new Timestamp(System.currentTimeMillis());
+                return memory;
 //            return Runtime.getRuntime().freeMemory();
         }
     }
@@ -162,6 +171,10 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
                     ac = ((AgentController) myAgent.getContainerController().createNewAgent(agnID, seClass, new Object[]{"firstState=" + seFirstTransition, "redundancy=" + redundancy, "parentAgent=" + parentAgentID,"recovery=true"}));
                 }
                 ac.start();
+                get_timestamp(T_Calc_start,seID,agnID,"MemoryCalcStart");
+                get_timestamp(T_Calc_finish,seID,agnID,"MemoryCalcFinish");
+                T_Calc_start=new Timestamp(0);
+                T_Calc_finish=new Timestamp(0);
                 String parts[]=myAgent.getLocalName().split("pnodeagent");
                 sendCommand("set "+agnID+" node="+parts[1]); //Añade el número de nodo en el que se va a encontrar el agente
 
@@ -236,10 +249,11 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
         String contenido =null;
         if(type.equals("Node")){
             contenido = seID +","+agent+","+type+","+myAgent.getLocalName();
+        }else if (type.contains("MemoryCalc")){
+            contenido = seID +","+agent+","+type+","+String.valueOf(timestamp.getTime());
         }else{
             contenido = seID +","+agent+","+type+","+String.valueOf(timestamp.getTime());
-//            if(seID.contains("batch")){
-//                String appId =  "app"+seID.substring(seID.length()-3);
+
                 String contenido1 = "app,"+" ,NegotiationTime,"+String.valueOf(timestamp.getTime());
                 ACLMessage msg3 = new ACLMessage(ACLMessage.INFORM);
                 msg3.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
@@ -251,7 +265,11 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
 
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
         msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
-        msg.setOntology("timestamp");
+        if (type.contains("MemoryCalc")){
+            msg.setOntology("timestamp_neg");
+        }else{
+            msg.setOntology("timestamp");
+        }
         msg.setConversationId(myAgent.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
         msg.setContent(contenido);
         myAgent.send(msg);

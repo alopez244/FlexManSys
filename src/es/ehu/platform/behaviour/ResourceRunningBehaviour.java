@@ -99,7 +99,9 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
                         msg_to_release.setOntology(postponed_msgs.get(i).getOntology());
                         msg_to_release.setConversationId(postponed_msgs.get(i).getConversationId());
                         msg_to_release.addReceiver(new AID(new_target.getContent(),false));
+
                         myAgent.send(msg_to_release);  //se libera el mensaje retenido con nuevo destinatario
+                        myAgent.AddToExpectedMsgs(msg_to_release);
                     }
                     myAgent.msg_buffer.remove(parent.getContent());
                 }else{

@@ -12,8 +12,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+
+import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
 
 //import jade.util.leap.ArrayList;
 
@@ -51,6 +55,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 	private AID QoSID = new AID("QoSManagerAgent", false);
 	private AID DDID = new AID("D&D", false);
 	private boolean agent_block_flag =false;
+	private boolean update_replicas=false;
 	// Constructor. Create a default template for the entry messages
 	public RunningBehaviour(MWAgent a) {
 		super(a);
@@ -58,28 +63,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 		this.myAgent = a;
 //		this.template = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_DATA),
 //				MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-		this.template=
-				//templates batch
-				MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-				MessageTemplate.or(MessageTemplate.MatchOntology("askdelay"),
-				MessageTemplate.or(MessageTemplate.MatchContent("reset_timeout"),
-				MessageTemplate.or(MessageTemplate.MatchOntology("data"),
-				//templates order
-				MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchOntology("Information"),MessageTemplate.MatchConversationId("ItemsInfo")),
-				MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchContent("Batch completed"),MessageTemplate.MatchConversationId("Shutdown")),
-				MessageTemplate.or(MessageTemplate.MatchOntology("update_timeout"),
-				MessageTemplate.or(MessageTemplate.MatchOntology("delay"),
-				//templates mplan
-				MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchOntology("Information"),MessageTemplate.MatchConversationId("OrderInfo")),
-				MessageTemplate.and(MessageTemplate.MatchContent("Order completed"),MessageTemplate.MatchConversationId("Shutdown"))
-												)))))))));
 
-		this.template2 = MessageTemplate.and(MessageTemplate.MatchOntology("release_buffer"),
-				MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),MessageTemplate.MatchSender(DDID)));
-		this.confirmation_required=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-				MessageTemplate.or(MessageTemplate.MatchOntology("data"),
-				MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchOntology("Information"),MessageTemplate.MatchConversationId("ItemsInfo")),
-				MessageTemplate.and(MessageTemplate.MatchOntology("Information"),MessageTemplate.MatchConversationId("OrderInfo")))));
 
 
 	}
@@ -94,7 +78,28 @@ public class RunningBehaviour extends SimpleBehaviour {
 
 	public void onStart() {
 		LOGGER.entry();
+		this.template=
+				//templates batch
+				MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+						MessageTemplate.or(MessageTemplate.MatchOntology("askdelay"),
+								MessageTemplate.or(MessageTemplate.MatchContent("reset_timeout"),
+										MessageTemplate.or(MessageTemplate.MatchOntology("data"),
+												//templates order
+												MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchOntology("Information"),MessageTemplate.MatchConversationId("ItemsInfo")),
+														MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchContent("Batch completed"),MessageTemplate.MatchConversationId("Shutdown")),
+																MessageTemplate.or(MessageTemplate.MatchOntology("update_timeout"),
+																		MessageTemplate.or(MessageTemplate.MatchOntology("delay"),
+																				//templates mplan
+																				MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchOntology("Information"),MessageTemplate.MatchConversationId("OrderInfo")),
+																						MessageTemplate.and(MessageTemplate.MatchContent("Order completed"),MessageTemplate.MatchConversationId("Shutdown"))
+																				)))))))));
 
+		this.template2 = MessageTemplate.and(MessageTemplate.MatchOntology("release_buffer"),
+				MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),MessageTemplate.MatchSender(DDID)));
+		this.confirmation_required=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+				MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchOntology("data"),MessageTemplate.MatchConversationId("PLCdata")),
+						MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchOntology("Information"),MessageTemplate.MatchConversationId("ItemsInfo")),
+								MessageTemplate.and(MessageTemplate.MatchOntology("Information"),MessageTemplate.MatchConversationId("OrderInfo")))));
 		if(!myAgent.ExecTimeStamped){
 			myAgent.get_timestamp(myAgent,"ExecutionTime");
 			myAgent.ExecTimeStamped=true;
@@ -114,16 +119,22 @@ public class RunningBehaviour extends SimpleBehaviour {
 
 		LOGGER.entry();
 		Object[] receivedMsgs = null;
+
 		//****************** 1) Generación de acknowledges
 		ACLMessage msg_asking_confirmation=myAgent.receive(confirmation_required);
 		if(msg_asking_confirmation!=null){ //si se recibe un mensaje que sea necesario contestar mandamos un acknowledge y volvemos a meter el mensaje a la cola
 			myAgent.Acknowledge(msg_asking_confirmation,myAgent);
+			DateFormat simple = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+			System.out.print("Answered: ");
+			Date result = new Date(System.currentTimeMillis());
+			System.out.println(simple.format(result)); //printea el instante de respuesta
 			myAgent.putBack(msg_asking_confirmation);
 		}
 		//****************** Fin de generación de acknowledge
 
 		//****************** 2) Etapa de checkeo para mensajes retenidos por falta de disponibilidad de agentes
 		//comprueba si hay mensajes que permitan liberar los mensajes retenidos por el agente
+
 		ACLMessage new_target= myAgent.receive(template2);
 		if(new_target!=null){     //D&D avisa de que ya se puede vaciar el buffer de mensajes
 			if(new_target.getContent().contains("orderagent")||new_target.getContent().contains("mplanagent")){ //nuevo agente de aplicación disponible para recibir el aviso
@@ -148,6 +159,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 			}
 		}
 		//****************** Fin de etapa de checkeo para mensajes retenidos por falta de disponibilidad de agentes
+
 
 		//****************** 3) Etapa de checkeo de mensajes de acknowledge
 		//Se recorre el queue de mensajes para comprobar si todos los mensajes que esperaban respuesta la han obtenido a tiempo
@@ -209,29 +221,12 @@ public class RunningBehaviour extends SimpleBehaviour {
 		}
 		//****************** Fin de etapa de checkeo de mensajes de acknowledge
 
-		//****************** 4) Etapa de actualización de replicas
-		// Consigue el estado actual de la replica cuando se recibe cualquier mensaje y se devuelve al queue.
-		String currentState = null;
-		ACLMessage any_msg = myAgent.receive();
-		if(any_msg!=null){
-			myAgent.msgFIFO.add((String) any_msg.getContent());
-//			System.out.println("Peeked msg: "+any_msg.getContent()); //para visualizar que mensaje es el que dispara el getstate
-			System.out.println("From: "+any_msg.getSender().getLocalName());
-			if(!any_msg.getContent().equals("done")&&!any_msg.getOntology().equals("trigger_getState")){ //"flushea" mensajes de tipo done y de trigger para evitar bucles porque estos nadie los lee
-				myAgent.putBack(any_msg);  //en caso de no serlo, se devuelve al queue de mensajes ACL
-			}
-			if(!myAgent.antiloopflag) { //el flag de antiloop evita bucles infinitos acotando un tramo de código
-				currentState = (String) ((AvailabilityFunctionality) myAgent.functionalityInstance).getState();
-				if (currentState != null) {
-					LOGGER.debug("Send state");
-					myAgent.sendStateToTracking(currentState);
-				}
-			}
-		}
-		//****************** Fin de etapa de actualización de replicas
-
 		//***************** 5) Etapa de ejecución de funtionality
 		ACLMessage msg = myAgent.receive(template);
+		if(msg!=null){
+			update_replicas=true;
+			myAgent.msgFIFO.add((String) msg.getContent());
+		}
 		receivedMsgs = manageReceivedMsg(msg);
 
 		Object result = myAgent.functionalityInstance.execute(receivedMsgs);
@@ -252,8 +247,51 @@ public class RunningBehaviour extends SimpleBehaviour {
 			agent_block_flag =true;
 		}
 
-		//***************** Fin de etapa de ejecución de funtionality
+		//****************** 4) Etapa de actualización de replicas
+		// Consigue el estado actual de la replica cuando se recibe cualquier mensaje y se devuelve al queue.
+//		String currentState = null;
+//		ACLMessage any_msg = myAgent.receive();
+//		if(any_msg!=null){
+//			myAgent.msgFIFO.add((String) any_msg.getContent());
+////			System.out.println("Peeked msg: "+any_msg.getContent()); //para visualizar que mensaje es el que dispara el getstate
+//			System.out.println("From: "+any_msg.getSender().getLocalName());
+//			if(!any_msg.getContent().equals("done")&&!any_msg.getOntology().equals("trigger_getState")){ //"flushea" mensajes de tipo done y de trigger para evitar bucles porque estos nadie los lee
+//				myAgent.putBack(any_msg);  //en caso de no serlo, se devuelve al queue de mensajes ACL
+//			}
+//			if(!myAgent.antiloopflag) { //el flag de antiloop evita bucles infinitos acotando un tramo de código
+//				currentState = (String) ((AvailabilityFunctionality) myAgent.functionalityInstance).getState();
+//				if (currentState != null) {
+//					LOGGER.debug("Send state");
+//					myAgent.sendStateToTracking(currentState);
+//				}
+//			}
+//		}
+		ACLMessage msg_to_flush= myAgent.receive(MessageTemplate.or(MessageTemplate.MatchContent("done"),MessageTemplate.MatchOntology("trigger_getState")));
+		if(msg_to_flush!=null){
+			if(msg_to_flush.getOntology().equals("trigger_getState")){
+				update_replicas=true;
+			}
+		}
 
+		String currentState = null;
+		if(update_replicas){
+
+			if(!myAgent.antiloopflag) { //el flag de antiloop evita bucles infinitos acotando un tramo de código con él
+				currentState = (String) ((AvailabilityFunctionality) myAgent.functionalityInstance).getState();
+				if (currentState != null) {
+					myAgent.get_timestamp(myAgent,"StartSendState");
+					LOGGER.debug("Send state");
+					myAgent.sendStateToTracking(currentState);
+				}
+			}
+			update_replicas=false;
+		}
+		if(myAgent.doTimeStamp){
+			myAgent.doTimeStamp=false;
+		}
+		//****************** Fin de etapa de actualización de replicas
+
+		//***************** Fin de etapa de ejecución de funtionality
 
 		long t = manageBlockingTimes();
 

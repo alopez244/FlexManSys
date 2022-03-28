@@ -18,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -233,10 +234,34 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
         return items;
 
     }
+    public void get_timestamp(Agent a,String type){
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        String myParentID=null;
+        ACLMessage parent = null;
+        try {
+            parent = sendCommand(myAgent,"get " + myAgent.getLocalName() + " attrib=parent","DoTstmp");
 
+        if(parent!=null){
+            String contenido = parent.getContent()+","+myAgent.getLocalName() +","+type+","+String.valueOf(timestamp.getTime());
+            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+            msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
+            if(type.contains("CPUCalc")){
+                msg.setOntology("timestamp_neg");
+            }else{
+                msg.setOntology("timestamp_err");
+            }
+
+            msg.setConversationId(a.getLocalName()+"_"+type+"_timestamp");
+            msg.setContent(contenido);
+            a.send(msg);
+        }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData) {
         // TODO
-
+        get_timestamp(myAgent,"CPUCalcStart");
         if(SystemUtils.IS_OS_WINDOWS){
             String result=null;
             try {
@@ -260,6 +285,7 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
             }
             System.out.println(result);
             String[] value=result.split(" "); //result= "100        "
+            get_timestamp(myAgent,"CPUCalcFinish");
             return Long.parseLong(value[0]);
 
         }else {  //el SO es linux
@@ -291,6 +317,7 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
             }else{
                 result=Long.parseLong(value[0]);
             }
+            get_timestamp(myAgent,"CPUCalcFinish");
             return result;
         }
     }

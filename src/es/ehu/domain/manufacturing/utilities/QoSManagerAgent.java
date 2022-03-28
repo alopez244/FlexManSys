@@ -380,6 +380,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
             MachineAgentList.add(batch);
             MachineAgentList.add(sender);
 
+            sendACL(7,"NodeKiller",sender,batch,myAgent);
 
             return MachineAgentList;
         }

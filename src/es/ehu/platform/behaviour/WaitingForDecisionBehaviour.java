@@ -18,6 +18,7 @@ public class WaitingForDecisionBehaviour extends SimpleBehaviour {
     super.onStart();
     LOGGER.info("Waiting for negotiation result.");
     myAgent.ActualState="waitingfordecision";
+
   }
 
   public WaitingForDecisionBehaviour(MWAgent a) {

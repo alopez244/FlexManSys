@@ -43,7 +43,7 @@ public class MWAgent extends Agent {
      *  Instancias en tracking del componente (arraylist para actualiza el estado, actualizarla cuando al MWM llega un setState)
      */
     //TODO refresh local cache
-
+    public boolean doTimeStamp=false;
     public BasicFunctionality functionalityInstance;
     public String[] targetComponentIDs, sourceComponentIDs;
     public int period = -1;
@@ -67,7 +67,7 @@ public class MWAgent extends Agent {
     public String gatewayAgentName; // Guarda el nombre del agente pasarela
     // Parámetros de configuración
     public boolean mwmStoresExecutionState = true;
-
+    public boolean restored_replica=false;
     /**
      * Primera transición a realizar
      */
@@ -339,17 +339,11 @@ public class MWAgent extends Agent {
 //			for (Object key: prop.keySet()) System.out.println(key+"="+prop.get(key));
 //			aMsg.setAllUserDefinedParameters(prop);
 //			System.out.println("*********");
-
         send(aMsg);
-
-
-
         //ACLMessage msg = blockingReceive(MessageTemplate.);
         LOGGER.info(cmpID+"("+getLocalName() + "):data("+
                 ((msg.getClass()==null)?"null":msg.getClass().getSimpleName())+
                 ") > "+sTargets );
-
-
         return LOGGER.exit(response);
     }
 
@@ -369,8 +363,10 @@ public class MWAgent extends Agent {
             for (String cmpins: cmpinss){
                 aMsg.addReceiver(new AID(cmpins, AID.ISLOCALNAME));
             }
-            AddToExpectedMsgs(aMsg); //un mensaje esperado por cada replica
             send(aMsg);
+            get_timestamp(this,"MsgSentDone");
+            AddToExpectedMsgs(aMsg); //un mensaje esperado por cada replica
+            get_timestamp(this,"AcknowledgeGenerated");
             convIDCounter++;
             LOGGER.debug("sendState().send("+sTargets+"):"+aMsg);
             LOGGER.info(cmpID+"("+getLocalName() + "):state("+ ((msg.getClass()==null)?"null":msg.getClass().getSimpleName())+ ") > "+cmpID+"("+sTargets+")" );
@@ -380,9 +376,6 @@ public class MWAgent extends Agent {
         }
         return LOGGER.exit(response);
     }
-
-
-
     public void triggerEvent(final String eventId){
         LOGGER.entry(eventId);
         sendCommand("start "+eventId);
@@ -397,6 +390,9 @@ public class MWAgent extends Agent {
 
     public void sendStateToTracking(String msg){ //en uso
         LOGGER.entry(msg);
+
+
+        get_timestamp(this,"GetStateDone");
         String parts1[] = msg.split("/div0/");
 
         String sTracking = parts1[5]; //las replicas siempre van codificadas en la posicion 5 del estado
@@ -410,6 +406,7 @@ public class MWAgent extends Agent {
         }else {
             LOGGER.info("No tracking instances:");
         }
+
         LOGGER.exit();
     }
 
@@ -445,13 +442,18 @@ public class MWAgent extends Agent {
                 }
             }
 
-        }else if(type.equals("RedundancyRecovery")) {
+        }else if(type.equals("RedundancyRecovery")||type.equals("StartSendState")||type.equals("GetStateDone")||type.equals("MsgSentDone")||type.equals("AcknowledgeGenerated")||type.equals("FinishSendState")) {
             ACLMessage parent = sendCommand("get " + a.getLocalName() + " attrib=parent");
             if(parent!=null){
                 String contenido = parent.getContent()+","+a.getLocalName() +","+type+","+String.valueOf(timestamp.getTime());
                 ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
                 msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
-                msg.setOntology("timestamp_err");
+                if(type.equals("RedundancyRecovery")){
+                    msg.setOntology("timestamp_err");
+                }else{
+                    msg.setOntology("timestamp_neg");
+                }
+
                 msg.setConversationId(a.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
                 msg.setContent(contenido);
                 a.send(msg);
@@ -501,7 +503,7 @@ public class MWAgent extends Agent {
             confirmation.setContent(msg.getContent());
             Date date = new Date();
             long instant = date.getTime();
-            instant=instant+2000; //añade una espera de 1.5 seg
+            instant=instant+1000; //añade una espera de 1.5 (orig) / 3 (pruebas) seg
             ExpMsg[1]=instant;
             AID receiver=(AID) itor.next();
             confirmation.addReceiver(receiver);

@@ -57,9 +57,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private volatile boolean delay_already_incremented=false;
     private ArrayList<ACLMessage> posponed_msgs_to_order=new ArrayList<ACLMessage>();
 
-
-
-
     @Override
     public void setState(String state) {
 
