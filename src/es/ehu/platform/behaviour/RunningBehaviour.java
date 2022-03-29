@@ -279,16 +279,19 @@ public class RunningBehaviour extends SimpleBehaviour {
 			if(!myAgent.antiloopflag) { //el flag de antiloop evita bucles infinitos acotando un tramo de código con él
 				currentState = (String) ((AvailabilityFunctionality) myAgent.functionalityInstance).getState();
 				if (currentState != null) {
-					myAgent.get_timestamp(myAgent,"StartSendState");
 					LOGGER.debug("Send state");
-					myAgent.sendStateToTracking(currentState);
+					if(myAgent.getLocalName().contains("batchagent")){
+						myAgent.sendStateToTracking(currentState,"batch");
+					}else if(myAgent.getLocalName().contains("orderagent")){
+						myAgent.sendStateToTracking(currentState,"order");
+					}else{
+						myAgent.sendStateToTracking(currentState,"mplan");
+					}
 				}
 			}
 			update_replicas=false;
 		}
-		if(myAgent.doTimeStamp){
-			myAgent.doTimeStamp=false;
-		}
+
 		//****************** Fin de etapa de actualización de replicas
 
 		//***************** Fin de etapa de ejecución de funtionality

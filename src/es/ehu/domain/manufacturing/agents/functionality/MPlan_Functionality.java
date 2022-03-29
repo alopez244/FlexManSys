@@ -1,5 +1,8 @@
 package es.ehu.domain.manufacturing.agents.functionality;
 
+import com.google.gson.Gson;
+import es.ehu.domain.manufacturing.utilities.StructMplanAgentState;
+import es.ehu.domain.manufacturing.utilities.StructOrderAgentState;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
@@ -49,154 +52,177 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 
   @Override
   public void setState(String state) {
-    ArrayList<ArrayList<ArrayList<ArrayList<String>>>> Traceability=new ArrayList<>();
-    ArrayList<String> remaining=new ArrayList<String>();
-    ArrayList<ArrayList<String>> FT=new ArrayList<>();
-    ArrayList<String> replicas=new ArrayList<String>();
-    String parts1[] =state.split("/div0/"); //el divisor 0 divide los argumentos y el resto se usan para los arraylist
-    String productTraceabilityConc = parts1[0]; //trazabilidad concatenada
-    String remainingConc = null;
-    if (parts1[1] != null&&parts1[1] != "") {
-      remainingConc = parts1[1]; //solo si quedan acciones/SonAgentIDs
-    }
-    String firstimeString = parts1[2]; //primera vez
+//    ArrayList<ArrayList<ArrayList<ArrayList<String>>>> Traceability=new ArrayList<>();
+//    ArrayList<String> remaining=new ArrayList<String>();
+//    ArrayList<ArrayList<String>> FT=new ArrayList<>();
+//    ArrayList<String> replicas=new ArrayList<String>();
+//    String parts1[] =state.split("/div0/"); //el divisor 0 divide los argumentos y el resto se usan para los arraylist
+//    String productTraceabilityConc = parts1[0]; //trazabilidad concatenada
+//    String remainingConc = null;
+//    if (parts1[1] != null&&parts1[1] != "") {
+//      remainingConc = parts1[1]; //solo si quedan acciones/SonAgentIDs
+//    }
+//    String firstimeString = parts1[2]; //primera vez
+//
+//    String FinishTimesConc=parts1[3]; //finish times concatenados (cada agente de aplicación lleva un formato)
+//    parentAgentID=parts1[4]; 					//parent
+//    String replicasConc=parts1[5];		//replicas del agente
+//    String SnewOrder=parts1[6];
+//    String SorderIndex=parts1[7];
+//    newOrder=Boolean.parseBoolean(SnewOrder);
+//    orderIndex=Integer.parseInt(SorderIndex);
+//
+//
+//    String parts2[] = productTraceabilityConc.split("/div1/"); //construye la trazabilidad
+//    for (int i = 0; i < parts2.length; i++) {
+//      Traceability.add(i, new ArrayList<ArrayList<ArrayList<String>>>());
+//      String parts3[] = parts2[i].split("/div2/");
+//      for (int j = 0; j < parts3.length; j++) {
+//        Traceability.get(i).add(j, new ArrayList<ArrayList<String>>());
+//        String parts4[] = parts3[j].split("/div3/");
+//        for (int k = 0; k < parts4.length; k++) {
+//          Traceability.get(i).get(j).add(k, new ArrayList<String>());
+//          String parts5[] = parts4[k].split("/div4/");
+//          for (int l = 0; l < parts5.length; l++) {
+//            Traceability.get(i).get(j).get(k).add(parts5[l]);
+//          }
+//        }
+//      }
+//    }
+//    firstTime = Boolean.parseBoolean(firstimeString);
+//    if(!firstTime) {
+//      ordersTraceability=Traceability; //solo hay que escribir esta variable cuando anteriormente se haya construido
+//    }
+//
+//    if (remainingConc != null) {    //construye los sonagentID o actionlist
+//      String parts6[] = remainingConc.split("/div1/");
+//      for (int i = 0; i < parts6.length; i++) {
+//        remaining.add(parts6[i]);
+//      }
+//    }
+//    sonAgentID=remaining;
+//
+//    String parts7[]=FinishTimesConc.split("/div1/");
+//    for(int i=0;i<parts7.length;i++) {
+//      FT.add(i, new ArrayList<String>());
+//      String parts8[] = parts7[i].split("/div2/");
+//      for (int j = 0; j < parts8.length; j++) {
+//        FT.get(i).add(parts8[j]);
+//      }
+//    }
+//    finishtimes=FT;
+//
+//    String parts9[]=replicasConc.split("/div1/");
+//    for(int k=0;k<parts9.length;k++){
+//      if(!parts9[k].equals(myAgent.getLocalName())){
+//        replicas.add(parts9[k]);
+//      }
+//    }
+//    myAgent.replicas=replicas;
 
-    String FinishTimesConc=parts1[3]; //finish times concatenados (cada agente de aplicación lleva un formato)
-    parentAgentID=parts1[4]; 					//parent
-    String replicasConc=parts1[5];		//replicas del agente
-    String SnewOrder=parts1[6];
-    String SorderIndex=parts1[7];
-    newOrder=Boolean.parseBoolean(SnewOrder);
-    orderIndex=Integer.parseInt(SorderIndex);
-
-
-    String parts2[] = productTraceabilityConc.split("/div1/"); //construye la trazabilidad
-    for (int i = 0; i < parts2.length; i++) {
-      Traceability.add(i, new ArrayList<ArrayList<ArrayList<String>>>());
-      String parts3[] = parts2[i].split("/div2/");
-      for (int j = 0; j < parts3.length; j++) {
-        Traceability.get(i).add(j, new ArrayList<ArrayList<String>>());
-        String parts4[] = parts3[j].split("/div3/");
-        for (int k = 0; k < parts4.length; k++) {
-          Traceability.get(i).get(j).add(k, new ArrayList<String>());
-          String parts5[] = parts4[k].split("/div4/");
-          for (int l = 0; l < parts5.length; l++) {
-            Traceability.get(i).get(j).get(k).add(parts5[l]);
-          }
-        }
-      }
-    }
-    firstTime = Boolean.parseBoolean(firstimeString);
-    if(!firstTime) {
-      ordersTraceability=Traceability; //solo hay que escribir esta variable cuando anteriormente se haya construido
-    }
-
-    if (remainingConc != null) {    //construye los sonagentID o actionlist
-      String parts6[] = remainingConc.split("/div1/");
-      for (int i = 0; i < parts6.length; i++) {
-        remaining.add(parts6[i]);
-      }
-    }
-    sonAgentID=remaining;
-
-    String parts7[]=FinishTimesConc.split("/div1/");
-    for(int i=0;i<parts7.length;i++) {
-      FT.add(i, new ArrayList<String>());
-      String parts8[] = parts7[i].split("/div2/");
-      for (int j = 0; j < parts8.length; j++) {
-        FT.get(i).add(parts8[j]);
-      }
-    }
-    finishtimes=FT;
-
-    String parts9[]=replicasConc.split("/div1/");
-    for(int k=0;k<parts9.length;k++){
-      if(!parts9[k].equals(myAgent.getLocalName())){
-        replicas.add(parts9[k]);
-      }
-    }
-    myAgent.replicas=replicas;
+    Gson gson = new Gson();
+    StructMplanAgentState MPAstate = gson.fromJson(state, StructMplanAgentState.class);
+    ordersTraceability=MPAstate.getordersTraceability();
+    sonAgentID=MPAstate.getsonAgentID();
+    firstTime=MPAstate.getfirstTime();
+    parentAgentID=MPAstate.getparenAgentID();
+    myAgent.replicas=MPAstate.getreplicas();
+    newOrder=MPAstate.getnewOrder();
+    orderIndex=MPAstate.getorderIndex();
 
   }
   @Override
   public String getState(){
-    myAgent.antiloopflag=true;
-    String state="";
-      for(int i=0;i<ordersTraceability.size();i++){
-    if(i!=0){
-      state=state+"/div1/";
-    }
-    for(int j=0;j<ordersTraceability.get(i).size();j++){
-      if(j!=0){
-        state=state+"/div2/";
-      }
-      for(int k=0;k<ordersTraceability.get(i).get(j).size();k++){
-        if(k!=0){
-          state=state+"/div3/";
-        }
-        for(int l=0;l<ordersTraceability.get(i).get(j).get(k).size();l++){
-          if(l!=0){
-            state=state+"/div4/";
-          }
-          state=state+ordersTraceability.get(i).get(j).get(k).get(l);
-        }
-      }
-    }
-  }
-  state=state+"/div0/";
-  for(int i=0;i<sonAgentID.size();i++){
-    if(i!=0){
-      state=state+"/div1/";
-    }
-    state=state+sonAgentID.get(i);
-  }
-  state=state+"/div0/"+String.valueOf(firstTime)+"/div0/";
+//    myAgent.antiloopflag=true;
+//    String state="";
+//      for(int i=0;i<ordersTraceability.size();i++){
+//    if(i!=0){
+//      state=state+"/div1/";
+//    }
+//    for(int j=0;j<ordersTraceability.get(i).size();j++){
+//      if(j!=0){
+//        state=state+"/div2/";
+//      }
+//      for(int k=0;k<ordersTraceability.get(i).get(j).size();k++){
+//        if(k!=0){
+//          state=state+"/div3/";
+//        }
+//        for(int l=0;l<ordersTraceability.get(i).get(j).get(k).size();l++){
+//          if(l!=0){
+//            state=state+"/div4/";
+//          }
+//          state=state+ordersTraceability.get(i).get(j).get(k).get(l);
+//        }
+//      }
+//    }
+//  }
+//  state=state+"/div0/";
+//  for(int i=0;i<sonAgentID.size();i++){
+//    if(i!=0){
+//      state=state+"/div1/";
+//    }
+//    state=state+sonAgentID.get(i);
+//  }
+//  state=state+"/div0/"+String.valueOf(firstTime)+"/div0/";
+//
+//    for(int i=0;i<finishtimes.size();i++){ //concatena los FT de los item
+//      if(i!=0){
+//        state=state+"/div1/";
+//      }
+//      for(int j=0;j<finishtimes.get(i).size();j++){
+//        if(j==0){
+//          state=state+finishtimes.get(i).get(j);
+//        }else{
+//          state=state+"/div2/"+finishtimes.get(i).get(j);
+//        }
+//      }
+//    }
+//  state=state+"/div0/"+parentAgentID+"/div0/";
+//
+//    try {   //realiza la consulta al sa para tener la lista de replicas actualizada.
+//
+//      String[] replicas=new String[1];
+//      if(redundancy.equals("1")){
+//        replicas[0] =" ";
+//      }else{
+//        ACLMessage parent = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "GetMplanParent");
+//        ACLMessage replicasACL = sendCommand(myAgent, "get * state=tracking parent=" + parent.getContent(), "GetMplanUpdatedReplicas");
+//        if(replicasACL.getContent().contains(",")){
+//          replicas= replicasACL.getContent().split(",");
+//        }else{
+//          replicas[0] = replicasACL.getContent();
+//        }
+//      }
+//
+//      for(int i=0; i<replicas.length;i++){
+//        if(i==0){
+//          state=state+replicas[i];
+//        }else{
+//          state=state+"/div1/"+replicas[i];
+//        }
+//      }
+//
+//      state=state+"/div0/"+String.valueOf(newOrder);
+//      state=state+"/div0/"+String.valueOf(orderIndex);
+//
+//
+//    }catch  (Exception e) {
+//      e.printStackTrace();
+//    }
+//    myAgent.antiloopflag=false;
+    myAgent.replicas=update_tracking_replicas();
+    StructMplanAgentState MPAstate=new StructMplanAgentState();
+    MPAstate.setordersTraceability(ordersTraceability);
+    MPAstate.setsonAgentID(sonAgentID);
+    MPAstate.setfirstTime(firstTime);
+    MPAstate.setparenAgentID(parentAgentID);
+    MPAstate.setreplicas(myAgent.replicas);
+    MPAstate.setnewOrder(newOrder);
+    MPAstate.setorderIndex(orderIndex);
 
-    for(int i=0;i<finishtimes.size();i++){ //concatena los FT de los item
-      if(i!=0){
-        state=state+"/div1/";
-      }
-      for(int j=0;j<finishtimes.get(i).size();j++){
-        if(j==0){
-          state=state+finishtimes.get(i).get(j);
-        }else{
-          state=state+"/div2/"+finishtimes.get(i).get(j);
-        }
-      }
-    }
-  state=state+"/div0/"+parentAgentID+"/div0/";
+    Gson gson = new Gson();
+    String state=gson.toJson(MPAstate);
 
-    try {   //realiza la consulta al sa para tener la lista de replicas actualizada.
-
-      String[] replicas=new String[1];
-      if(redundancy.equals("1")){
-        replicas[0] =" ";
-      }else{
-        ACLMessage parent = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "GetMplanParent");
-        ACLMessage replicasACL = sendCommand(myAgent, "get * state=tracking parent=" + parent.getContent(), "GetMplanUpdatedReplicas");
-        if(replicasACL.getContent().contains(",")){
-          replicas= replicasACL.getContent().split(",");
-        }else{
-          replicas[0] = replicasACL.getContent();
-        }
-      }
-
-      for(int i=0; i<replicas.length;i++){
-        if(i==0){
-          state=state+replicas[i];
-        }else{
-          state=state+"/div1/"+replicas[i];
-        }
-      }
-
-      state=state+"/div0/"+String.valueOf(newOrder);
-      state=state+"/div0/"+String.valueOf(orderIndex);
-
-
-    }catch  (Exception e) {
-      e.printStackTrace();
-    }
-    myAgent.antiloopflag=false;
     return state;
   }
 
@@ -249,7 +275,7 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
       String currentState = (String) ((AvailabilityFunctionality) myAgent.functionalityInstance).getState(); //se actualiza el estado de las replicas
       if (currentState != null) {
         System.out.println("Send state");
-        myAgent.sendStateToTracking(currentState); //comunicamos a las replicas nuestro estado
+        myAgent.sendStateToTracking(currentState,"mplan"); //comunicamos a las replicas nuestro estado
       }
 
     } else {

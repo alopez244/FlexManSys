@@ -38,7 +38,32 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
     //////////////////////////
     //  BOOT STATE METHODS
     //////////////////////////
+    public ArrayList<String> update_tracking_replicas(){
+        String[] updated_replicasS=new String[1];
 
+        ArrayList<String> updated_replicas=new ArrayList<String>();
+        ACLMessage parent = null;
+        try {
+            parent = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "GetBatchParent");
+            ACLMessage replicasACL = sendCommand(myAgent, "get * state=tracking parent=" + parent.getContent(), "GetBatchUpdatedReplicas");
+            if(replicasACL.equals("")){
+                updated_replicasS[0]="";
+            }else{
+                if(replicasACL.getContent().contains(",")){
+                    updated_replicasS= replicasACL.getContent().split(",");
+                }else{
+                    updated_replicasS[0] = replicasACL.getContent();
+                }
+                for(int i=0;i<updated_replicasS.length;i++){ //actualiza las replicas de este agente
+                    updated_replicas.add(updated_replicasS[i]);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return updated_replicas;
+    }
     public Object[] processACLMessages(MWAgent agent, String seType, List<String> myElements, String conversationId, String redundancy, String parentAgentID) {
 
         this.myAgent = agent;

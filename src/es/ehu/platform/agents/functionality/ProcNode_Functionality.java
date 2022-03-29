@@ -173,8 +173,8 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
                 ac.start();
                 get_timestamp(T_Calc_start,seID,agnID,"MemoryCalcStart");
                 get_timestamp(T_Calc_finish,seID,agnID,"MemoryCalcFinish");
-                T_Calc_start=new Timestamp(0);
-                T_Calc_finish=new Timestamp(0);
+//                T_Calc_start=new Timestamp(0);
+//                T_Calc_finish=new Timestamp(0);
                 String parts[]=myAgent.getLocalName().split("pnodeagent");
                 sendCommand("set "+agnID+" node="+parts[1]); //Añade el número de nodo en el que se va a encontrar el agente
 

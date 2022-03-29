@@ -4,6 +4,10 @@ package es.ehu.platform;
  * Agente base el cual contiene las funciones necesarias para interactuar con el middleware
  */
 
+import com.google.gson.Gson;
+import es.ehu.domain.manufacturing.utilities.StructBatchAgentState;
+import es.ehu.domain.manufacturing.utilities.StructMplanAgentState;
+import es.ehu.domain.manufacturing.utilities.StructOrderAgentState;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
 import jade.core.AID;
 import jade.core.Agent;
@@ -349,7 +353,8 @@ public class MWAgent extends Agent {
 
     public String sendStateToReplicas(String msg, final String sTargets){ //en uso
         LOGGER.entry(msg, sTargets);
-        String [] cmpinss = sTargets.split("/div1/");
+//        String [] cmpinss = sTargets.split("/div1/");
+        String [] cmpinss = sTargets.split(",");
         if (cmpinss == null) return null;
         if (msg==null) msg = "null";
 
@@ -388,17 +393,39 @@ public class MWAgent extends Agent {
      * @param msg State information
      */
 
-    public void sendStateToTracking(String msg){ //en uso
+    public void sendStateToTracking(String msg, String category){ //en uso
         LOGGER.entry(msg);
+        this.get_timestamp(this,"StartSendState");
+        Gson gson = new Gson();
+        ArrayList<String>replicas=null;
 
+        if(category.equals("batch")){
+            StructBatchAgentState state = gson.fromJson(msg, StructBatchAgentState.class);
+            replicas=state.getreplicas();
+        }else if(category.equals("order")){
+            StructOrderAgentState state = gson.fromJson(msg, StructOrderAgentState.class);
+            replicas=state.getreplicas();
+        }else{
+            StructMplanAgentState state = gson.fromJson(msg, StructMplanAgentState.class);
+            replicas=state.getreplicas();
+        }
+
+        String sTracking = "";
+        for(int i=0; i<replicas.size();i++){
+            if(i==0){
+                sTracking=replicas.get(i);
+            }else{
+                sTracking=sTracking+ ","+ replicas.get(i);
+            }
+        }
 
         get_timestamp(this,"GetStateDone");
-        String parts1[] = msg.split("/div0/");
+//        String parts1[] = msg.split("/div0/");
 
-        String sTracking = parts1[5]; //las replicas siempre van codificadas en la posicion 5 del estado
+//        String sTracking = parts1[5]; //las replicas siempre van codificadas en la posicion 5 del estado
         LOGGER.info("Tracking: " + sTracking);
 
-        if(sTracking != null&&(!sTracking.equals(" "))){
+        if(sTracking!= null&&(!sTracking.equals(""))){
             if (sTracking.length() > 0) {
                 LOGGER.info("Refresh state to tracking instances:"+ sTracking);
                 this.sendStateToReplicas(msg, sTracking);
