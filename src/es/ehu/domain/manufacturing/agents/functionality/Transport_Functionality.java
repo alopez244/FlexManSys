@@ -306,13 +306,9 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
             // Si entramos aqui, el Transporte se encuentra libre y sin un plan asignado
 
-            System.out.println("1");
-
             /* Si el transporte está libre, se comprueba si hay tareas en el plan
             * La cabecera del modelo ocupa una posición, por lo que para que haya tareas, el tamaño del modelo tiene que ser de 2 o más */
             if (myAgent.transportPlan.size() >= 2) {
-
-                System.out.println("2");
 
                 /* Se leen las posiciones de la primera operación del plan (el tercer elemento del plan) */
                 /* Recordatorio: del segundo elemento del modelo (primera operación), se obtiene el cuarto elemento (valores de sus atributos)...
@@ -333,8 +329,6 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
                         /* Compruebo si la posición i del array allPositions coincide con la posición j de keyPosition */
                         if (myAgent.keyPosition.get(0).get(2).get(j).equals(allPositions[i])){
-
-                            System.out.println("3");
 
                             /* Si coinciden, obtengo la coordenada */
                             allCoordinates[i]=myAgent.keyPosition.get(0).get(3).get(j);
@@ -407,7 +401,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
             /* Antes de considerar al transporte como operable, verificamos que ha llevado a cabo su etapa de
             /* calibracion. En caso de no estar calibrado, se le envia el comando de calibracion */
 
-            if (Objects.equals(myAgent.ActualState, "IDLE") || (Objects.equals(myAgent.ActualState, "CALIBRATION"))){
+            if (Objects.equals(myAgent.ActualState, "IDLE") || (Objects.equals(myAgent.ActualState, "LOCALIZATION"))){
 
                 if (Objects.equals(myAgent.ActualState, "IDLE")) {
 
@@ -417,7 +411,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
                 }
 
-                else if (Objects.equals(myAgent.ActualState, "CALIBRATION")){
+                else if (Objects.equals(myAgent.ActualState, "LOCALIZATION")){
 
                     myAgent.ActualState = javaTranspState.getTransport_unit_state();
                     System.out.println(myAgent.transport_unit_name + " Transport is calibrating");
@@ -453,9 +447,9 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
                 else {
 
-                    /* EL transporte ha entrado a RECOVERY desde CALIBRATION */
+                    /* EL transporte ha entrado a RECOVERY desde LOCALIZATION */
 
-                    System.out.println(myAgent.transport_unit_name + " Transport needs assistance, obstacle detected during calibration");
+                    System.out.println(myAgent.transport_unit_name + " Transport needs assistance, obstacle detected during localization");
 
                     if (!myAgent.cameraObstacle && !myAgent.bumperObstacle){
 
