@@ -129,6 +129,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
     private static final String CMD_REFUSE = "Refuse";
     private boolean busy=false;
     private MWAgent myAgent;
+    private boolean direct_win=false;
     private NegFunctionality aNegFunctionality;
 
     /**
@@ -211,7 +212,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 
                                     case NEG_WON: //he ganado la negociación y termina correctamente
                                         System.out.println("WON!");
-
+                                        direct_win=true;
                                     case NEG_FAIL:
                                         break;
                                 }
@@ -233,7 +234,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 
                                         case NEG_WON: //he ganado la negociación y termina correctamente
                                             System.out.println("WON!");
-
+                                            direct_win=true;
                                         case NEG_FAIL:
                                             break;
                                     }
@@ -255,7 +256,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 
                                     case NEG_WON: //he ganado la negociación y termina correctamente
                                         System.out.println("WON!");
-
+                                        direct_win=true;
                                     case NEG_FAIL:
                                         break;
                                 }
@@ -277,7 +278,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 
                                     case NEG_WON: //he ganado la negociación y termina correctamente
                                         System.out.println("WON!");
-
+                                        direct_win=true;
                                     case NEG_FAIL:
                                         break;
                                 }
@@ -306,17 +307,19 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                         AID DDId = new AID("D&D", false);
                                         inform_winner.addReceiver(DDId); //para este caso solo hay que avisar al D&D pues no hay replicas
                                         myAgent.send(inform_winner);
-
                                         System.out.println("WON!");
+                                        direct_win=true;
 
                                     case NEG_FAIL:
                                         break;
                                 }
                             }
                         }
-
-                    regNegotiation(conversationId, msg.getSender(), negMsg);
-                    initNegotiation();
+                    if(!direct_win){ //significa que solo habia una instancia para negociar por lo que no tiene
+                        regNegotiation(conversationId, msg.getSender(), negMsg);
+                        initNegotiation();
+                    }
+                    direct_win=false;
 
             } else if (msg.getPerformative() == ACLMessage.INFORM){
                 busy=false;
