@@ -36,6 +36,7 @@ public class GWagentROS extends GatewayAgent {
     public boolean TaskListFlag = false;
     public boolean TaskReadyToSend = false;
     public boolean TransportOperative = false;
+    public boolean SimpleTask = false;
 
     public String CurrentTransportMachineState;
 
@@ -74,11 +75,12 @@ public class GWagentROS extends GatewayAgent {
           //((StructCommand) command).setContent(msg_content); // Aqui se define el contenido que se va a enviar al transporte
           //msg_content = null;
 
-           if (TaskReadyToSend == false){
+           if (SimpleTask == true && TaskReadyToSend == false){
 
                // Aqui se define el contenido que se va a enviar al transporte si el mensaje se recibe por ComandoCoordenada
                ((StructCommand) command).setContent(msg_content);
                msg_content = null;
+               SimpleTask = false;
 
            }
 
@@ -105,6 +107,7 @@ public class GWagentROS extends GatewayAgent {
                        // Ya se han enviado todas las tareas de la lista, desactivamos este modo
                        TaskReadyToSend = false;
                        msg_content = null;
+
                    }
 
                }
@@ -284,6 +287,7 @@ public class GWagentROS extends GatewayAgent {
                 // mientras el transporte opera, es por ello que es necesario no dejarle enviar mas tareas al transporte
 
                 TaskReadyToSend = false;
+                SimpleTask = true;
 
             }
 
@@ -312,6 +316,13 @@ public class GWagentROS extends GatewayAgent {
 
                     TaskList[TaskListIndx] = msg_content;
                     TaskListIndx = TaskListIndx - 1;
+
+                    System.out.println("+++++++++++++++++++++++++++");
+                    System.out.println("+++++++++++++++++++++++++++");
+                    System.out.println(msg_content);
+                    System.out.println("+++++++++++++++++++++++++++");
+                    System.out.println("+++++++++++++++++++++++++++");
+
 
                     if (TaskListIndx == 0){
 

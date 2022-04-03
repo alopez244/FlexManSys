@@ -15,7 +15,7 @@
 	</xs:redefine>
 	<xs:element name="transportPlan">
 		<xs:complexType>
-			<xs:sequence minOccurs="0">
+			<xs:sequence minOccurs="0" maxOccurs="unbounded">
 				<xs:element name="operation" type="Operation"/>
 			</xs:sequence>
 			<xs:attribute name="id" type="xs:NMTOKEN" use="required"/>

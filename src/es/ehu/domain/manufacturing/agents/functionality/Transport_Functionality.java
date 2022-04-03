@@ -3,11 +3,8 @@ package es.ehu.domain.manufacturing.agents.functionality;
 import com.google.gson.Gson;
 import es.ehu.domain.manufacturing.agents.TransportAgent;
 import es.ehu.domain.manufacturing.utilities.StructTranspRequest;
-import es.ehu.domain.manufacturing.utilities.StructTranspResults;
-import es.ehu.domain.manufacturing.utilities.StructTranspState;
 import es.ehu.domain.manufacturing.utilities.StructTransportUnitState;
 import es.ehu.platform.MWAgent;
-import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.behaviour.NegotiatingBehaviour;
 import es.ehu.platform.template.interfaces.AssetManagementFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
@@ -43,6 +40,11 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
     /* Flag que se activa cuando el transporte esta trabajando */
     private Boolean workInProgress = false;
+    private Boolean transportActive = false;
+
+    /* Ultima coordenada enviada al transporte */
+    private int TasksNumber;
+    private int AccomplishedTaskCounter;
 
     /* Nombre del gatewayAgent con el que interactúa el agente */
     private AID gatewayAgentID =null;
@@ -340,32 +342,36 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 StructTranspRequest javaTranspRequest = new StructTranspRequest();
                 javaTranspRequest.setTask(allCoordinates);
 
-                /* Ahora se formatea la estructura a json*/
-                // EL tamanio de la estructura de Json parece ser demasiado grande, hay problemas de lectura en el
-                // GatewayAgent, se propone pasar las posiciones del string allCoordinates de una a una
-                //Gson gson_request = new Gson();
-                //gson_request.toJson(javaTranspRequest);
+                /* Solo se enviara al transporte su lista tareas siempre y cuando se encuentre en estado ACTIVE */
 
-                /* Después, se prepara el mensaje y se envía al gatewayAgent */
-                //sendACLMessage(ACLMessage.REQUEST,gatewayAgentID,"data",myAgent.getLocalName()+"_"+ conversationId++, String.valueOf(gson),myAgent);
+                if (transportActive){
 
-                /* Se define el numero de coordenadas del TransportPlan correspondiente a pasar al transporte */
+                    // Cuando se inicia una conversacion con el Gateway con la ontologia PlanCoordenadas, sabe que se trata de
+                    // una conversacion tipo serie. Es decir, que habra un START, unos DATOS y un END.
 
-                // Se envia previamente la cantidad de tareas que se van a recibir
-                sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "PlanCoordenadas", "1234", String.valueOf(allCoordinates.length), myAgent);
+                    // En este caso, el START indica la cantidad de coordenadas que tiene la lista de tareas, es decir,
+                    // el numero de DATOS que va a recibir de la trama de mensaje.
+                    sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "PlanCoordenadas", "1234", String.valueOf(allCoordinates.length), myAgent);
 
-                for (int i = 0; i < allCoordinates.length; i++) {
+                    for (int i = 0; i < allCoordinates.length; i++) {
 
-                    sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "PlanCoordenadas", "1234", allCoordinates[i], myAgent);
+                        // Posteriormente, se envian todos los DATOS de la lista de tareas, es decir, todas las coordenadas.
+                        sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "PlanCoordenadas", "1234", allCoordinates[i], myAgent);
 
+                        if(i == allCoordinates.length-1){
+
+                            TasksNumber = allCoordinates.length;
+
+                        }
+
+                    }
+
+                    // Finalmente, se le hace saber al Gateway que no recibira ninguna coordenada mas con el contenido END.
+                    sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "PlanCoordenadas", "1234", "END", myAgent);
+
+                    /* Por último, pongo el workInProgress a true*/
+                    workInProgress = true;
                 }
-
-                /* Indicamos al transporte que el numero de coordenadas */
-
-                sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "PlanCoordenadas", "1234", "END", myAgent);
-
-                /* Por último, pongo el workInProgress a true*/
-                workInProgress=true;
 
             } else {
 
@@ -377,8 +383,8 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
             }
         }else{
 
-            /* Dejar para debug, luego comentar o quitar*/
-            System.out.println(myAgent.transport_unit_name + " Transport has a plan");
+            // Este else sobra, comprobar
+
         }
     }
 
@@ -394,6 +400,8 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
         myAgent.transport_unit_name = javaTranspState.getTransport_unit_name();
 
         if (!Objects.equals(myAgent.ActualState, "ACTIVE")){
+
+            transportActive = false;
 
             /* El transporte o bien se encuentra en un estado que no puede operar o bien se encuentra operando */
             /* Enviamos al SMA la informacion que proviene desde el transporte */
@@ -518,6 +526,8 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
         } else if (myAgent.ActualState.equals("ACTIVE")){
 
+            transportActive = true;
+
             // El transporte o bien acaba de terminar una operacion o bien esta listo para operar y recibir tareas
             System.out.println(myAgent.transport_unit_name + " Transport is active");
 
@@ -569,11 +579,29 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                     sendACLMessage(ACLMessage.INFORM,serviceReceiver,"data",myAgent.getLocalName()+"_"+ conversationId++,"initialTimeStamp="+ myAgent.initialTimeStamp +" finalTimeStamp="+myAgent.finalTimeStamp,myAgent);
                 }
 
-                // Se continúa eliminando esta tarea del plan (la primera tarea de la lista ocupa la segunda posición del submodelo)
-                myAgent.transportPlan.remove(1);
+                AccomplishedTaskCounter = AccomplishedTaskCounter + 1;
 
-                // Por último, se resetea el flag para indicar que el transaporte ha quedado libre
-                workInProgress = false;
+                //if (transportDockingRequired) {
+                System.out.println("Number of Accomplished Tasks: " + AccomplishedTaskCounter );
+
+                if (TasksNumber == AccomplishedTaskCounter) {
+
+                    // Esta seccion unicamente se ejecutara cuando reciba un final de servicio por parte del transporte
+                    // en este caso cuando el numero de tareas ejecutadas coincida con el numero de tareas enviadas
+
+                    // Se continúa eliminando esta tarea del plan (la primera tarea de la lista ocupa la segunda posición del submodelo)
+                    myAgent.transportPlan.remove(1);
+
+                    // Por último, se resetea el flag para indicar que el transaporte ha quedado libre
+                    workInProgress = false;
+
+
+                    // Reseteamos la ultima coordenada enviada
+
+                    AccomplishedTaskCounter = 0;
+
+                }
+
                 TransportOperative = false;
 
             }

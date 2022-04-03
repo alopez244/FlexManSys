@@ -27,8 +27,10 @@ public class TransportAgent extends DomResAgentTemplate{
 
     /* Posicion actual del transporte */
     public String currentPos;
+    public String recovery_point;
     public Double currentPos_X;
     public Double currentPos_Y;
+    public boolean transport_in_dock;
 
     /* Porcentaje de bateria */
     public Float battery;
