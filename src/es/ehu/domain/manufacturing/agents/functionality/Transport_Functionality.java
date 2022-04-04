@@ -173,9 +173,6 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
     @Override
     public Object execute(Object[] input) {
 
-        System.out.println("**********************************");
-        System.out.println("JEJEJEJ");
-
         if (input[0] != null) {
             ACLMessage msg = (ACLMessage) input[0];
             Acknowledge(msg,myAgent);
@@ -241,7 +238,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
         //Devolver el valor obtenido
 
         System.out.println("**********************************");
-        System.out.println(negAction);
+        System.out.println("NEGOCIACION");
 
         /* Se van a recibir dos campos en el objeto negExternalData:
         *  En el primer campo, se recibirá la operación (u operaciones) que tendrá que añadir a su pila el transporte ganador
@@ -249,10 +246,24 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
         String positionsArray = (String) negExternalData[0];
         String machineAgentName = (String) negExternalData[1]; /* Creo que este parámetro no debería de hacer falta para este método, pero por si acaso */
 
-        /* If redundante solo para confirmar que la petición se ajusta a un criterio que tenga sentido para el agente
-        *  Este if cobrará más sentido si en el futuro se consideran varios criterios posibles a elección del solicitante */
-        //TODO: cambiar el criterio "position" por "battery" (luego ya lo cambio yo en el resto de sitios que haga falta)
+        System.out.println(positionsArray); //dockingStation;kukaInput
+        System.out.println(machineAgentName); //machine1
+
+        /* Se verifica bajo que criterio se quiere negociar */
+
         if (negCriterion.equals("position")){
+
+            // Se calculara en funcion de la posicion actual del transporte
+
+
+        }
+
+        else if (negCriterion.equals("battery")){
+
+            // Se calculara en funcion de la bateria actual del transporte
+
+            System.out.println(myAgent.battery);
+
 
         }
 
@@ -351,6 +362,10 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
                     // En este caso, el START indica la cantidad de coordenadas que tiene la lista de tareas, es decir,
                     // el numero de DATOS que va a recibir de la trama de mensaje.
+
+                    // transportAgent ==>  START | DATA1 | DATA2 | DATA3 | DATA4 | END ==> GWagentROS
+                    // GWagentROS ==> DATA1 => TransportUnit ...  GWagentROS ==> DATA2 => TransportUnit ...
+
                     sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "PlanCoordenadas", "1234", String.valueOf(allCoordinates.length), myAgent);
 
                     for (int i = 0; i < allCoordinates.length; i++) {
@@ -398,6 +413,9 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
         myAgent.ActualState = javaTranspState.getTransport_unit_state();
         myAgent.transport_unit_name = javaTranspState.getTransport_unit_name();
+        myAgent.battery = javaTranspState.getBattery();
+        myAgent.currentPos_X = javaTranspState.getOdom_x();
+        myAgent.currentPos_Y = javaTranspState.getOdom_y();
 
         if (!Objects.equals(myAgent.ActualState, "ACTIVE")){
 

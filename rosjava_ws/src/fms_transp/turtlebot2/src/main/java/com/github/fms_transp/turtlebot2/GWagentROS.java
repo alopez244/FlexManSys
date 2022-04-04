@@ -37,6 +37,7 @@ public class GWagentROS extends GatewayAgent {
     public boolean TaskReadyToSend = false;
     public boolean TransportOperative = false;
     public boolean SimpleTask = false;
+    public boolean neg_requested = false;
 
     public String CurrentTransportMachineState;
 
@@ -204,6 +205,30 @@ public class GWagentROS extends GatewayAgent {
               msg.setContent(gson.toJson(TransportState));
 
               send(msg);
+
+              // ************************* PRUEBA NEGOCIACION *************************
+              if (neg_requested == false) {
+                  ACLMessage msg_neg = new ACLMessage(ACLMessage.CFP);
+                  msg_neg.addReceiver(TransportAgent);
+                  msg_neg.setOntology("negotiation");
+                  msg_neg.setConversationId("1234");
+
+                  String targets = TransportAgentAID; //el ID que tenga el agente.
+                  String negotiationCriteria = "battery"; //o battery o el que utilices.
+                  String negAction = "supplyConsumables";
+                  String externalData = "dockingStation;kukaInput,machine1"; //las posiciones separadas por ; y los campos del externalData separados entre si por ,
+
+                  msg_neg.setContent("negotiate " + targets + " criterion=" + negotiationCriteria + " action=" + negAction + " externaldata=" + externalData);
+                  send(msg_neg);
+                  neg_requested = true;
+              }
+
+              // ************************* PRUEBA NEGOCIACION *************************
+
+
+
+
+
           }
 
       }
