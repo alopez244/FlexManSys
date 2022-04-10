@@ -269,7 +269,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                         1, true, true, true, negMsg.getExternalData()[0], negMsg.getExternalData()[1])) {
 
                                     case NEG_LOST: //he perdido la negociación
-                                        LOGGER.info("> " + myAgent.getLocalName() + " lost nego" + conversationId);
+                                        LOGGER.info("> " + myAgent.getLocalName() + " lost nego " + conversationId);
                                         break;
 
                                     case NEG_RETRY: //he ganado la negociación pero había ganado otra por lo que pido al que la ha iniciado que repita

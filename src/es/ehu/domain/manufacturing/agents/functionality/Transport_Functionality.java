@@ -173,6 +173,9 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
     @Override
     public Object execute(Object[] input) {
 
+        System.out.println("************************************");
+        System.out.println("EXECUTE");
+
         if (input[0] != null) {
             ACLMessage msg = (ACLMessage) input[0];
             Acknowledge(msg,myAgent);
@@ -232,24 +235,17 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
     @Override
     public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData) {
 
-        //TODO implementar el método. Para ello hay que:
-        //Leer la pila de tareas (obtener todas las coordenadas)
-        //Estimar un valor de negociación en base a estas (tiempo o distancia, preferiblemente tiempo)
-        //Devolver el valor obtenido
-
-        System.out.println("**********************************");
-        System.out.println("NEGOCIACION");
+        long negValue = 0; // Valor de la negociacion, va desde 0 hasta 10, siendo este ultimo la maxima puntuacion
+        double dnegValue = 0.0; // Valor auxiliar de la negociacion
 
         /* Se van a recibir dos campos en el objeto negExternalData:
         *  En el primer campo, se recibirá la operación (u operaciones) que tendrá que añadir a su pila el transporte ganador
         *  En el segundo campo, se recibirá el nombre del agente máquina que solicita la operación */
-        String positionsArray = (String) negExternalData[0];
-        String machineAgentName = (String) negExternalData[1]; /* Creo que este parámetro no debería de hacer falta para este método, pero por si acaso */
+        String positionsArray = (String) negExternalData[0]; //dockingStation;kukaInput
+        String machineAgentName = (String) negExternalData[1]; //machine1
 
-        System.out.println(positionsArray); //dockingStation;kukaInput
-        System.out.println(machineAgentName); //machine1
-
-        /* Se verifica bajo que criterio se quiere negociar */
+        /* Se verifica bajo que criterio se quiere negociar. Posteriormente, se le dara una puntuacion al agente
+         * transporte dentro de la negociacion segun los datos que reciba desde el transporte que represente. */
 
         if (negCriterion.equals("position")){
 
@@ -260,36 +256,127 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
         else if (negCriterion.equals("battery")){
 
-            // Se calculara en funcion de la bateria actual del transporte
+            /* Se calculara en funcion de la bateria actual del transporte */
 
-            System.out.println(myAgent.battery);
+            /* La bateria de los transportes Turtlebot2 esta formada por celdas del tipo Lithium-ion, concretamente con
+             * una configuracion de 4s1p. Esta configuracion de 4 celdas en serie y 1 en paralelo, le da una tension
+             * nominal de 14.8 VDC con una capacidad de 2200 mAh; en torno a 2 o 3 horas de autonomia, en funcion del
+             * estado de salud de las celdas de cada transporte y de las tareas asignadas. Es decir, cada celda cuenta
+             * con 3.7 VDC de tension nominal y 2200 mAh. */
+
+            /* La principal caracteristica de las celdas tipo Lithium-ion a la hora de calcular la cantidad de energia
+             * que contienen, es decir, calcular el SOC (State of Charge), es la no linealidad de la curva de descarga
+             * de estas celdas. Esta curva, cuenta con dos regiones exponenciales negativas con pendiente muy pronunciadas
+             * y una region plana, donde la tension varia muy poco. Es esta region plana la que supone un problema
+             * considerable, al significar que 14.8 VDC puede equivaler al 80 % de su nivel de energia o bien al
+             * 20 % de su energia. */
+
+            /* Al no contar con un modelo de la bateria de los transportes, y al ser necesario el contar con un estimador
+             * del SOC para cada transporte segun la cantidad de energia que se va consumiendo en funcion de los perifericos
+             * que tiene conectados, se va a implementar un modelo muy simple basado en el nivel de bateria que devuelve
+             * el topico /flexmansys/state/TUN*/
+
+            /* Se va a emplear la siguiente curva de descarga, basada en la curva de descarga nominal aportada por un
+             * usuario en ROS.org para un Turtletbot2
+             *
+             *      [VDC] Bateria
+             * 16.8   | X
+             *        |
+             *        |
+             *        |
+             *        |
+             * 14.8   |    X
+             *        |
+             *        |
+             * 13.6   |                                                                 X
+             *        |
+             *        |
+             * 13.2   |                                                                        X
+             *        |
+             *        |________________________________________________________________________________ [%] Energia
+             *        100  80                                                           20     0
+             *
+             * De este grafico se sacan 3 regiones, las cuales se van a linealizar por separado:
+             *
+             * Region Alta  [Highland] 100 % - 80 % => 16.8 VDC a 14.8 VDC => Energia = 10*Bateria - 68
+             * Region Media [Midland]   80 % - 20 % => 14.8 VDC a 13.6 VDC => Energia = 50*Bateria - 660
+             * Region Baja  [Lowland]   20 % -  0 % => 13.6 VDC a 13.2 VDC => Energia = 50*Bateria - 660
+             *
+             *
+             * En funcion del nivel de bateria leido desde el transporte, se asginara una de las tres regiones. La
+             * posicion que ocupe el nivel de bateria en el espectro de energia restante [%], sera la puntuacion
+             * obtenida por el transporte x100.
+             * */
+
+            if (myAgent.battery >= 14.8){
+
+                dnegValue = (10.0*myAgent.battery-68.0)/10.0;
+
+            }
+
+            else if (myAgent.battery < 14.8 && myAgent.battery >= 13.6){
+
+                dnegValue = (50.0*myAgent.battery-660.0)/10.0;
+
+            }
+
+            else if (myAgent.battery < 13.6){
+
+                dnegValue = (50.0*myAgent.battery-660.0)/10.0;
+
+            }
+
+            else {
+
+                dnegValue = 0.0;
+            }
 
 
         }
 
-        return 0; /* Este 0 solo lo he puesto para que no de problemas al compilar, luego habrá que sustituirlo por lo que corresponda */
+        /* El metodo checkNegotiation recibe el valor de CalculateNegotiation con un tipo Long, luego truncamos el valor
+         * tipo double calculado de dnegValue, como valor de negociacion. Si el valor es X.5 o mas, trunca hacia arriba,
+         * en caso de ser menos de X.5, trunca hacia abajo. */
+
+        negValue = Math.round(dnegValue);
+
+        return negValue;
+
     }
 
     @Override
     public int checkNegotiation(String conversationId, String sAction, double negReceivedValue, long negScalarValue, boolean tieBreak, boolean checkReplies, boolean isPartialWinner, Object... negExternalData) {
 
+        System.out.println("************************************");
+        System.out.println("CHECK NEGOTIATION");
+
         LOGGER.entry(conversationId, sAction, negReceivedValue, negScalarValue);
+
+        System.out.println("************************************");
+        System.out.println(conversationId + sAction + negReceivedValue + negScalarValue);
 
         /* Se van a recibir dos campos en el objeto negExternalData:
          *  En el primer campo, se recibirá la operación (u operaciones) que tendrá que añadir a su pila el transporte ganador
          *  En el segundo campo, se recibirá el nombre del agente máquina que solicita la operación */
+
         String positionsArray = (String) negExternalData[0];
         String machineAgentName = (String) negExternalData[1];
 
         /* Se comparan el valor propio y el valor recibido */
-        if (negReceivedValue<negScalarValue) return NegotiatingBehaviour.NEG_LOST; /* pierde la negociación */
-        if ((negReceivedValue==negScalarValue) && !tieBreak ) return NegotiatingBehaviour.NEG_LOST; /* empata la negociación pero no es quien fija el desempate */
+
+        /* pierde la negociación */
+        //if (negReceivedValue<negScalarValue) return NegotiatingBehaviour.NEG_LOST;
+
+        /* empata la negociación pero no es quien fija el desempate */
+        //if ((negReceivedValue==negScalarValue) && !tieBreak ) return NegotiatingBehaviour.NEG_LOST;
 
         LOGGER.info("negotiation(id:"+conversationId+") partial winner "+myAgent.getLocalName()+"(value:"+negScalarValue+")");
-        if (!checkReplies) return NegotiatingBehaviour.NEG_PARTIAL_WON; /* es el ganador parcial, pero faltan negociaciones por finalizar */
 
+        /* es el ganador parcial, pero faltan negociaciones por finalizar */
+        //if (!checkReplies) return NegotiatingBehaviour.NEG_PARTIAL_WON;
 
-        if (!isPartialWinner) return NegotiatingBehaviour.NEG_LOST; /* Para ser el ganadores verdadero un agente tendrá que ser ganador parcial en cada momento */
+        /* Para ser el ganadores verdadero un agente tendrá que ser ganador parcial en cada momento */
+        //if (!isPartialWinner) return NegotiatingBehaviour.NEG_LOST;
 
         /* El agente es el ganador final (ha ganado todas las comparaciones) */
         LOGGER.info("ejecutar "+sAction);
@@ -298,10 +385,16 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
         if (action.cmd.equals("supplyConsumables")) {
             LOGGER.info("id=" + action.who);
 
+            Object[] data = new Object[1];
+            data[0]=positionsArray;
+            execute(data);
+
+
             //TODO implementar las acciones que tiene que hacer el agente ganador. Para ello hay que:
             //Encapsular la operación (u operaciones) recibida en un mensaje ACL e invocar el método Execute
             //Una vez añadida la operación al plan, enviar un mensaje al agente que solicitó el servicio (machineAgentName)
-            //Este mensaje deberá informar de qué transporte ha ganado la negociación y el momento de entrega estimado (solo en caso de que las negociaciones se hagan en base a tiempos)
+            //Este mensaje deberá informar de qué transporte ha ganado la negociación
+
         }
 
         return NegotiatingBehaviour.NEG_WON;

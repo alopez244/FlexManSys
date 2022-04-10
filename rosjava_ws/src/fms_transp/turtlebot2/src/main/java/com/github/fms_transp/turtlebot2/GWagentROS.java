@@ -226,9 +226,6 @@ public class GWagentROS extends GatewayAgent {
               // ************************* PRUEBA NEGOCIACION *************************
 
 
-
-
-
           }
 
       }
