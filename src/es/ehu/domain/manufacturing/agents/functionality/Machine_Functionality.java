@@ -19,6 +19,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -42,7 +43,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private Boolean orderQueueFlag = false; // Flag que se activa cuando existen nuevas ordenes en cola para la maquina
     public static int convIDcnt=0;
     private AID gatewayAgentID =null;
-
+    private Timestamp MStart;
+    private Timestamp GWAnswer;
     private MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
             MessageTemplate.MatchOntology("acl_error"));
 
@@ -68,6 +70,14 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
      *
      * @return The name used for registering the agent in the MWM (or SM)
      */
+    private void get_Timestamp(Timestamp T, String type){
+        String contenido = "5"+","+"machine1" +","+type+","+String.valueOf(T.getTime());
+        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+        msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
+        msg.setOntology("timestamp_neg");
+        msg.setContent(contenido);
+        myAgent.send(msg);
+    }
     @Override
     public Void init(MWAgent mwAgent) {
 
@@ -80,8 +90,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         //Later, if the previous condition is accomplished, the agent is registered
         this.myAgent = (MachineAgent) mwAgent;
         LOGGER.entry();
-        if(myAgent.getLocalName().contains("machine")){
-            myAgent.get_timestamp(myAgent,"MachineStart");
+
+        if(myAgent.getLocalName().contains("auxma")){
+            MStart = new Timestamp(System.currentTimeMillis());
+            get_Timestamp(MStart,"MachineStart");
         }
         String machineName = myAgent.resourceName;
         Integer machineNumber = Integer.parseInt(machineName.split("_")[1]);
@@ -118,7 +130,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             System.exit(0); //si el PLC o el GW no están disponible no tiene sentido que iniciemos el agente máquina
         }
         //*************************************
-        myAgent.get_timestamp(myAgent,"GWAnswer");
+        GWAnswer = new Timestamp(System.currentTimeMillis());
+        get_Timestamp(GWAnswer,"GWAnswer");
+//        myAgent.get_timestamp(myAgent,"GWAnswer");
+
         //timestamp
         //First, the machine attributes are included
         String attribs = "";
@@ -187,7 +202,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         } catch (Exception e1) {
             e1.printStackTrace();
         }
-
 
         //myAgent.initTransition = ControlBehaviour.RUNNING;
 

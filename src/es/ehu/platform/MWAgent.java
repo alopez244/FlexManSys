@@ -72,6 +72,7 @@ public class MWAgent extends Agent {
     // Parámetros de configuración
     public boolean mwmStoresExecutionState = true;
     public boolean restored_replica=false;
+
     /**
      * Primera transición a realizar
      */

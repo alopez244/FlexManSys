@@ -477,7 +477,7 @@ public class AgentToCSVgw {
 
 //                    String [] data_raw = new String[] {parentNeg.getKey(), agentname, t0, t1, t2, t3,t4,t5,t6,t7}; //Los datos raw se escriben por agente
 //                    testResultsNegCSV_raw.add(data_raw);
-                    String [] data_raw = new String[] {agentname, t0, t1, t2}; //Los datos raw se escriben por agente
+                    String [] data_raw = new String[] {parentNeg.getKey(),agentname, t0, t1, t2}; //Los datos raw se escriben por agente
                     testResultsNegCSV_raw.add(data_raw);
 
 //                    if(!t1.equals("")&&!t0.equals("")){
