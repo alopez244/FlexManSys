@@ -369,9 +369,9 @@ public class MWAgent extends Agent {
                 aMsg.addReceiver(new AID(cmpins, AID.ISLOCALNAME));
             }
             send(aMsg);
-            get_timestamp(this,"MsgSentDone");
+//            get_timestamp(this,"MsgSentDone");
             AddToExpectedMsgs(aMsg); //un mensaje esperado por cada replica
-            get_timestamp(this,"AcknowledgeGenerated");
+//            get_timestamp(this,"AcknowledgeGenerated");
             convIDCounter++;
             LOGGER.debug("sendState().send("+sTargets+"):"+aMsg);
             LOGGER.info(cmpID+"("+getLocalName() + "):state("+ ((msg.getClass()==null)?"null":msg.getClass().getSimpleName())+ ") > "+cmpID+"("+sTargets+")" );
@@ -395,7 +395,7 @@ public class MWAgent extends Agent {
 
     public void sendStateToTracking(String msg, String category){ //en uso
         LOGGER.entry(msg);
-        this.get_timestamp(this,"StartSendState");
+//        this.get_timestamp(this,"StartSendState");
         Gson gson = new Gson();
         ArrayList<String>replicas=null;
 
@@ -419,7 +419,7 @@ public class MWAgent extends Agent {
             }
         }
 
-        get_timestamp(this,"GetStateDone");
+//        this.get_timestamp(this,"GetStateDone");
 //        String parts1[] = msg.split("/div0/");
 
 //        String sTracking = parts1[5]; //las replicas siempre van codificadas en la posicion 5 del estado
@@ -486,6 +486,22 @@ public class MWAgent extends Agent {
                 a.send(msg);
             }
 
+        }else if(type.equals("MachineStart")||type.equals("GWAnswer")||type.equals("MachineRunning")){
+            String number="";
+            if(a.getLocalName().equals("machine1")){
+                number="5";
+            }else if(a.getLocalName().equals("machine2")){
+                number="1";
+            }else{
+                number="4";
+            }
+            String contenido = number+","+a.getLocalName() +","+type+","+String.valueOf(timestamp.getTime());
+            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+            msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
+            msg.setOntology("timestamp_neg");
+            msg.setConversationId(a.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
+            msg.setContent(contenido);
+            a.send(msg);
         }else{
             ACLMessage reply = sendCommand("get " + a.getLocalName() + " attrib=parent");
             if (reply != null){

@@ -126,7 +126,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                     if(state.getContent().equals("")){
                         LOGGER.warn(msg.getContent()+" reported by QoS but no data available. Already solved."); //si el QoS denuncia un agente ya detectado mientras se ha estado trabajando en ello no se debe hacer nada
                     }else{
-                        LOGGER.warn(msg.getContent()+" is dead or isolated and was in "+state.getContent()+" state.");
+                        LOGGER.warn(msg.getContent()+" is dead or isolated and it was in "+state.getContent()+" state.");
                         ACLMessage parent= sendCommand(myAgent, "get "+msg.getContent()+" attrib=parent", "D&D_"+convIDCounter++);
 
                         ACLMessage hosting_node=sendCommand(myAgent, "get "+msg.getContent()+" attrib=node", "D&D_"+convIDCounter++); //devuelve el número de nodo que hostea a la replica

@@ -62,7 +62,9 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
     }
 
     public void onStart() {
+        //timestamp
         LOGGER.entry();
+        myAgent.get_timestamp(myAgent,"MachineRunning");
         myAgent.ActualState="running";
         this.PrevPeriod = myAgent.period;
         if (myAgent.period < 0) {

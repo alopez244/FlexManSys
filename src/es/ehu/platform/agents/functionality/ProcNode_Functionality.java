@@ -89,12 +89,12 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
         String seFirstTransition = (String)negExternalData[5];
         if(ListAttrib.contains((String)negExternalData[0])){
             long used_node=0; //Si en la lista de atributos ya existe el parent se devuelve un valor no competente para perder automáticamente.
-            T_Calc_finish = new Timestamp(System.currentTimeMillis());
+//            T_Calc_finish = new Timestamp(System.currentTimeMillis());
             return used_node;
         }else{
 
             long memory=Runtime.getRuntime().freeMemory();
-            T_Calc_finish = new Timestamp(System.currentTimeMillis());
+//            T_Calc_finish = new Timestamp(System.currentTimeMillis());
                 return memory;
 //            return Runtime.getRuntime().freeMemory();
         }
@@ -171,8 +171,8 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
                     ac = ((AgentController) myAgent.getContainerController().createNewAgent(agnID, seClass, new Object[]{"firstState=" + seFirstTransition, "redundancy=" + redundancy, "parentAgent=" + parentAgentID,"recovery=true"}));
                 }
                 ac.start();
-                get_timestamp(T_Calc_start,seID,agnID,"MemoryCalcStart");
-                get_timestamp(T_Calc_finish,seID,agnID,"MemoryCalcFinish");
+//                get_timestamp(T_Calc_start,seID,agnID,"MemoryCalcStart");
+//                get_timestamp(T_Calc_finish,seID,agnID,"MemoryCalcFinish");
 //                T_Calc_start=new Timestamp(0);
 //                T_Calc_finish=new Timestamp(0);
                 String parts[]=myAgent.getLocalName().split("pnodeagent");

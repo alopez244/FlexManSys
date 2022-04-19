@@ -75,11 +75,14 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 MessageTemplate.MatchOntology("data")),MessageTemplate.MatchConversationId("ProvidedConsumables"));
 
         //First of all, the connection with the asset must be checked
+//timestamp
 
         //Later, if the previous condition is accomplished, the agent is registered
         this.myAgent = (MachineAgent) mwAgent;
         LOGGER.entry();
-
+        if(myAgent.getLocalName().contains("machine")){
+            myAgent.get_timestamp(myAgent,"MachineStart");
+        }
         String machineName = myAgent.resourceName;
         Integer machineNumber = Integer.parseInt(machineName.split("_")[1]);
         myAgent.gatewayAgentName = "ControlGatewayCont" + machineNumber.toString(); //Se genera el nombre del Gateway Agent con el que se tendrá que comunicar
@@ -94,27 +97,29 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             if (args[i].toLowerCase().startsWith("id=")) return null;
         }
         //******************************Checkeo del estado del GW y PLC. Agente maquina no iniciará hasta tenerlos disponibles
-//        sendACLMessage(16,gatewayAgentID,"ping","","",myAgent);
-//        ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 300);
-//        if(answer_gw==null){
-//            System.out.println("GW is not online. Start GW and repeat.");
-//            System.exit(0);
-//        }
-//
-//        sendACLMessage(16, gatewayAgentID, "check_asset","check_asset_on_boot_"+convIDcnt++,"ask_state",myAgent); //primero antes de nada debemos comprobar si el agente GW y el PLC están disponibles
-//        ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 300);
-//        if(answer!=null){
-//            if(!answer.getContent().equals("Working")&&!answer.getContent().equals("Not working")){
-//                System.out.println("PLC is not prepared to work.");
-//                System.exit(0); //si el PLC o el GW no están disponible no tiene sentido que iniciemos el agente máquina
-//            }else{
-//                System.out.println("PLC is "+answer.getContent());
-//            }
-//        }else{
-//            System.out.println("PLC is not prepared to work.");
-//            System.exit(0); //si el PLC o el GW no están disponible no tiene sentido que iniciemos el agente máquina
-//        }
+        sendACLMessage(16,gatewayAgentID,"ping","","",myAgent);
+        ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 300);
+        if(answer_gw==null){
+            System.out.println("GW is not online. Start GW and repeat.");
+            System.exit(0);
+        }
+
+        sendACLMessage(16, gatewayAgentID, "check_asset","check_asset_on_boot_"+convIDcnt++,"ask_state",myAgent); //primero antes de nada debemos comprobar si el agente GW y el PLC están disponibles
+        ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 300);
+        if(answer!=null){
+            if(!answer.getContent().equals("Working")&&!answer.getContent().equals("Not working")){
+                System.out.println("PLC is not prepared to work.");
+                System.exit(0); //si el PLC o el GW no están disponible no tiene sentido que iniciemos el agente máquina
+            }else{
+                System.out.println("PLC is "+answer.getContent());
+            }
+        }else{
+            System.out.println("PLC is not prepared to work.");
+            System.exit(0); //si el PLC o el GW no están disponible no tiene sentido que iniciemos el agente máquina
+        }
         //*************************************
+        myAgent.get_timestamp(myAgent,"GWAnswer");
+        //timestamp
         //First, the machine attributes are included
         String attribs = "";
         for (int j = 0; j < myAgent.resourceModel.get(0).get(2).size(); j++){
