@@ -44,7 +44,9 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
     /* Ultima coordenada enviada al transporte */
     private int TasksNumber;
+    private int LeftTaskCounter = 0;
     private int AccomplishedTaskCounter;
+
 
     /* Nombre del gatewayAgent con el que interactúa el agente */
     private AID gatewayAgentID =null;
@@ -173,9 +175,6 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
     @Override
     public Object execute(Object[] input) {
 
-        System.out.println("************************************");
-        System.out.println("EXECUTE");
-
         if (input[0] != null) {
 
             ACLMessage msg = (ACLMessage) input[0];
@@ -183,9 +182,6 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
             /* Se guardan en un array de String todas las posibles operaciones recibidas */
             String[] allOperations = msg.getContent().split("&");
-
-            System.out.println("************************************");
-            System.out.println(allOperations[0]);
 
             /* Se recorre el array para ir grabando las operaciones una a una*/
             for (String singleOperation : allOperations) {
@@ -206,17 +202,14 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 /* Se guardan en un array de String todos los atributos de la operación */
                 String [] allAttributes = singleOperation.split(" ");
 
-                System.out.println("************************************");
-                System.out.println(allAttributes[0]);
-
                 /* Se recorre el array para ir grabando los atributos uno a uno */
                 for (String singleAttribute : allAttributes){
 
                     /* Se separa el nombre del atributo de los valores */
                     String [] attInfo = singleAttribute.split("=");
                     attNames.add(attInfo[0]);
-                    //attValues.add(attInfo[1]);
-                    attValues.add("transport1");
+                    attValues.add(attInfo[1]);
+                    //attValues.add("transport1");
 
                 }
 
@@ -227,8 +220,12 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 operationInfo.add(3, attValues);
                 myAgent.transportPlan.add(operationInfo);
 
-                System.out.println("************************************");
-                System.out.println(operationInfo);
+
+                // Se actualiza el valor de las tareas introducidas al TransportPlan
+                LeftTaskCounter = LeftTaskCounter + 1;
+
+                /* El comando que se introduce al TransportPlan.xml incrusta una linea de codigo como la siguiente:
+                 * <operation positions="dockingStation,kukaInput,kukaOutput,kukaInput" requester="transport1" receiver="transport1"> </operation>*/
 
             }
 
@@ -261,7 +258,6 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
         if (negCriterion.equals("position")){
 
             // Se calculara en funcion de la posicion actual del transporte
-
 
         }
 
@@ -358,13 +354,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
     @Override
     public int checkNegotiation(String conversationId, String sAction, double negReceivedValue, long negScalarValue, boolean tieBreak, boolean checkReplies, boolean isPartialWinner, Object... negExternalData) {
 
-        System.out.println("************************************");
-        System.out.println("CHECK NEGOTIATION");
-
         LOGGER.entry(conversationId, sAction, negReceivedValue, negScalarValue);
-
-        System.out.println("************************************");
-        System.out.println(conversationId + sAction + negReceivedValue + negScalarValue);
 
         /* Se van a recibir dos campos en el objeto negExternalData:
          *  En el primer campo, se recibirá la operación (u operaciones) que tendrá que añadir a su pila el transporte ganador
@@ -416,26 +406,35 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
             }
 
+            String TA_name = myAgent.getLocalName();
+
+            /* Se construyen los argumentos que se introduciran en el TransportPlan.xml */
+            //positionsArray = "positions=" + positionsArray + " " + "requester=transport1" + " " + "receiver=transport1";
+            positionsArray = "positions=" + positionsArray + " " + "requester=" + TA_name + " " + "receiver=" + TA_name;
+
             // Se encapsulan las operaciones en un mensaje tipo ACL
             ACLMessage positionsCoordinates = new ACLMessage(ACLMessage.INFORM);
             positionsCoordinates.setContent(positionsArray);
 
-            Object[] data = new Object[2];
+            Object[] data = new Object[1];
             data[0]=positionsCoordinates;
-            data[1]=machineAgentName;
             execute(data);
 
-            //TODO implementar las acciones que tiene que hacer el agente ganador. Para ello hay que:
-            //Encapsular la operación (u operaciones) recibida en un mensaje ACL e invocar el método Execute
-            //Una vez añadida la operación al plan, enviar un mensaje al agente que solicitó el servicio (machineAgentName)
-            //Este mensaje deberá informar de qué transporte ha ganado la negociación
+            /* Tras introducir el plan requerido en el TransportPlan.xml, se le indica al agente que solicito el
+             * el transporte que ha ganado la negociacion. */
+
+            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+            msg.addReceiver(new AID(machineAgentName, AID.ISLOCALNAME));
+            //msg.setContent("I am the winner of:" + seOperationID);
+            msg.setContent("El ganador de la negociacion es: " + TA_name);
+            msg.setConversationId(conversationId);
+            myAgent.send(msg);
 
         }
 
         return NegotiatingBehaviour.NEG_WON;
 
     }
-
 
     /* OPERACIONES DE INTERACCIÓN CON EL ASSET */
 
@@ -522,7 +521,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 //Si no tiene ninguna tarea mas asignada, el transporte debe de volver a su estacion de carga
 
                 sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "ComandoCoordenada", "1234", "DOCK", myAgent);
-                System.out.println(myAgent.transport_unit_name + " Transport going to docking station");
+
             }
         }else{
 
@@ -705,11 +704,6 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 // El transporte ha efectuado su tarea correctamente, ha vuelto al estado ACTIVE, esto indica que
                 // el transporte esta preparado para recibir nuevas tareas.
 
-                System.out.println(myAgent.transport_unit_name + " Transport ended his task");
-
-                AID serviceRequester = new AID(myAgent.transportPlan.get(1).get(3).get(1), false);
-                AID serviceReceiver = new AID(myAgent.transportPlan.get(1).get(3).get(2), false);
-
                 myAgent.hour = javaTranspState.getHour();
                 myAgent.minute = javaTranspState.getMinute();
                 myAgent.seconds = javaTranspState.getSeconds();
@@ -717,12 +711,20 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 myAgent.finalTimeStamp = myAgent.hour + ":" + myAgent.minute + ":" + myAgent.seconds + " h";
                 System.out.println(myAgent.transport_unit_name + " Transport ended his task at " + myAgent.finalTimeStamp);
 
-                // Se envía un mensaje al solicitante del servicio
-                sendACLMessage(ACLMessage.INFORM,serviceRequester,"data",myAgent.getLocalName()+"_"+ conversationId++,"initialTimeStamp="+ myAgent.initialTimeStamp +" finalTimeStamp="+ myAgent.finalTimeStamp,myAgent);
+                /* Se envia un mensaje al solicitante del servicio indicando el estado de lo que ha solicitado, sin embargo,
+                 * unicamente lo hara si existe una operacion recogida dentro del TransportPlan.xml*/
 
-                // Se comprueba si el solicitante y el receptor del servicio son distintos agentes, para enviar un segundo mensaje si es necesario
-                if (serviceReceiver != serviceRequester){
-                    sendACLMessage(ACLMessage.INFORM,serviceReceiver,"data",myAgent.getLocalName()+"_"+ conversationId++,"initialTimeStamp="+ myAgent.initialTimeStamp +" finalTimeStamp="+myAgent.finalTimeStamp,myAgent);
+                if (LeftTaskCounter > 0) {
+                    AID serviceRequester = new AID(myAgent.transportPlan.get(1).get(3).get(1), false);
+                    AID serviceReceiver = new AID(myAgent.transportPlan.get(1).get(3).get(2), false);
+
+                    // Se envía un mensaje al solicitante del servicio
+                    sendACLMessage(ACLMessage.INFORM, serviceRequester, "data", myAgent.getLocalName() + "_" + conversationId++, "initialTimeStamp=" + myAgent.initialTimeStamp + " finalTimeStamp=" + myAgent.finalTimeStamp, myAgent);
+
+                    // Se comprueba si el solicitante y el receptor del servicio son distintos agentes, para enviar un segundo mensaje si es necesario
+                    if (serviceReceiver != serviceRequester) {
+                        sendACLMessage(ACLMessage.INFORM, serviceReceiver, "data", myAgent.getLocalName() + "_" + conversationId++, "initialTimeStamp=" + myAgent.initialTimeStamp + " finalTimeStamp=" + myAgent.finalTimeStamp, myAgent);
+                    }
                 }
 
                 AccomplishedTaskCounter = AccomplishedTaskCounter + 1;
@@ -741,9 +743,10 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                     // Por último, se resetea el flag para indicar que el transaporte ha quedado libre
                     workInProgress = false;
 
+                    // Se indica que un plan ha sido completado del TransportPlan.xml
+                    LeftTaskCounter = LeftTaskCounter - 1;
 
-                    // Reseteamos la ultima coordenada enviada
-
+                    // Se da paso a un nuevo plan reseteando el numero de tareas completadas
                     AccomplishedTaskCounter = 0;
 
                 }
@@ -762,113 +765,3 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
     @Override
     public Void terminate(MWAgent myAgent) {return null;}
 }
-
-
-/*
-
-public void rcvDataFromDevice(ACLMessage msg) {
-
-      if (msg.getPerformative() == ACLMessage.CONFIRM){
-
-            // Si se trata de un mensaje de confirmación, se tiene que procesar con la estructura "StructTranspState"
-Gson gson = new Gson();
-    StructTransportUnitState javaTranspState = gson.fromJson(msg.getContent(), StructTransportUnitState.class);
-
-            myAgent.battery = javaTranspState.getBattery();
-                    myAgent.currentPos_X = javaTranspState.getOdom_x();
-                    myAgent.currentPos_Y = javaTranspState.getOdom_y();
-
-                    // Se actualiza el valor de estos parámetros en el SystemModelAgent
-                    String cmd = "set "+seId+" battery="+ myAgent.battery;
-                    ACLMessage reply = null;
-                    try {
-                    reply = myAgent.sendCommand(cmd);
-                    } catch (Exception e) {
-                    e.printStackTrace();
-                    }
-
-                    cmd = "set "+seId+" currentPos_X="+ myAgent.currentPos_X;
-                    try {
-                    reply = myAgent.sendCommand(cmd);
-                    } catch (Exception e) {
-                    e.printStackTrace();
-                    }
-
-                    cmd = "set "+seId+" currentPos_Y="+ myAgent.currentPos_Y;
-                    try {
-                    reply = myAgent.sendCommand(cmd);
-                    } catch (Exception e) {
-                    e.printStackTrace();
-                    }
-
-
-                    } else if (msg.getPerformative() == ACLMessage.INFORM){
-
-                    // Si se trata de un mensaje con información, se tiene que procesar con la estructura "StructTranspResults"
-                    Gson gson = new Gson();
-                    StructTransportUnitState javaTranspResults = gson.fromJson(msg.getContent(), StructTransportUnitState.class);
-
-
-        // En la primera parte se hace lo mismo
-        //TOD O: sacar la parte de código común a los dos casos a un método auxiliar
-
-        myAgent.battery = javaTranspResults.getBattery();
-        myAgent.currentPos_X = javaTranspResults.getOdom_x();
-        myAgent.currentPos_Y = javaTranspResults.getOdom_y();
-        float initialTimeStamp = javaTranspResults.getSeconds();
-        float finalTimeStamp = javaTranspResults.getSeconds();
-
-        // Se actualiza el valor de estos parámetros en el SystemModelAgent
-        String cmd = "set "+seId+" battery="+ myAgent.battery;
-        ACLMessage reply = null;
-        try {
-        reply = myAgent.sendCommand(cmd);
-        } catch (Exception e) {
-        e.printStackTrace();
-        }
-
-        cmd = "set "+seId+" currentPos_X="+ myAgent.currentPos_X;
-        try {
-        reply = myAgent.sendCommand(cmd);
-        } catch (Exception e) {
-        e.printStackTrace();
-        }
-
-        cmd = "set "+seId+" currentPos_Y="+ myAgent.currentPos_Y;
-        try {
-        reply = myAgent.sendCommand(cmd);
-        } catch (Exception e) {
-        e.printStackTrace();
-        }
-
-        // Después, se informa a la máquina que solicitó el servicio de que este ha sido completado
-        //TOD O: enviar un mensaje de confirmación de servicio realizado al machine agent que corresponda (hablar en la reunión)
-
-           // myAgent.ActualState = javaTranspResults.getTransport_unit_state();
-
-            while (myAgent.ActualState != "ACTIVE"){
-
-            }
-
-        // Primero se obtienen los nombres del agente que solicitó el servicio y del agente que recibe el servicio
-        AID serviceRequester = new AID(myAgent.transportPlan.get(1).get(3).get(1), false);
-        AID serviceReceiver = new AID(myAgent.transportPlan.get(1).get(3).get(2), false);
-
-        // Se envía un mensaje al solicitante del servicio
-        sendACLMessage(ACLMessage.INFORM,serviceRequester,"data",myAgent.getLocalName()+"_"+ conversationId++,"initialTimeStamp="+ initialTimeStamp +" finalTimeStamp="+finalTimeStamp,myAgent);
-
-        // Se comprueba si el solicitante y el receptor del servicio son distintos agentes, para enviar un segundo mensaje si es necesario
-        if (serviceReceiver != serviceRequester){
-        sendACLMessage(ACLMessage.INFORM,serviceReceiver,"data",myAgent.getLocalName()+"_"+ conversationId++,"initialTimeStamp="+ initialTimeStamp +" finalTimeStamp="+finalTimeStamp,myAgent);
-        }
-
-        // Se continúa eliminando esta tarea del plan (la primera tarea de la lista ocupa la segunda posición del submodelo)
-        myAgent.transportPlan.remove(1);
-
-        // Por último, se resetea el flag para indicar que el transaporte ha quedado libre
-        workInProgress=false;
-        }
-        }
-
- */
-

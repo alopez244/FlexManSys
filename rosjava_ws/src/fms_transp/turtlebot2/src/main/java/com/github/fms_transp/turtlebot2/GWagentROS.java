@@ -100,10 +100,11 @@ public class GWagentROS extends GatewayAgent {
                    ((StructCommand) command).setContent(TaskList[TaskListIndx]);
                    TransportOperative = true;
 
-                   if (TaskListIndx >= 1) {
+                   if (TaskListIndx >= 2) {
                        TaskListIndx = TaskListIndx - 1;
                    }
-                   else if (TaskListIndx == 0){
+
+                   else if (TaskListIndx <= 1){
 
                        // Ya se han enviado todas las tareas de la lista, desactivamos este modo
                        TaskReadyToSend = false;
@@ -339,11 +340,9 @@ public class GWagentROS extends GatewayAgent {
                     TaskList[TaskListIndx] = msg_content;
                     TaskListIndx = TaskListIndx - 1;
 
-                    System.out.println("+++++++++++++++++++++++++++");
-                    System.out.println("+++++++++++++++++++++++++++");
-                    System.out.println(msg_content);
-                    System.out.println("+++++++++++++++++++++++++++");
-                    System.out.println("+++++++++++++++++++++++++++");
+                    System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++");
+                    System.out.println("Se ha recibido la siguiente coordenada: " + msg_content);
+                    System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++");
 
 
                     if (TaskListIndx == 0){
