@@ -177,11 +177,15 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
         System.out.println("EXECUTE");
 
         if (input[0] != null) {
+
             ACLMessage msg = (ACLMessage) input[0];
             Acknowledge(msg,myAgent);
 
             /* Se guardan en un array de String todas las posibles operaciones recibidas */
             String[] allOperations = msg.getContent().split("&");
+
+            System.out.println("************************************");
+            System.out.println(allOperations[0]);
 
             /* Se recorre el array para ir grabando las operaciones una a una*/
             for (String singleOperation : allOperations) {
@@ -202,13 +206,17 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 /* Se guardan en un array de String todos los atributos de la operación */
                 String [] allAttributes = singleOperation.split(" ");
 
+                System.out.println("************************************");
+                System.out.println(allAttributes[0]);
+
                 /* Se recorre el array para ir grabando los atributos uno a uno */
                 for (String singleAttribute : allAttributes){
 
                     /* Se separa el nombre del atributo de los valores */
                     String [] attInfo = singleAttribute.split("=");
                     attNames.add(attInfo[0]);
-                    attValues.add(attInfo[1]);
+                    //attValues.add(attInfo[1]);
+                    attValues.add("transport1");
 
                 }
 
@@ -218,6 +226,9 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 operationInfo.add(2, attNames);
                 operationInfo.add(3, attValues);
                 myAgent.transportPlan.add(operationInfo);
+
+                System.out.println("************************************");
+                System.out.println(operationInfo);
 
             }
 
@@ -385,10 +396,34 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
         if (action.cmd.equals("supplyConsumables")) {
             LOGGER.info("id=" + action.who);
 
-            Object[] data = new Object[1];
-            data[0]=positionsArray;
-            execute(data);
+            // Recogemos cada coordenada del plan de transporte en un string
+            String[] allOperations = positionsArray.split(";");
 
+            // Trasnformamos la separacion por ; a , para que sea entendible por el TransportPlan.xml correspondiente
+            for (int i = 0; i < allOperations.length; i++) {
+
+                if(i==0) {
+                    positionsArray = allOperations[i] + ",";
+                }
+
+                else if (i>0 && i < allOperations.length - 1){
+                    positionsArray = positionsArray + allOperations[i] + ",";
+                }
+
+                else if (i >= allOperations.length - 1){
+                    positionsArray = positionsArray + allOperations[i];
+                }
+
+            }
+
+            // Se encapsulan las operaciones en un mensaje tipo ACL
+            ACLMessage positionsCoordinates = new ACLMessage(ACLMessage.INFORM);
+            positionsCoordinates.setContent(positionsArray);
+
+            Object[] data = new Object[2];
+            data[0]=positionsCoordinates;
+            data[1]=machineAgentName;
+            execute(data);
 
             //TODO implementar las acciones que tiene que hacer el agente ganador. Para ello hay que:
             //Encapsular la operación (u operaciones) recibida en un mensaje ACL e invocar el método Execute
