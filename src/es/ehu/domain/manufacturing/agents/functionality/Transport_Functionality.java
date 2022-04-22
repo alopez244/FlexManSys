@@ -365,19 +365,19 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
         /* Se comparan el valor propio y el valor recibido */
 
-        /* pierde la negociación */
-        //if (negReceivedValue<negScalarValue) return NegotiatingBehaviour.NEG_LOST;
+        /* pierde la negociación, la negociacion es a MAXIMOS */
+        if (negReceivedValue>negScalarValue) return NegotiatingBehaviour.NEG_LOST;
 
         /* empata la negociación pero no es quien fija el desempate */
-        //if ((negReceivedValue==negScalarValue) && !tieBreak ) return NegotiatingBehaviour.NEG_LOST;
+        if ((negReceivedValue==negScalarValue) && !tieBreak ) return NegotiatingBehaviour.NEG_LOST;
 
         LOGGER.info("negotiation(id:"+conversationId+") partial winner "+myAgent.getLocalName()+"(value:"+negScalarValue+")");
 
         /* es el ganador parcial, pero faltan negociaciones por finalizar */
-        //if (!checkReplies) return NegotiatingBehaviour.NEG_PARTIAL_WON;
+        if (!checkReplies) return NegotiatingBehaviour.NEG_PARTIAL_WON;
 
         /* Para ser el ganadores verdadero un agente tendrá que ser ganador parcial en cada momento */
-        //if (!isPartialWinner) return NegotiatingBehaviour.NEG_LOST;
+        if (!isPartialWinner) return NegotiatingBehaviour.NEG_LOST;
 
         /* El agente es el ganador final (ha ganado todas las comparaciones) */
         LOGGER.info("ejecutar "+sAction);
