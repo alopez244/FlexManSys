@@ -77,10 +77,10 @@ public class TrackingBehaviour extends SimpleBehaviour {
 					sendACLMessage(ACLMessage.REQUEST,target,"trigger_getState",myAgent.getLocalName(),""); //pedimos al agente en running que nos envie el estado
 				}
 			}
-			myAgent.get_timestamp(myAgent,"RedundancyRecovery"); //replica lista para funcionar, se recoge el timestamp
+//			myAgent.get_timestamp(myAgent,"RedundancyRecovery"); //replica lista para funcionar, se recoge el timestamp
 		}
 		if(!myAgent.ExecTimeStamped){
-			myAgent.get_timestamp(myAgent,"ExecutionTime"); //para que solo se ejecute una vez
+//			myAgent.get_timestamp(myAgent,"ExecutionTime"); //para que solo se ejecute una vez
 			myAgent.ExecTimeStamped=true;
 		}
 

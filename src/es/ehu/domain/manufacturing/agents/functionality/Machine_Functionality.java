@@ -32,7 +32,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private ArrayList<ArrayList<String>> productInfo;
     private HashMap<String, String> operationsWithBatchAgents = new HashMap<>();
     private HashMap PLCmsgIn = new HashMap(); // Estructura de datos que se envia al PLC
-    private HashMap rcvd=new HashMap();
+//    private HashMap rcvd=new HashMap();
     private HashMap PLCmsgOut = new HashMap(); // Estructura de datos que se recibe del PLC
     private String BathcID = ""; // Variable que guarda el identificador del lote que se esta fabricando
     private Integer NumOfItems = 0; // Representa el numero de intems que se estan fabricando (todos perteneciente al mismo lote)
@@ -71,7 +71,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
      * @return The name used for registering the agent in the MWM (or SM)
      */
     private void get_Timestamp(Timestamp T, String type){
-        String contenido = "5"+","+"machine1" +","+type+","+String.valueOf(T.getTime());
+        String contenido = "1"+","+"machine1" +","+type+","+String.valueOf(T.getTime());
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
         msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
         msg.setOntology("timestamp_neg");
@@ -91,10 +91,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         this.myAgent = (MachineAgent) mwAgent;
         LOGGER.entry();
 
-        if(myAgent.getLocalName().contains("auxma")){
-            MStart = new Timestamp(System.currentTimeMillis());
-            get_Timestamp(MStart,"MachineStart");
-        }
+//        if(myAgent.getLocalName().contains("auxma")){
+//            MStart = new Timestamp(System.currentTimeMillis());
+//            get_Timestamp(MStart,"MachineStart");
+//        }
         String machineName = myAgent.resourceName;
         Integer machineNumber = Integer.parseInt(machineName.split("_")[1]);
         myAgent.gatewayAgentName = "ControlGatewayCont" + machineNumber.toString(); //Se genera el nombre del Gateway Agent con el que se tendrá que comunicar
@@ -109,30 +109,30 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             if (args[i].toLowerCase().startsWith("id=")) return null;
         }
         //******************************Checkeo del estado del GW y PLC. Agente maquina no iniciará hasta tenerlos disponibles
-        sendACLMessage(16,gatewayAgentID,"ping","","",myAgent);
-        ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 300);
-        if(answer_gw==null){
-            System.out.println("GW is not online. Start GW and repeat.");
-            System.exit(0);
-        }
-
-        sendACLMessage(16, gatewayAgentID, "check_asset","check_asset_on_boot_"+convIDcnt++,"ask_state",myAgent); //primero antes de nada debemos comprobar si el agente GW y el PLC están disponibles
-        ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 300);
-        if(answer!=null){
-            if(!answer.getContent().equals("Working")&&!answer.getContent().equals("Not working")){
-                System.out.println("PLC is not prepared to work.");
-                System.exit(0); //si el PLC o el GW no están disponible no tiene sentido que iniciemos el agente máquina
-            }else{
-                System.out.println("PLC is "+answer.getContent());
-            }
-        }else{
-            System.out.println("PLC is not prepared to work.");
-            System.exit(0); //si el PLC o el GW no están disponible no tiene sentido que iniciemos el agente máquina
-        }
+//        sendACLMessage(16,gatewayAgentID,"ping","","",myAgent);
+//        ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 300);
+//        if(answer_gw==null){
+//            System.out.println("GW is not online. Start GW and repeat.");
+//            System.exit(0);
+//        }
+//
+//        sendACLMessage(16, gatewayAgentID, "check_asset","check_asset_on_boot_"+convIDcnt++,"ask_state",myAgent); //primero antes de nada debemos comprobar si el agente GW y el PLC están disponibles
+//        ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 300);
+//        if(answer!=null){
+//            if(!answer.getContent().equals("Working")&&!answer.getContent().equals("Not working")){
+//                System.out.println("PLC is not prepared to work.");
+//                System.exit(0); //si el PLC o el GW no están disponible no tiene sentido que iniciemos el agente máquina
+//            }else{
+//                System.out.println("PLC is "+answer.getContent());
+//            }
+//        }else{
+//            System.out.println("PLC is not prepared to work.");
+//            System.exit(0); //si el PLC o el GW no están disponible no tiene sentido que iniciemos el agente máquina
+//        }
         //*************************************
-        GWAnswer = new Timestamp(System.currentTimeMillis());
-        get_Timestamp(GWAnswer,"GWAnswer");
-//        myAgent.get_timestamp(myAgent,"GWAnswer");
+//        GWAnswer = new Timestamp(System.currentTimeMillis());
+//        get_Timestamp(GWAnswer,"GWAnswer");
+
 
         //timestamp
         //First, the machine attributes are included
@@ -256,7 +256,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
                     String[] AllInformation = allOperations[i].split(" ");
                     for (String info : AllInformation) {
-                        String attrName = info.split("=")[0];
+                        String attrName = info.split("=")[0]; //nombre plannedFT
                         String attrValue = info.split("=")[1];
 
                         names.add(attrName);
@@ -271,7 +271,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     operationInfo.add(1, aux2);
                     operationInfo.add(2, names);
                     operationInfo.add(3, values);
-
                     myAgent.machinePlan.add(operationInfo);
 
                 }
@@ -293,14 +292,38 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     @Override
     public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData) {
         // TODO
-        // negExternalData --> batchAgentID, numOfItems
-        String seID = (String)negExternalData[0];
-        String seNumOfItems = (String) negExternalData[1];
-        int numItems = Integer.parseInt(seNumOfItems);
-        String seOperationID = (String)negExternalData[2];
+        if(negCriterion.equals("finish_time")){
+            String last_FT="";
+            String operations = (String)negExternalData[0];
+            for(int i = 0 ; i < myAgent.machinePlan.size();i++) {    //Buscamos de todos los plannedStartTime el primero (se asume que estan ordenados)
+                if (myAgent.machinePlan.get(i).get(0).get(0).equals("operation")) {
+                    if (myAgent.machinePlan.get(i).get(2).get(1).equals("plannedFinishTime")) {
+                        last_FT=myAgent.machinePlan.get(i).get(3).get(1);
+                    }
+                }
+            }
+            if(last_FT.equals("")){ //podría ser una máquina sin tareas
+                return 1;
+            }else{
+                Date FT=null;
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+                try {
+                    FT = formatter.parse(last_FT);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                return FT.getTime();
+            }
+        }else {
+            // negExternalData --> batchAgentID, numOfItems
+            String seID = (String)negExternalData[0];
+            String seNumOfItems = (String) negExternalData[1];
+            int numItems = Integer.parseInt(seNumOfItems);
+            String seOperationID = (String)negExternalData[2];
 
-        Random r = new Random();
-        return r.nextInt(1000)*numItems;
+            Random r = new Random();
+            return r.nextInt(1000)*numItems;
+        }
     }
 
     @Override
@@ -622,7 +645,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                                 if (myAgent.machinePlan.get(j).get(2).get(k).equals("plannedStartTime")) {
                                     String starttime = myAgent.machinePlan.get(j).get(3).get(k);
                                     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"); //Se usa el formato XS:DateTime
-                                    SimpleDateFormat formatter2 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS"); //Se usa el formato con milisegundos agregados para mayor precision
                                     Date date2 = getactualtime();
 //                                    System.out.println("Hora actual: " + hora + ":" + minutos + ":" + segundos);
                                     Date date1 = null;

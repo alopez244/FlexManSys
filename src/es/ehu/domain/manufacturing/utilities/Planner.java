@@ -296,6 +296,7 @@ public class Planner extends Agent {
             System.out.print("File: ");
             file = in.nextLine();
             System.out.println();
+            sendACL(ACLMessage.INFORM,"D&D","plan_id",file); //se avisa al D&D de que plan queremos ejecutar
             String uri=appPath+file;
             XMLReader fileReader = new XMLReader();
             ArrayList<ArrayList<ArrayList<String>>> xmlelements = null;
@@ -311,7 +312,7 @@ public class Planner extends Agent {
                 return;
             }
 
-            // We use MPlanInterpreter tu obtain all information
+            // We use MPlanInterpreter to obtain all information
             String planName = file.substring(0, file.length()-4); //saves the plan´s ID to be assigned later in the name attribute
             xmlelements = MPlanInterpreter.getManEntities(myAgent, xmlelements, planName);
             if(xmlelements!=null){
@@ -415,10 +416,9 @@ public class Planner extends Agent {
                 //Start
                 try {
                     Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-
                     start(app, agentAttributes, conversationId);
 
-                    get_timestamp(parentIdList,timestamp);
+//                    get_timestamp(parentIdList,timestamp);
 
                 } catch (Exception e) {
                     LOGGER.error("ERROR IN start METHOD OF PLANNER: Sending command to systemModelAgent");

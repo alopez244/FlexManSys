@@ -297,7 +297,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 MessageTemplate.MatchOntology("delay"));
         this.myAgent = myAgent;
 
-        myAgent.get_timestamp(myAgent,"CreationTime");
+//        myAgent.get_timestamp(myAgent,"CreationTime");
         // Crear un nuevo conversationID
         String conversationId = myAgent.getLocalName() + "_" + chatID++;
 
@@ -571,7 +571,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         this.myAgent = myAgent;
         String parentName = "";
         unregister_from_node();
-        myAgent.get_timestamp(myAgent,"FinishTime");
+//        myAgent.get_timestamp(myAgent,"FinishTime");
         if(myAgent.ActualState=="running"){ //para filtrar las replicas ejecutando terminate
             try {
                 ACLMessage reply = sendCommand(myAgent, "get * reference=" + orderNumber, "parentAgentID");

@@ -1,4 +1,6 @@
 package es.ehu.domain.manufacturing.utilities;
+
+import es.ehu.platform.utilities.XMLReader;
 import es.ehu.platform.template.interfaces.DDInterface;
 import jade.core.AID;
 import jade.core.Agent;
@@ -8,6 +10,7 @@ import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.security.acl.Acl;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +19,7 @@ import java.util.HashMap;
 public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterface {
 //    private volatile AID QoSID = new AID("QoSManagerAgent", false);
     private int convIDCounter=1;
+    private String xmlplan="MPlan1.xml";
     static final Logger LOGGER = LogManager.getLogger(DiagnosisAndDecision.class.getName());
     private Agent myAgent=this;
     private String reported_agent="";
@@ -25,6 +29,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
     private MessageTemplate neg_template=MessageTemplate.and(MessageTemplate.MatchOntology("negotiation"),
             MessageTemplate.MatchPerformative(ACLMessage.INFORM));
     private HashMap<String,HashMap<String,ArrayList<String>>> agents_sorted_by_state=new HashMap<String,HashMap<String,ArrayList<String>>>();
+
     protected void setup(){
         LOGGER.entry();
 
@@ -39,6 +44,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
 
         public void action() {
 
+
                 ACLMessage negotiation_result=myAgent.receive(neg_template); //comprueba si alguna replica en tracking ha cambiado a running
                 if(negotiation_result!=null){
                     actions_after_negotiation(negotiation_result);
@@ -52,10 +58,14 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                             LOGGER.error(msg.getContent()+" is either dead or isolated.");
                             LOGGER.warn("MANUAL MODE: Cosider taking actions to solve the issue");
                         }
-                    } else if (msg.getOntology().equals("msg_lost")) {
+                    } else if(msg.getOntology().equals("redistribute")){
+                        redistribute_machine_operations(msg);
+                    }else if (msg.getOntology().equals("msg_lost")) {
                         actions_after_msg_lost(msg);
                     } else if(msg.getOntology().equals("man/auto")){
                         change_DD_state(msg);
+                    }else if(msg.getOntology().equals("plan_id")){
+                        xmlplan=msg.getContent();
                     }
                 }
             }
@@ -70,13 +80,19 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             sendACL(7,winner,"restart_timeout","reset_timeout",myAgent); //si es batch debe resetear el timeout
             try {
                 ACLMessage parent=sendCommand(myAgent,"get "+winner+" attrib=parent",convID+String.valueOf(convIDCounter++));
+
+
                 String target=get_relationship(parent.getContent()); //devuelve el agente máquina que cuelga del machine
+
+                ACLMessage reference = sendCommand(myAgent, "get " + parent + " attrib=reference", "recovered_batch_reference");
+
+
                 sendACL(ACLMessage.INFORM,target,"release_buffer",winner,myAgent); //pide al machine que vacie el buffer de mensajes retenidos
                 restart_replica(parent.getContent()); //hay que generar una replica en tracking si es posible para mantener el numero de replicas constante
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            get_timestamp(myAgent,msg.getSender().getLocalName(),"RunningAgentRecovery");
+//            get_timestamp(myAgent,msg.getSender().getLocalName(),"RunningAgentRecovery");
         }else if(winner.contains("orderagent")||winner.contains("mplanagent")){ //en caso de ser un order o mplan hay que buscar a los sons responsables de informar
             try {
                 String[] category=winner.split("agent");
@@ -110,7 +126,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            get_timestamp(myAgent,msg.getSender().getLocalName(),"RunningAgentRecovery");
+//            get_timestamp(myAgent,msg.getSender().getLocalName(),"RunningAgentRecovery");
         }else {
             //TODO
         }
@@ -271,6 +287,127 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             //TODO poner a negociar otras maquinas para asumir el mando del batch
         }
         reported_agent= "";
+    }
+
+    public void redistribute_machine_operations(ACLMessage msg){
+        String[] inf=msg.getContent().split("/");
+        String lost_machine=inf[0];
+        String batch=inf[1];
+        String item=inf[2];
+
+        String batch_=get_relationship(lost_machine);
+
+        LOGGER.warn(lost_machine+" operations must be redistributed. "+batch+" stoped on item "+item);
+        String appPath="classes/resources/AppInstances/";
+        String lost_machine_id="";
+        String[] id = new String[1];
+        try {
+            ACLMessage LM_id= sendCommand(myAgent,"get "+lost_machine+" attrib=id", String.valueOf(convIDCounter++));
+            lost_machine_id=LM_id.getContent();
+            id = lost_machine_id.split("");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        XMLReader fileReader = new XMLReader();
+        String uri=appPath+xmlplan;
+        String new_operations="";
+        ArrayList<ArrayList<ArrayList<String>>> xmlelements = fileReader.readFile(uri);
+        int batch_position=0;
+        ArrayList<String> needed_operations=new ArrayList<String >();
+        if(!item.equals("?")){
+            boolean first_item_found=false;
+//          reconstruccion de plan para máquina a partir de batch y item proporcionado
+            for(int i=0;i<xmlelements.size();i++){
+                if(xmlelements.get(i).get(0).get(0).equals("batch")&&xmlelements.get(i).get(3).get(2).equals(batch)){
+                    batch_position=i;
+                    break;
+                }
+            }
+            for(int i=batch_position+1;i<xmlelements.size()&&!xmlelements.get(i).get(0).get(0).equals("batch");i++){
+                if(xmlelements.get(i).get(0).get(0).equals("PlannedItem")){
+                    if(xmlelements.get(i).get(3).get(1).equals(item)||first_item_found){
+                        for(int j=i+1;j<xmlelements.size()&&!xmlelements.get(j).get(0).get(0).equals("PlannedItem");j++){
+                            if(xmlelements.get(j).get(0).get(0).contains("Operation")&&xmlelements.get(j).get(3).get(3).equals(id[1])){
+                                needed_operations.add(xmlelements.get(j).get(3).get(5));
+                                new_operations=new_operations+ "id="+xmlelements.get(j).get(3).get(1)+" plannedFinishTime="+xmlelements.get(j).get(3).get(2)+ " plannedStartTime="+xmlelements.get(j).get(3).get(3)+ " batch_ID="+xmlelements.get(i).get(3).get(0)+" item_ID="+xmlelements.get(i).get(3).get(1)+" order_ID="+xmlelements.get(i).get(3).get(2)+" productType="+xmlelements.get(i).get(3).get(3)+"&";
+                            }
+                        }
+                        first_item_found=true;
+                    }
+                }
+            }
+        }else{ //si no sabemos en que item se ha quedado, rehacemos el lote por completo
+            for(int i=0;i<xmlelements.size();i++){
+                if(xmlelements.get(i).get(0).get(0).equals("batch")&&xmlelements.get(i).get(3).get(2).equals(batch)){
+                    batch_position=i;
+                    break;
+                }
+            }
+            for(int i=batch_position+1;i<xmlelements.size()&&!xmlelements.get(i).get(0).get(0).equals("batch");i++){
+                if(xmlelements.get(i).get(0).get(0).equals("PlannedItem")){
+                    for(int j=i+1;j<xmlelements.size()&&!xmlelements.get(j).get(0).get(0).equals("PlannedItem");j++){
+                        if(xmlelements.get(j).get(0).get(0).contains("Operation")&&xmlelements.get(j).get(3).get(3).equals(id[0])){
+                            needed_operations.add(xmlelements.get(j).get(3).get(5));
+                            new_operations=new_operations+ "id="+xmlelements.get(j).get(3).get(1)+" plannedFinishTime="+xmlelements.get(j).get(3).get(2)+ " plannedStartTime="+xmlelements.get(j).get(3).get(3)+ " batch_ID="+xmlelements.get(i).get(3).get(0)+" item_ID="+xmlelements.get(i).get(3).get(1)+" order_ID="+xmlelements.get(i).get(3).get(2)+" productType="+xmlelements.get(i).get(3).get(3)+"&";
+                        }
+                    }
+                }
+            }
+        }
+        //operaciones listas para añadirlas como external data en la negociación
+
+        //Ahora hay que checkear que máquinas pueden participar
+        ArrayList<String> participating_machines=new ArrayList<String >();
+        try {
+            String[] machine_list=new String[1];
+            ACLMessage machines= sendCommand(myAgent,"get * category=machine", String.valueOf(convIDCounter++));
+            if(machines.getContent().contains(",")){
+                machine_list=machines.getContent().split(",");
+            }else{
+                machine_list[0]=machines.getContent();
+            }
+            ArrayList<String>this_machine_op_list=new ArrayList<String>();
+            String OPL="";
+            for(int i=0;i<machine_list.length;i++){ //comprueba que máquinas pueden participar en la negociación
+                ArrayList<String>temp=needed_operations;
+                ACLMessage operationList= sendCommand(myAgent,"get "+machine_list[i]+" attrib=simpleOperations", String.valueOf(convIDCounter++));
+                OPL=operationList.getContent();
+//                String[] M_ID=id_of_machine.getContent().split("");
+                String[] OP_list=new String[1];
+                if(operationList.getContent().contains(",")){
+                    OP_list=operationList.getContent().split(",");
+                }else{
+                    OP_list[0]=operationList.getContent();
+                }
+                for(int j=0;j<OP_list.length;j++){ //crea un listado de operaciones para la maquina
+                    this_machine_op_list.add(OP_list[j]);
+                }
+                boolean join_negotiation=true;
+                for(int j=0;j<temp.size();j++){  //comprueba si tiene todas las operaciones necesarias
+                    if(!temp.contains(this_machine_op_list.get(j))){
+                        join_negotiation=false;
+                        break;
+                    }
+                }
+                if(join_negotiation){
+                    participating_machines.add(machine_list[i]);
+                    System.out.println(machine_list[i]+" could potentially take over operations "+OPL);
+                }
+            }
+            if(participating_machines.size()>0){
+                String targets="";
+                for(int i=0;i<participating_machines.size();i++){
+                    targets=targets+participating_machines.get(i)+",";
+                }
+                String negotationdata="localneg "+targets+ " criterion=finish_time action=execute externaldata=" + new_operations;
+                sendCommand(myAgent,negotationdata,String.valueOf(convIDCounter++));
+            }else{
+                LOGGER.warn("No machines available to take over operations "+OPL);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void actions_after_msg_lost(ACLMessage msg){

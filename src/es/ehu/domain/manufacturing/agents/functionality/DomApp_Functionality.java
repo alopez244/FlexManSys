@@ -286,7 +286,7 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
     }
     public long calculateNegotiationValue(String negAction, String negCriterion, Object... negExternalData) {
         // TODO
-        get_timestamp(myAgent,"CPUCalcStart");
+//        get_timestamp(myAgent,"CPUCalcStart");
         if(SystemUtils.IS_OS_WINDOWS){
             String result=null;
             try {
@@ -310,7 +310,7 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
             }
             System.out.println(result);
             String[] value=result.split(" "); //result= "100        "
-            get_timestamp(myAgent,"CPUCalcFinish");
+//            get_timestamp(myAgent,"CPUCalcFinish");
             return Long.parseLong(value[0]);
 
         }else {  //el SO es linux
@@ -342,7 +342,7 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
             }else{
                 result=Long.parseLong(value[0]);
             }
-            get_timestamp(myAgent,"CPUCalcFinish");
+//            get_timestamp(myAgent,"CPUCalcFinish");
             return result;
         }
     }

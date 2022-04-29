@@ -101,7 +101,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 						MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchOntology("Information"),MessageTemplate.MatchConversationId("ItemsInfo")),
 								MessageTemplate.and(MessageTemplate.MatchOntology("Information"),MessageTemplate.MatchConversationId("OrderInfo")))));
 		if(!myAgent.ExecTimeStamped){
-			myAgent.get_timestamp(myAgent,"ExecutionTime");
+//			myAgent.get_timestamp(myAgent,"ExecutionTime");
 			myAgent.ExecTimeStamped=true;
 		}
 

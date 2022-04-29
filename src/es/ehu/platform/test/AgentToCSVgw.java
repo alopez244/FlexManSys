@@ -415,12 +415,12 @@ public class AgentToCSVgw {
         List<String[]> testResultsNegCSV = new ArrayList<>();
 
         //Añado la cabecera raw
-//        testResultsNegCSV_raw.add(new String[] {"Parent","Agent","t0_MemoryCalcStart","t1_MemoryCalcFinish","t2_CPUCalcStart","t3_CPUCalcFinish","t4_StartSendState","t5_GetStateDone","t6_MsgSentDone","t7_AcknowledgeGenerated"});
-        testResultsNegCSV_raw.add(new String[] {"Number","Agent","t0_MachineStart","t1_GWAnswer","t2_MachineRunning"});
+        testResultsNegCSV_raw.add(new String[] {"Parent","Agent","t0_MemoryCalcStart","t1_MemoryCalcFinish","t2_CPUCalcStart","t3_CPUCalcFinish","t4_StartSendState","t5_GetStateDone","t6_MsgSentDone","t7_AcknowledgeGenerated"});
+//        testResultsNegCSV_raw.add(new String[] {"Number","Agent","t0_MachineStart","t1_GWAnswer","t2_MachineRunning"});
 
         //Añado la cabecera final
-//        testResultsNegCSV.add(new String[]{"Parent","Agent","MemoryCalcTime (t1-t0)","CPUCalcTime (t3-t2)","GetStateInterval (t5-t4)","MsgSendInterval (t6-t5)","AckGererationInterva (t7-t6)"});
-        testResultsNegCSV.add(new String[]{"Number","Agent","PLCCheck (t1-t0)","TransitionToRunning (t2-t1)","Total (t2-t0)"});
+        testResultsNegCSV.add(new String[]{"Parent","Agent","MemoryCalcTime (t1-t0)","CPUCalcTime (t3-t2)","GetStateInterval (t5-t4)","MsgSendInterval (t6-t5)","AckGererationInterva (t7-t6)"});
+//        testResultsNegCSV.add(new String[]{"Number","Agent","PLCCheck (t1-t0)","TransitionToRunning (t2-t1)","Total (t2-t0)"});
 
         //Itero todas las posiciones del HasMap de componentes
 
@@ -447,68 +447,77 @@ public class AgentToCSVgw {
                 System.out.println(agentNeg.getKey());
 
                     agentname=agentNeg.getKey();
-//                    if(agentNeg.getValue().get("MemoryCalcStart")!=null){
-//                        t0 = agentNeg.getValue().get("MemoryCalcStart");
-//                    }
-                    if(agentNeg.getValue().get("MachineStart")!=null){
-                        t0 = agentNeg.getValue().get("MachineStart");
-                    }
-                    if(agentNeg.getValue().get("GWAnswer")!=null){
-                        t1 = agentNeg.getValue().get("GWAnswer");  //QoS recibe la denuncia
-                    }
-                    if(agentNeg.getValue().get("MachineRunning")!=null){
-                        t2 = agentNeg.getValue().get("MachineRunning"); //D&D recibe confirmacion del QoS
-                    }
-//                    if(agentNeg.getValue().get("CPUCalcFinish")!=null){
-//                        t3 = agentNeg.getValue().get("CPUCalcFinish");  //El sistema ya puede funcionar (si procede)
-//                    }
-//                    if(agentNeg.getValue().get("StartSendState")!=null){
-//                        t4 = agentNeg.getValue().get("StartSendState");  //El sistema ya puede funcionar (si procede)
-//                    }
-//                    if(agentNeg.getValue().get("GetStateDone")!=null){
-//                        t5 = agentNeg.getValue().get("GetStateDone");  //El sistema ya puede funcionar (si procede)
-//                    }
-//                    if(agentNeg.getValue().get("MsgSentDone")!=null){
-//                        t6 = agentNeg.getValue().get("MsgSentDone");  //El sistema ya puede funcionar (si procede)
-//                    }
-//                    if(agentNeg.getValue().get("AcknowledgeGenerated")!=null){
-//                        t7 = agentNeg.getValue().get("AcknowledgeGenerated");  //El sistema ya puede funcionar (si procede)
-//                    }
+//                if(agentNeg.getValue().get("MachineStart")!=null){
+//                    t0 = agentNeg.getValue().get("MachineStart");
+//                }
+//                if(agentNeg.getValue().get("GWAnswer")!=null){
+//                    t1 = agentNeg.getValue().get("GWAnswer");  //QoS recibe la denuncia
+//                }
+//                if(agentNeg.getValue().get("MachineRunning")!=null){
+//                    t2 = agentNeg.getValue().get("MachineRunning"); //D&D recibe confirmacion del QoS
+//                }
 
-//                    String [] data_raw = new String[] {parentNeg.getKey(), agentname, t0, t1, t2, t3,t4,t5,t6,t7}; //Los datos raw se escriben por agente
-//                    testResultsNegCSV_raw.add(data_raw);
-                    String [] data_raw = new String[] {parentNeg.getKey(),agentname, t0, t1, t2}; //Los datos raw se escriben por agente
+
+
+
+                    if(agentNeg.getValue().get("MemoryCalcStart")!=null){
+                        t0 = agentNeg.getValue().get("MemoryCalcStart");
+                    }
+
+                    if(agentNeg.getValue().get("CPUCalcFinish")!=null){
+                        t3 = agentNeg.getValue().get("CPUCalcFinish");  //El sistema ya puede funcionar (si procede)
+                    }
+                    if(agentNeg.getValue().get("StartSendState")!=null){
+                        t4 = agentNeg.getValue().get("StartSendState");  //El sistema ya puede funcionar (si procede)
+                    }
+                    if(agentNeg.getValue().get("GetStateDone")!=null){
+                        t5 = agentNeg.getValue().get("GetStateDone");  //El sistema ya puede funcionar (si procede)
+                    }
+                    if(agentNeg.getValue().get("MsgSentDone")!=null){
+                        t6 = agentNeg.getValue().get("MsgSentDone");  //El sistema ya puede funcionar (si procede)
+                    }
+                    if(agentNeg.getValue().get("AcknowledgeGenerated")!=null){
+                        t7 = agentNeg.getValue().get("AcknowledgeGenerated");  //El sistema ya puede funcionar (si procede)
+                    }
+
+                    String [] data_raw = new String[] {parentNeg.getKey(), agentname, t0, t1, t2, t3,t4,t5,t6,t7}; //Los datos raw se escriben por agente
+//                    String [] data_raw = new String[] {parentNeg.getKey(),agentname, t0, t1, t2}; //Los datos raw se escriben por agente
                     testResultsNegCSV_raw.add(data_raw);
 
-//                    if(!t1.equals("")&&!t0.equals("")){
-//                        MemoryCalcTime = String.valueOf((Double.valueOf(t1)-Double.valueOf(t0))/1000);
-//                    }
+//
+//                if(!t1.equals("")&&!t0.equals("")){
+//                    PLCCheck = String.valueOf((Double.valueOf(t1)-Double.valueOf(t0))/1000);
+//                }
+//                if(!t2.equals("")&&!t1.equals("")){
+//                    TransitionToRunning = String.valueOf((Double.valueOf(t2)-Double.valueOf(t1))/1000);
+//                }
+//                if(!t2.equals("")&&!t0.equals("")){
+//                    Total = String.valueOf((Double.valueOf(t2)-Double.valueOf(t0))/1000);
+//                }
+
+
+
                     if(!t1.equals("")&&!t0.equals("")){
-                        PLCCheck = String.valueOf((Double.valueOf(t1)-Double.valueOf(t0))/1000);
+                        MemoryCalcTime = String.valueOf((Double.valueOf(t1)-Double.valueOf(t0))/1000);
                     }
-                    if(!t2.equals("")&&!t1.equals("")){
-                        TransitionToRunning = String.valueOf((Double.valueOf(t2)-Double.valueOf(t1))/1000);
+
+                    if(!t3.equals("")&&!t2.equals("")){
+                        CPUCalcTime = String.valueOf((Double.valueOf(t3)-Double.valueOf(t2))/1000);
                     }
-                    if(!t2.equals("")&&!t0.equals("")){
-                        Total = String.valueOf((Double.valueOf(t2)-Double.valueOf(t0))/1000);
+                    if(!t5.equals("")&&!t4.equals("")){
+                        GetStateInterval = String.valueOf((Double.valueOf(t5)-Double.valueOf(t4))/1000);
                     }
-//                    if(!t3.equals("")&&!t2.equals("")){
-//                        CPUCalcTime = String.valueOf((Double.valueOf(t3)-Double.valueOf(t2))/1000);
-//                    }
-//                    if(!t5.equals("")&&!t4.equals("")){
-//                        GetStateInterval = String.valueOf((Double.valueOf(t5)-Double.valueOf(t4))/1000);
-//                    }
-//                    if(!t6.equals("")&&!t5.equals("")){
-//                        MsgSendInterval = String.valueOf((Double.valueOf(t6)-Double.valueOf(t5))/1000);
-//                    }
-//                    if(!t7.equals("")&&!t6.equals("")){
-//                        AckGererationInterval  = String.valueOf((Double.valueOf(t7)-Double.valueOf(t6))/1000);
-//                    }
+                    if(!t6.equals("")&&!t5.equals("")){
+                        MsgSendInterval = String.valueOf((Double.valueOf(t6)-Double.valueOf(t5))/1000);
+                    }
+                    if(!t7.equals("")&&!t6.equals("")){
+                        AckGererationInterval  = String.valueOf((Double.valueOf(t7)-Double.valueOf(t6))/1000);
+                    }
 
 
-//                    String[] data = new String[] {parentNeg.getKey(), agentname,MemoryCalcTime,CPUCalcTime,GetStateInterval, MsgSendInterval, AckGererationInterval};
-//                    testResultsNegCSV.add(data);
-                    String[] data = new String[] {parentNeg.getKey(),agentname,PLCCheck,TransitionToRunning, Total};
+                    String[] data = new String[] {parentNeg.getKey(), agentname,MemoryCalcTime,CPUCalcTime,GetStateInterval, MsgSendInterval, AckGererationInterval};
+
+//                    String[] data = new String[] {parentNeg.getKey(),agentname,PLCCheck,TransitionToRunning, Total};
                     testResultsNegCSV.add(data);
 
 //                }

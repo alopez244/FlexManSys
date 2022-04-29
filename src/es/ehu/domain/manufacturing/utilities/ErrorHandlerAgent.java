@@ -15,10 +15,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.sql.Timestamp;
+import java.util.HashMap;
+
+
 
 public class ErrorHandlerAgent extends Agent{
     private Agent myAgent;
     public int timeStmp=0;
+
 
     static final Logger LOGGER = LogManager.getLogger(ErrorHandlerAgent.class.getName());
     public ErrorHandlerAgent() {
@@ -108,6 +112,7 @@ public class ErrorHandlerAgent extends Agent{
             return found;
         }
 
+
         public boolean PingAgent (String name,Agent agent){  //checkea el estado de los agentes de aplicación, recurso y gateway
 //        this.myAgent = agent;
             MessageTemplate pingtemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
@@ -191,5 +196,6 @@ public class ErrorHandlerAgent extends Agent{
         }
     }
     }
+
 
 

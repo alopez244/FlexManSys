@@ -18,7 +18,7 @@ import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
+import static es.ehu.platform.utilities.MasReconOntologies.*;
 
 /**
  * Manages several simultaneous negotiations, differentiating the execution
@@ -129,7 +129,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
     private static final String CMD_REFUSE = "Refuse";
     private boolean busy=false;
     private MWAgent myAgent;
-    private boolean direct_win=false;
+    private boolean direct_win=false; //evita realizar calculos de valor de negociacion cuando una entidad ha ganado ya por ser la unica en participar.
     private NegFunctionality aNegFunctionality;
 
     /**
@@ -240,25 +240,49 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                     }
                                 }
                         }else if (actionValue_temp.equals("execute")) {
-                            negMsg = new MsgNegotiation((Iterator<AID>) msg.getAllReceiver(), conversationId, cmd.attribs.get("action"), cmd.attribs.get("criterion"),
-                                    externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString());
-                            if(negMsg.getTargets().length<=1){
-                                actionValue=actionValue_temp;
-                                switch (aNegFunctionality.checkNegotiation(conversationId, cmd.attribs.get("action"), 1,
-                                        0, true, true, true, negMsg.getExternalData()[0], negMsg.getExternalData()[1], negMsg.getExternalData()[2])) {
+                            if(cmd.attribs.get("criterion").equals("finish_time")){
+                                negMsg = new MsgNegotiation((Iterator<AID>) msg.getAllReceiver(), conversationId, cmd.attribs.get("action"), cmd.attribs.get("criterion"),
+                                        externaldata.nextElement().toString());
+                                if(negMsg.getTargets().length<=1){
+                                    actionValue=actionValue_temp;
+                                    switch (aNegFunctionality.checkNegotiation(conversationId, cmd.attribs.get("action"), 1,
+                                            0, true, true, true, negMsg.getExternalData()[0])) {
 
-                                    case NEG_LOST: //he perdido la negociación
-                                        LOGGER.info("> " + myAgent.getLocalName() + " lost nego" + conversationId);
-                                        break;
+                                        case NEG_LOST: //he perdido la negociación
+                                            LOGGER.info("> " + myAgent.getLocalName() + " lost nego" + conversationId);
+                                            break;
 
-                                    case NEG_RETRY: //he ganado la negociación pero había ganado otra por lo que pido al que la ha iniciado que repita
-                                        break;
+                                        case NEG_RETRY: //he ganado la negociación pero había ganado otra por lo que pido al que la ha iniciado que repita
+                                            break;
 
-                                    case NEG_WON: //he ganado la negociación y termina correctamente
-                                        System.out.println("WON!");
-                                        direct_win=true;
-                                    case NEG_FAIL:
-                                        break;
+                                        case NEG_WON: //he ganado la negociación y termina correctamente
+                                            System.out.println("WON!");
+                                            direct_win=true;
+                                        case NEG_FAIL:
+                                            break;
+                                    }
+                                }
+                            }else{
+                                negMsg = new MsgNegotiation((Iterator<AID>) msg.getAllReceiver(), conversationId, cmd.attribs.get("action"), cmd.attribs.get("criterion"),
+                                        externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString());
+                                if(negMsg.getTargets().length<=1){
+                                    actionValue=actionValue_temp;
+                                    switch (aNegFunctionality.checkNegotiation(conversationId, cmd.attribs.get("action"), 1,
+                                            0, true, true, true, negMsg.getExternalData()[0], negMsg.getExternalData()[1], negMsg.getExternalData()[2])) {
+
+                                        case NEG_LOST: //he perdido la negociación
+                                            LOGGER.info("> " + myAgent.getLocalName() + " lost nego" + conversationId);
+                                            break;
+
+                                        case NEG_RETRY: //he ganado la negociación pero había ganado otra por lo que pido al que la ha iniciado que repita
+                                            break;
+
+                                        case NEG_WON: //he ganado la negociación y termina correctamente
+                                            System.out.println("WON!");
+                                            direct_win=true;
+                                        case NEG_FAIL:
+                                            break;
+                                    }
                                 }
                             }
                         }else if (actionValue_temp.equals("supplyConsumables")) {
@@ -365,11 +389,11 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                     case NEG_WON: //he ganado la negociación y termina correctamente
                                         LOGGER.info(myAgent.getLocalName() + " WON negotiation(id:" + conversationId + ")!");
 
-                                        try {
-                                            Thread.sleep(100);
-                                        } catch (InterruptedException e) {
-                                            e.printStackTrace();
-                                        }
+//                                        try {
+//                                            Thread.sleep(100);
+//                                        } catch (InterruptedException e) {
+//                                            e.printStackTrace();
+//                                        }
 
                                         ACLMessage inform_winner = new ACLMessage(ACLMessage.INFORM);
                                         inform_winner.setOntology(ONT_NEGOTIATE);
@@ -439,11 +463,11 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                     case NEG_WON: //he ganado la negociación y termina correctamente
                                         LOGGER.info(myAgent.getLocalName() + " WON negotiation(id:" + conversationId + ")!");
 
-                                        try {
-                                            Thread.sleep(100);
-                                        } catch (InterruptedException e) {
-                                            e.printStackTrace();
-                                        }
+//                                        try {
+//                                            Thread.sleep(100);
+//                                        } catch (InterruptedException e) {
+//                                            e.printStackTrace();
+//                                        }
 
                                         ACLMessage inform_winner = new ACLMessage(ACLMessage.INFORM);
                                         inform_winner.setOntology(ONT_NEGOTIATE);
@@ -484,37 +508,111 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                 } catch (Exception e) {
                                     LOGGER.debug("Received value is not a number");
                                 }
+                                String Criterion = (String) negotiationRuntime.get(conversationId).getCriterion();
+                                if(Criterion.equals("finish_time")){
+                                    LOGGER.info(msg.getSender().getLocalName() + "(" + receivedVal + ") ");
+                                    negotiationRuntime.get(conversationId).cntReplies();
 
-                                LOGGER.info(msg.getSender().getLocalName() + "(" + receivedVal + ") ");
-                                negotiationRuntime.get(conversationId).cntReplies();
+                                    boolean tieBreak = msg.getSender().getLocalName().compareTo(myAgent.getLocalName()) > 0;
 
-                                boolean tieBreak = msg.getSender().getLocalName().compareTo(myAgent.getLocalName()) > 0;
+                                    String Operations = (String) negotiationRuntime.get(conversationId).getExternalData()[0];
 
-                                String seID = (String) negotiationRuntime.get(conversationId).getExternalData()[0];
-                                String seNumOfItems = (String) negotiationRuntime.get(conversationId).getExternalData()[1];
-                                String seOperationID = (String) negotiationRuntime.get(conversationId).getExternalData()[2];
+                                    switch (aNegFunctionality.checkNegotiation(conversationId, negotiationRuntime.get(conversationId).getAction(), receivedVal,
+                                            negotiationRuntime.get(conversationId).getScalarValue(), tieBreak, negotiationRuntime.get(conversationId).checkReplies(), negotiationRuntime.get(conversationId).isPartialWinner(),
+                                            Operations)) {
 
-                                switch (aNegFunctionality.checkNegotiation(conversationId, negotiationRuntime.get(conversationId).getAction(), receivedVal,
-                                        negotiationRuntime.get(conversationId).getScalarValue(), tieBreak, negotiationRuntime.get(conversationId).checkReplies(), negotiationRuntime.get(conversationId).isPartialWinner(),
-                                        seID, seNumOfItems, seOperationID)) {
-
-                                    case NEG_LOST: //he perdido la negociación
-                                        LOGGER.info("Negotiation (id: " + conversationId + ") loser " + myAgent.getLocalName() + " (value:" + negotiationRuntime.get(conversationId).getScalarValue() + ") dropped");
+                                        case NEG_LOST: //he perdido la negociación
+                                            LOGGER.info("Negotiation (id: " + conversationId + ") loser " + myAgent.getLocalName() + " (value:" + negotiationRuntime.get(conversationId).getScalarValue() + ") dropped");
 //                                negotiationRuntime.remove(conversationId); //salgo de esta negociación
-                                        negotiationRuntime.get(conversationId).isNotPartialWinner();
-                                        break;
+                                            negotiationRuntime.get(conversationId).isNotPartialWinner();
+                                            break;
 
-                                    case NEG_RETRY: //he ganado la negociación pero había ganado otra por lo que pido al que la ha iniciado que repita
-                                        negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
-                                        break;
+                                        case NEG_RETRY: //he ganado la negociación pero había ganado otra por lo que pido al que la ha iniciado que repita
+//                                            negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
+                                            break;
 
-                                    case NEG_WON: //he ganado la negociación y termina correctamente
-                                        LOGGER.info(myAgent.getLocalName() + " WON negotiation(id:" + conversationId + ")!");
-                                        negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
+                                        case NEG_WON: //he ganado la negociación y termina correctamente
+                                            LOGGER.info(myAgent.getLocalName() + " WON negotiation(id:" + conversationId + ")!");
+//                                            negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
+                                            ACLMessage inform_winner = new ACLMessage(ACLMessage.INFORM);
+                                            inform_winner.setOntology(ONT_NEGOTIATE);
+                                            inform_winner.setConversationId(conversationId);
+                                            LOGGER.debug("Targets lenght: " + negotiationRuntime.get(conversationId).getTargets().length);
+                                            for (AID id : negotiationRuntime.get(conversationId).getTargets()) {
+                                                // Removes the own agent from the list
+                                                if (!id.getLocalName().equals(myAgent.getLocalName())) {
+                                                    inform_winner.addReceiver(id);
+                                                }
+                                            }
+                                            myAgent.send(inform_winner);
 
-                                    case NEG_FAIL:
-                                        negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
-                                        break;
+                                            ACLMessage new_operations=new ACLMessage(ACLMessage.REQUEST);
+                                            new_operations.setOntology(ONT_RUN);
+                                            new_operations.setContent(Operations);
+                                            new_operations.addReceiver(myAgent.getAID());
+                                            myAgent.send(new_operations);
+                                            busy = false;
+
+                                        case NEG_FAIL:
+//                                            negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
+                                            break;
+                                    }
+                                    if (negotiationRuntime.get(conversationId).checkReplies()) { //si he pasado por todos las pujas y sea ganador o perdedor
+                                        negotiationRuntime.remove(conversationId);
+                                    }
+                                }else{
+                                    LOGGER.info(msg.getSender().getLocalName() + "(" + receivedVal + ") ");
+                                    negotiationRuntime.get(conversationId).cntReplies();
+
+                                    boolean tieBreak = msg.getSender().getLocalName().compareTo(myAgent.getLocalName()) > 0;
+
+                                    String seID = (String) negotiationRuntime.get(conversationId).getExternalData()[0];
+                                    String seNumOfItems = (String) negotiationRuntime.get(conversationId).getExternalData()[1];
+                                    String seOperationID = (String) negotiationRuntime.get(conversationId).getExternalData()[2];
+
+                                    switch (aNegFunctionality.checkNegotiation(conversationId, negotiationRuntime.get(conversationId).getAction(), receivedVal,
+                                            negotiationRuntime.get(conversationId).getScalarValue(), tieBreak, negotiationRuntime.get(conversationId).checkReplies(), negotiationRuntime.get(conversationId).isPartialWinner(),
+                                            seID, seNumOfItems, seOperationID)) {
+
+                                        case NEG_LOST: //he perdido la negociación
+                                            LOGGER.info("Negotiation (id: " + conversationId + ") loser " + myAgent.getLocalName() + " (value:" + negotiationRuntime.get(conversationId).getScalarValue() + ") dropped");
+//                                negotiationRuntime.remove(conversationId); //salgo de esta negociación
+                                            negotiationRuntime.get(conversationId).isNotPartialWinner();
+                                            break;
+
+                                        case NEG_RETRY: //he ganado la negociación pero había ganado otra por lo que pido al que la ha iniciado que repita
+//                                            negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
+                                            break;
+
+                                        case NEG_WON: //he ganado la negociación y termina correctamente
+                                            LOGGER.info(myAgent.getLocalName() + " WON negotiation(id:" + conversationId + ")!");
+//                                            negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
+                                            ACLMessage inform_winner = new ACLMessage(ACLMessage.INFORM);
+                                            inform_winner.setOntology(ONT_NEGOTIATE);
+                                            inform_winner.setConversationId(conversationId);
+                                            LOGGER.debug("Targets lenght: " + negotiationRuntime.get(conversationId).getTargets().length);
+                                            for (AID id : negotiationRuntime.get(conversationId).getTargets()) {
+                                                // Removes the own agent from the list
+                                                if (!id.getLocalName().equals(myAgent.getLocalName())) {
+                                                    inform_winner.addReceiver(id);
+                                                }
+                                            }
+                                            myAgent.send(inform_winner);
+//
+//                                            ACLMessage new_operations=new ACLMessage(ACLMessage.REQUEST);
+//                                            new_operations.setOntology(ONT_RUN);
+//                                            new_operations.setContent(Operations);
+//                                            new_operations.addReceiver(myAgent.getAID());
+//                                            myAgent.send(new_operations);
+                                            busy = false;
+
+                                        case NEG_FAIL:
+//                                            negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
+                                            break;
+                                    }
+                                    if (negotiationRuntime.get(conversationId).checkReplies()) { //si he pasado por todos las pujas y sea ganador o perdedor
+                                        negotiationRuntime.remove(conversationId);
+                                    }
                                 }
 
                             } else {// !negotiationRuntime.containsKey(conversationId)
@@ -733,6 +831,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
             long value = aNegFunctionality.calculateNegotiationValue(negMsg.getNegAction(), negMsg.getCriterion(), negMsg.getExternalData());
             NegotiationData newNegotiation = new NegotiationData(requester, negMsg);
             newNegotiation.setScalarValue(value);
+
             negotiationRuntime.put(negId, newNegotiation);
 //            negotiationRuntime.put(negId, newNegotiation);
             //Segundo, enviar un mensaje al resto de agentes con mi valor de negociación

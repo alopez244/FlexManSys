@@ -63,18 +63,18 @@ public class PingBehaviour extends SimpleBehaviour{
                         ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 300);
                         if (answer != null) {
                             if (answer.getContent().equals("Working")) { //PLC esta ejecutando algun plan y no tiene errores
-                                reply.setContent(myAgent.gatewayAgentName + ":OK\n" + "PLC:W");
+                                reply.setContent(myAgent.gatewayAgentName + ":OK PLC:W");
                             } else if (answer.getContent().equals("Not working")) { //PLC esta a la espera de recibir plan
-                                reply.setContent(myAgent.gatewayAgentName + ":OK\n" + "PLC:NW");
+                                reply.setContent(myAgent.gatewayAgentName + ":OK PLC:NW");
                             } else if (answer.getContent().equals("Error while working")) { //Error mientras se encontraba trabajando
-                                reply.setContent(myAgent.gatewayAgentName + ":OK\n" + "PLC:EW");
+                                reply.setContent(myAgent.gatewayAgentName + ":OK PLC:EW");
                             } else if (answer.getContent().equals("Error while not working")) { //Error sin estar trabajando
-                                reply.setContent(myAgent.gatewayAgentName + ":OK\n" + "PLC:ENW");
+                                reply.setContent(myAgent.gatewayAgentName + ":OK PLC:ENW");
                             } else {
-                                reply.setContent(myAgent.gatewayAgentName + ":OK\n" + "PLC:?");
+                                reply.setContent(myAgent.gatewayAgentName + ":OK PLC:?");
                             }
                         } else {
-                            reply.setContent(myAgent.gatewayAgentName + ":OK\n" + "PLC:?"); //con el tecnomatix en pausa siempre se devuelve esto aunque el GW este bien porque no contesta
+                            reply.setContent(myAgent.gatewayAgentName + ":NOOK PLC:?"); //con el tecnomatix en pausa siempre se devuelve esto aunque el GW este bien porque no contesta
                         }
                     }
                 }else{

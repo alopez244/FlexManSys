@@ -14,4 +14,6 @@ public interface DDInterface extends Serializable {
 
     public void change_DD_state(ACLMessage msg);
 
+    public void redistribute_machine_operations(ACLMessage msg);
+
 }

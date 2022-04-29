@@ -488,14 +488,7 @@ public class MWAgent extends Agent {
             }
 
         }else if(type.equals("MachineStart")||type.equals("GWAnswer")||type.equals("MachineRunning")){
-            String number="";
-            if(a.getLocalName().equals("machine1")){
-                number="5";
-            }else if(a.getLocalName().equals("machine2")){
-                number="1";
-            }else{
-                number="4";
-            }
+            String number="1";
             String contenido = number+","+a.getLocalName() +","+type+","+String.valueOf(timestamp.getTime());
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
             msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
@@ -547,7 +540,7 @@ public class MWAgent extends Agent {
             confirmation.setContent(msg.getContent());
             Date date = new Date();
             long instant = date.getTime();
-            instant=instant+1000; //añade una espera de 1.5 (orig) / 3 (pruebas) seg
+            instant=instant+1000; //añade una espera de 1.5 seg (orig) / 3 seg(pruebas Raspberrys) / 1 seg (pruebas cluster PCs)
             ExpMsg[1]=instant;
             AID receiver=(AID) itor.next();
             confirmation.addReceiver(receiver);

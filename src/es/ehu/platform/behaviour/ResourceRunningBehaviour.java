@@ -64,7 +64,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
     public void onStart() {
         //timestamp
         LOGGER.entry();
-        myAgent.get_timestamp(myAgent,"MachineRunning");
+//        myAgent.get_timestamp(myAgent,"MachineRunning");
         myAgent.ActualState="running";
         this.PrevPeriod = myAgent.period;
         if (myAgent.period < 0) {
@@ -191,7 +191,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         ACLMessage err_simulation = myAgent.receive(template3);
         if (err_simulation!=null) {
             System.out.println(err_simulation.getSender().getLocalName()+" politely asked to kill myself");
-            myAgent.get_timestamp(myAgent,"AgentKilled");
+//            myAgent.get_timestamp(myAgent,"AgentKilled");
             System.out.println(System.currentTimeMillis()); //timestamp para comparar tiempos entre muerte real y timestamp: ~12ms en PC
             System.exit(0); //mata al nodo completo
         }

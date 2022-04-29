@@ -82,190 +82,10 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         itemreference=take_item_references(finish_times_of_batch);
         items_finish_times=take_finish_times(finish_times_of_batch);
 
-//        ArrayList<ArrayList<ArrayList<ArrayList<String>>>> Traceability=new ArrayList<>();
-//        ArrayList<String> remaining=new ArrayList<String>();
-//        ArrayList<String> FT=new ArrayList<String>();
-//        ArrayList<String> replicas=new ArrayList<String>();
-//        String parts1[] =state.split("/div0/"); //el divisor 0 divide los argumentos y el resto se usan para los arraylist
-//        String productTraceabilityConc = parts1[0]; //trazabilidad concatenada
-//        String remainingConc = null;
-//        if (parts1[1] != null&&parts1[1] != "") {
-//            remainingConc = parts1[1]; //solo si quedan acciones/SonAgentIDs
-//        }
-//        String firstimeString = parts1[2]; //primera vez
-//
-//        String FinishTimesConc=parts1[3]; //finish times concatenados (cada agente de aplicación lleva un formato)
-//        parentAgentID=parts1[4]; 					//parent
-//        String replicasConc=parts1[5];		//replicas del agente
-//        finish_times_of_batch=parts1[6];   //FT de cada item
-//        itemreference=take_item_references(finish_times_of_batch); //construimos la variable itemreference
-//        actual_item_number=Integer.parseInt(parts1[7]);  //el item que se esta produciendo actualmente
-//        String data_string=parts1[8];             //la fecha cuando se pidió el delay
-//        delaynum=Long.parseLong(parts1[9]);                 //el delay devuelto por el machine
-//        String s_expected_finish_date=parts1[10];
-//
-//        if(data_string.equals("")){
-//            System.out.println("Date when delay was asked is lost. Timeout wont be able to start");
-//            date_when_delay_was_asked=null;
-//        }else{
-//            SimpleDateFormat formato = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-//            try {
-//                date_when_delay_was_asked = formato.parse(data_string);
-//            } catch (ParseException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//        if(s_expected_finish_date.equals("*")){
-//            System.out.println("Date when delay was asked is lost. Timeout thread cannot be start");
-//            expected_finish_date=null;
-//        }else{
-//            SimpleDateFormat formato = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-//            try {
-//                expected_finish_date = formato.parse(s_expected_finish_date);
-//            } catch (ParseException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//
-//        String parts2[] = productTraceabilityConc.split("/div1/"); //construye la trazabilidad
-//        for (int i = 0; i < parts2.length; i++) {
-//            Traceability.add(i, new ArrayList<ArrayList<ArrayList<String>>>());
-//            String parts3[] = parts2[i].split("/div2/");
-//            for (int j = 0; j < parts3.length; j++) {
-//                Traceability.get(i).add(j, new ArrayList<ArrayList<String>>());
-//                String parts4[] = parts3[j].split("/div3/");
-//                for (int k = 0; k < parts4.length; k++) {
-//                    Traceability.get(i).get(j).add(k, new ArrayList<String>());
-//                    String parts5[] = parts4[k].split("/div4/");
-//                    for (int l = 0; l < parts5.length; l++) {
-//                        Traceability.get(i).get(j).get(k).add(parts5[l]);
-//                    }
-//                }
-//            }
-//        }
-//        productsTraceability=Traceability;
-//        if (remainingConc != null) {    //construye bien los sonagentID o actionlist segun el tipo de agente
-//            String parts6[] = remainingConc.split("/div1/");
-//            for (int i = 0; i < parts6.length; i++) {
-//                remaining.add(parts6[i]);
-//            }
-//        }
-//        actionList=remaining;
-//
-//        firstTime = Boolean.parseBoolean(firstimeString);
-//        String parts7[]=FinishTimesConc.split("/div1/");
-//        for(int i=0;i<parts7.length;i++){
-//            FT.add(parts7[i]);
-//        }
-//        items_finish_times=FT;
-//        String parts8[]=replicasConc.split("/div1/");
-//        for(int i=0;i<parts8.length;i++){
-//            if(!parts8[i].equals(myAgent.getLocalName())){
-//                replicas.add(parts8[i]);
-//            }
-//        }
-//        myAgent.replicas=replicas;
     }
     @Override
     public String getState(){
-     //div0 dividen las diferentes variables
-     //div1 y posteriores se usan para dividir arraylist de multiples dimensiones
-//
-//    myAgent.antiloopflag=true;
-//        String state="";
-//        ArrayList<String> updated_replicas=new ArrayList<String>();
-//        ArrayList<String> Finishtimes=take_finish_times(finish_times_of_batch);
-//
-//
-//        for(int i=0;i<productsTraceability.size();i++){
-//            if(i!=0){
-//                state=state+"/div1/";
-//            }
-//            for(int j=0;j<productsTraceability.get(i).size();j++){
-//                if(j!=0){
-//                    state=state+"/div2/";
-//                }
-//                for(int k=0;k<productsTraceability.get(i).get(j).size();k++){
-//                    if(k!=0){
-//                        state=state+"/div3/";
-//                    }
-//                    for(int l=0;l<productsTraceability.get(i).get(j).get(k).size();l++){
-//                        if(l!=0){
-//                            state=state+"/div4/";
-//                        }
-//                        state=state+productsTraceability.get(i).get(j).get(k).get(l);
-//                    }
-//                }
-//            }
-//        }
-//        state=state+"/div0/";
-//        for(int i=0;i<actionList.size();i++){
-//            if(i!=0){
-//                state=state+"/div1/";
-//            }
-//            state=state+actionList.get(i);
-//        }
-//        state=state+"/div0/"+String.valueOf(firstTime)+"/div0/";
-//
-//        for(int i=0;i<Finishtimes.size();i++){ //concatena los FT de los item
-//            if(i==0){
-//                state=state+Finishtimes.get(i);
-//            }else{
-//                state=state+"/div1/"+Finishtimes.get(i);
-//            }
-//        }
-//        state=state+"/div0/"+parentAgentID+"/div0/";
-//
-//        try {   //realiza la consulta al sa para tener la lista de replicas actualizada.
-//            String[] replicas=new String[1];
-//            if(redundancy.equals("1")){
-//                replicas[0] =" ";
-//            }else{
-//                ACLMessage parent = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "GetBatchParent");
-//                ACLMessage replicasACL = sendCommand(myAgent, "get * state=tracking parent=" + parent.getContent(), "GetBatchUpdatedReplicas");
-//
-//                if(replicasACL.getContent().contains(",")){
-//                    replicas= replicasACL.getContent().split(",");
-//                }else{
-//                    replicas[0] = replicasACL.getContent();
-//                }
-//            }
-//            for(int i=0; i<replicas.length;i++){
-//                if(i==0){
-//                    state=state+replicas[i];
-//                }else{
-//                    state=state+"/div1/"+replicas[i];
-//                }
-//            }
-//            for(int i=0;i<replicas.length;i++){ //actualiza las replicas de este agente
-//                updated_replicas.add(replicas[i]);
-//            }
-//            myAgent.replicas=updated_replicas;
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        state=state+"/div0/"+finish_times_of_batch;
-//        state=state+"/div0/"+String.valueOf(actual_item_number);
-//        String string_date ="";
-//        if(date_when_delay_was_asked!=null){
-//            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-//            string_date = sdf.format(date_when_delay_was_asked);
-//        }
-//        state=state+"/div0/"+string_date;
-//
-//        state=state+"/div0/"+String.valueOf(delaynum);
-//
-//        String s_exp_fd="*";
-//        if(expected_finish_date!=null){
-//            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-//            s_exp_fd = sdf.format(expected_finish_date);
-//        }
-//        state=state+"/div0/"+s_exp_fd;
-//
-//        myAgent.antiloopflag=false;  //baja el flag de antiloop
+
         myAgent.replicas=update_tracking_replicas();
         StructBatchAgentState BAstate=new StructBatchAgentState();
         BAstate.setproductsTraceability(productsTraceability);
@@ -345,7 +165,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     public Void init(MWAgent myAgent) {
 
         this.myAgent = myAgent;
-         myAgent.get_timestamp(myAgent,"CreationTime");
+//         myAgent.get_timestamp(myAgent,"CreationTime");
         String conversationId = myAgent.getLocalName() + "_" + chatID++;
         firstState = getArgumentOfAgent(myAgent, "firstState");
         redundancy = getArgumentOfAgent(myAgent, "redundancy");
@@ -599,7 +419,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         this.myAgent = myAgent;
         String parentName = "";
         unregister_from_node();
-        myAgent.get_timestamp(myAgent,"FinishTime");
+//        myAgent.get_timestamp(myAgent,"FinishTime");
         if(myAgent.ActualState=="running"){ //para filtrar las replicas ejecutando terminate
             try {
                 ACLMessage reply = sendCommand(myAgent, "get * reference=" + batchNumber, "parentAgentID");

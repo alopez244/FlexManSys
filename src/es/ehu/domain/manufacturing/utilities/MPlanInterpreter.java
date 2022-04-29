@@ -131,15 +131,39 @@ public class MPlanInterpreter {
             ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
             msg.addReceiver(new AID((String) pair.getKey(), AID.ISLOCALNAME));
             msg.setOntology("data");
+
+
+            String data=(String)pair.getValue();
+            ArrayList<String> batch_list=new ArrayList<String>();
+            String previous_batch="";
+            String[] batch_raw_data=data.split("batch_ID=");
+            int index=1;
+            while(batch_raw_data.length>index){
+                String[] actual_batch=batch_raw_data[index].split(" ");
+                if(!actual_batch[0].equals(previous_batch)){
+                    batch_list.add(actual_batch[0]);
+                }
+                previous_batch=actual_batch[0];
+                index++;
+            }
+
             msg.setContent((String) pair.getValue());
             myAgent.send(msg);
             ACLMessage ack= myAgent.blockingReceive(MessageTemplate.MatchPerformative(ACLMessage.CONFIRM),500);
             if(ack==null){
-//                System.out.println("ERROR. "+msg.getAllReceiver()+" did not answer on time.");
+                System.out.println("ERROR. "+msg.getAllReceiver()+" did not answer on time.");
                 return null;
             }
 
+            for(int i=0;i<batch_list.size();i++){
+                ACLMessage inform_QoS=new ACLMessage(ACLMessage.INFORM);
+                inform_QoS.setOntology("add_relation");
+                inform_QoS.setContent(batch_list.get(i)+"/"+(String)pair.getKey());
+                inform_QoS.addReceiver(new AID("QoSManagerAgent", AID.ISLOCALNAME));
+                myAgent.send(inform_QoS);
+            }
         }
+
         //No es necesario con la estructura nueva de XML ***************************************************************
 
 
