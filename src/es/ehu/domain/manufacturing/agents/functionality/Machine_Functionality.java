@@ -236,7 +236,9 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
         if (input[0] != null) {
             ACLMessage msg = (ACLMessage) input[0];
-            myAgent.Acknowledge(msg,myAgent);
+            if(!msg.getSender().getLocalName().equals(myAgent.getLocalName())){  //si las operaciones son asignadas por haber ganado una negociacion no hace falta acknowledge
+                myAgent.Acknowledge(msg,myAgent);
+            }
 
             if (msg.getContent().equals("All manufacturing plan ready to run")) {
 
@@ -331,9 +333,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
         LOGGER.entry(conversationId, sAction, negReceivedValue, negScalarValue);
 
-        String seID = (String)negExternalData[0];
-        String seNumOfItems = (String)negExternalData[1];
-        String seOperationID = (String)negExternalData[2];
+        String Operations = (String)negExternalData[0];
+//        String seID = (String)negExternalData[0];
+//        String seNumOfItems = (String)negExternalData[1];
+//        String seOperationID = (String)negExternalData[2];
 
         if (negReceivedValue<negScalarValue) return NegotiatingBehaviour.NEG_LOST; //pierde negociación
         if ((negReceivedValue==negScalarValue) && !tieBreak ) return NegotiatingBehaviour.NEG_LOST; //empata negocicación pero no es quien fija desempate
@@ -346,22 +349,29 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         Cmd action = new Cmd(sAction);
 
         if (action.cmd.equals("execute")) {
-            operationsWithBatchAgents.put(seOperationID, seID);
+//            operationsWithBatchAgents.put(seOperationID, seID);
 
             // Envio un mensaje al BatchAgent para avisarle de que soy el ganador para asociarme esa operacion
-            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-            msg.addReceiver(new AID(seID, AID.ISLOCALNAME));
-            msg.setContent("I am the winner of:" + seOperationID);
+//            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+//            msg.addReceiver(new AID(seID, AID.ISLOCALNAME));
+//            msg.setContent("I am the winner of:" + seOperationID);
+//            msg.setConversationId(conversationId);
+//            myAgent.send(msg);
+
+//            System.out.println("\tI am the winner to get operations " +seOperationID+ " from batch " + seID + ". NumItems: " + seNumOfItems);
+            System.out.println("\tI am the winner to get operations: " +Operations);
+//            Object[] data = new Object[2];
+//            data[0]=seOperationID;
+//            data[1]=seID;
+//            execute(data);
+            while (Operations.contains("*")) Operations = Operations.replace("*", "="); //reconstruye el string
+            ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+            msg.setSender(myAgent.getAID());
+            msg.setContent(Operations);
             msg.setConversationId(conversationId);
-            myAgent.send(msg);
-
-            System.out.println("\tI am the winner to get operation " +seOperationID+ " from batch " + seID + ". NumItems: " + seNumOfItems);
-
-            Object[] data = new Object[2];
-            data[0]=seOperationID;
-            data[1]=seID;
+            Object[] data = new Object[1];
+            data[0]=msg;
             execute(data);
-
         }
 
         return NegotiatingBehaviour.NEG_WON;

@@ -328,9 +328,11 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                 if(xmlelements.get(i).get(0).get(0).equals("PlannedItem")){
                     if(xmlelements.get(i).get(3).get(1).equals(item)||first_item_found){
                         for(int j=i+1;j<xmlelements.size()&&!xmlelements.get(j).get(0).get(0).equals("PlannedItem");j++){
-                            if(xmlelements.get(j).get(0).get(0).contains("Operation")&&xmlelements.get(j).get(3).get(3).equals(id[1])){
-                                needed_operations.add(xmlelements.get(j).get(3).get(5));
-                                new_operations=new_operations+ "id="+xmlelements.get(j).get(3).get(1)+" plannedFinishTime="+xmlelements.get(j).get(3).get(2)+ " plannedStartTime="+xmlelements.get(j).get(3).get(3)+ " batch_ID="+xmlelements.get(i).get(3).get(0)+" item_ID="+xmlelements.get(i).get(3).get(1)+" order_ID="+xmlelements.get(i).get(3).get(2)+" productType="+xmlelements.get(i).get(3).get(3)+"&";
+                            if(xmlelements.get(j).get(0).get(0).contains("Operation")&&xmlelements.get(j).get(3).get(3).equals(id[0])){
+                                if(!needed_operations.contains(xmlelements.get(j).get(3).get(1))){
+                                    needed_operations.add(xmlelements.get(j).get(3).get(1));
+                                }
+                                new_operations=new_operations+ "id*"+xmlelements.get(j).get(3).get(1)+" plannedFinishTime*"+xmlelements.get(j).get(3).get(2)+ " plannedStartTime*"+xmlelements.get(j).get(3).get(4)+ " batch_ID*"+xmlelements.get(i).get(3).get(0)+" item_ID*"+xmlelements.get(i).get(3).get(1)+" order_ID*"+xmlelements.get(i).get(3).get(2)+" productType*"+xmlelements.get(i).get(3).get(3)+"&"; //hay que codificar los "=" como otro caracter para evitar malinterpretaciones por parte del SMA y del mensaje de negociacion
                             }
                         }
                         first_item_found=true;
@@ -348,8 +350,10 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                 if(xmlelements.get(i).get(0).get(0).equals("PlannedItem")){
                     for(int j=i+1;j<xmlelements.size()&&!xmlelements.get(j).get(0).get(0).equals("PlannedItem");j++){
                         if(xmlelements.get(j).get(0).get(0).contains("Operation")&&xmlelements.get(j).get(3).get(3).equals(id[0])){
-                            needed_operations.add(xmlelements.get(j).get(3).get(5));
-                            new_operations=new_operations+ "id="+xmlelements.get(j).get(3).get(1)+" plannedFinishTime="+xmlelements.get(j).get(3).get(2)+ " plannedStartTime="+xmlelements.get(j).get(3).get(3)+ " batch_ID="+xmlelements.get(i).get(3).get(0)+" item_ID="+xmlelements.get(i).get(3).get(1)+" order_ID="+xmlelements.get(i).get(3).get(2)+" productType="+xmlelements.get(i).get(3).get(3)+"&";
+                            if(!needed_operations.contains(xmlelements.get(j).get(3).get(1))){
+                                needed_operations.add(xmlelements.get(j).get(3).get(1));
+                            }
+                            new_operations=new_operations+ "id*"+xmlelements.get(j).get(3).get(1)+" plannedFinishTime*"+xmlelements.get(j).get(3).get(2)+ " plannedStartTime*"+xmlelements.get(j).get(3).get(4)+ " batch_ID*"+xmlelements.get(i).get(3).get(0)+" item_ID*"+xmlelements.get(i).get(3).get(1)+" order_ID*"+xmlelements.get(i).get(3).get(2)+" productType*"+xmlelements.get(i).get(3).get(3)+"&";//hay que codificar los "=" como otro caracter para evitar malinterpretaciones por parte del SMA y del mensaje de negociacion
                         }
                     }
                 }
@@ -367,32 +371,33 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             }else{
                 machine_list[0]=machines.getContent();
             }
-            ArrayList<String>this_machine_op_list=new ArrayList<String>();
+
             String OPL="";
             for(int i=0;i<machine_list.length;i++){ //comprueba que máquinas pueden participar en la negociación
+                ArrayList<String>this_machine_op_list=new ArrayList<String>();
                 ArrayList<String>temp=needed_operations;
                 ACLMessage operationList= sendCommand(myAgent,"get "+machine_list[i]+" attrib=simpleOperations", String.valueOf(convIDCounter++));
                 OPL=operationList.getContent();
-//                String[] M_ID=id_of_machine.getContent().split("");
-                String[] OP_list=new String[1];
-                if(operationList.getContent().contains(",")){
-                    OP_list=operationList.getContent().split(",");
+                String[] splited_OPs=new String[1];
+                if(operationList.getContent().contains("complexOperation")){
+                    splited_OPs=operationList.getContent().split("complexOperation");
                 }else{
-                    OP_list[0]=operationList.getContent();
+                    splited_OPs[0]=operationList.getContent();
+                }
+                String[] OP_list=new String[1];
+                if(splited_OPs[0].contains(",")){
+                    OP_list=splited_OPs[0].split(",");
+                }else{
+                    OP_list[0]=splited_OPs[0];
                 }
                 for(int j=0;j<OP_list.length;j++){ //crea un listado de operaciones para la maquina
                     this_machine_op_list.add(OP_list[j]);
                 }
-                boolean join_negotiation=true;
-                for(int j=0;j<temp.size();j++){  //comprueba si tiene todas las operaciones necesarias
-                    if(!temp.contains(this_machine_op_list.get(j))){
-                        join_negotiation=false;
-                        break;
+                if(this_machine_op_list.containsAll(temp)){
+                    if(!machine_list[i].equals(lost_machine)){
+                        participating_machines.add(machine_list[i]);
+                        System.out.println(machine_list[i]+" could potentially take over operations "+OPL);
                     }
-                }
-                if(join_negotiation){
-                    participating_machines.add(machine_list[i]);
-                    System.out.println(machine_list[i]+" could potentially take over operations "+OPL);
                 }
             }
             if(participating_machines.size()>0){

@@ -546,11 +546,11 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                             }
                                             myAgent.send(inform_winner);
 
-                                            ACLMessage new_operations=new ACLMessage(ACLMessage.REQUEST);
-                                            new_operations.setOntology(ONT_RUN);
-                                            new_operations.setContent(Operations);
-                                            new_operations.addReceiver(myAgent.getAID());
-                                            myAgent.send(new_operations);
+//                                            ACLMessage new_operations=new ACLMessage(ACLMessage.REQUEST);
+//                                            new_operations.setOntology(ONT_RUN);
+//                                            new_operations.setContent(Operations);
+//                                            new_operations.addReceiver(myAgent.getAID());
+//                                            myAgent.send(new_operations);
                                             busy = false;
 
                                         case NEG_FAIL:

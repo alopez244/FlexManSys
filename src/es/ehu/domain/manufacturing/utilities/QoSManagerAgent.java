@@ -226,11 +226,16 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
 //                        ArrayList<String> temp = BatchAndMachines(msg.getContent(), sender); //Crea un listado de agentes maquina con los batch que tengan asignados
 //                        batch_and_machine.add(j, temp);
 //                        j++;
-//                        sendACL(ACLMessage.INFORM,"D&D","redistribute","machine1/311/3112",myAgent);
+                        String batch="";
+                        String item="";
+//                        sendACL(ACLMessage.INFORM,"D&D","redistribute","machine1/111/1112",myAgent);
+
                     } else if(msg.getOntology().equals("add_relation")){ //ej: 221/machine1
                         String[] data= msg.getContent().split("/");
                         batch_machine.put(data[0],data[1]);
-
+//                        if(data[1].equals("machine1")){
+//                            sendACL(ACLMessage.INFORM,"D&D","redistribute","machine1/"+data[0]+"/"+data[0]+"1",myAgent);
+//                        }
                     } else if (msg.getOntology().equals("asset_state")) { //recibe ping de vuelta del asset (solo para testing)
                         LOGGER.info("Recieved asset state out of the timeout: " + msg.getContent());
                     } else if (msg.getOntology().equals("reported_on_dead_node")) {
@@ -518,7 +523,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                 //      ENW -> error while not working
                 if (echo != null) {
                     LOGGER.debug(echo.getContent());
-                    String[] content_div = echo.getContent().split("\n");
+                    String[] content_div = echo.getContent().split(" & ");
                     String[] gw_state = content_div[0].split(":");
                     System.out.println("Ping result: ");
                     if (gw_state[1].contains("DOWN")) {
