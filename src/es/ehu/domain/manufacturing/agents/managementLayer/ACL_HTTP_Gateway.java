@@ -147,23 +147,28 @@ public class ACL_HTTP_Gateway {
         HashMap<String,String> body = new HashMap<>();
         HashMap<String,Object> cmdHashMap = new HashMap<>();
 
-        //Después, transformo el mensaje recibido de vuelta en un HashMap
-        cmdHashMap = new Gson().fromJson(cmd, HashMap.class);
-
-        //Se eliminan los decimales de los valores numéricos
-        for(Map.Entry<String,Object> item : cmdHashMap.entrySet()){
-            if (item.getValue() instanceof Double){
-                cmdHashMap.put(item.getKey(), String.valueOf(Math.round((Double) item.getValue())));
-            }
-        }
-
-
-        //Obtengo el tipo de servicio y compruebo qué tipo de petición es (0=GET,1=POST)
-        service = cmdHashMap.get("Operation_Ref_Service_Type").toString();
-        if (service.equals("0")){
+        //A continuación, se comprueba si el mensaje es de chequeo
+        if (cmd.equals("ask_state")){
             service="GET_";
-        } else if (service.equals("1")){
-            service="POST_";
+        } else {
+
+            //Si no es un mensaje de chequeo, transformo el mensaje recibido de vuelta en un HashMap
+            cmdHashMap = new Gson().fromJson(cmd, HashMap.class);
+
+            //Se eliminan los decimales de los valores numéricos
+            for(Map.Entry<String,Object> item : cmdHashMap.entrySet()){
+                if (item.getValue() instanceof Double){
+                    cmdHashMap.put(item.getKey(), String.valueOf(Math.round((Double) item.getValue())));
+                }
+            }
+
+            //Obtengo el tipo de servicio y compruebo qué tipo de petición es (0=GET,1=POST)
+            service = cmdHashMap.get("Operation_Ref_Service_Type").toString();
+            if (service.equals("0")){
+                service="GET_";
+            } else if (service.equals("1")){
+                service="POST_";
+            }
         }
 
         service=service+assetName;
@@ -184,7 +189,10 @@ public class ACL_HTTP_Gateway {
                 HttpResponse<JsonNode> get_PA = Unirest.get("http://127.0.0.1:1880/State/ManufacturingStation/PA").asJson();
 
                 //Solo me quedo con el contenido si la comunicación ha sido corecta
-                if (get_PA.getStatus() == 200) result = get_PA.getBody().toString();
+                if (get_PA.getStatus() == 200){
+                    //result = get_PA.getBody().toString();
+                    result = "Not working"; //Prueba, si hago un GET, devuelvo un Not working
+                }
                 break;
             case "POST_PA":
 

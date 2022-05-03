@@ -46,10 +46,16 @@ public class GWAgentHTTP extends GatewayAgent {
             case "send":
 
                 //Se declara un nuevo mensaje ACL con la performativa y el contenido recibidos en la estructura
-                //También se definen el receptor (el agente que me escribió primero) y la ontología (assetdata)
+                //También se definen el receptor (el agente que me escribió primero)
+                //La ontología también se define, pero dependiendo del contenido del mensaje (asset_state o assetdata)
                 ACLMessage msgToAgent = new ACLMessage(ACLMessage.INFORM);
                 msgToAgent.addReceiver(machineAgentName);
-                msgToAgent.setOntology("assetdata");
+
+                if (command.readMessage().equals("Not working")){
+                    msgToAgent.setOntology("asset_state");
+                } else {
+                    msgToAgent.setOntology("assetdata");
+                }
                 msgToAgent.setContent(command.readMessage());
                 send(msgToAgent);
                 break;
@@ -101,8 +107,8 @@ public class GWAgentHTTP extends GatewayAgent {
 
                         //Si se ha recibido un mensaje de este tipo, se guarda el contenido del mensaje
                         // También se guarda el AID del solicitante
-                        msgRecvState = msg.getContent();
-                        stateRequester = msg.getSender();
+                        msgRecv = msg.getContent();
+                        machineAgentName = msg.getSender();
 
                     } else if (templateWork.match(msg)){
 
