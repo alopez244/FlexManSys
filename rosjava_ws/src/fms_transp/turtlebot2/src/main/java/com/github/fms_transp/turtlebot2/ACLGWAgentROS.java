@@ -162,28 +162,28 @@ public class ACLGWAgentROS extends AbstractNodeMain {
 
     switch (TransportName){
 
-      case "LEONARDO":
+      case "Leonardo":
 
         PubTopicName = "/flexmansys/coordenada/leonardo";
         SubTopicName = "/flexmansys/state/leonardo";
 
         break;
 
-      case "RAPHAEL":
+      case "Raphael":
 
         PubTopicName = "/flexmansys/coordenada/raphael";
         SubTopicName = "/flexmansys/state/raphael";
 
         break;
 
-      case "DONATELLO":
+      case "Donatello":
 
         PubTopicName = "/flexmansys/coordenada/donatello";
         SubTopicName = "/flexmansys/state/donatello";
 
         break;
 
-      case "MICHELANGELO":
+      case "Michelangelo":
 
         PubTopicName = "/flexmansys/coordenada/michelangelo";
         SubTopicName = "/flexmansys/state/michelangelo";

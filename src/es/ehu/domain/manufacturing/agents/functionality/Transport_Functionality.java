@@ -114,7 +114,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
             myAgent.ActualState = javaTranspState.getTransport_unit_state();
 
-            if(!Objects.equals(myAgent.ActualState, "NONE") && !Objects.equals(myAgent.ActualState, "ERROR") && !Objects.equals(myAgent.ActualState, "STOP")){
+            if(!Objects.equals(myAgent.ActualState, "Undefined") && !Objects.equals(myAgent.ActualState, "Error") && !Objects.equals(myAgent.ActualState, "Stop")){
                 System.out.println("The asset is ready to work: " +myAgent.ActualState);
                 myAgent.battery = javaTranspState.getBattery();
                 myAgent.currentPos_X = javaTranspState.getOdom_x();
@@ -124,7 +124,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
             } else {
                 /* Si se recibe respuesta pero no es la adecuada, significa que el asset no está listo y no se puede continuar con el registro */
                 /* Para que la respuesta sea adecuada, el transporte debe de estar disponible para operar, es decir, que su estado debe de ser*/
-                /* diferente a NONE, STOP y ERROR */
+                /* diferente a UNDEFINED, STOP y ERROR */
                 System.out.println("The asset is not ready to work. Trasnport not ready.");
                 System.exit(0);
             }
@@ -544,7 +544,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
         myAgent.currentPos_X = javaTranspState.getOdom_x();
         myAgent.currentPos_Y = javaTranspState.getOdom_y();
 
-        if (!Objects.equals(myAgent.ActualState, "ACTIVE")){
+        if (!Objects.equals(myAgent.ActualState, "Active")){
 
             transportActive = false;
 
@@ -554,9 +554,9 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
             /* Antes de considerar al transporte como operable, verificamos que ha llevado a cabo su etapa de
             /* calibracion. En caso de no estar calibrado, se le envia el comando de calibracion */
 
-            if (Objects.equals(myAgent.ActualState, "IDLE") || (Objects.equals(myAgent.ActualState, "LOCALIZATION"))){
+            if (Objects.equals(myAgent.ActualState, "Idle") || (Objects.equals(myAgent.ActualState, "Localization"))){
 
-                if (Objects.equals(myAgent.ActualState, "IDLE")) {
+                if (Objects.equals(myAgent.ActualState, "Idle")) {
 
                     sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "ComandoCoordenada", "1234", "X", myAgent);
                     myAgent.ActualState = javaTranspState.getTransport_unit_state();
@@ -564,7 +564,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
                 }
 
-                else if (Objects.equals(myAgent.ActualState, "LOCALIZATION")){
+                else if (Objects.equals(myAgent.ActualState, "Localization")){
 
                     myAgent.ActualState = javaTranspState.getTransport_unit_state();
                     System.out.println(myAgent.transport_unit_name + " Transport is calibrating");
@@ -573,7 +573,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
             }
 
-            if (Objects.equals(myAgent.ActualState, "RECOVERY")){
+            if (Objects.equals(myAgent.ActualState, "Recovery")){
 
                 // A futuro faltaria notificar que el transporte ha encontrado un obstaculo en el camino al SMA
                 // para que un operario proceda a retirar el obstaculo
@@ -645,7 +645,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 e.printStackTrace();
             }
 
-            if (myAgent.ActualState.equals("OPERATIVE")){
+            if (myAgent.ActualState.equals("Operative")){
 
                 // El transporte esta en operacion, este flag permitira saber cuando el transporte ha vuelto a estado
                 // ACTIVE habiendo estado en operacion anteriormente
@@ -669,7 +669,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
             }
 
-        } else if (myAgent.ActualState.equals("ACTIVE")){
+        } else if (myAgent.ActualState.equals("Active")){
 
             transportActive = true;
 
