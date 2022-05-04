@@ -91,7 +91,7 @@ public class GWagentROS extends GatewayAgent {
 
                System.out.println(CurrentTransportMachineState);
 
-               if (CurrentTransportMachineState.equals("ACTIVE") && TransportOperative == false){
+               if (CurrentTransportMachineState.equals("Active") && TransportOperative == false){
 
                    // Solo le mandaremos un comando de lista de tareas si se encuentra en estado ACTIVO, de esta manera
                    // tambien se puede llevar un control a modo de "cuenta gotas" de los comandos que se le envian al
@@ -114,7 +114,7 @@ public class GWagentROS extends GatewayAgent {
 
                }
 
-               else if (CurrentTransportMachineState.equals("OPERATIVE") && TransportOperative == true){
+               else if (CurrentTransportMachineState.equals("Operative") && TransportOperative == true){
 
                    // Este estado nos permite darle tiempo al transporte para entrar en modo operativo, de modo
                    // que no se pierda ningun comando de la TaskList en el tiempo que tarda en realizar la transicion
