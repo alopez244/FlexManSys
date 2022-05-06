@@ -43,7 +43,7 @@
 				<consumable id="LB" description="Lower Bearing" type="bearing"/>
 			</action>
 		</simple_operation>
-		<simple_operation id="4" executionTime="00:01:00">
+		<simple_operation id="4" executionTime="00:01:30">
 			<action id="4" type="pick_and_place" actionPos="4" description="place cover">
 				<consumable id="C" description="Cover" type="cover"/>
 			</action>

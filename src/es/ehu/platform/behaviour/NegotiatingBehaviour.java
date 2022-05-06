@@ -14,6 +14,7 @@ import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.security.acl.Acl;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
@@ -257,6 +258,14 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 
                                         case NEG_WON: //he ganado la negociación y termina correctamente
                                             System.out.println("WON!");
+
+                                            ACLMessage DD_inform=new ACLMessage(ACLMessage.INFORM);
+                                            DD_inform.addReceiver(new AID("D&D",false));
+                                            DD_inform.setOntology("redistributed_operations");
+                                            DD_inform.setConversationId(conversationId);
+                                            DD_inform.setContent((String) negotiationRuntime.get(conversationId).getExternalData()[0]);
+                                            myAgent.send(DD_inform);
+
                                             direct_win=true;
                                         case NEG_FAIL:
                                             break;
@@ -327,11 +336,14 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                         ACLMessage inform_winner = new ACLMessage(ACLMessage.INFORM);
                                         inform_winner.setOntology(ONT_NEGOTIATE);
                                         inform_winner.setConversationId(conversationId);
-
-                                        AID DDId = new AID("D&D", false);
-                                        inform_winner.addReceiver(DDId); //para este caso solo hay que avisar al D&D pues no hay replicas
                                         myAgent.send(inform_winner);
                                         System.out.println("WON!");
+
+                                        ACLMessage DD_inform=new ACLMessage(ACLMessage.INFORM);
+                                        DD_inform.setOntology("restored_functionality");
+                                        DD_inform.addReceiver(new AID("D&D", false)); //para este caso solo hay que avisar al D&D pues no hay replicas
+                                        DD_inform.setConversationId(conversationId);
+                                        myAgent.send(DD_inform);
                                         direct_win=true;
 
                                     case NEG_FAIL:
@@ -546,11 +558,13 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                             }
                                             myAgent.send(inform_winner);
 
-//                                            ACLMessage new_operations=new ACLMessage(ACLMessage.REQUEST);
-//                                            new_operations.setOntology(ONT_RUN);
-//                                            new_operations.setContent(Operations);
-//                                            new_operations.addReceiver(myAgent.getAID());
-//                                            myAgent.send(new_operations);
+                                            ACLMessage DD_inform=new ACLMessage(ACLMessage.INFORM);
+                                            DD_inform.addReceiver(new AID("D&D",false));
+                                            DD_inform.setOntology("redistributed_operations");
+                                            DD_inform.setConversationId(conversationId);
+                                            DD_inform.setContent(Operations);
+                                            myAgent.send(DD_inform);
+
                                             busy = false;
 
                                         case NEG_FAIL:
@@ -712,9 +726,13 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                                 inform_winner.addReceiver(id);
                                             }
                                         }
-                                        AID DDId = new AID("D&D", false);
-                                        inform_winner.addReceiver(DDId); //para este caso hay que avisar tambien al D&D para que se encargue de avisar a quien corresponda de que hay un nuevo encargado en running
                                         myAgent.send(inform_winner);
+
+                                        ACLMessage DD_inform=new ACLMessage(ACLMessage.INFORM);
+                                        DD_inform.setOntology("restored_functionality");
+                                        DD_inform.addReceiver(new AID("D&D", false));  //para este caso hay que avisar tambien al D&D para que se encargue de avisar a quien corresponda de que hay un nuevo encargado en running
+                                        DD_inform.setConversationId(conversationId);
+                                        myAgent.send(DD_inform);
 
                                         ACLMessage recover_tracking_state = new ACLMessage(ACLMessage.REQUEST); //devuelve las replicas que han perdido a estado de tracking
                                         recover_tracking_state.setOntology("control");

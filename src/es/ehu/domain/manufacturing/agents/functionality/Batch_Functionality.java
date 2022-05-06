@@ -52,7 +52,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private volatile ArrayList<String> items_finish_times=new ArrayList<String>();
     private volatile int actual_item_number=0;
     private volatile long delaynum=0;
-    private volatile boolean update_timeout_flag=false, delay_already_asked=false;
+    private volatile boolean update_timeout_flag=false;
     private volatile AID QoSID = new AID("QoSManagerAgent", false);
     private volatile boolean reset_flag=false;
     private volatile boolean delay_already_incremented=false;
@@ -156,6 +156,8 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
             }
             if(!timeout){
                 System.out.println("Batch finished");
+            }else{
+                System.out.println("Timeout thrown");
             }
             System.out.println("Item timeout finished.");
         }
@@ -207,7 +209,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 myAgent.msgFIFO.add((String) finishtime.getContent());
                 System.out.println(finishtime.getContent());
                 finish_times_of_batch=finishtime.getContent();
-
                 sendACLMessage(16,QoSID,"askdelay","delayasking",batchreference,myAgent);
 
             } catch (Exception e) {
@@ -218,8 +219,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
         } else {
             // Si su estado es tracking
-
-
             trackingOnBoot(myAgent, mySeType, conversationId);
             myAgent.initTransition = ControlBehaviour.TRACKING;
         }
@@ -255,7 +254,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 if (msg.getPerformative() == ACLMessage.INFORM && msg.getOntology().equals("askdelay")) { //si es un mensaje con info del delay creamos el timeout
                     date_when_delay_was_asked = getactualtime();
                     String delay = msg.getContent();
-
                     delaynum = Long.parseLong(delay);
                     AID OrderAgent = new AID(parentAgentID, false);
 
@@ -267,13 +265,10 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-
-
-                    delay_already_asked = true;
                     timeout thread = new timeout();
                     thread.start(); //se inicia el timeout tras recibir delay
                 } else if (msg.getPerformative() == ACLMessage.INFORM && msg.getContent().equals("reset_timeout")) {
-//                QoSresponse_flag=true;
+
                     reset_flag = true;
                     System.out.println("Timeout has been asked to be reset");
                     if (date_when_delay_was_asked == null || delaynum == 0 || expected_finish_date == null) {
@@ -300,8 +295,18 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     }
 
                 } else if (msg.getPerformative() == ACLMessage.INFORM && msg.getContent().equals("confirmed_timeout")) {
-//                QoSresponse_flag=true;
-                    System.out.println("Timeout confirmed by QoS.");
+                    System.out.println("Timeout confirmed by QoS. Preparing for resetting timeout with new conditions");
+//                    delay_already_incremented=false;
+                } else if(msg.getPerformative() == ACLMessage.INFORM && msg.getOntology().equals("rebuild_finish_times")){
+                    System.out.println("New machine is assigned to batch "+batchreference+". Timeouts must be rebuilt.");
+                    delay_already_incremented=false;
+                    date_when_delay_was_asked=null;
+                    delaynum=0;
+                    actual_item_number=0;
+                    reset_flag=false;
+                    finish_times_of_batch=msg.getContent();
+                    sendACLMessage(16,QoSID,"askdelay","delayasking",batchreference,myAgent);
+
                 } else if (msg.getPerformative() == ACLMessage.INFORM && msg.getOntology().equals("data")) {
 
 //                    Acknowledge(msg, myAgent);

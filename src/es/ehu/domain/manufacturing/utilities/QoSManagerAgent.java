@@ -24,13 +24,13 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
     private Agent myAgent=this;
     private ArrayList<String> ActualBatch = new ArrayList<String>();
     private ArrayList<ArrayList<String>> ErrorList=new ArrayList<ArrayList<String>>();
-    private int i=0;
     private ArrayList<ArrayList<String>> allDelays = new ArrayList<ArrayList<String>>();
-    private int j=0;
     private int l=0;
     private ArrayList<ArrayList<String>> batch_and_machine = new ArrayList<ArrayList<String>>();
     private HashMap<String, String> batch_machine=new HashMap<String,String >();
-    private ArrayList<String> delay_asking_queue=new ArrayList<String>();
+//    private ArrayList<String> delay_asking_queue=new ArrayList<String>();
+    private HashMap<String,String> delay_asking_queue =new HashMap<String,String >();
+    private HashMap<String,String> delay_list=new HashMap<String,String >();
     static final Logger LOGGER = LogManager.getLogger(QoSManagerAgent.class.getName());
     private boolean add_timeout_error_flag=true,pong=false,add_communication_error_flag=true,confirmed_isol=false;
     private String argument1="",argument2="",argument3="",argument4="",argument5="",argument6="",now="";
@@ -60,7 +60,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
 //                        String convID = msgparts[2];
                         String receiver = msgparts[0];
                         String intercepted_msg = msgparts[1];
-
+                        report_back(msg);
                         LOGGER.warn(msg.getSender().getLocalName() + " reported a failure while trying to communicate with " + receiver);
                         if (CheckNotFoundRegistry(receiver) && CheckNotFoundRegistry(msg.getSender().getLocalName())) { //comprueba que el denunciante y el denunciado no esten en la blacklist de agentes no encontrados
 //                            get_timestamp(myAgent,receiver,"DeadAgentDetection");
@@ -68,7 +68,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                             String command = CheckMsgFIFO(receiver, intercepted_msg); //checkMsgFIFo se puede usar con order, batch y machine por ahora, el resto responde como un ping
                             System.out.println(command);
                             if (command.equals("msg_lost")) {         //Receiver vivo pero mensaje perdido
-                                report_back(msg); //responde al fallo de comunicacion
+//                                report_back(msg); //responde al fallo de comunicacion
                                 if (!PingAgent(msg.getSender().getLocalName(),myAgent)) { //checks if the reporting agent is actually isolated.
                                     LOGGER.error(msg.getSender().getLocalName() + " agent who reported the error is isolated");
                                     sendACL(ACLMessage.INFORM, "D&D", "msg_lost", msg.getContent(),myAgent);
@@ -84,12 +84,12 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                                     sendACL(ACLMessage.INFORM, "D&D", "msg_lost", msg.getContent(),myAgent);
                                 }
                             } else if (command.equals("msg_received")) {
-                                report_back(msg);
+//                                report_back(msg);
                                 LOGGER.info("Message arrived to agent. Ignore error.");
 
                             } else { //si no responde el receiver, se trata de un agente aislado o muerto
                                 LOGGER.warn("No answer from " + receiver + ". Confirming error.");
-                                report_back(msg);
+//                                report_back(msg);
                                 String msgtoDD = receiver;
 //                                if (receiver.contains("ControlGatewayCont")) {  //en algunos casos necesitamos saber el agente que ha denunciado el fallo para que pase a idle a traves del D&D
 //                                    msgtoDD = msgtoDD + "/div/" + msg.getSender().getLocalName();
@@ -100,7 +100,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                             }
 
                         } else {
-                            report_back(msg);//si ya estan denunciados no hace nada
+//                            report_back(msg);//si ya estan denunciados no hace nada
                         }
 
                     } else if (msg.getOntology().equals("timeout")) { //error de tipo timeout
@@ -187,15 +187,15 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                 if (msg.getPerformative() == ACLMessage.INFORM) { //Se recibe algun tipo de info
                     if (msg.getOntology().equals("batch_finish")) { //se recibe cuando acaba el batch
                         String finishing_batch = msg.getContent();
-                        for (int n = 0; n < allDelays.size(); n++) { //Se elimina de la lista de los delays el batch que ha terminado
-                            if (allDelays.get(n).get(0).equals(finishing_batch)) {
-                                allDelays.remove(n);
-                                n--;
-                                i--;
-                            }
-                        }
+//                        for (int n = 0; n < allDelays.size(); n++) { //Se elimina de la lista de los delays el batch que ha terminado
+//                            if (allDelays.get(n).get(0).equals(finishing_batch)) {
+//                                allDelays.remove(n);
+//                                n--;
+//                                i--;
+//                            }
+//                        }
+                        delay_list.remove(finishing_batch);
                         batch_machine.remove(finishing_batch);
-
 //                        for (int o = 0; o < batch_and_machine.size(); o++) {
 //                            if (batch_and_machine.get(o).get(0).equals(finishing_batch)) { //se elimina la asignación batch-máquina
 //                                batch_and_machine.remove(o);
@@ -204,38 +204,38 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
 //                            }
 //                        }
                         LOGGER.info("Batch " + finishing_batch + " finished.");
-                    } else if (msg.getOntology().equals("delay")) {
+
+                    } else if (msg.getOntology().equals("delay")) {     //ejemplo: 221/133234000
                         String[] parts2 = msg.getContent().split("/");
                         String batch_id = parts2[0];
                         String ms_of_delay = parts2[1];
                         LOGGER.info("Batch " + batch_id + " started with " + ms_of_delay + " ms of delay");
-                        ActualBatch = getDelays(msg.getContent()); //Añade el batch especificado con su correspondiente delay a la lista de delays
-
-                        for (int l = 0; l < delay_asking_queue.size(); l++) {
-                            if (ActualBatch.get(0).equals(delay_asking_queue.get(l))) {
-                                sendACL(ACLMessage.INFORM, delay_asking_queue.get(l + 1), "askdelay", ActualBatch.get(1),myAgent);
-                                delay_asking_queue.remove(l + 1);
-                                delay_asking_queue.remove(l);
-                                LOGGER.info("Informing batch " + msg.getContent());
-                                break;
-                            }
+                        delay_list.put(batch_id,ms_of_delay); //Añade el batch especificado con su correspondiente delay a la lista de delays
+                        if(delay_asking_queue.containsKey(batch_id)){  //si anteriormente han pedido el delay que acabamos de registrar debemos informar
+                            sendACL(ACLMessage.INFORM, delay_asking_queue.get(batch_id), "askdelay", delay_list.get(batch_id),myAgent);
+                            delay_list.remove(batch_id);
+                            delay_asking_queue.remove(batch_id);
+                            LOGGER.info("Informing batch " + msg.getContent());
                         }
-                        allDelays.add(i, ActualBatch);
-                        i++;
-//                        String sender = msg.getSender().getLocalName();
-//                        ArrayList<String> temp = BatchAndMachines(msg.getContent(), sender); //Crea un listado de agentes maquina con los batch que tengan asignados
-//                        batch_and_machine.add(j, temp);
-//                        j++;
-                        String batch="";
-                        String item="";
-//                        sendACL(ACLMessage.INFORM,"D&D","redistribute","machine1/111/1112",myAgent);
+
+//                        else if(delay_list.containsKey(batch_id)){  //si previamente ya se ha registrado el delay viene de una máquina que ha asumido carga de trabajo por una redistribución de tareas
+//                            try {
+//                            ACLMessage parent = sendCommand(myAgent, "get * category=batch reference=" + batch_id, "QoS");
+//                            ACLMessage running_batch = sendCommand(myAgent, "get * category=batchAgent parent=" + parent.getContent() + " state=running", "QoS");
+//                            sendACL(ACLMessage.INFORM, running_batch.getContent(), "askdelay", delay_list.get(batch_id),myAgent);
+//                            } catch (Exception e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
+
+//                    if(msg.getSender().getLocalName().equals("machine1")){
+//                        sendACL(ACLMessage.INFORM,"D&D","redistribute","machine1/211/2112",myAgent);
+//                    }
 
                     } else if(msg.getOntology().equals("add_relation")){ //ej: 221/machine1
                         String[] data= msg.getContent().split("/");
                         batch_machine.put(data[0],data[1]);
-//                        if(data[1].equals("machine1")){
-//                            sendACL(ACLMessage.INFORM,"D&D","redistribute","machine1/"+data[0]+"/"+data[0]+"1",myAgent);
-//                        }
+
                     } else if (msg.getOntology().equals("asset_state")) { //recibe ping de vuelta del asset (solo para testing)
                         LOGGER.info("Recieved asset state out of the timeout: " + msg.getContent());
                     } else if (msg.getOntology().equals("reported_on_dead_node")) {
@@ -290,31 +290,36 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
 //                        }
                     }
                     if (msg.getOntology().equals("askdelay")) { //Se recibe consulta del delay
-
-                        ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
+//                        ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
                         String asking_batch = msg.getContent();
-                        reply.setContent("0"); //si no encuentra ningun batch que coincida en la lista predefine un valor de 0
-                        boolean flag = true;
-                        if (allDelays.size() != 0) {
-                            for (int k = 0; k < allDelays.size(); k++) {
-                                if (allDelays.get(k).get(0).equals(asking_batch)) {
-                                    reply.setContent(allDelays.get(k).get(1));
-                                    flag = false;
-                                    break;
-                                }
-                            }
-                        }
-                        if (flag) {  //Es posible que se pida el delay antes de tenerlo, por lo que se anotan en la lista de espera hasta recibirlo del machine agent.
-                            LOGGER.info("Batch " + asking_batch + " asked delay before having it");
-                            delay_asking_queue.add(asking_batch);
-                            delay_asking_queue.add(msg.getSender().getLocalName());
 
-                        } else {
-                            reply.addReceiver(msg.getSender());
-                            reply.setOntology(msg.getOntology());
-                            myAgent.send(reply);
+//                        boolean flag = true;
+//                        if (allDelays.size() != 0) {
+//                            for (int k = 0; k < allDelays.size(); k++) {
+//                                if (allDelays.get(k).get(0).equals(asking_batch)) {
+//                                    reply.setContent(allDelays.get(k).get(1));
+//                                    flag = false;
+//                                    break;
+//                                }
+//                            }
+//                        }
+                        if(delay_list.containsKey(msg.getContent())){
+                            sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),delay_list.get(msg.getContent()),myAgent);
                             LOGGER.info("Informing batch " + asking_batch);
+                        }else{
+                            delay_asking_queue.put(asking_batch,msg.getSender().getLocalName());
                         }
+//                        if (flag) {  //Es posible que se pida el delay antes de tenerlo, por lo que se anotan en la lista de espera hasta recibirlo del machine agent.
+//                            LOGGER.info("Batch " + asking_batch + " asked delay before having it");
+//                            delay_asking_queue.add(asking_batch);
+//                            delay_asking_queue.add(msg.getSender().getLocalName());
+//
+//                        } else {
+//                            reply.addReceiver(msg.getSender());
+//                            reply.setOntology(msg.getOntology());
+//                            myAgent.send(reply);
+//                            LOGGER.info("Informing batch " + asking_batch);
+//                        }
                     } else if (msg.getOntology().equals("command")) { //peticiones provenientes del D&D
                         if (msg.getContent().equals("errorlist")) {
                             LOGGER.info(msg.getSender().getLocalName() + " asked to send error list");
@@ -429,7 +434,6 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                                         batch_machine.remove(timeout_batch_id); //hay que borrar la relación
                                     }
                                 }
-
                             }
 
                         } else if (ping_result.equals("working")) { //el sistema funciona correctamente, se puede haber retrasado por un fallo. Registramos el timeout, lo reseteamos y no hacemos nada más.
@@ -446,7 +450,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                                     batch_machine.remove(timeout_batch_id); //hay que borrar la relación
                                 }
                             }
-                            sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "reset_timeout",myAgent);
+//                            sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "reset_timeout",myAgent);
                             argument4 = MA + "->OK";
                             argument5 = "GW->OK";
                             add_to_error_list("timeout", argument2, argument3, argument4, argument5);
@@ -455,7 +459,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                         argument4 = MA + "->NO OK";
                         argument5 = "?";
                         add_to_error_list("timeout", argument2, argument3, argument4, argument5);
-                        sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "confirmed_timeout",myAgent);
+//                        sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "confirmed_timeout",myAgent);
                     }
         }
 
@@ -480,33 +484,6 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
 
             return MachineAgentList;
         }
-
-//        private boolean PingAgent (String name){  //checkea el estado de los agentes de aplicación, recurso y gateway
-//
-//            boolean state;
-//
-//            int n=SearchAgent(name);
-//            if(n>0){
-//                AID Agent_to_ping_ID=new AID(name,false);
-//                ACLMessage ping=new ACLMessage(ACLMessage.REQUEST);
-//                ping.setOntology("ping");
-//                ping.addReceiver(Agent_to_ping_ID);
-//                ping.setContent("");
-//                send(ping);
-//                sendACL();
-//                ACLMessage echo=blockingReceive(pingtemplate,500);
-//                if(echo!=null) {
-//                    LOGGER.info(name+" answered on time.");
-//                    state=true;
-//                }else{
-//                    LOGGER.error(name+" did not answer on time. Confirming failure.");
-//                    state=false;
-//                }
-//            }else{
-//                state=false;
-//            }
-//            return state;
-//        }
 
         public String PingAsset(String machine) {
 

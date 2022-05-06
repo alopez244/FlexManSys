@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 public interface DDInterface extends Serializable {
 
-    public void actions_after_negotiation(ACLMessage msg);
+    public void recover_redundancy(ACLMessage msg);
 
     public void actions_after_not_found(ACLMessage msg);
 
@@ -15,5 +15,8 @@ public interface DDInterface extends Serializable {
     public void change_DD_state(ACLMessage msg);
 
     public void redistribute_machine_operations(ACLMessage msg);
+
+    public void recalculate_timeouts(ACLMessage msg);
+
 
 }

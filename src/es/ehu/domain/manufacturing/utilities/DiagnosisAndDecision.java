@@ -1,5 +1,6 @@
 package es.ehu.domain.manufacturing.utilities;
 
+import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.utilities.XMLReader;
 import es.ehu.platform.template.interfaces.DDInterface;
 import jade.core.AID;
@@ -12,7 +13,10 @@ import org.apache.logging.log4j.Logger;
 
 import java.security.acl.Acl;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 
@@ -23,10 +27,15 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
     static final Logger LOGGER = LogManager.getLogger(DiagnosisAndDecision.class.getName());
     private Agent myAgent=this;
     private String reported_agent="";
+    public static final String DATE_FORMAT="yyyy-MM-dd'T'HH:mm:ss";
+    public static final String TIME_FORMAT="HH:mm:ss";
+    private SimpleDateFormat formatter_date = new SimpleDateFormat(DATE_FORMAT);
+    private SimpleDateFormat formatter_time = new SimpleDateFormat(TIME_FORMAT);
+
     public String control="automatic"; //variable que conmutamos cuando la interfaz (planner) lo pide
     private MessageTemplate expected_senders=MessageTemplate.or(MessageTemplate.MatchSender(new AID("planner",AID.ISLOCALNAME)),
                                             MessageTemplate.MatchSender(new AID("QoSManagerAgent",AID.ISLOCALNAME)));
-    private MessageTemplate neg_template=MessageTemplate.and(MessageTemplate.MatchOntology("negotiation"),
+    private MessageTemplate neg_template=MessageTemplate.and(MessageTemplate.or(MessageTemplate.MatchOntology("redistributed_operations"),MessageTemplate.MatchOntology("restored_functionality")),
             MessageTemplate.MatchPerformative(ACLMessage.INFORM));
     private HashMap<String,HashMap<String,ArrayList<String>>> agents_sorted_by_state=new HashMap<String,HashMap<String,ArrayList<String>>>();
 
@@ -46,8 +55,12 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
 
 
                 ACLMessage negotiation_result=myAgent.receive(neg_template); //comprueba si alguna replica en tracking ha cambiado a running
-                if(negotiation_result!=null){
-                    actions_after_negotiation(negotiation_result);
+                if(negotiation_result!=null) {
+                    if (negotiation_result.getOntology().equals("restored_functionality")) {
+                        recover_redundancy(negotiation_result);
+                    } else if (negotiation_result.getOntology().equals("redistributed_operations")) {
+                        recalculate_timeouts(negotiation_result);
+                    }
                 }
                 ACLMessage msg=myAgent.receive(expected_senders);  //solo lee mensajes de los agentes indicados en el template
                 if(msg!=null) {
@@ -60,7 +73,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                         }
                     } else if(msg.getOntology().equals("redistribute")){
                         redistribute_machine_operations(msg);
-                    }else if (msg.getOntology().equals("msg_lost")) {
+                    } else if (msg.getOntology().equals("msg_lost")) {
                         actions_after_msg_lost(msg);
                     } else if(msg.getOntology().equals("man/auto")){
                         change_DD_state(msg);
@@ -71,7 +84,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             }
         }
 
-    public void actions_after_negotiation(ACLMessage msg){
+    public void recover_redundancy(ACLMessage msg){
         LOGGER.info("New agent started: "+msg.getSender().getLocalName());
         String convID="negotiation_winner_";
         String winner=msg.getSender().getLocalName();
@@ -289,13 +302,109 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
         reported_agent= "";
     }
 
+    public void recalculate_timeouts(ACLMessage msg){
+        String machine=msg.getSender().getLocalName();
+        String raw_OP=msg.getContent();
+        String batch="";
+
+        ACLMessage machine_id= null;
+        try {
+            machine_id = sendCommand(myAgent,"get "+machine+" attrib=id", String.valueOf(convIDCounter++));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        String M_id = machine_id.getContent().split("")[0];
+        String machine_xml="Machine"+M_id+".xml";
+
+        String MachinePath="classes/resources/ResInstances/";
+        XMLReader fileReader = new XMLReader();
+        String uri=MachinePath+machine_xml;
+        ArrayList<ArrayList<ArrayList<String>>> xmloperations = new ArrayList<ArrayList<ArrayList<String>>>();
+        HashMap<String,String>operation_time=new HashMap<String,String>();
+        try{
+        xmloperations = fileReader.readFile(uri);
+        for(int i=0;i<xmloperations.size();i++){
+            if(xmloperations.get(i).get(0).get(0).equals("simple_operation")){
+                operation_time.put(xmloperations.get(i).get(3).get(1),xmloperations.get(i).get(3).get(0)); //crea un hashmap con operaciones y sus tiempos
+            }
+        }
+        } catch (Exception e) {
+        LOGGER.error("Cannot read machine xml file");
+        }
+
+        while (raw_OP.contains("*")) raw_OP = raw_OP.replace("*", "="); //reconstruye el string
+        String[] allOperations = raw_OP.split("&");
+        HashMap<String,HashMap<String,String>> batch_data=new HashMap<String,HashMap<String,String>>();
+        String batch_finish_times="";
+        String finishTime="";
+
+        for (int i = 0; i < allOperations.length; i++) { //se asume que la maquina realiza item por operación. No se contempla el caso de item subdividido en varias operaciones
+            HashMap<String,String> item_data=new HashMap<String,String>();
+            String[] AllInformation = allOperations[i].split(" ");
+            String item=find_value_of_attrb("item_ID",AllInformation);
+            String operation_id=find_value_of_attrb("id",AllInformation);
+            if(i==0){               //en el primer item obtenemos el batch y el start time
+                batch=find_value_of_attrb("batch_ID",AllInformation);
+               batch_finish_times= batch+"&";
+               String ST=find_value_of_attrb("plannedStartTime",AllInformation);
+                Date item_ST=null;
+                Date expected_time=null;
+                try {
+                    item_ST = formatter_date.parse(ST);
+                    expected_time=formatter_time.parse(operation_time.get(operation_id));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                finishTime=formatter_date.format(new Date(item_ST.getTime()+expected_time.getTime()+(60000*60))); //hay que sumarle un offset de 1 hora
+                batch_finish_times=batch_finish_times+item+"/"+finishTime;
+            }else{
+                String ST=finishTime; //el start time de este item sera el finishtime del anterior
+                Date item_ST=null;
+                Date expected_time=null;
+                try {
+                    item_ST = formatter_date.parse(ST);
+                    expected_time=formatter_time.parse(operation_time.get(operation_id));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                finishTime=formatter_date.format(new Date(item_ST.getTime()+expected_time.getTime()+(60000*60))); //hay que sumarle un offset de 1 hora
+                batch_finish_times=batch_finish_times+"_"+item+"/"+finishTime;
+            }
+        }
+        sendACL(ACLMessage.INFORM,"QoSManagerAgent","add_relation",batch+"/"+machine,myAgent); //añade una relacion maquina-batch
+
+        try {
+            ACLMessage parent = sendCommand(myAgent, "get * category=batch reference=" + batch, String.valueOf(convIDCounter++));
+            ACLMessage running_batch = sendCommand(myAgent, "get * category=batchAgent parent=" + parent.getContent() + " state=running",  String.valueOf(convIDCounter++));
+            sendACL(ACLMessage.INFORM,running_batch.getContent(),"rebuild_finish_times",batch_finish_times,myAgent);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public String find_value_of_attrb(String toFind, String[] data){
+    String value="not_found"; //si no se actualiza este valor significa que no ha sido encontrado
+        for (String info : data) {                //consigue el item
+            String attrName = info.split("=")[0];
+            String attrValue = info.split("=")[1];
+            if(attrName.equals(toFind)){
+                value=attrValue;
+                break;
+            }
+        }
+        return value;
+    }
+
+
     public void redistribute_machine_operations(ACLMessage msg){
         String[] inf=msg.getContent().split("/");
         String lost_machine=inf[0];
         String batch=inf[1];
         String item=inf[2];
 
-        String batch_=get_relationship(lost_machine);
+//        String batch_=get_relationship(lost_machine);
 
         LOGGER.warn(lost_machine+" operations must be redistributed. "+batch+" stoped on item "+item);
         String appPath="classes/resources/AppInstances/";
@@ -371,7 +480,6 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             }else{
                 machine_list[0]=machines.getContent();
             }
-
             String OPL="";
             for(int i=0;i<machine_list.length;i++){ //comprueba que máquinas pueden participar en la negociación
                 ArrayList<String>this_machine_op_list=new ArrayList<String>();
@@ -379,8 +487,8 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                 ACLMessage operationList= sendCommand(myAgent,"get "+machine_list[i]+" attrib=simpleOperations", String.valueOf(convIDCounter++));
                 OPL=operationList.getContent();
                 String[] splited_OPs=new String[1];
-                if(operationList.getContent().contains("complexOperation")){
-                    splited_OPs=operationList.getContent().split("complexOperation");
+                if(operationList.getContent().contains("complexOperations")){
+                    splited_OPs=operationList.getContent().split("complexOperations");
                 }else{
                     splited_OPs[0]=operationList.getContent();
                 }
@@ -396,20 +504,26 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                 if(this_machine_op_list.containsAll(temp)){
                     if(!machine_list[i].equals(lost_machine)){
                         participating_machines.add(machine_list[i]);
-                        System.out.println(machine_list[i]+" could potentially take over operations "+OPL);
+                        System.out.println(machine_list[i]+" could potentially take over operations "+splited_OPs[0]);
                     }
                 }
             }
-            if(participating_machines.size()>0){
-                String targets="";
-                for(int i=0;i<participating_machines.size();i++){
-                    targets=targets+participating_machines.get(i)+",";
-                }
-                String negotationdata="localneg "+targets+ " criterion=finish_time action=execute externaldata=" + new_operations;
-                sendCommand(myAgent,negotationdata,String.valueOf(convIDCounter++));
+            if(new_operations.equals("")){
+                LOGGER.warn("New operations could not be found on XML");
             }else{
-                LOGGER.warn("No machines available to take over operations "+OPL);
+                if(participating_machines.size()>0){
+                    String targets="";
+                    for(int i=0;i<participating_machines.size();i++){
+                        targets=targets+participating_machines.get(i)+",";
+                    }
+                    String negotationdata="localneg "+targets+ " criterion=finish_time action=execute externaldata=" + new_operations;
+                    LOGGER.debug(new_operations);
+                    sendCommand(myAgent,negotationdata,String.valueOf(convIDCounter++));
+                }else{
+                    LOGGER.warn("No machines available to take over operations "+OPL);
+                }
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
