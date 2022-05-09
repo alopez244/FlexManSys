@@ -84,15 +84,17 @@ public class RunningBehaviour extends SimpleBehaviour {
 						MessageTemplate.or(MessageTemplate.MatchOntology("askdelay"),
 								MessageTemplate.or(MessageTemplate.MatchContent("reset_timeout"),
 										MessageTemplate.or(MessageTemplate.MatchOntology("data"),
-												//templates order
-												MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchOntology("Information"),MessageTemplate.MatchConversationId("ItemsInfo")),
-														MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchContent("Batch completed"),MessageTemplate.MatchConversationId("Shutdown")),
-																MessageTemplate.or(MessageTemplate.MatchOntology("update_timeout"),
-																		MessageTemplate.or(MessageTemplate.MatchOntology("delay"),
-																				//templates mplan
-																				MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchOntology("Information"),MessageTemplate.MatchConversationId("OrderInfo")),
-																						MessageTemplate.and(MessageTemplate.MatchContent("Order completed"),MessageTemplate.MatchConversationId("Shutdown"))
-																				)))))))));
+											MessageTemplate.or(MessageTemplate.MatchOntology("rebuild_finish_times"),
+													//templates order
+													MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchOntology("Information"),MessageTemplate.MatchConversationId("ItemsInfo")),
+															MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchContent("Batch completed"),MessageTemplate.MatchConversationId("Shutdown")),
+																	MessageTemplate.or(MessageTemplate.MatchOntology("update_timeout"),
+																			MessageTemplate.or(MessageTemplate.MatchOntology("delay"),
+																				MessageTemplate.or(MessageTemplate.MatchOntology("take_down_order_timeout"),
+																						//templates mplan
+																						MessageTemplate.or(MessageTemplate.and(MessageTemplate.MatchOntology("Information"),MessageTemplate.MatchConversationId("OrderInfo")),
+																								MessageTemplate.and(MessageTemplate.MatchContent("Order completed"),MessageTemplate.MatchConversationId("Shutdown"))
+																						)))))))))));
 
 		this.template2 = MessageTemplate.and(MessageTemplate.MatchOntology("release_buffer"),
 				MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),MessageTemplate.MatchSender(DDID)));

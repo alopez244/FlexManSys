@@ -110,160 +110,9 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         newBatch=OAstate.getnewBatch();
         batchIndex=OAstate.getbatchIndex();
 
-//
-//        ArrayList<ArrayList<ArrayList<ArrayList<String>>>> Traceability=new ArrayList<>();
-//        ArrayList<String> remaining=new ArrayList<String>();
-//        ArrayList<ArrayList<String>> FT=new ArrayList<>();
-//        ArrayList<String> replicas=new ArrayList<String>();
-//        String parts1[] =state.split("/div0/"); //el divisor 0 divide los argumentos y el resto se usan para los arraylist
-//        String productTraceabilityConc = parts1[0]; //trazabilidad concatenada
-//        String remainingConc = null;
-//        if (parts1[1] != null&&parts1[1] != "") {
-//            remainingConc = parts1[1]; //solo si quedan acciones/SonAgentIDs
-//        }
-//        String firstimeString = parts1[2]; //primera vez
-//
-//        String FinishTimesConc=parts1[3]; //finish times concatenados (cada agente de aplicación lleva un formato)
-//        parentAgentID=parts1[4]; 					//parent
-//        String replicasConc=parts1[5];		//replicas del agente
-//        String Snewbatch=parts1[6];
-//        String Sbatchindex=parts1[7];
-//        newBatch=Boolean.parseBoolean(Snewbatch);
-//        batchIndex=Integer.parseInt(Sbatchindex);
-//
-//
-//        String parts2[] = productTraceabilityConc.split("/div1/"); //construye la trazabilidad
-//        for (int i = 0; i < parts2.length; i++) {
-//            Traceability.add(i, new ArrayList<ArrayList<ArrayList<String>>>());
-//            String parts3[] = parts2[i].split("/div2/");
-//            for (int j = 0; j < parts3.length; j++) {
-//                Traceability.get(i).add(j, new ArrayList<ArrayList<String>>());
-//                String parts4[] = parts3[j].split("/div3/");
-//                for (int k = 0; k < parts4.length; k++) {
-//                    Traceability.get(i).get(j).add(k, new ArrayList<String>());
-//                    String parts5[] = parts4[k].split("/div4/");
-//                    for (int l = 0; l < parts5.length; l++) {
-//                        Traceability.get(i).get(j).get(k).add(parts5[l]);
-//                    }
-//                }
-//            }
-//        }
-//        firstTime = Boolean.parseBoolean(firstimeString);
-//        if(!firstTime){
-//            batchTraceability=Traceability;
-//        }
-//
-//        if (remainingConc != null) {    //construye los sonagentID o actionlist
-//            String parts6[] = remainingConc.split("/div1/");
-//            for (int i = 0; i < parts6.length; i++) {
-//                remaining.add(parts6[i]);
-//            }
-//        }
-//        sonAgentID=remaining;
-//
-//        String parts7[]=FinishTimesConc.split("/div1/");
-//        for(int i=0;i<parts7.length;i++) {
-//            FT.add(i, new ArrayList<String>());
-//            String parts8[] = parts7[i].split("/div2/");
-//            for (int j = 0; j < parts8.length; j++) {
-//                FT.get(i).add(parts8[j]);
-//            }
-//        }
-//        batch_last_items_ft=FT;
-//        String parts9[]=replicasConc.split("/div1/");
-//        for(int k=0;k<parts9.length;k++){
-//            if(!parts9[k].equals(myAgent.getLocalName())){
-//                replicas.add(parts9[k]);
-//            }
-//        }
-//        myAgent.replicas=replicas;
-
     }
     @Override
     public String getState(){
-//        myAgent.antiloopflag=true;
-//        String state="";
-//
-//        for(int i=0;i<batchTraceability.size();i++){
-//            if(i!=0){
-//                state=state+"/div1/";
-//            }
-//            for(int j=0;j<batchTraceability.get(i).size();j++){
-//                if(j!=0){
-//                    state=state+"/div2/";
-//                }
-//                for(int k=0;k<batchTraceability.get(i).get(j).size();k++){
-//                    if(k!=0){
-//                        state=state+"/div3/";
-//                    }
-//                    for(int l=0;l<batchTraceability.get(i).get(j).get(k).size();l++){
-//                        if(l!=0){
-//                            state=state+"/div4/";
-//                        }
-//                        state=state+batchTraceability.get(i).get(j).get(k).get(l);
-//                    }
-//                }
-//            }
-//        }
-//        state=state+"/div0/";
-//        for(int i=0;i<sonAgentID.size();i++){
-//            if(i!=0){
-//                state=state+"/div1/";
-//            }
-//            state=state+sonAgentID.get(i);
-//        }
-//        state=state+"/div0/"+String.valueOf(firstTime)+"/div0/";
-//
-//        for(int i=0;i<batch_last_items_ft.size();i++){ //concatena los FT de los item
-//            if(i!=0){
-//                state=state+"/div1/";
-//            }
-//            for(int j=0;j<batch_last_items_ft.get(i).size();j++){
-//                if(j==0){
-//                    state=state+batch_last_items_ft.get(i).get(j);
-//                }else{
-//                    state=state+"/div2/"+batch_last_items_ft.get(i).get(j);
-//                }
-//            }
-//        }
-//        state=state+"/div0/"+parentAgentID+"/div0/";
-//
-//        try {   //realiza la consulta al sa para tener la lista de replicas actualizada.
-//
-//            String[] replicas=new String[1];
-//            if(redundancy.equals("1")){
-//                replicas[0] =" ";
-//            }else{
-//                ACLMessage parent = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "GetOrderParent");
-//                ACLMessage replicasACL = sendCommand(myAgent, "get * state=tracking parent=" + parent.getContent(), "GetOrderUpdatedReplicas");
-//                if(replicasACL.equals("")){
-//                    replicas[0] =" ";
-//                }else{
-//                    if(replicasACL.getContent().contains(",")){
-//                        replicas= replicasACL.getContent().split(",");
-//                    }else{
-//                        replicas[0] = replicasACL.getContent();
-//                    }
-//                }
-//            }
-//
-//            for(int i=0; i<replicas.length;i++){
-//                if(i==0){
-//                    state=state+replicas[i];
-//                }else{
-//                    state=state+"/div1/"+replicas[i];
-//                }
-//            }
-//            state=state+"/div0/"+String.valueOf(newBatch);
-//            state=state+"/div0/"+String.valueOf(batchIndex);
-//
-//
-//        }catch  (Exception e) {
-//            e.printStackTrace();
-//        }
-//        myAgent.antiloopflag=false;
-//
-//        String state=null;
 
         myAgent.replicas=update_tracking_replicas();
         StructOrderAgentState OAstate=new StructOrderAgentState();
@@ -508,6 +357,9 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 } else {
                     System.out.println("Not my batch, something went wrong");
                 }
+            }else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("take_down_order_timeout")){
+                batch_to_take_down=msg.getContent();
+
             }else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("delay")){
                 String rawdelay = msg.getContent();
                 String[] parts = rawdelay.split("/");

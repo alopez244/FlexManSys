@@ -300,7 +300,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             for(int i = 0 ; i < myAgent.machinePlan.size();i++) {    //Buscamos de todos los plannedStartTime el primero (se asume que estan ordenados)
                 if (myAgent.machinePlan.get(i).get(0).get(0).equals("operation")) {
                     if (myAgent.machinePlan.get(i).get(2).get(1).equals("plannedFinishTime")) {
-                        last_FT=myAgent.machinePlan.get(i).get(3).get(1);
+                        last_FT=myAgent.machinePlan.get(i).get(3).get(1);  //coge el valor del finish-time,
                     }
                 }
             }

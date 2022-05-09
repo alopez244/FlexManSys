@@ -430,6 +430,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
 
                                 for(Entry<String,String> machines: batch_machine.entrySet()){
                                     if(machines.getValue().equals(MA)){
+
                                         sendACL(ACLMessage.INFORM,"D&D","redistribute",MA+"/"+machines.getKey()+"/"+timeout_item_id,myAgent);
                                         batch_machine.remove(timeout_batch_id); //hay que borrar la relación
                                     }

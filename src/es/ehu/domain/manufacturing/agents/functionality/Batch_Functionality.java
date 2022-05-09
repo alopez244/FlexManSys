@@ -261,7 +261,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                         batchName = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "name"); //consigue el nombre del batch
                         ACLMessage reference = sendCommand(myAgent, "get " + batchName.getContent() + " attrib=reference", "Reference");
                         sendACLMessage(7, OrderAgent, "delay", "inform delay", reference.getContent() + "/" + delay, myAgent); //informa al parent
-                        //TODO timeout de ACL aquí
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -295,10 +294,10 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     }
 
                 } else if (msg.getPerformative() == ACLMessage.INFORM && msg.getContent().equals("confirmed_timeout")) {
-                    System.out.println("Timeout confirmed by QoS. Preparing for resetting timeout with new conditions");
+//                    System.out.println("Timeout confirmed by QoS. Preparing for resetting timeout with new conditions");
 //                    delay_already_incremented=false;
                 } else if(msg.getPerformative() == ACLMessage.INFORM && msg.getOntology().equals("rebuild_finish_times")){
-                    System.out.println("New machine is assigned to batch "+batchreference+". Timeouts must be rebuilt.");
+                    System.out.println("New machine is assigned to batch "+batchreference+". Timeouts must be rebuilt for new operation times.");
                     delay_already_incremented=false;
                     date_when_delay_was_asked=null;
                     delaynum=0;

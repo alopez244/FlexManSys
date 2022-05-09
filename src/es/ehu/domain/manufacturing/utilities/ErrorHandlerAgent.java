@@ -22,6 +22,9 @@ import java.util.HashMap;
 public class ErrorHandlerAgent extends Agent{
     private Agent myAgent;
     public int timeStmp=0;
+    public String ConvID="EHAget_";
+    public int cnt=0;
+
 
 
     static final Logger LOGGER = LogManager.getLogger(ErrorHandlerAgent.class.getName());
@@ -147,6 +150,7 @@ public class ErrorHandlerAgent extends Agent{
             msg.addReceiver(receiverAID);
             msg.setOntology(ontology);
             msg.setContent(content);
+            msg.setConversationId(ConvID+String.valueOf(cnt++));
             send(msg);
         }
 

@@ -98,9 +98,9 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                 String target=get_relationship(parent.getContent()); //devuelve el agente máquina que cuelga del machine
 
                 ACLMessage reference = sendCommand(myAgent, "get " + parent + " attrib=reference", "recovered_batch_reference");
-
-
-                sendACL(ACLMessage.INFORM,target,"release_buffer",winner,myAgent); //pide al machine que vacie el buffer de mensajes retenidos
+                if(target!=null){
+                    sendACL(ACLMessage.INFORM,target,"release_buffer",winner,myAgent); //pide al machine que vacie el buffer de mensajes retenidos
+                }
                 restart_replica(parent.getContent()); //hay que generar una replica en tracking si es posible para mantener el numero de replicas constante
             } catch (Exception e) {
                 e.printStackTrace();
@@ -304,6 +304,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
 
     public void recalculate_timeouts(ACLMessage msg){
         String machine=msg.getSender().getLocalName();
+
         String raw_OP=msg.getContent();
         String batch="";
 
@@ -334,13 +335,13 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
         }
 
         while (raw_OP.contains("*")) raw_OP = raw_OP.replace("*", "="); //reconstruye el string
+        LOGGER.info(machine+" has taken over operations "+raw_OP);
         String[] allOperations = raw_OP.split("&");
         HashMap<String,HashMap<String,String>> batch_data=new HashMap<String,HashMap<String,String>>();
         String batch_finish_times="";
         String finishTime="";
 
         for (int i = 0; i < allOperations.length; i++) { //se asume que la maquina realiza item por operación. No se contempla el caso de item subdividido en varias operaciones
-            HashMap<String,String> item_data=new HashMap<String,String>();
             String[] AllInformation = allOperations[i].split(" ");
             String item=find_value_of_attrb("item_ID",AllInformation);
             String operation_id=find_value_of_attrb("id",AllInformation);
@@ -404,6 +405,14 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
         String batch=inf[1];
         String item=inf[2];
 
+        try { //a la hora de rehacer el timeout para el batch, si no eliminamos el timeout del order previamente, este se duplicará
+            ACLMessage batch_parent = sendCommand(myAgent, "get * category=batch reference=" + batch, String.valueOf(convIDCounter++));
+            ACLMessage order_parent = sendCommand(myAgent, "get "+batch_parent.getContent()+" attrib=parent", String.valueOf(convIDCounter++));
+            ACLMessage orderagent_running = sendCommand(myAgent, "get * category=orderAgent state=running parent=" + order_parent.getContent(), String.valueOf(convIDCounter++));
+            sendACL(ACLMessage.INFORM,orderagent_running.getContent(),"take_down_order_timeout",batch,myAgent);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 //        String batch_=get_relationship(lost_machine);
 
         LOGGER.warn(lost_machine+" operations must be redistributed. "+batch+" stoped on item "+item);
@@ -519,6 +528,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                     String negotationdata="localneg "+targets+ " criterion=finish_time action=execute externaldata=" + new_operations;
                     LOGGER.debug(new_operations);
                     sendCommand(myAgent,negotationdata,String.valueOf(convIDCounter++));
+                    sendCommand(myAgent,"del "+lost_machine,String.valueOf(convIDCounter++)); //eliminamos la máquina del SMA
                 }else{
                     LOGGER.warn("No machines available to take over operations "+OPL);
                 }
