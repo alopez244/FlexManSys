@@ -263,7 +263,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                             DD_inform.addReceiver(new AID("D&D",false));
                                             DD_inform.setOntology("redistributed_operations");
                                             DD_inform.setConversationId(conversationId);
-                                            DD_inform.setContent((String) negotiationRuntime.get(conversationId).getExternalData()[0]);
+                                            DD_inform.setContent((String) negMsg.getExternalData()[0]);
                                             myAgent.send(DD_inform);
 
                                             direct_win=true;

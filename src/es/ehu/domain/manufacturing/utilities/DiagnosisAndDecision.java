@@ -402,8 +402,9 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
     public void redistribute_machine_operations(ACLMessage msg){
         String[] inf=msg.getContent().split("/");
         String lost_machine=inf[0];
-        String batch=inf[1];
-        String item=inf[2];
+        String lost_machine_id=inf[1];
+        String batch=inf[2];
+        String item=inf[3];
 
         try { //a la hora de rehacer el timeout para el batch, si no eliminamos el timeout del order previamente, este se duplicará
             ACLMessage batch_parent = sendCommand(myAgent, "get * category=batch reference=" + batch, String.valueOf(convIDCounter++));
@@ -417,15 +418,15 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
 
         LOGGER.warn(lost_machine+" operations must be redistributed. "+batch+" stoped on item "+item);
         String appPath="classes/resources/AppInstances/";
-        String lost_machine_id="";
-        String[] id = new String[1];
-        try {
-            ACLMessage LM_id= sendCommand(myAgent,"get "+lost_machine+" attrib=id", String.valueOf(convIDCounter++));
-            lost_machine_id=LM_id.getContent();
-            id = lost_machine_id.split("");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+//        String lost_machine_id="";
+//        String[] id = new String[1];
+//        try {
+//            ACLMessage LM_id= sendCommand(myAgent,"get "+lost_machine+" attrib=id", String.valueOf(convIDCounter++));
+//            lost_machine_id=LM_id.getContent();
+//            id = lost_machine_id.split("");  //obtenemos el número de la máquina: id=21 -> máquina nº2
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
 
         XMLReader fileReader = new XMLReader();
         String uri=appPath+xmlplan;
@@ -444,11 +445,11 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             }
             for(int i=batch_position+1;i<xmlelements.size()&&!xmlelements.get(i).get(0).get(0).equals("batch");i++){
                 if(xmlelements.get(i).get(0).get(0).equals("PlannedItem")){
-                    if(xmlelements.get(i).get(3).get(1).equals(item)||first_item_found){
+                    if(xmlelements.get(i).get(3).get(1).equals(item)||first_item_found){  //solo queremos añadir los items a partir del timeout
                         for(int j=i+1;j<xmlelements.size()&&!xmlelements.get(j).get(0).get(0).equals("PlannedItem");j++){
-                            if(xmlelements.get(j).get(0).get(0).contains("Operation")&&xmlelements.get(j).get(3).get(3).equals(id[0])){
+                            if(xmlelements.get(j).get(0).get(0).contains("Operation")&&xmlelements.get(j).get(3).get(3).equals(lost_machine_id)){
                                 if(!needed_operations.contains(xmlelements.get(j).get(3).get(1))){
-                                    needed_operations.add(xmlelements.get(j).get(3).get(1));
+                                    needed_operations.add(xmlelements.get(j).get(3).get(1));  //añade al listado las operaciones que vamos a necesitar hacer para comprobra la compatibilidad entre maquinas
                                 }
                                 new_operations=new_operations+ "id*"+xmlelements.get(j).get(3).get(1)+" plannedFinishTime*"+xmlelements.get(j).get(3).get(2)+ " plannedStartTime*"+xmlelements.get(j).get(3).get(4)+ " batch_ID*"+xmlelements.get(i).get(3).get(0)+" item_ID*"+xmlelements.get(i).get(3).get(1)+" order_ID*"+xmlelements.get(i).get(3).get(2)+" productType*"+xmlelements.get(i).get(3).get(3)+"&"; //hay que codificar los "=" como otro caracter para evitar malinterpretaciones por parte del SMA y del mensaje de negociacion
                             }
@@ -467,7 +468,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             for(int i=batch_position+1;i<xmlelements.size()&&!xmlelements.get(i).get(0).get(0).equals("batch");i++){
                 if(xmlelements.get(i).get(0).get(0).equals("PlannedItem")){
                     for(int j=i+1;j<xmlelements.size()&&!xmlelements.get(j).get(0).get(0).equals("PlannedItem");j++){
-                        if(xmlelements.get(j).get(0).get(0).contains("Operation")&&xmlelements.get(j).get(3).get(3).equals(id[0])){
+                        if(xmlelements.get(j).get(0).get(0).contains("Operation")&&xmlelements.get(j).get(3).get(3).equals(lost_machine_id)){
                             if(!needed_operations.contains(xmlelements.get(j).get(3).get(1))){
                                 needed_operations.add(xmlelements.get(j).get(3).get(1));
                             }
