@@ -67,14 +67,14 @@ set(turtlebot_transport_flexmansys_CONFIG_INCLUDED TRUE)
 
 # set variables for source/devel/install prefixes
 if("FALSE" STREQUAL "TRUE")
-  set(turtlebot_transport_flexmansys_SOURCE_PREFIX /home/borjartime/IdeaProjects/FlexManSys/catkin_ws/src/turtlebot_transport_flexmansys)
-  set(turtlebot_transport_flexmansys_DEVEL_PREFIX /home/borjartime/IdeaProjects/FlexManSys/catkin_ws/devel)
+  set(turtlebot_transport_flexmansys_SOURCE_PREFIX /home/borjartime/catkin_ws/src/turtlebot_transport_flexmansys)
+  set(turtlebot_transport_flexmansys_DEVEL_PREFIX /home/borjartime/catkin_ws/devel)
   set(turtlebot_transport_flexmansys_INSTALL_PREFIX "")
   set(turtlebot_transport_flexmansys_PREFIX ${turtlebot_transport_flexmansys_DEVEL_PREFIX})
 else()
   set(turtlebot_transport_flexmansys_SOURCE_PREFIX "")
   set(turtlebot_transport_flexmansys_DEVEL_PREFIX "")
-  set(turtlebot_transport_flexmansys_INSTALL_PREFIX /home/borjartime/IdeaProjects/FlexManSys/catkin_ws/install)
+  set(turtlebot_transport_flexmansys_INSTALL_PREFIX /home/borjartime/catkin_ws/install)
   set(turtlebot_transport_flexmansys_PREFIX ${turtlebot_transport_flexmansys_INSTALL_PREFIX})
 endif()
 
@@ -154,7 +154,7 @@ foreach(library ${libraries})
     set(lib_path "")
     set(lib "${library}-NOTFOUND")
     # since the path where the library is found is returned we have to iterate over the paths manually
-    foreach(path /home/borjartime/IdeaProjects/FlexManSys/catkin_ws/install/lib;/home/borjartime/IdeaProjects/FlexManSys/catkin_ws/devel/lib;/home/borjartime/catkin_ws/devel/lib;/opt/ros/kinetic/lib)
+    foreach(path /home/borjartime/catkin_ws/install/lib;/home/borjartime/catkin_ws/devel/lib;/opt/ros/kinetic/lib)
       find_library(lib ${library}
         PATHS ${path}
         NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)

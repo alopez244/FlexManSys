@@ -14,7 +14,7 @@ class ManipulationActivitySimulation(object):
     def __init__(self):
 
         self.ButtonObject = ButtonsTopicReader()
-        self.ActiviyFinalished = False
+        self.ActivityFinalished = False
 
     def ManipulationActivityFinalished(self):
 
@@ -22,12 +22,12 @@ class ManipulationActivitySimulation(object):
 
         if self.ButtonObject.ButtonPressed_B0 == True:
 
-            self.ActiviyFinalished = True
+            self.ActivityFinalished = True
             self.ButtonObject.ButtonPressed_B0 = False
 
         elif self.ButtonObject.ButtonPressed_B0 == False:
 
-            self.ActiviyFinalished = False
+            self.ActivityFinalished = False
 
 
 

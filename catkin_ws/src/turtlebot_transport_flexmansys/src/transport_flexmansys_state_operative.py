@@ -100,13 +100,16 @@ class OperativeState(object):
                 # Estas lineas simulan la finalizacion de la actividad de manipulacion en caso de ser necesaria.
                 # Saldra del bucle siempre y cuando se presione el boton B0 de la unidad de transporte.
 
-                while self.ManipulationSimulationObject.ActiviyFinalished == False:
+                while self.ManipulationSimulationObject.ActivityFinalished == False:
                     self.ManipulationSimulationObject.ManipulationActivityFinalished()
 
                 rospy.loginfo("Actividad de manipulacion finalizada")
 
                 self.ManipulationSimulationObject.ActivityFinalished = False
 
+                # self.ManipulationSimulationObject.ActiviyFinalished = False
+
+                # Aqui iria la funcion de checkeo de que el transporte se encuentra en su estacion de carga
                 # self.TransportDockingCheck()
 
         self.Operative_to_Active = True

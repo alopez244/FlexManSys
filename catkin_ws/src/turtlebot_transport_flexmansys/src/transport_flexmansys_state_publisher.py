@@ -38,7 +38,7 @@ class TransportUnitStatePublisher(object):
         if initialize == True:
 
             self.TransportUnitStatePublisherObject.kobuki_general.transport_unit_name = "Leonardo"
-            self.TransportUnitStatePublisherObject.kobuki_general.transport_unit_state = "UNDEFINED"
+            self.TransportUnitStatePublisherObject.kobuki_general.transport_unit_state = "Undefined"
             self.TransportUnitStatePublisherObject.kobuki_general.battery = 0.0
 
             self.TransportUnitStatePublisherObject.kobuki_obstacle.detected_obstacle_bumper = False

@@ -7,5 +7,4 @@
 # new environment variables
 
 # modified environment variables
-export PWD='/home/borjartime/IdeaProjects/FlexManSys/catkin_ws/build'
-export ROS_PACKAGE_PATH='/home/borjartime/catkin_ws/src:/home/borjartime/IdeaProjects/FlexManSys/catkin_ws/src:/home/borjartime/catkin_ws/src:/opt/ros/kinetic/share'
+export PWD='/home/borjartime/catkin_ws/build'

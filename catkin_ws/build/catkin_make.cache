@@ -1,2 +1,2 @@
-turtlebot_transport_flexmansys
--DCATKIN_DEVEL_PREFIX=/home/borjartime/IdeaProjects/FlexManSys/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/borjartime/IdeaProjects/FlexManSys/catkin_ws/install -DCATKIN_WHITELIST_PACKAGES=turtlebot_transport_flexmansys -G Unix Makefiles
+ar_tag_toolbox-master:creacion_accion:creacion_servicio:get_pose:init_particles_caller:my_move_base:my_package:rplidar_ros:send_goals:servicio:servicio_cuadrado:topics_quiz:turtlebot_navigation_gazebo:turtlebot_project_rosbasic:turtlebot_transport_flexmansys
+-DCATKIN_DEVEL_PREFIX=/home/borjartime/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/borjartime/catkin_ws/install -G Unix Makefiles

@@ -6,7 +6,7 @@ Bundle-SymbolicName: org.ros.rosjava_messages.turtlebot_transport_flex
 Bundle-Version: 0.0.0
 Bundle-Name: turtlebot_transport_flexmansys
 Bundle-ManifestVersion: 2
-Bnd-LastModified: 1646650345000
+Bnd-LastModified: 1643191325000
 Import-Package: org.ros.internal.message
 Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.7))"
 Created-By: 1.8.0_292 (Private Build)

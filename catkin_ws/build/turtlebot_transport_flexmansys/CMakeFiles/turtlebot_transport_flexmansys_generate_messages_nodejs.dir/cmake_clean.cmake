@@ -1,12 +1,12 @@
 file(REMOVE_RECURSE
   "CMakeFiles/turtlebot_transport_flexmansys_generate_messages_nodejs"
-  "/home/borjartime/IdeaProjects/FlexManSys/catkin_ws/devel/share/gennodejs/ros/turtlebot_transport_flexmansys/msg/TransportPrivateState.js"
-  "/home/borjartime/IdeaProjects/FlexManSys/catkin_ws/devel/share/gennodejs/ros/turtlebot_transport_flexmansys/msg/KobukiObstacle.js"
-  "/home/borjartime/IdeaProjects/FlexManSys/catkin_ws/devel/share/gennodejs/ros/turtlebot_transport_flexmansys/msg/TransportUnitState.js"
-  "/home/borjartime/IdeaProjects/FlexManSys/catkin_ws/devel/share/gennodejs/ros/turtlebot_transport_flexmansys/msg/TimeDate.js"
-  "/home/borjartime/IdeaProjects/FlexManSys/catkin_ws/devel/share/gennodejs/ros/turtlebot_transport_flexmansys/msg/KobukiGeneral.js"
-  "/home/borjartime/IdeaProjects/FlexManSys/catkin_ws/devel/share/gennodejs/ros/turtlebot_transport_flexmansys/msg/KobukiPosition.js"
-  "/home/borjartime/IdeaProjects/FlexManSys/catkin_ws/devel/share/gennodejs/ros/turtlebot_transport_flexmansys/srv/TransportServiceMessage.js"
+  "/home/borjartime/catkin_ws/devel/share/gennodejs/ros/turtlebot_transport_flexmansys/msg/TransportPrivateState.js"
+  "/home/borjartime/catkin_ws/devel/share/gennodejs/ros/turtlebot_transport_flexmansys/msg/TimeDate.js"
+  "/home/borjartime/catkin_ws/devel/share/gennodejs/ros/turtlebot_transport_flexmansys/msg/KobukiObstacle.js"
+  "/home/borjartime/catkin_ws/devel/share/gennodejs/ros/turtlebot_transport_flexmansys/msg/TransportUnitState.js"
+  "/home/borjartime/catkin_ws/devel/share/gennodejs/ros/turtlebot_transport_flexmansys/msg/KobukiPosition.js"
+  "/home/borjartime/catkin_ws/devel/share/gennodejs/ros/turtlebot_transport_flexmansys/msg/KobukiGeneral.js"
+  "/home/borjartime/catkin_ws/devel/share/gennodejs/ros/turtlebot_transport_flexmansys/srv/TransportServiceMessage.js"
 )
 
 # Per-language clean rules from dependency scanning.
