@@ -104,7 +104,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 		/* Paso 2: contacto con el asset a través del gatewayAgent y espero respuesta (si no hay, no se puede continuar con el registro) */
 		sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "check_asset",
                 myAgent.getLocalName()+"_"+methodName+"_"+conversationId++,"ask_state",myAgent);
-		ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 1200);
+		ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 1500);
 		if(answer!=null){
 			if(!answer.getContent().equals("Working")&&!answer.getContent().equals("Not working")){
 				System.out.println("PLC is not prepared to work.");
