@@ -86,18 +86,27 @@ public class MPlanInterpreter {
 
         String masterAttributes = "";
         String machineId = null;
-
+        HashMap<String,HashMap<String,String>> machine_batch_operation=new  HashMap<String,HashMap<String,String>>();
+        String batch_id="";
         for (int i = 0; i < roughPlan.size(); i++) {
             if (roughPlan.get(i).get(0).get(0).equals("PlannedItem")) {
                 masterAttributes = "";
                 for (int m = 0; m < roughPlan.get(i).get(2).size(); m++) {
-                    if (attribsToFind.contains(roughPlan.get(i).get(2).get(m)))
+                    if (attribsToFind.contains(roughPlan.get(i).get(2).get(m))){
                         masterAttributes = masterAttributes + roughPlan.get(i).get(2).get(m) + "=" + roughPlan.get(i).get(3).get(m) + " ";
+                    }
+
+
+                    if (roughPlan.get(i).get(2).get(m).equals("batch_ID")) {
+                        batch_id = roughPlan.get(i).get(3).get(m);
+                    }
                 }
-            }
-            else if (roughPlan.get(i).get(0).get(0).contains("Operation")) {
+
+
+            }else if (roughPlan.get(i).get(0).get(0).contains("Operation")) {
 
                 // Get machine ID
+
                 for (int z = 0; z < roughPlan.get(i).get(2).size(); z++) {
                     if (roughPlan.get(i).get(2).get(z).equals("plannedStationId")) {
                         ACLMessage reply = null;
@@ -111,14 +120,29 @@ public class MPlanInterpreter {
                         }
                     }
                 }
+                String operation_id="";
+
+
                 // Añadimos las informacion que se le va a enviar a las maquinas
                 for (int j = 0; j < roughPlan.get(i).get(2).size(); j++) {
-                    if (attribsToFind.contains(roughPlan.get(i).get(2).get(j)))
-                        if (machinesWithAllOpInfo.get(machineId) == null)
+                    if (attribsToFind.contains(roughPlan.get(i).get(2).get(j))) {
+                        if (machinesWithAllOpInfo.get(machineId) == null) {
                             machinesWithAllOpInfo.put(machineId, roughPlan.get(i).get(2).get(j) + "=" + roughPlan.get(i).get(3).get(j) + " ");
-                        else
+                        } else {
                             machinesWithAllOpInfo.put(machineId, machinesWithAllOpInfo.get(machineId) + roughPlan.get(i).get(2).get(j) + "=" + roughPlan.get(i).get(3).get(j) + " ");
+                        }
+
+                        if (roughPlan.get(i).get(2).get(j).equals("id")) {
+                            operation_id = roughPlan.get(i).get(3).get(j);
+                        }
+
+                    }
                 }
+                if(!machine_batch_operation.containsKey(machineId)){
+                    machine_batch_operation.put(machineId,new HashMap<String,String>());
+                }
+                    machine_batch_operation.get(machineId).put(batch_id,operation_id);
+
                 machinesWithAllOpInfo.put(machineId, machinesWithAllOpInfo.get(machineId) + masterAttributes + "&");
 
             }
@@ -154,6 +178,14 @@ public class MPlanInterpreter {
                 System.out.println("ERROR. "+msg.getAllReceiver()+" did not answer on time.");
                 return null;
             }
+//
+//            for(Map.Entry<String,HashMap<String, String>> batchs: machine_batch_operation.entrySet()){ //puede haber multiples batch asignados a la misma máquina
+//                if(batchs.getValue().equals(msg.getSender().getLocalName())){
+//                    sendACL(ACLMessage.INFORM,"D&D","redistribute",msg.getSender().getLocalName()+"/"+get_machine_id(msg.getSender().getLocalName())+"/"+machines.getKey()+"/"+"?",myAgent);
+//                }
+//            }
+
+
 
             for(int i=0;i<batch_list.size();i++){
                 ACLMessage inform_QoS=new ACLMessage(ACLMessage.INFORM);

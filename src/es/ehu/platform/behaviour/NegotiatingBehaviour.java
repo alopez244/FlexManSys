@@ -259,12 +259,12 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                         case NEG_WON: //he ganado la negociación y termina correctamente
                                             System.out.println("WON!");
 
-                                            ACLMessage DD_inform=new ACLMessage(ACLMessage.INFORM);
-                                            DD_inform.addReceiver(new AID("D&D",false));
-                                            DD_inform.setOntology("redistributed_operations");
-                                            DD_inform.setConversationId(conversationId);
-                                            DD_inform.setContent((String) negMsg.getExternalData()[0]);
-                                            myAgent.send(DD_inform);
+//                                            ACLMessage DD_inform=new ACLMessage(ACLMessage.INFORM);
+//                                            DD_inform.addReceiver(new AID("D&D",false));
+//                                            DD_inform.setOntology("redistributed_operations");
+//                                            DD_inform.setConversationId(conversationId);
+//                                            DD_inform.setContent((String) negMsg.getExternalData()[0]);
+//                                            myAgent.send(DD_inform);
 
                                             direct_win=true;
                                         case NEG_FAIL:
@@ -558,12 +558,12 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                             }
                                             myAgent.send(inform_winner);
 
-                                            ACLMessage DD_inform=new ACLMessage(ACLMessage.INFORM);
-                                            DD_inform.addReceiver(new AID("D&D",false));
-                                            DD_inform.setOntology("redistributed_operations");
-                                            DD_inform.setConversationId(conversationId);
-                                            DD_inform.setContent(Operations);
-                                            myAgent.send(DD_inform);
+//                                            ACLMessage DD_inform=new ACLMessage(ACLMessage.INFORM);
+//                                            DD_inform.addReceiver(new AID("D&D",false));
+//                                            DD_inform.setOntology("redistributed_operations");
+//                                            DD_inform.setConversationId(conversationId);
+//                                            DD_inform.setContent(Operations);
+//                                            myAgent.send(DD_inform);
 
                                             busy = false;
 

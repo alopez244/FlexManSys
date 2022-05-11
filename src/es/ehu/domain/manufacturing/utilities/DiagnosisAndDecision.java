@@ -337,7 +337,6 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
         while (raw_OP.contains("*")) raw_OP = raw_OP.replace("*", "="); //reconstruye el string
         LOGGER.info(machine+" has taken over operations "+raw_OP);
         String[] allOperations = raw_OP.split("&");
-        HashMap<String,HashMap<String,String>> batch_data=new HashMap<String,HashMap<String,String>>();
         String batch_finish_times="";
         String finishTime="";
 

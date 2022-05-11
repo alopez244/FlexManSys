@@ -47,7 +47,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private Timestamp GWAnswer;
     private MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
             MessageTemplate.MatchOntology("acl_error"));
-
+    public static final String DATE_FORMAT="yyyy-MM-dd'T'HH:mm:ss";
+    public static final String TIME_FORMAT="HH:mm:ss";
+    private SimpleDateFormat formatter_date = new SimpleDateFormat(DATE_FORMAT);
+    private SimpleDateFormat formatter_time = new SimpleDateFormat(TIME_FORMAT);
     private AID QoSID = new AID("QoSManagerAgent", false);
     public ArrayList<ACLMessage> posponed_msgs_to_batch=new ArrayList<ACLMessage>();
     public ArrayList<ACLMessage> posponed_msgs_to_gw=new ArrayList<ACLMessage>();
@@ -365,6 +368,62 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 //            data[1]=seID;
 //            execute(data);
             while (Operations.contains("*")) Operations = Operations.replace("*", "="); //reconstruye el string
+
+            HashMap<String,String>operation_time=new HashMap<String,String>();
+            for(int i=0;i<myAgent.resourceModel.size();i++){
+                if(myAgent.resourceModel.get(i).get(0).get(0).equals("simple_operation")){
+                    operation_time.put(myAgent.resourceModel.get(i).get(3).get(1),myAgent.resourceModel.get(i).get(3).get(0)); //crea un hashmap con operaciones y sus tiempos
+                }
+            }
+
+            String[] allOperations = Operations.split("&");
+            String batch_finish_times="";
+            String finishTime="";
+            String batch="";
+
+            for (int i = 0; i < allOperations.length; i++) { //se asume que la maquina realiza item por operación. No se contempla el caso de item subdividido en varias operaciones
+                String[] AllInformation = allOperations[i].split(" ");
+                String item=find_value_of_attrb("item_ID",AllInformation);
+                String operation_id=find_value_of_attrb("id",AllInformation);
+                if(i==0){               //en el primer item obtenemos el batch y el start time
+                    batch=find_value_of_attrb("batch_ID",AllInformation);
+                    batch_finish_times= batch+"&";
+                    String ST=find_value_of_attrb("plannedStartTime",AllInformation);
+                    Date item_ST=null;
+                    Date expected_time=null;
+                    try {
+                        item_ST = formatter_date.parse(ST);
+                        expected_time=formatter_time.parse(operation_time.get(operation_id));
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    finishTime=formatter_date.format(new Date(item_ST.getTime()+expected_time.getTime()+(60000*60))); //hay que sumarle un offset de 1 hora
+                    batch_finish_times=batch_finish_times+item+"/"+finishTime;
+                }else{
+                    String ST=finishTime; //el start time de este item sera el finishtime del anterior
+                    Date item_ST=null;
+                    Date expected_time=null;
+                    try {
+                        item_ST = formatter_date.parse(ST);
+                        expected_time=formatter_time.parse(operation_time.get(operation_id));
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    finishTime=formatter_date.format(new Date(item_ST.getTime()+expected_time.getTime()+(60000*60))); //hay que sumarle un offset de 1 hora
+                    batch_finish_times=batch_finish_times+"_"+item+"/"+finishTime;
+                }
+            }
+            sendACLMessage(ACLMessage.INFORM,new AID("QoSManagerAgent",false),"add_relation",String.valueOf(convIDcnt++),batch+"/"+myAgent.getLocalName(),myAgent); //añade una relacion maquina-batch
+
+            try {
+                ACLMessage parent = sendCommand(myAgent, "get * category=batch reference=" + batch, String.valueOf(convIDcnt++));
+                ACLMessage running_batch = sendCommand(myAgent, "get * category=batchAgent parent=" + parent.getContent() + " state=running", String.valueOf(convIDcnt++));
+                sendACLMessage(ACLMessage.INFORM,new AID(running_batch.getContent(),false),"rebuild_finish_times",String.valueOf(convIDcnt++),batch_finish_times,myAgent);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+
             ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
             msg.setSender(myAgent.getAID());
             msg.setContent(Operations);
@@ -375,6 +434,19 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         }
 
         return NegotiatingBehaviour.NEG_WON;
+    }
+
+    public String find_value_of_attrb(String toFind, String[] data){
+        String value="not_found"; //si no se actualiza este valor significa que no ha sido encontrado
+        for (String info : data) {                //consigue el item
+            String attrName = info.split("=")[0];
+            String attrValue = info.split("=")[1];
+            if(attrName.equals(toFind)){
+                value=attrValue;
+                break;
+            }
+        }
+        return value;
     }
 
     public void rcvDataFromDevice(ACLMessage msg2) {
