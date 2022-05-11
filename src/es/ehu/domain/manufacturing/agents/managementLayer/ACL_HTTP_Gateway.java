@@ -23,6 +23,7 @@ public class ACL_HTTP_Gateway {
     private String response;
     private String assetName;
     private String host;
+    private HashMap<String,Object> cmdHashMap;
 
     public ACL_HTTP_Gateway(String[] args) {
 
@@ -128,6 +129,32 @@ public class ACL_HTTP_Gateway {
 
     private void jadeSend(String response) throws ControllerException, InterruptedException {
 
+        //Antes de devolver los resultados, vamos a completar la estructura con la información que le falta
+        //Solo se van a hacer cambios si se han recibido los resultados de una operación POST (devuelve Time_Stamps)
+        if(response.contains("Initial_Time_Stamp")){
+
+            //En primer lugar, eliminamos el último caracter del string original
+            String responseTrim=response.substring(0, response.length() - 1);
+//            System.out.println(responseTrim);
+
+            //El segundo paso será modificar los campos que ya están en el string para añadirles la cabecera
+            String responseUpdate=responseTrim.replace("Initial_Time_Stamp","Data_Initial_Time_Stamp")
+                    .replace("Final_Time_Stamp","Data_Final_Time_Stamp")
+                    .replace("Item_Number","Id_Item_Number");
+
+            //A continuación, se coge la información que queremos recuperar del mensaje recibido
+            responseUpdate=responseUpdate+",\"Control_Flag_Item_Completed\":True,\"Control_Flag_Service_Completed\":True,"+
+                    "Id_Machine_Reference:"+cmdHashMap.get("Id_Machine_Reference")+",Id_Order_Reference:"
+                    +cmdHashMap.get("Id_Order_Reference")+",Id_Batch_Reference:"+cmdHashMap.get("Id_Batch_Reference")
+                    +",Id_Ref_Subproduct_Type:"+cmdHashMap.get("Id_Ref_Subproduct_Type")+",Id_Ref_Service_Type:"
+                    +cmdHashMap.get("Operation_Ref_Service_Type")+",Data_Service_Time_Stamp:1234567898765"+"}";
+            System.out.println(responseUpdate);
+
+            //Por último, se actualiza la variable response
+            response=responseUpdate;
+
+        }
+
         //Se declara la estructura que se le va a pasar al GatewayAgent
         StructMessage strMessage = new StructMessage();
 
@@ -145,7 +172,6 @@ public class ACL_HTTP_Gateway {
         String result = null;
         String service;
         HashMap<String,String> body = new HashMap<>();
-        HashMap<String,Object> cmdHashMap = new HashMap<>();
 
         //A continuación, se comprueba si el mensaje es de chequeo
         if (cmd.equals("ask_state")){
