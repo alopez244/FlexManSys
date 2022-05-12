@@ -12,7 +12,11 @@
         <xs:attribute name="kukaDTBuffers" type="xs:string" use="required"/>
         <xs:attribute name="urInput" type="xs:string" use="required"/>
         <xs:attribute name="urOutput" type="xs:string" use="required"/>
-        <xs:attribute name="urBuffers" type="xs:string" use="required"/>
+        <xs:attribute name="PointA" type="xs:string" use="required"/>
+        <xs:attribute name="PointB" type="xs:string" use="required"/>
+        <xs:attribute name="PointC" type="xs:string" use="required"/>
+        <xs:attribute name="PointD" type="xs:string" use="required"/>
+        <xs:attribute name="PointF" type="xs:string" use="required"/>
     </xs:complexType>
     <xs:element name="keyPositions" type="KeyPositions"/>
 </xs:schema>

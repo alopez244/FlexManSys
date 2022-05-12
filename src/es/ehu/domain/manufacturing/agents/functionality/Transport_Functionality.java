@@ -361,7 +361,13 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
          *  En el segundo campo, se recibirá el nombre del agente máquina que solicita la operación */
 
         String positionsArray = (String) negExternalData[0];
-        String machineAgentName = (String) negExternalData[1];
+
+
+        // Se obtienen los AID de los agentes requester y receiver, siendo Requester el primero AID que se recibe
+        // en el content del mensaje de externalData
+
+        String RequesterAID = (String) negExternalData[1];
+        String ReceiverAID = (String) negExternalData[2];
 
         /* Se comparan el valor propio y el valor recibido */
 
@@ -406,20 +412,6 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
             }
 
-            // Se obtienen los AID de los agentes requester y receiver, siendo Requester el primero AID que se recibe
-            // en el content del mensaje de externalData
-            String[] allAgentsNames = machineAgentName.split("&");
-
-            String RequesterAID = allAgentsNames[0];
-            String ReceiverAID = allAgentsNames[1];
-
-            /*
-            System.out.println("+++++++++++++++++++++++++++++++");
-            System.out.println(RequesterAID);
-            System.out.println(ReceiverAID);
-            System.out.println("+++++++++++++++++++++++++++++++");
-            */
-
             String TA_name = myAgent.getLocalName();
 
             /* Se construyen los argumentos que se introduciran en el TransportPlan.xml */
@@ -439,7 +431,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
             // Mensaje que notifica quien es el ganador de la negociacion al agente requester del servicio de transporte
 
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-            msg.addReceiver(new AID(machineAgentName, AID.ISLOCALNAME));
+            msg.addReceiver(new AID(ReceiverAID, AID.ISLOCALNAME));
             //msg.setContent("I am the winner of:" + seOperationID);
             msg.setContent("El ganador de la negociacion es: " + TA_name);
             msg.setConversationId(conversationId);

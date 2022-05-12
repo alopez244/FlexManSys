@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <keyPositions xmlns="keyPositions" dockingStation="A2" rawMaterialWarehouse="B3" kukaInput="C4" kukaOutput="D5"
               kukaBuffers="E6" kukaDTInput="F7" kukaDTOutput="G8" kukaDTBuffers="H9" urInput="I0" urOutput="J1"
-              urBuffers="K1"/>
+              urBuffers="K1" PointA="A" PointB="B" PointC="C" PointD="D" PointF="F"/>
