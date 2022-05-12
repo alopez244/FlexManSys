@@ -217,7 +217,9 @@ public class GWagentROS extends GatewayAgent {
                   String targets = TransportAgentAID; //el ID que tenga el agente.
                   String negotiationCriteria = "battery"; //o battery o el que utilices.
                   String negAction = "supplyConsumables";
-                  String externalData = "dockingStation;kukaInput,machine1"; //las posiciones separadas por ; y los campos del externalData separados entre si por ,
+                  // Las posiciones separadas por ; y los campos del externalData separados entre si por comas
+                  // Primero se especifica el AID del requester y luego el receiver
+                  String externalData = "dockingStation;kukaInput,machine1&machine2";
 
                   msg_neg.setContent("negotiate " + targets + " criterion=" + negotiationCriteria + " action=" + negAction + " externaldata=" + externalData);
                   send(msg_neg);

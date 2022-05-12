@@ -249,8 +249,8 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
         /* Se van a recibir dos campos en el objeto negExternalData:
         *  En el primer campo, se recibirá la operación (u operaciones) que tendrá que añadir a su pila el transporte ganador
         *  En el segundo campo, se recibirá el nombre del agente máquina que solicita la operación */
-        String positionsArray = (String) negExternalData[0]; //dockingStation;kukaInput
-        String machineAgentName = (String) negExternalData[1]; //machine1
+        String positionsArray = (String) negExternalData[0]; //Coordenada1;Coordenada2
+        String machineAgentName = (String) negExternalData[1]; //requester,receiver
 
         /* Se verifica bajo que criterio se quiere negociar. Posteriormente, se le dara una puntuacion al agente
          * transporte dentro de la negociacion segun los datos que reciba desde el transporte que represente. */
@@ -406,11 +406,24 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
             }
 
+            // Se obtienen los AID de los agentes requester y receiver, siendo Requester el primero AID que se recibe
+            // en el content del mensaje de externalData
+            String[] allAgentsNames = machineAgentName.split("&");
+
+            String RequesterAID = allAgentsNames[0];
+            String ReceiverAID = allAgentsNames[1];
+
+            /*
+            System.out.println("+++++++++++++++++++++++++++++++");
+            System.out.println(RequesterAID);
+            System.out.println(ReceiverAID);
+            System.out.println("+++++++++++++++++++++++++++++++");
+            */
+
             String TA_name = myAgent.getLocalName();
 
             /* Se construyen los argumentos que se introduciran en el TransportPlan.xml */
-            //positionsArray = "positions=" + positionsArray + " " + "requester=transport1" + " " + "receiver=transport1";
-            positionsArray = "positions=" + positionsArray + " " + "requester=" + TA_name + " " + "receiver=" + TA_name;
+            positionsArray = "positions=" + positionsArray + " " + "requester=" + RequesterAID + " " + "receiver=" + ReceiverAID;
 
             // Se encapsulan las operaciones en un mensaje tipo ACL
             ACLMessage positionsCoordinates = new ACLMessage(ACLMessage.INFORM);
@@ -422,6 +435,8 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
             /* Tras introducir el plan requerido en el TransportPlan.xml, se le indica al agente que solicito el
              * el transporte que ha ganado la negociacion. */
+
+            // Mensaje que notifica quien es el ganador de la negociacion al agente requester del servicio de transporte
 
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
             msg.addReceiver(new AID(machineAgentName, AID.ISLOCALNAME));
@@ -721,10 +736,6 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                     // Se envía un mensaje al solicitante del servicio
                     sendACLMessage(ACLMessage.INFORM, serviceRequester, "data", myAgent.getLocalName() + "_" + conversationId++, "initialTimeStamp=" + myAgent.initialTimeStamp + " finalTimeStamp=" + myAgent.finalTimeStamp, myAgent);
 
-                    // Se comprueba si el solicitante y el receptor del servicio son distintos agentes, para enviar un segundo mensaje si es necesario
-                    if (serviceReceiver != serviceRequester) {
-                        sendACLMessage(ACLMessage.INFORM, serviceReceiver, "data", myAgent.getLocalName() + "_" + conversationId++, "initialTimeStamp=" + myAgent.initialTimeStamp + " finalTimeStamp=" + myAgent.finalTimeStamp, myAgent);
-                    }
                 }
 
                 AccomplishedTaskCounter = AccomplishedTaskCounter + 1;
@@ -736,6 +747,16 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
 
                     // Esta seccion unicamente se ejecutara cuando reciba un final de servicio por parte del transporte
                     // en este caso cuando el numero de tareas ejecutadas coincida con el numero de tareas enviadas
+
+                    AID serviceRequester = new AID(myAgent.transportPlan.get(1).get(3).get(1), false);
+                    AID serviceReceiver = new AID(myAgent.transportPlan.get(1).get(3).get(2), false);
+
+                    // Se comprueba si el solicitante y el receptor del servicio son distintos agentes, para enviar un segundo mensaje si es necesario
+                    if (serviceReceiver != serviceRequester) {
+                        // Mensaje que informa al agente receiver, es decir, el que recibe el servicio de transporte,
+                        // que el servicio de transporte ha sido completado y finalizado correctamente.
+                        sendACLMessage(ACLMessage.INFORM, serviceReceiver, "data", myAgent.getLocalName() + "_" + conversationId++, "initialTimeStamp=" + myAgent.initialTimeStamp + " finalTimeStamp=" + myAgent.finalTimeStamp, myAgent);
+                    }
 
                     // Se continúa eliminando esta tarea del plan (la primera tarea de la lista ocupa la segunda posición del submodelo)
                     myAgent.transportPlan.remove(1);
@@ -758,7 +779,6 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
         }
 
     }
-
 
     /* OPERACIONES DE FINALIZACIÓN DEL AGENTE TRANSPORTE*/
 
