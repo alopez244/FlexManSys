@@ -380,11 +380,11 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             String batch_finish_times="";
             String finishTime="";
             String batch="";
-
+            String operation_id="";
             for (int i = 0; i < allOperations.length; i++) { //se asume que la maquina realiza item por operación. No se contempla el caso de item subdividido en varias operaciones
                 String[] AllInformation = allOperations[i].split(" ");
                 String item=find_value_of_attrb("item_ID",AllInformation);
-                String operation_id=find_value_of_attrb("id",AllInformation);
+                operation_id=find_value_of_attrb("id",AllInformation);
                 if(i==0){               //en el primer item obtenemos el batch y el start time
                     batch=find_value_of_attrb("batch_ID",AllInformation);
                     batch_finish_times= batch+"&";
@@ -413,7 +413,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     batch_finish_times=batch_finish_times+"_"+item+"/"+finishTime;
                 }
             }
-            sendACLMessage(ACLMessage.INFORM,new AID("QoSManagerAgent",false),"add_relation",String.valueOf(convIDcnt++),batch+"/"+myAgent.getLocalName(),myAgent); //añade una relacion maquina-batch
+            sendACLMessage(ACLMessage.INFORM,new AID("QoSManagerAgent",false),"add_relation",String.valueOf(convIDcnt++),myAgent.getLocalName()+"/"+batch+"/"+operation_id,myAgent); //añade una relacion maquina-batch
 
             try {
                 ACLMessage parent = sendCommand(myAgent, "get * category=batch reference=" + batch, String.valueOf(convIDcnt++));
@@ -468,12 +468,13 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
                     BathcID = String.valueOf(PLCmsgIn.get("Id_Batch_Reference"));
                     BathcID = BathcID.split("\\.")[0];
-
+                    String operation="";
                     for (int i = 0; i <myAgent.machinePlan.size(); i++){    //searching the expected batch to be manufactured in machine plan arraylist
                         for (int j = 0; j < myAgent.machinePlan.get(i).size(); j++){
                             if (myAgent.machinePlan.get(i).get(j).get(0).equals("operation")){
                                 if (NumOfItems != 0) {
                                     if (myAgent.machinePlan.get(i).get(j + 3).get(3).equals(BathcID)) { //The manufactured batch is compared with the expected batch ***With new XML is trying to compare item ID with batch ID, get(4) changed to get(3)
+                                        operation=myAgent.machinePlan.get(i).get(j + 3).get(0);
                                         myAgent.machinePlan.remove(i);
                                         i--;
                                         NumOfItems--;   //only the references to the items that were expected to be manufactured are deleted, that's why it is counted how many remains to be deleted
@@ -482,6 +483,9 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                             }
                         }
                     }
+
+                    sendACLMessage(ACLMessage.INFORM,new AID("QoSManagerAgent",false),"remove_relation","relation_"+BathcID+"_removal",BathcID+"/"+operation,myAgent);
+
                     if (myAgent.machinePlan.size() < 3){  //checking that there is no more operation to send
                         orderQueueFlag = false;
                     } else{

@@ -22,7 +22,8 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
 
     private ArrayList<ArrayList<String>> ErrorList=new ArrayList<ArrayList<String>>();
     private int l=0;
-    private HashMap<String, String> batch_machine=new HashMap<String,String >();
+//    private HashMap<String, String> batch_machine=new HashMap<String,String >();
+    private HashMap<String,HashMap<String, String>> batch_op_machine=new HashMap<String,HashMap<String, String>>();
     private HashMap<String,String> delay_asking_queue =new HashMap<String,String >();
     private HashMap<String,String> delay_list=new HashMap<String,String >();
     static final Logger LOGGER = LogManager.getLogger(QoSManagerAgent.class.getName());
@@ -67,9 +68,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                                     LOGGER.error(msg.getSender().getLocalName() + " agent who reported the error is isolated");
                                     sendACL(ACLMessage.INFORM, "D&D", "msg_lost", msg.getContent(),myAgent);
                                     String msgtoDD = msg.getSender().getLocalName();
-//                                    if (msg.getSender().getLocalName().contains("ControlGatewayCont")) {
-//                                        msgtoDD = msgtoDD + "/div/" + receiver;
-//                                    }
+
                                     add_to_error_list("not_found", msg.getSender().getLocalName(), "", "", "");
                                     sendACL(ACLMessage.INFORM, "D&D", "not_found", msgtoDD,myAgent);
                                 } else {
@@ -85,25 +84,39 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                                 LOGGER.warn("No answer from " + receiver + ". Confirming error.");
 //                                report_back(msg);
                                 String msgtoDD = receiver;
-//                                if (receiver.contains("ControlGatewayCont")) {  //en algunos casos necesitamos saber el agente que ha denunciado el fallo para que pase a idle a traves del D&D
-//                                    msgtoDD = msgtoDD + "/div/" + msg.getSender().getLocalName();
-//                                }
+//
 //                                get_timestamp(myAgent,receiver,"DeadAgentConfirmation");
                                 if(receiver.contains("ControlGatewayCont")){ //si el agente denunciado es un GW hay que redistribuir las tareas de su máquina
 
-                                    for(Entry<String,String> machines: batch_machine.entrySet()){ //puede haber multiples batch asignados a la misma máquina
-                                        if(machines.getValue().equals(msg.getSender().getLocalName())){
-                                            sendACL(ACLMessage.INFORM,"D&D","redistribute",msg.getSender().getLocalName()+"/"+get_machine_id(msg.getSender().getLocalName())+"/"+machines.getKey()+"/"+"?",myAgent);
-//                                            batch_machine.remove(machines.getKey()); //hay que borrar la relación
+                                    for(Entry<String, HashMap<String,String>> batches: batch_op_machine.entrySet()){
+                                        for(Entry<String,String> operations: batch_op_machine.get(batches.getKey()).entrySet()){
+                                            if(operations.getValue().equals(msg.getSender().getLocalName())){ //el unico posible denunciante del GW es la misma maquina
+                                                sendACL(ACLMessage.INFORM,"D&D","redistribute",msg.getSender().getLocalName()+"/"+get_machine_id(msg.getSender().getLocalName())+"/"+batches.getKey()+"/"+"?",myAgent);
+                                            }
                                         }
                                     }
+
+//                                    for(Entry<String,String> machines: batch_machine.entrySet()){ //puede haber multiples batch asignados a la misma máquina
+//                                        if(machines.getValue().equals(msg.getSender().getLocalName())){
+//                                            sendACL(ACLMessage.INFORM,"D&D","redistribute",msg.getSender().getLocalName()+"/"+get_machine_id(msg.getSender().getLocalName())+"/"+machines.getKey()+"/"+"?",myAgent);
+////                                            batch_machine.remove(machines.getKey()); //hay que borrar la relación
+//                                        }
+//                                    }
                                 } else if(receiver.contains("machine")){
-                                    for(Entry<String,String> machines: batch_machine.entrySet()){ //puede haber multiples batch asignados a la misma máquina
-                                        if(machines.getValue().equals(receiver)){
-                                            sendACL(ACLMessage.INFORM,"D&D","redistribute",receiver+"/"+get_machine_id(msg.getSender().getLocalName())+"/"+machines.getKey()+"/"+"?",myAgent);
-//                                            batch_machine.remove(machines.getKey()); //hay que borrar la relación
+//                                    for(Entry<String,String> machines: batch_machine.entrySet()){ //puede haber multiples batch asignados a la misma máquina
+//                                        if(machines.getValue().equals(receiver)){
+//                                            sendACL(ACLMessage.INFORM,"D&D","redistribute",receiver+"/"+get_machine_id(msg.getSender().getLocalName())+"/"+machines.getKey()+"/"+"?",myAgent);
+////                                            batch_machine.remove(machines.getKey()); //hay que borrar la relación
+//                                        }
+//                                    }
+                                    for(Entry<String, HashMap<String,String>> batches: batch_op_machine.entrySet()){
+                                        for(Entry<String,String> operations: batch_op_machine.get(batches.getKey()).entrySet()){
+                                            if(operations.getValue().equals(receiver)){ //el unico posible denunciante del GW es la misma maquina
+                                                sendACL(ACLMessage.INFORM,"D&D","redistribute",receiver+"/"+get_machine_id(receiver)+"/"+batches.getKey()+"/"+"?",myAgent);
+                                            }
                                         }
                                     }
+
                                 }else{
                                     add_to_error_list("not_found", receiver, "", "", "");
                                     sendACL(ACLMessage.INFORM, "D&D", "not_found", msgtoDD,myAgent);
@@ -128,7 +141,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                                     LOGGER.warn("Timeout coming from a thread from " + msg.getSender().getLocalName() + " who is dead. Ignoring timeout");
                                 } else {
 //                                    if (batch_and_machine.size() > 0) { //buscamos el batch en el listado y conseguimos el ID del machine agent responsable
-                                    if (batch_machine.containsKey(timeout_batch_id)) { //buscamos el batch en el listado y conseguimos el ID del machine agent responsable
+                                    if (batch_op_machine.containsKey(timeout_batch_id)) { //buscamos el batch en el listado y conseguimos el ID del machine agent responsable
                                         timeout_handler(msg, timeout_batch_id, timeout_item_id);
                                     } else {
                                         LOGGER.warn("No data available to check failure because process has either not started or already has finish. Most likely a dead agent reported timeout. Ignoring");
@@ -172,7 +185,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
 //                                                if (batch_and_machine.size() > 0) { //buscamos el batch en el listado y conseguimos el ID del machine agent responsable
 //                                                    timeout_handler(msg, timeout_batch_id,"?");
 //                                                }
-                                                if (batch_machine.containsKey(timeout_batch_id)) { //buscamos el batch en el listado y conseguimos el ID del machine agent responsable
+                                                if (batch_op_machine.containsKey(timeout_batch_id)) { //buscamos el batch en el listado y conseguimos el ID del machine agent responsable
                                                     timeout_handler(msg, timeout_batch_id,"?");
                                                 }
                                             } else {
@@ -199,9 +212,12 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                         String finishing_batch = msg.getContent();
 
                         delay_list.remove(finishing_batch);
-                        batch_machine.remove(finishing_batch);
-
+//                        batch_machine.remove(finishing_batch);
+                        batch_op_machine.remove(finishing_batch);
                         LOGGER.info("Batch " + finishing_batch + " finished.");
+
+                    } else if (msg.getOntology().equals("remove_relation")) {
+                        batch_op_machine.get(msg.getContent().split("/")[0]).remove(msg.getContent().split("/")[1]);
 
                     } else if (msg.getOntology().equals("delay")) {     //ejemplo: 221/133234000
                         String[] parts2 = msg.getContent().split("/");
@@ -216,13 +232,18 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                             LOGGER.info("Informing batch " + msg.getContent());
                         }
 
-
-                    } else if(msg.getOntology().equals("add_relation")){ //ej: 221/machine1
-                        String[] data= msg.getContent().split("/");
-                        batch_machine.put(data[0],data[1]);
-
-                    } else if (msg.getOntology().equals("asset_state")) { //recibe ping de vuelta del asset (solo para testing)
-                        LOGGER.info("Recieved asset state out of the timeout: " + msg.getContent());
+                    } else if(msg.getOntology().equals("add_relation")){ //ej:   machine1/221/4
+                        String machine= msg.getContent().split("/")[0];
+                        String batch= msg.getContent().split("/")[1];
+                        String operation= msg.getContent().split("/")[2];
+                        if(!batch_op_machine.containsKey(batch)){
+                            batch_op_machine.put(batch,new HashMap<String,String>());
+                        }
+                        batch_op_machine.get(batch).put(operation,machine);  //se asume que un batch puede disponer de varias maquinas asignadas y viceversa, pero si tiene diferentes maquinas será para ejecutar difernetes operaciones
+//                        batch_machine.put(data[0],data[1]);
+                        System.out.println("Added relation "+batch+" -> "+operation+" -> "+machine);
+                    } else if (msg.getOntology().equals("asset_state")) { //recibe ping de vuelta del asset fuera de tiempo de espera de mensaje (solo para testing, no deberia ocurrir en funcionamiento normal)
+                        LOGGER.warn("Recieved asset state out of the timeout: " + msg.getContent());
                     } else if (msg.getOntology().equals("reported_on_dead_node")) {
 //                        get_timestamp(myAgent,msg.getContent(),"DeadAgentConfirmation");
                         add_to_error_list("not_found", msg.getContent(), "", "", "");
@@ -233,14 +254,28 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                     if (msg.getOntology().equals("askrelationship")) {
                         if (msg.getContent().contains("machine")) {
                             String content="";
-                            for(Entry<String,String> machines: batch_machine.entrySet()){
-                                if(machines.getValue().equals(msg.getContent())){
-                                    content=content+machines.getKey()+"/";
+
+//                            for(Entry<String,String> machines: batch_machine.entrySet()){
+//                                if(machines.getValue().equals(msg.getContent())){
+//                                    content=content+machines.getKey()+"/";
+//                                }
+//                            }
+                            for(Entry<String, HashMap<String,String>> batches: batch_op_machine.entrySet()){
+                                for(Entry<String,String> operations: batch_op_machine.get(batches.getKey()).entrySet()){
+                                    if(operations.getValue().equals(msg.getContent())){
+                                        content=content+operations.getValue()+"/";
+                                    }
                                 }
                             }
-                            sendACL(ACLMessage.INFORM,"D&D",msg.getOntology(),content,myAgent);
+
+                            sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),content,myAgent);
                         }else{
-                            sendACL(ACLMessage.INFORM,"D&D",msg.getOntology(),batch_machine.get(msg.getContent()),myAgent);
+//                            sendACL(ACLMessage.INFORM,"D&D",msg.getOntology(),batch_machine.get(msg.getContent()),myAgent);
+                            String content="";
+                            for(Entry<String,String> operations: batch_op_machine.get(msg.getContent()).entrySet()){
+                                content=content+operations.getValue()+"/";
+                            }
+                            sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),content,myAgent);
                         }
 
                     }
@@ -279,68 +314,85 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
         }
 
         private void timeout_handler(ACLMessage msg, String timeout_batch_id, String timeout_item_id) {
-                    String MA = batch_machine.get(timeout_batch_id);
-                    argument2 = timeout_batch_id;
-                    argument3 = timeout_item_id;
-                    if (CheckNotFoundRegistry(MA)) { //comprobamos que no este denunciado ya
-                        String ping_result = PingAsset(MA);
-                        if (!ping_result.contains("plc") && ping_result.contains("_down")) {     //GW o machine caidos, se denuncia a D&D
-                            String[] dead_agent = ping_result.split("_down");
-                            if (dead_agent[0].contains("machine")) {
-                                argument4 = MA + "->NO OK";
-                                argument5 = "GW->?";
-                            } else {
-                                argument4 = MA + "->OK";
-                                argument5 = "GW->NO OK";
-                            }
-                            add_to_error_list("timeout", argument2, argument3, argument4, argument5); //añadimos timeout
-                            if (!CheckNotFoundRegistry(dead_agent[0])) {
-                                LOGGER.info("Agent " + dead_agent[0] + " has already been reported");
-                            } else {
-                                LOGGER.warn(MA+" operations must be redistributed to finish batch "+timeout_batch_id);
-                                add_to_error_list("not_found", dead_agent[0], "", "", ""); //añadimos agente caido
+//                    String MA = batch_machine.get(timeout_batch_id);
+            for(Entry<String,String> operations: batch_op_machine.get(timeout_batch_id).entrySet()){ //hay que checkear cada maquina asignada al batch
+                String MA = operations.getValue();
+                argument2 = timeout_batch_id;
+                argument3 = timeout_item_id;
+                if (CheckNotFoundRegistry(MA)) { //comprobamos que no este denunciado ya
+                    String ping_result = PingAsset(MA);
+                    if (!ping_result.contains("plc") && ping_result.contains("_down")) {     //GW o machine caidos, se denuncia a D&D
+                        String[] dead_agent = ping_result.split("_down");
+                        if (dead_agent[0].contains("machine")) {
+                            argument4 = MA + "->NO OK";
+                            argument5 = "GW->?";
+                        } else {
+                            argument4 = MA + "->OK";
+                            argument5 = "GW->NO OK";
+                        }
+                        add_to_error_list("timeout", argument2, argument3, argument4, argument5); //añadimos timeout
+                        if (!CheckNotFoundRegistry(dead_agent[0])) {
+                            LOGGER.info("Agent " + dead_agent[0] + " has already been reported");
+                        } else {
+                            LOGGER.warn(MA+" operations must be redistributed to finish batch "+timeout_batch_id);
+                            add_to_error_list("not_found", dead_agent[0], "", "", ""); //añadimos agente caido
 
-
-                                for(Entry<String,String> machines: batch_machine.entrySet()){
-                                    if(machines.getValue().equals(MA)){
-                                        if(machines.getKey().equals(timeout_batch_id)){ //si se trata del batch del timeout se le pasa el item
-                                            sendACL(ACLMessage.INFORM,"D&D","redistribute",MA+"/"+get_machine_id(MA)+"/"+machines.getKey()+"/"+timeout_item_id,myAgent);
+                            for(Entry<String, HashMap<String,String>> batches: batch_op_machine.entrySet()){  //tras confirmar que esta máquina está mal se redistribuyen las tareas asignadas a esta maquina
+                                for(Entry<String,String> operations2: batch_op_machine.get(batches.getKey()).entrySet()){
+                                    if(operations2.getValue().equals(MA)){
+                                        if(batches.getKey().equals(timeout_batch_id)){ //si se trata del batch del timeout se le pasa el item
+                                            sendACL(ACLMessage.INFORM,"D&D","redistribute",MA+"/"+get_machine_id(MA)+"/"+batches.getKey()+"/"+timeout_item_id,myAgent);
                                         }else{   //si no es el batch del timeout solo puede ser un batch que esta pendiente de ejecución, es decir se debe rehacer por completo
-                                            sendACL(ACLMessage.INFORM,"D&D","redistribute",MA+"/"+get_machine_id(MA)+"/"+machines.getKey()+"/"+"?",myAgent);
+                                            sendACL(ACLMessage.INFORM,"D&D","redistribute",MA+"/"+get_machine_id(MA)+"/"+batches.getKey()+"/"+"?",myAgent);
                                         }
                                     }
                                 }
                             }
 
-                        } else if (ping_result.equals("working")) { //el sistema funciona correctamente, se puede haber retrasado por un fallo. Registramos el timeout, lo reseteamos y no hacemos nada más.
-                            LOGGER.info("Everything OK theoretically. Reset timeout.");
-                            sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "reset_timeout",myAgent);
-                            argument4 = MA + "->OK";
-                            argument5 = "GW->OK";
-                            add_to_error_list("timeout", argument2, argument3, argument4, argument5);  //aunque este todoo ok hay que añadir el timeout a la lista de errores
-                        } else { //el sistema está parado o en error
+//                            for(Entry<String,String> machines: batch_machine.entrySet()){
+//                                if(machines.getValue().equals(MA)){
+//                                    if(machines.getKey().equals(timeout_batch_id)){ //si se trata del batch del timeout se le pasa el item
+//                                        sendACL(ACLMessage.INFORM,"D&D","redistribute",MA+"/"+get_machine_id(MA)+"/"+machines.getKey()+"/"+timeout_item_id,myAgent);
+//                                    }else{   //si no es el batch del timeout solo puede ser un batch que esta pendiente de ejecución, es decir se debe rehacer por completo
+//                                        sendACL(ACLMessage.INFORM,"D&D","redistribute",MA+"/"+get_machine_id(MA)+"/"+machines.getKey()+"/"+"?",myAgent);
+//                                    }
+//                                }
+//                            }
+                        }
 
-                            for(Entry<String,String> machines: batch_machine.entrySet()){ //puede haber multiples batch asignados a la misma máquina
-                                if(machines.getValue().equals(MA)){
-                                    if(machines.getKey().equals(timeout_batch_id)){
-                                        sendACL(ACLMessage.INFORM,"D&D","redistribute",MA+"/"+get_machine_id(MA)+"/"+machines.getKey()+"/"+timeout_item_id,myAgent);
-                                    }else{
-                                        sendACL(ACLMessage.INFORM,"D&D","redistribute",MA+"/"+get_machine_id(MA)+"/"+machines.getKey()+"/"+"?",myAgent);
+                    } else if (ping_result.equals("working")||ping_result.equals("not_working")) { //el maquina no ha comenzado el batch o se ha retrasado. Registramos el timeout, lo reseteamos y no hacemos nada más.
+                        LOGGER.info("Everything OK theoretically. Reset timeout.");
+                        sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "reset_timeout",myAgent);
+                        argument4 = MA + "->OK";
+                        argument5 = "GW->OK";
+                        add_to_error_list("timeout", argument2, argument3, argument4, argument5);  //aunque este todoo ok hay que añadir el timeout a la lista de errores
+                    } else { //el sistema está parado o en error
+
+                        for(Entry<String, HashMap<String,String>> batches: batch_op_machine.entrySet()){  //tras confirmar que esta máquina está mal se redistribuyen las tareas asignadas a esta maquina
+                            for(Entry<String,String> operations2: batch_op_machine.get(batches.getKey()).entrySet()){
+                                if(operations2.getValue().equals(MA)){
+                                    if(batches.getKey().equals(timeout_batch_id)){ //si se trata del batch del timeout se le pasa el item
+                                        sendACL(ACLMessage.INFORM,"D&D","redistribute",MA+"/"+get_machine_id(MA)+"/"+batches.getKey()+"/"+timeout_item_id,myAgent);
+                                    }else{   //si no es el batch del timeout solo puede ser un batch que esta pendiente de ejecución, es decir se debe rehacer por completo
+                                        sendACL(ACLMessage.INFORM,"D&D","redistribute",MA+"/"+get_machine_id(MA)+"/"+batches.getKey()+"/"+"?",myAgent);
                                     }
-//                                    batch_machine.remove(machines.getKey()); //hay que borrar la relación
                                 }
                             }
-//                            sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "reset_timeout",myAgent);
-                            argument4 = MA + "->OK";
-                            argument5 = "GW->OK";
-                            add_to_error_list("timeout", argument2, argument3, argument4, argument5);
                         }
-                    } else {  //si ya esta denunciado no hay que ejecutar acciones de redistribuir de tareas
-                        argument4 = MA + "->NO OK";
-                        argument5 = "?";
+//                            sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "reset_timeout",myAgent);
+                        argument4 = MA + "->OK";
+                        argument5 = "GW->OK";
                         add_to_error_list("timeout", argument2, argument3, argument4, argument5);
-//                        sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "confirmed_timeout",myAgent);
                     }
+                } else {  //si ya esta denunciado no hay que ejecutar acciones de redistribuir de tareas
+                    argument4 = MA + "->NO OK";
+                    argument5 = "?";
+                    add_to_error_list("timeout", argument2, argument3, argument4, argument5);
+//                        sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "confirmed_timeout",myAgent);
+                }
+            }
+
+
         }
 
         private ArrayList<String> getDelays(String data) {

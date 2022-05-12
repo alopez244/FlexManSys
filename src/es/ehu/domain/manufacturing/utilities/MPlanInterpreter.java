@@ -178,22 +178,28 @@ public class MPlanInterpreter {
                 System.out.println("ERROR. "+msg.getAllReceiver()+" did not answer on time.");
                 return null;
             }
-//
-//            for(Map.Entry<String,HashMap<String, String>> batchs: machine_batch_operation.entrySet()){ //puede haber multiples batch asignados a la misma máquina
-//                if(batchs.getValue().equals(msg.getSender().getLocalName())){
-//                    sendACL(ACLMessage.INFORM,"D&D","redistribute",msg.getSender().getLocalName()+"/"+get_machine_id(msg.getSender().getLocalName())+"/"+machines.getKey()+"/"+"?",myAgent);
-//                }
-//            }
 
-
-
-            for(int i=0;i<batch_list.size();i++){
-                ACLMessage inform_QoS=new ACLMessage(ACLMessage.INFORM);
-                inform_QoS.setOntology("add_relation");
-                inform_QoS.setContent(batch_list.get(i)+"/"+(String)pair.getKey());
-                inform_QoS.addReceiver(new AID("QoSManagerAgent", AID.ISLOCALNAME));
-                myAgent.send(inform_QoS);
+            for(Map.Entry<String,HashMap<String, String>> machines: machine_batch_operation.entrySet()){
+                if(machines.getKey().equals((String)pair.getKey())){
+                    for(Map.Entry<String,String> batchs: machines.getValue().entrySet()){
+                        ACLMessage inform_QoS=new ACLMessage(ACLMessage.INFORM);
+                        inform_QoS.setOntology("add_relation");
+                        inform_QoS.setContent(machines.getKey()+"/"+batchs.getKey()+"/"+batchs.getValue());
+                        inform_QoS.addReceiver(new AID("QoSManagerAgent", AID.ISLOCALNAME));
+                        myAgent.send(inform_QoS);
+                    }
+                }
             }
+
+
+
+//            for(int i=0;i<batch_list.size();i++){
+//                ACLMessage inform_QoS=new ACLMessage(ACLMessage.INFORM);
+//                inform_QoS.setOntology("add_relation");
+//                inform_QoS.setContent(batch_list.get(i)+"/"+(String)pair.getKey());
+//                inform_QoS.addReceiver(new AID("QoSManagerAgent", AID.ISLOCALNAME));
+//                myAgent.send(inform_QoS);
+//            }
         }
 
         //No es necesario con la estructura nueva de XML ***************************************************************

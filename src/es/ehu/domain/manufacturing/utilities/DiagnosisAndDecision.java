@@ -93,13 +93,15 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             sendACL(7,winner,"restart_timeout","reset_timeout",myAgent); //si es batch debe resetear el timeout
             try {
                 ACLMessage parent=sendCommand(myAgent,"get "+winner+" attrib=parent",convID+String.valueOf(convIDCounter++));
+                ACLMessage reference = sendCommand(myAgent, "get " + parent.getContent() + " attrib=reference", "recovered_batch_reference");
+
+                ArrayList<String> targets=get_relationship(reference.getContent()); //devuelve el agente máquina que cuelga del batch
 
 
-                String target=get_relationship(parent.getContent()); //devuelve el agente máquina que cuelga del machine
-
-                ACLMessage reference = sendCommand(myAgent, "get " + parent + " attrib=reference", "recovered_batch_reference");
-                if(target!=null){
-                    sendACL(ACLMessage.INFORM,target,"release_buffer",winner,myAgent); //pide al machine que vacie el buffer de mensajes retenidos
+                if(targets!=null){
+                    for(int i=0;i<targets.size();i++){
+                        sendACL(ACLMessage.INFORM,targets.get(i),"release_buffer",winner,myAgent); //pide al machine que vacie el buffer de mensajes retenidos
+                    }
                 }
                 restart_replica(parent.getContent()); //hay que generar una replica en tracking si es posible para mantener el numero de replicas constante
             } catch (Exception e) {
@@ -292,7 +294,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                     e.printStackTrace();
                 }
             }else if(msg.getContent().contains("machine")){
-                String batch=get_relationship(msg.getContent());
+//                String batch=get_relationship(msg.getContent());
                 //TODO poner a negociar otras maquinas para asumir el mando del batch
             }
 
@@ -339,11 +341,11 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
         String[] allOperations = raw_OP.split("&");
         String batch_finish_times="";
         String finishTime="";
-
+        String operation_id="";
         for (int i = 0; i < allOperations.length; i++) { //se asume que la maquina realiza item por operación. No se contempla el caso de item subdividido en varias operaciones
             String[] AllInformation = allOperations[i].split(" ");
             String item=find_value_of_attrb("item_ID",AllInformation);
-            String operation_id=find_value_of_attrb("id",AllInformation);
+            operation_id=find_value_of_attrb("id",AllInformation);
             if(i==0){               //en el primer item obtenemos el batch y el start time
                 batch=find_value_of_attrb("batch_ID",AllInformation);
                batch_finish_times= batch+"&";
@@ -372,7 +374,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                 batch_finish_times=batch_finish_times+"_"+item+"/"+finishTime;
             }
         }
-        sendACL(ACLMessage.INFORM,"QoSManagerAgent","add_relation",batch+"/"+machine,myAgent); //añade una relacion maquina-batch
+        sendACL(ACLMessage.INFORM,"QoSManagerAgent","add_relation",machine+"/"+batch+"/"+operation_id,myAgent); //añade una relacion maquina-batch
 
         try {
             ACLMessage parent = sendCommand(myAgent, "get * category=batch reference=" + batch, String.valueOf(convIDCounter++));
@@ -623,17 +625,25 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
     }
 
 
-    private String get_relationship(String agent){ //obtiene la relacion entre agente máquina y batch. TODO Haría falta un sistema mejor.
+    private ArrayList<String> get_relationship(String agent){ //obtiene la relacion entre agente máquina y batch. TODO Haría falta un sistema mejor.
         MessageTemplate t=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                 MessageTemplate.MatchOntology("askrelationship"));
         sendACL(16,"QoSManagerAgent" , "askrelationship", agent,myAgent);
         ACLMessage received_agent= myAgent.blockingReceive(t, 1000);
         if(received_agent!=null){
-            LOGGER.info(received_agent.getContent()+" is assigned to "+ agent);
-            return received_agent.getContent();
+            LOGGER.info(received_agent.getContent()+" is/are assigned to agent "+ agent);
+            String[] agents=received_agent.getContent().split("/");
+            ArrayList<String> relationed_agents=new ArrayList<String>();
+            for(int i=0;i<agents.length;i++){
+                if(!agents[i].equals("")){
+                    relationed_agents.add(agents[i]);
+                }
+            }
+
+            return relationed_agents;
         }else{
             LOGGER.error("QoSManagerAgent did not answer on time");
-            return "error";
+            return null;
         }
     }
     private boolean tracking_to_running(String parent){
