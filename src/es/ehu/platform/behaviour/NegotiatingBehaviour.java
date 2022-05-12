@@ -4,22 +4,19 @@ import es.ehu.platform.MWAgent;
 import es.ehu.platform.template.interfaces.NegFunctionality;
 import es.ehu.platform.utilities.Cmd;
 import es.ehu.platform.utilities.MsgNegotiation;
-
 import jade.core.AID;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.security.acl.Acl;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static es.ehu.platform.utilities.MasReconOntologies.*;
+import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
 
 /**
  * Manages several simultaneous negotiations, differentiating the execution
@@ -296,11 +293,11 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                             }
                         }else if (actionValue_temp.equals("supplyConsumables")) {
                             negMsg = new MsgNegotiation((Iterator<AID>) msg.getAllReceiver(), conversationId, cmd.attribs.get("action"), cmd.attribs.get("criterion"),
-                                    externaldata.nextElement().toString(), externaldata.nextElement().toString());
+                                    externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString());
                             if(negMsg.getTargets().length<=1){
                                 actionValue=actionValue_temp;
-                                switch (aNegFunctionality.checkNegotiation(conversationId, cmd.attribs.get("action"), 15000,
-                                        1, true, true, true, negMsg.getExternalData()[0], negMsg.getExternalData()[1])) {
+                                switch (aNegFunctionality.checkNegotiation(conversationId, cmd.attribs.get("action"), 0,
+                                        1, true, true, true, negMsg.getExternalData()[0], negMsg.getExternalData()[1], negMsg.getExternalData()[2])) {
 
                                     case NEG_LOST: //he perdido la negociación
                                         LOGGER.info("> " + myAgent.getLocalName() + " lost nego" + conversationId);

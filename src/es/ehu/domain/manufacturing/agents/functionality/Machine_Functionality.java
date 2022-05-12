@@ -12,6 +12,10 @@ import es.ehu.platform.template.interfaces.Traceability;
 import es.ehu.platform.utilities.Cmd;
 import jade.core.AID;
 import jade.core.behaviours.SimpleBehaviour;
+import jade.domain.DFService;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.wrapper.AgentController;
@@ -506,9 +510,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         ArrayList<String> actionList = new ArrayList<String>(); // Lista de acciones que componen el servicio actual
         ArrayList<String> consumableList = new ArrayList<String>(); // Lista de consumibles que se utilizan para el servicio actual
         String  batchName = "";// Nombre del batch agent al que se le enviara el mensaje
-        ArrayList<String> batchlist= new ArrayList<String>(); //nombres de los batch que deben recibir mensajes, replicas o no
-        String neededMaterial = ""; // String que contendra  ID + cantidad de consumibles para hacer la peticion a los transportes
-        Integer neededConsumable = 0; // variable que se utiliza para contar los consumibles necesarios (max - current)
         HashMap msgToBatch = new HashMap(); // Estructura de datos que se enviara al agente batch
 
         // Se crea el array list con las keys que se necesitaran para eliminar el .0 de los datos que se pasen de a tipo string
@@ -573,13 +574,45 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                             myAgent.availableMaterial.get(j).put("current", Integer.toString(currentConsumables));
                             int warningConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("warning"));
                             if (currentConsumables <= warningConsumable && !matReqDone){
-                                neededConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("max")) - currentConsumables;
-                                neededMaterial = neededMaterial.concat(myAgent.availableMaterial.get(j).get("consumable_id") + ":" + Integer.toString(neededConsumable) + ";");
                                 requestMaterial = true;
                             }
 
                             // Se inicia el proceso de peticion siempre y cuando el flag requestMaterial este activado y se haya comprobado el estado de los cuatro tipos de consumibles
                             if (i == consumableList.size()-1 && requestMaterial) {
+
+                                //Defino las posiciones de la negociación
+                                String positions = myAgent.resourceName+"_Materials" + ";warehouse";
+
+                                //Encuentro el nombre del SystemModelAgent
+                                DFAgentDescription dfd = new DFAgentDescription();
+                                ServiceDescription sd = new ServiceDescription();
+
+                                sd.setType("sa");
+                                dfd.addServices(sd);
+                                String mwm;
+
+                                while (true) {
+                                    DFAgentDescription[] result = new DFAgentDescription[0];
+                                    try {
+                                        result = DFService.search(myAgent, dfd);
+                                    } catch (FIPAException e) {
+                                        e.printStackTrace();
+                                    }
+
+                                    if ((result != null) && (result.length > 0)) {
+                                        dfd = result[0];
+                                        mwm = dfd.getName().getLocalName();
+                                        break;
+                                    }
+                                    LOGGER.info(".");
+                                    try {
+                                        Thread.sleep(100);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+
+                                } //end while (true)
+
                                 //Se lanza la negociacion para decidir cual sera el transporte que reponga el material
                                 try {
                                     ACLMessage reply2 = sendCommand(myAgent, "get * category=transport", "TransportAgentID");
@@ -587,14 +620,13 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                                         targets = reply2.getContent();
                                     }
                                     String negotiationQuery = "localneg " + targets + " criterion=position action=" +
-                                            "supplyConsumables externaldata=" + neededMaterial + "," + myAgent.getLocalName();
+                                            "supplyConsumables externaldata=" + positions +","+ mwm + "," + myAgent.getLocalName();
                                     ACLMessage result = sendCommand(myAgent, negotiationQuery, "TransportAgentNeg");
 
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
 
-                                neededMaterial = ""; // Una vez hecha la peticion, se reinicializa la variable
                                 matReqDone = true; // Flag que señala si la peticion de material se ha realizado
                                 requestMaterial = false; // Una vez hecha la peticion se desactiva el flag
                             }
@@ -725,14 +757,13 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 // Solo se envia la operación si hay material suficiente
                 if (!consumableShortage) {
 
-                    for(int j = 0 ; j < myAgent.machinePlan.size()&&firstItemFlag==false;j++) {    //Buscamos de todos los plannedStartTime el primero (se asume que estan ordenados)
+                    for (int j = 0; j < myAgent.machinePlan.size() && firstItemFlag == false; j++) {    //Buscamos de todos los plannedStartTime el primero (se asume que estan ordenados)
                         if (myAgent.machinePlan.get(j).get(0).get(0).equals("operation")) {
                             for (int k = 0; k < myAgent.machinePlan.get(j).get(2).size() && firstItemFlag == false; k++) {
                                 if (myAgent.machinePlan.get(j).get(2).get(k).equals("plannedStartTime")) {
                                     String starttime = myAgent.machinePlan.get(j).get(3).get(k);
                                     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"); //Se usa el formato XS:DateTime
                                     Date date2 = getactualtime();
-//                                    System.out.println("Hora actual: " + hora + ":" + minutos + ":" + segundos);
                                     Date date1 = null;
 
                                     try {
@@ -745,29 +776,29 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                                     while (date1.after(date2)) { //Se queda actualizando la fecha hasta que se alcance la fecha definida en el plan de fabricación
                                         date2 = getactualtime();
                                     }
-                                        long diferencia = ((date2.getTime() - date1.getTime())); //calculamos el retraso en iniciar en milisegundos
-                                        AID QoSID = new AID("QoSManagerAgent", false);
-                                        String content = BathcID;
-                                        String delay = String.valueOf(diferencia);
-                                        content = content + "/" + delay;
-                                        sendACLMessage(ACLMessage.INFORM, QoSID, "delay", "batch_delay", content, myAgent);
-                                        firstItemFlag = true;
-                                    }
+                                    long diferencia = ((date2.getTime() - date1.getTime())); //calculamos el retraso en iniciar en milisegundos
+                                    AID QoSID = new AID("QoSManagerAgent", false);
+                                    String content = BathcID;
+                                    String delay = String.valueOf(diferencia);
+                                    content = content + "/" + delay;
+                                    sendACLMessage(ACLMessage.INFORM, QoSID, "delay", "batch_delay", content, myAgent);
+                                    firstItemFlag = true;
                                 }
                             }
                         }
                     }
-                        firstItemFlag = false;
 
-                        PLCmsgOut.remove("Index");
-                        String MessageContent = new Gson().toJson(PLCmsgOut);
-                        AID gatewayAgentID = new AID(myAgent.gatewayAgentName, false);
-                        ACLMessage msg_to_gw=sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "data", "PLCdata", MessageContent, myAgent);
+                    firstItemFlag = false;
 
-                        myAgent.AddToExpectedMsgs(msg_to_gw);
+                    PLCmsgOut.remove("Index");
+                    String MessageContent = new Gson().toJson(PLCmsgOut);
+                    AID gatewayAgentID = new AID(myAgent.gatewayAgentName, false);
+                    ACLMessage msg_to_gw = sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "data", "PLCdata", MessageContent, myAgent);
 
-                        sendingFlag = false;
-                        machinePlanIndex = 0;
+                    myAgent.AddToExpectedMsgs(msg_to_gw);
+
+                    sendingFlag = false;
+                    machinePlanIndex = 0;
 
                 } else { // en caso contrario, se analizan las operaciones en cola para poder ser enviados
                     System.out.println("El lote " + BathcID + " no se puede fabricar por falta de material");
@@ -778,13 +809,39 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         System.out.println("No es posible fabricar ninguna orden en cola por falta de material");
                         machinePlanIndex = 0;
                         if (!matReqDone) { // Si aun no se ha hecho la petición de material se procede a hacerlo
-                            String neededMaterial = "";
-                            Integer neededConsumable = 0;
-                            for (int j = 0; j < myAgent.availableMaterial.size(); j++){ // Cálculo del material necesario para llenar el alimentador de piezas al maximo
-                                int currentConsumables = Integer.parseInt(myAgent.availableMaterial.get(j).get("current"));
-                                neededConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("max")) - currentConsumables;
-                                neededMaterial = neededMaterial.concat(myAgent.availableMaterial.get(j).get("consumable_id") + ":" + Integer.toString(neededConsumable) + ";");
-                            }
+
+                            //Defino las posiciones de la negociación
+                            String positions = myAgent.resourceName+"_Materials" + ";warehouse";
+
+                            //Encuentro el nombre del SystemModelAgent
+                            DFAgentDescription dfd = new DFAgentDescription();
+                            ServiceDescription sd = new ServiceDescription();
+
+                            sd.setType("sa");
+                            dfd.addServices(sd);
+                            String mwm;
+
+                            while (true) {
+                                DFAgentDescription[] result = new DFAgentDescription[0];
+                                try {
+                                    result = DFService.search(myAgent, dfd);
+                                } catch (FIPAException e) {
+                                    e.printStackTrace();
+                                }
+
+                                if ((result != null) && (result.length > 0)) {
+                                    dfd = result[0];
+                                    mwm = dfd.getName().getLocalName();
+                                    break;
+                                }
+                                LOGGER.info(".");
+                                try {
+                                    Thread.sleep(100);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+
+                            } //end while (true)
 
                             //Peticion negociacion entre los agentes transporte disponibles
                             try {
@@ -793,7 +850,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                                     targets = reply2.getContent();
                                 }
                                 String negotiationQuery = "localneg " + targets + " criterion=position action=" +
-                                        "supplyConsumables externaldata=" + neededMaterial + "," + myAgent.getLocalName();
+                                        "supplyConsumables externaldata=" + positions +","+ mwm + "," + myAgent.getLocalName();
                                 ACLMessage result = sendCommand(myAgent, negotiationQuery, "TransportAgentNeg");
 
                             } catch (Exception e) {
@@ -804,15 +861,13 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         }
                     }
                 }
-            } else {
-                //System.out.println("No operations defined");
-                PLCmsgOut.put("Control_Flag_New_Service", false);
-                sendingFlag = false;
             }
-
+        } else {
+            //System.out.println("No operations defined");
+            PLCmsgOut.put("Control_Flag_New_Service", false);
+            sendingFlag = false;
         }
-
-
+    }
 }
 
 
