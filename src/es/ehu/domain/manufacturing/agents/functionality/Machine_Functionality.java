@@ -581,7 +581,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                             if (i == consumableList.size()-1 && requestMaterial) {
 
                                 //Defino las posiciones de la negociación
-                                String positions = myAgent.resourceName+"_Materials" + ";warehouse";
+                                String positions = myAgent.resourceName+"_Buffers" + ";warehouse";
 
                                 //Encuentro el nombre del SystemModelAgent
                                 DFAgentDescription dfd = new DFAgentDescription();
@@ -811,7 +811,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         if (!matReqDone) { // Si aun no se ha hecho la petición de material se procede a hacerlo
 
                             //Defino las posiciones de la negociación
-                            String positions = myAgent.resourceName+"_Materials" + ";warehouse";
+                            String positions = myAgent.resourceName+"_Buffers" + ";warehouse";
 
                             //Encuentro el nombre del SystemModelAgent
                             DFAgentDescription dfd = new DFAgentDescription();
