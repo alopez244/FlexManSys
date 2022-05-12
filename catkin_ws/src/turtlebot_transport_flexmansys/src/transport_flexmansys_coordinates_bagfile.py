@@ -84,6 +84,24 @@ class StationCoordinates (object):
             self.qz = 0.7440
             self.qw = 0.6781
 
+        elif self.CoordinateObject == "D":
+            self.x = 1.5
+            self.y = 8.0
+            self.z = 0.0
+            self.qx = 0.0
+            self.qy = 0.0
+            self.qz = 0.0
+            self.qw = 1.0
+
+        elif self.CoordinateObject == "F":
+            self.x = 4.5
+            self.y = 1.12
+            self.z = 0.0
+            self.qx = 0.0
+            self.qy = 0.0
+            self.qz = 0.0
+            self.qw = 1.0
+
         elif self.CoordinateObject == "D1":
             self.x = 0.0
             self.y = 0.20
