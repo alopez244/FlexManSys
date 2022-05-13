@@ -98,8 +98,8 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         /* Código ejecutado únicamente en la primera iteración de la ejecución del comportamiento */
         public void onStart() {
 
-            /* Se registra el SystemModelAgent en el Directory Facilitator de JADE con el nombre "sa" */
-            myAgent.registerAgent("sa");
+            /* Se registra el SystemModelAgent en el Directory Facilitator de JADE */
+            myAgent.registerSMA();
             LOGGER.warn("Se ha inicializado el SMABehaviour");
         }
 
@@ -178,12 +178,15 @@ public class SystemModelAgent extends Agent implements IExecManagement {
 
             /* Se evalúa el primer campo del array cmds para determinar qué método hay que invocar */
             switch (cmds[0]) {
-
-
-                /* Los métodos que vaya revisando irán pasando arriba */
                 case "initialize":
                     result.append(initialize());
                     break;
+                case "help":
+                    result.append(help(cmds));
+                    break;
+
+                /* Los métodos que vaya revisando irán pasando arriba */
+
                 case "reg":
                     result.append(reg(cmds[1], attribs));
                     break;
@@ -219,9 +222,6 @@ public class SystemModelAgent extends Agent implements IExecManagement {
                     break;
                 case "getcmp":
                     result.append(getCmp(cmds[1]));
-                    break;
-                case "help":
-                    result.append(help(cmds));
                     break;
                 default:
                     result.append("cmd not found:").append(cmds[0]);
@@ -265,7 +265,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
                 attribs.put(attribDef[0], (attribDef.length>1)?attribDef[1]:"");
             }
         }
-        return LOGGER.exit(attribs);
+        return attribs;
     }
 
     /**
@@ -291,7 +291,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
                 restrictions.put(attribDef[0], (attribDef.length>1)?attribDef[1]:"");
             }
         }
-        return LOGGER.exit(restrictions);
+        return restrictions;
     }
 
     /**
@@ -349,130 +349,154 @@ public class SystemModelAgent extends Agent implements IExecManagement {
      * Este método apunta a un fichero de propiedades (sa.properties)
      * Este fichero indica contra qué ficheros XSD hay que hacer la validación del sistema y de las aplicaciones
      * Además, registra el elemento "system" en el modelo del sistema
-     * @return
+     * @return Mensaje de confirmación para indicar que la inicialización ha concluido
      */
     private String initialize() {
 
+        /* Se declara el objeto prop con el que se va a trabajar en el método */
         Properties prop = new Properties();
 
+        /* A continuación, se declara el path relativo hasta el fichero de propiedades */
         String url = "/resources/sa.properties";
-
         LOGGER.debug("Properties: "+ getClass().getResource(url).getPath());
 
+        /* Después, se obtiene el path completo a partir del path relativo */
         InputStream in = getClass().getResourceAsStream(url);
+
+        /* Se carga el contenido del fichero de propiedades en la variable prop */
         try {
             prop.load(in);
         } catch (IOException e1) {
             e1.printStackTrace();
         }
 
-        String systemElements = prop2String((String)prop.get("systemElements"));
-        LOGGER.info("systemElements:"+systemElements );
+        /* Se obtiene el contenido del esquema appConcepts (AppConcepts.xsd) */
+        String appConcepts = prop2String((String)prop.get("appConcepts"));
 
-        //normaliza xmlsn
-        systemElements = systemElements.replace(systemElements.substring(systemElements.indexOf("<xs:schema "), systemElements.indexOf("\">")+2),
+        /* A continuación, se normaliza el namespace del fichero XML (xmlsn) */
+        /* Para ello, se sustituye el contenido de la línea que empieza por xs: schema */
+        appConcepts = appConcepts.replace(appConcepts.substring(appConcepts.indexOf("<xs:schema "), appConcepts.indexOf("\">")+2),
                 "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">");
 
+        /* Se repite la misma operación con el esquema appValidation (AppHierarchy.xsd) */
         String appValidation = prop2String((String)prop.get("appValidation"));
-        System.out.println("** buscar:"+appValidation.substring(appValidation.indexOf("<xs:schema "), appValidation.indexOf("\">")+2)+".");
         appValidation = appValidation.replace(appValidation.substring(appValidation.indexOf("<xs:schema "), appValidation.indexOf("\">")+2),
                 "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">");
 
-        System.out.println("appValidation:"+appValidation );
+        /* Se repite de nuevo la misma operación con el esquema systemModel (FLRXMANSYSystemModel.xsd) */
+        String systemModel = prop2String((String)prop.get("systemModel"));
+        systemModel = systemModel.replace(systemModel.substring(systemModel.indexOf("<xs:schema "), systemModel.indexOf("\">")+2),
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">");
 
         try {
-            this.processCmd("reg system ID=system name=Sistema xsd="+URLEncoder.encode(prop2String((String)prop.get("systemModel")), "UTF-8"), "" );
-            //+ "reg="+URLEncoder.encode(registerXsd, "UTF-8") );
-            //+ "sta="+URLEncoder.encode(startableXsd, "UTF-8"));
 
-            System.out.println("************************appvalidation**:"+prop2String((String)prop.get("appValidation")));
-
-            this.processCmd("reg registering ID=registering name=registering xsd="+URLEncoder.encode(appValidation, "UTF-8"), "");
-            this.processCmd("reg concepts ID=concepts name=concepts xsd="+URLEncoder.encode(systemElements, "UTF-8"), "");
+            /* Por último, se registran los tres elementos (system, validation y concepts) */
+            this.processCmd("reg system ID=system name=Sistema xsd="+URLEncoder.encode(systemModel, "UTF-8"), "");
+            this.processCmd("reg validation ID=validation name=validation xsd="+URLEncoder.encode(appValidation, "UTF-8"), "");
+            this.processCmd("reg concepts ID=concepts name=concepts xsd="+URLEncoder.encode(appConcepts, "UTF-8"), "");
         } catch (Exception e) {e.printStackTrace();}
 
         return "done";
     }
 
     /**
-     * Auxiliar method used to read the properties file.
-     * It returns a string with the content of the XML schema the input tag is pointing to.
-     * (i.e. systemElements=AppConcepts.xsd)
-     * @param file
-     * @return
+     * Método auxiliar utilizado para leer el fichero de propiedades (sa.properties)
+     * Devuelve un String con el contenido del fichero XSD asociado a un concepto del fichero de propiedades
+     * (e.g., appConcepts=AppConcepts.xsd)
+     * @param file Nombre del fichero XSD a buscar
+     * @return String con el contenido del fichero XSD
      */
     private String prop2String(String file){
+
         String output = "";
         try {
+
+            /* Se genera el path completo a partir de la variable file y se lee su contenido */
             output = IOUtils.toString(this.getClass().getResourceAsStream("/resources/"+file), "UTF-8");
         } catch (IOException e1) {e1.printStackTrace();}
+
+        /* Por último, se elimina cualquier espacio o caracter de cualquier tipo que esté antes del primer símbolo < */
         return output.substring(output.indexOf("<"));
     }
 
     /**
-     * This method registers the SystemModelAgent in the JADE DF
-     * @param localName
+     * Este método registra al SystemModelAgent en el servicio de páginas amarillas de JADE (JADE DF)
      */
-    private void registerAgent(String localName) {
-        LOGGER.entry(localName);
+    private void registerSMA() {
+
+        /* Se declaran las variables que se van a utilizar en el método */
         DFAgentDescription dfd = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
 
-        dfd = new DFAgentDescription();
-        sd = new ServiceDescription();
+        /* Se asigna el nombre con el que hemos creado el agent como tipo del objeto ServiceDescription sd */
+        /* Para evitar problemas, es necesario crear el SystemModelAgent con el nombre "sa" */
         sd.setType(getLocalName());
-        setRState("initialSate");
-
         sd.setName(getName());
-        sd.setOwnership("Ownership");
+
+        /* Se añaden el servicio y el nombre del agente al objeto DFAgentDescription dfd */
         dfd.addServices(sd);
         dfd.setName(getAID());
-        dfd.addOntologies("ontology");
-        dfd.setState("initialSate");
+
+        /* Se registra el agente en el JADE DF (si ya estaba registrado, se borra lo que había y se registra de nuevo) */
         try {
             DFService.deregister(this);
-        } catch (Exception e) {} //si está lo deregistro
+        } catch (Exception e) {}
         try {
             DFService.register(this, dfd);
         } catch (FIPAException e) {
             LOGGER.error(getLocalName() + " no registrado. Motivo: " + e.getMessage());
             doDelete();
         }
-        LOGGER.exit();
     }
 
 
-
-
-
-    //====================================================================
-    //IREGISTER INTERFACE
-    //====================================================================
+    /* IREGISTER INTERFACE */
 
     /**
-     * This method check if the item to be registered has an ID. If not, it generates an ID and returns it.
-     * The element gets registered in the system model ("elements" Hashtable)
-     * @param prm
-     * @param attribs
-     * @return
+     * Este método registra un elemento de la categoría solicitada en el HashMap elements
+     * Si entre los atributos facilitados se incluye el atributo ID, se utilizará este ID para el registro
+     * Si no tiene un ID previamente asignado, se le genera uno automáticament en función de su categoría
+     * @param prm String que indica la categoría del nuevo elemento a registrar
+     * @param attribs HashTable con los atributos asociados al nuevo elemento a registrar
+     * @return ID con el que se ha registrado al nuevo elemento en el modelo del sistema
      */
     private String reg(final String prm, Hashtable<String, String> attribs) {
-        LOGGER.entry(prm, attribs);
+
+        /* Se inicializan las variables que se van a utilizar en este método*/
         String type = prm;
         String id = "";
-        if (!attribs.containsKey("ID")) { // si no llega un id lo genero
+
+        /* Se comprueba si el elemento a registrar ya tiene un ID preasignado (se revisan sus atributos) */
+        if (!attribs.containsKey("ID")) {
+
+            /* Si no tiene ID preasignado, se crea uno nuevo en dos pasos */
+            /* Primero, se cogen los 10 primeros caracteres de la categoría del del elemento a registrar (prm) */
             id = (prm.length() > 10)? prm.substring(0, 10): prm;
             id = id.toLowerCase();
-            if (!count.containsKey(id)) count.put(id, 1);
-            else count.put(id, (count.get(id)) + 1);
+
+            /* Segundo, se asigna un número */
+            if (!count.containsKey(id)) {
+
+                /* Si es el primer elemento de esa categoría, se le asigna un 1 y se registra en el HashMap count */
+                count.put(id, 1);
+            } else {
+
+                /* De ahí en adelante, el número a asignar se incrementa de uno en uno  */
+                count.put(id, (count.get(id)) + 1);
+            }
             id = id + count.get(id);
-        } else { // si llega lo guardo
+
+        } else {
+
+            /* Si ya tiene un ID preasignado, se utiliza y después es borrado del HashTable attribs */
             id = attribs.get("ID");
             attribs.remove("ID");
         }
+
+        /* Por último, se añade la categoría al HashTable de attribs y el nuevo elemento en el HashMap elements */
         attribs.put("category", type);
         elements.put(id, attribs);
-        return LOGGER.exit(id);
+        return id;
     }
 
     /**
@@ -514,7 +538,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
 
             SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 
-            Source schemaFile = new StreamSource(new StringReader(URLDecoder.decode(elements.get(appValidation?"registering":"concepts").get("xsd"), "UTF-8")));
+            Source schemaFile = new StreamSource(new StringReader(URLDecoder.decode(elements.get(appValidation?"validation":"concepts").get("xsd"), "UTF-8")));
             Schema schema = schemaFactory.newSchema(schemaFile);
 
             // create a Validator instance, which can be used to validate an instance document
@@ -662,7 +686,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         }
         LOGGER.info(validateHierarchy+">"+seType+": xsd correcta");
 
-        // mover a registering
+        // mover a validation
 
         aux.clear();
         aux.put("attrib","seParent");
@@ -1060,7 +1084,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         // ir a systemmodel.xsd y buscar <xs:extension base="tipo" y en sus hijos
         // getFixed (tipo, atributo) > buscar <xs:extension base="tipo" y en sus hijos devuelve el fixed del que tenga nombre atributo
 
-        // si es extensible el padre traigo la estructura desde el hijo de system con los atributos, (resolver su ID **registering**), validar appvalidar.xsd
+        // si es extensible el padre traigo la estructura desde el hijo de system con los atributos, (resolver su ID **validation**), validar appvalidar.xsd
         // si valida > volver a montarlo en systemmodel
 
         //String parentType = sendCommand ("get "+parentId+" attrib=category", conversationId).getContent();
@@ -1123,11 +1147,11 @@ public class SystemModelAgent extends Agent implements IExecManagement {
 
         } else LOGGER.info("xsd concepts correcto");
 
-        // mover a registering.xml
+        // mover a validation.xml
 
 
-        if (parentId.equals("system")) { //sendCommand("set " + ID + " parent=registering", conversationId).getContent();
-            command = "set " + ID + " parent=registering";
+        if (parentId.equals("system")) { //sendCommand("set " + ID + " parent=validation", conversationId).getContent();
+            command = "set " + ID + " parent=validation";
             set(command.split(" ")[1], processAttribs(2, command.split(" ")), conversationId);
         } else { //sendCommand("set " + ID + " parent=(get " + ID + " attrib=seParent) seParent=", conversationId).getContent();
             auxAttribs.clear();
