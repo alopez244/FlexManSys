@@ -7,7 +7,6 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import es.ehu.domain.manufacturing.utilities.StructMessage;
 import jade.core.Profile;
-import jade.lang.acl.ACLMessage;
 import jade.util.leap.Properties;
 import jade.wrapper.ControllerException;
 import jade.wrapper.gateway.JadeGateway;
@@ -24,6 +23,10 @@ public class ACL_HTTP_Gateway {
     private String assetName;
     private String host;
     private HashMap<String,Object> cmdHashMap;
+
+    //Apaño para hacer pruebas
+    //Declaro variables incrementales
+    private int Item_Counter = 0;
 
     public ACL_HTTP_Gateway(String[] args) {
 
@@ -142,6 +145,19 @@ public class ACL_HTTP_Gateway {
                     .replace("Final_Time_Stamp","Data_Final_Time_Stamp")
                     .replace("Item_Number","Id_Item_Number");
 
+            //Si la operación la hace el robot, no nos devuelve item number, hay que añadirlo
+            if (assetName.contains("Robot")){
+
+                //Si es la operación de entrada, hay que incrementar el contador
+                if (cmdHashMap.get("Operation_Parameters").toString().contains("warehouse_2")){
+                    Item_Counter=Item_Counter+1;
+                    responseUpdate=responseUpdate+",\"Id_Item_number\":"+Item_Counter;
+                } else if (cmdHashMap.get("Operation_Parameters").toString().contains("warehouse_4")){
+                    //Si es la operación de salida, se mete el contador sin incrementar (ya hemos sumado en la primera operación)
+                    responseUpdate=responseUpdate+",\"Id_Item_number\":"+Item_Counter;
+                }
+            } //Si la operación la ha hecho alguna de las máquinas del demostrador, no hace falta añadir el parámetro
+
             //A continuación, se coge la información que queremos recuperar del mensaje recibido
             responseUpdate=responseUpdate+",\"Control_Flag_Item_Completed\":True,\"Control_Flag_Service_Completed\":True,"+
                     "Id_Machine_Reference:"+cmdHashMap.get("Id_Machine_Reference")+",Id_Order_Reference:"
@@ -222,8 +238,12 @@ public class ACL_HTTP_Gateway {
                 break;
             case "POST_PA":
 
-                //Obtengo el nombre y el valor de los parámetros
-                body.put("Ref_Subproduct_Type", String.valueOf(cmdHashMap.get("Id_Ref_Subproduct_Type")));
+//                //Obtengo el nombre y el valor de los parámetros
+//                body.put("Ref_Subproduct_Type", String.valueOf(cmdHashMap.get("Id_Ref_Subproduct_Type")));
+//                String bodyJson = new Gson().toJson(body);
+
+                //Obtengo el nombre y el valor de los parámetros (versión test)
+                body.put("Ref_Subproduct_Type", String.valueOf(Item_Counter));
                 String bodyJson = new Gson().toJson(body);
 
                 //Recibo la respuesta al post
