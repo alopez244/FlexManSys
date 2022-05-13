@@ -243,7 +243,8 @@ public class ACL_HTTP_Gateway {
 //                String bodyJson = new Gson().toJson(body);
 
                 //Obtengo el nombre y el valor de los parámetros (versión test)
-                body.put("Ref_Subproduct_Type", String.valueOf(Item_Counter));
+//                body.put("Ref_Subproduct_Type", String.valueOf(Item_Counter));
+                body.put("Ref_Subproduct_Type", String.valueOf(1));
                 String bodyJson = new Gson().toJson(body);
 
                 //Recibo la respuesta al post
