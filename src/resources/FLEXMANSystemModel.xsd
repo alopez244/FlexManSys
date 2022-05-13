@@ -79,28 +79,15 @@
 			<xs:attribute name="ref_proc_node" type="xs:string" use="optional"/>
 		</xs:complexType>
 	</xs:element>
-	<!-- Groups -->
-	<xs:group name="DomainApplications">
-		<xs:sequence>
-			<xs:annotation>
-				<xs:documentation>List of the extended system elements related to the application domain extended with isStartable attribute</xs:documentation>
-			</xs:annotation>
-			<xs:element name="mPlan" type="MPlan" minOccurs="1" maxOccurs="unbounded"/>
-		</xs:sequence>
-	</xs:group>
-	<xs:group name="Resources">
-		<xs:sequence>
-			<xs:annotation>
-				<xs:documentation>List of domain dependand resources</xs:documentation>
-			</xs:annotation>
-			<xs:element name="resourceAgent" type="ResourceAgent" maxOccurs="unbounded"/>
-		</xs:sequence>
-	</xs:group>
 	<!-- ============= SYSTEM =========== -->
 	<xs:complexType name="System">
 		<xs:sequence>
-			<xs:group ref="Resources" minOccurs="1" maxOccurs="1"/>
-			<xs:group ref="DomainApplications" minOccurs="1" maxOccurs="1"/>
+			<xs:sequence>
+				<xs:element name="resourceAgent" type="ResourceAgent" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:sequence>
+				<xs:element name="mPlan" type="MPlan" minOccurs="1" maxOccurs="unbounded"/>
+			</xs:sequence>
 		</xs:sequence>
 		<xs:attribute name="name" type="xs:string" use="required"/>
 		<xs:attribute name="ID" type="xs:string" use="required"/>

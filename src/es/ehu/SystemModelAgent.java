@@ -184,20 +184,20 @@ public class SystemModelAgent extends Agent implements IExecManagement {
                 case "help":
                     result.append(help(cmds));
                     break;
-
-                /* Los métodos que vaya revisando irán pasando arriba */
-
                 case "reg":
                     result.append(reg(cmds[1], attribs));
                     break;
                 case "del":
                     result.append(del(cmds[1]));
                     break;
+                case "validate":
+                    result.append(validate((cmds.length > 1) ? cmds[1] : "", (cmds.length > 2 ? cmds[2] : ""), (cmds.length > 3 ? cmds[3] : "")));
+                    break;
+
+                /* Los métodos que vaya revisando irán pasando arriba */
+
                 case "list":
                     result.append(list((cmds.length > 1) ? cmds[1] : "design", (cmds.length > 2 ? cmds[2] : "")));
-                    break;
-                case "validate":
-                    result.append(validate((cmds.length > 1) ? cmds[1] : "design", (cmds.length > 2 ? cmds[2] : ""), (cmds.length > 3 ? cmds[3] : "")));
                     break;
                 case "set":
                     result.append(set(cmds[1], attribs, conversationId));
@@ -378,9 +378,9 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         appConcepts = appConcepts.replace(appConcepts.substring(appConcepts.indexOf("<xs:schema "), appConcepts.indexOf("\">")+2),
                 "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">");
 
-        /* Se repite la misma operación con el esquema appValidation (AppHierarchy.xsd) */
-        String appValidation = prop2String((String)prop.get("appValidation"));
-        appValidation = appValidation.replace(appValidation.substring(appValidation.indexOf("<xs:schema "), appValidation.indexOf("\">")+2),
+        /* Se repite la misma operación con el esquema appHierarchy (AppHierarchy.xsd) */
+        String appHierarchy = prop2String((String)prop.get("appHierarchy"));
+        appHierarchy = appHierarchy.replace(appHierarchy.substring(appHierarchy.indexOf("<xs:schema "), appHierarchy.indexOf("\">")+2),
                 "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">");
 
         /* Se repite de nuevo la misma operación con el esquema systemModel (FLRXMANSYSystemModel.xsd) */
@@ -390,9 +390,9 @@ public class SystemModelAgent extends Agent implements IExecManagement {
 
         try {
 
-            /* Por último, se registran los tres elementos (system, validation y concepts) */
+            /* Por último, se registran los tres elementos (system, hierarchy y concepts) */
             this.processCmd("reg system ID=system name=Sistema xsd="+URLEncoder.encode(systemModel, "UTF-8"), "");
-            this.processCmd("reg validation ID=validation name=validation xsd="+URLEncoder.encode(appValidation, "UTF-8"), "");
+            this.processCmd("reg hierarchy ID=hierarchy name=hierarchy xsd="+URLEncoder.encode(appHierarchy, "UTF-8"), "");
             this.processCmd("reg concepts ID=concepts name=concepts xsd="+URLEncoder.encode(appConcepts, "UTF-8"), "");
         } catch (Exception e) {e.printStackTrace();}
 
@@ -463,8 +463,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
     private String reg(final String prm, Hashtable<String, String> attribs) {
 
         /* Se inicializan las variables que se van a utilizar en este método*/
-        String type = prm;
-        String id = "";
+        String id;
 
         /* Se comprueba si el elemento a registrar ya tiene un ID preasignado (se revisan sus atributos) */
         if (!attribs.containsKey("ID")) {
@@ -494,175 +493,46 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         }
 
         /* Por último, se añade la categoría al HashTable de attribs y el nuevo elemento en el HashMap elements */
-        attribs.put("category", type);
+        attribs.put("category", prm);
         elements.put(id, attribs);
         return id;
     }
 
     /**
-     * Allows removal of all elements of the system model or just a single element.
-     * @param prm
-     * @return
+     * Método que permite eliminar uno o todos los elementos del HashMap elements
+     * @param prm Nombre del elemento a eliminar (*) si se queren borrar todos los elementos del HashMap
+     * @return Mensaje de confirmación
      */
     private String del(String prm) {
-        LOGGER.entry(prm);
+
+        /* Variable con la que se va a devolver el resultado */
         String response = "not found";
+
+        /* Se evalúa la expresión recibida en el parámetro prm */
         if (prm.equals("*")) {
+
+            /* Si se recibe el caracter "*", se eliminan todos los elementos del HashMap */
             response = elements.size() + " deleted";
             elements.clear();
-
         } else if (elements.get(prm) != null) {
-            elements.remove(prm);
 
+            /* Si se recibe el nombre de un elemento que esté en la lista, es eliminado */
+            elements.remove(prm);
             response = "done";
         }
-        return LOGGER.exit(response);
+
+        return response;
     }
 
-    /**
-     * Check the compliance of the application to be registered.
-     * For that purpose, it uses the XML schemas pointed in the properties file (sa.properties).
-     * @param _prm
-     * @return
-     * @throws Exception
-     */
-    private String validate(String... _prm) throws Exception {
 
-        String output = "valid";
 
-        if ((_prm[0].equals("systemElement")) || (_prm[0].equals("appValidation"))){ //comprueba tconcepts.xsd
-
-            boolean appValidation = _prm[0].equals("appValidation");
-
-            Document document = listDom(_prm[1], appValidation); //segundo parámetro indica al DOM si arrastrar los IDs
-
-            SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-
-            Source schemaFile = new StreamSource(new StringReader(URLDecoder.decode(elements.get(appValidation?"validation":"concepts").get("xsd"), "UTF-8")));
-            Schema schema = schemaFactory.newSchema(schemaFile);
-
-            // create a Validator instance, which can be used to validate an instance document
-            Validator validator = schema.newValidator();
-            // validate the DOM tree
-            try {
-                validator.validate(new DOMSource(document));
-            } catch (Exception e) {
-                StringWriter sw = new StringWriter();
-                PrintWriter pw = new PrintWriter(sw);
-                e.printStackTrace(new PrintWriter(sw));
-                output = sw.toString(); // stack trace as a string
-                //LOGGER.info(output);
-            }
-
-            // hay error, muestro la descripción
-            if (output.indexOf(';')>0) output = output.substring(output.indexOf(";") + 2, output.indexOf('\n'));
-            LOGGER.info(output);
-
-        } else if (_prm[0].equals("hierarchy")) { //comprueba jerarquía
-            String padre = _prm[2];
-            String hijo = _prm[1];
-
-            LOGGER.debug("comprobar jerarquía hijo="+hijo+" padre="+padre);
-
-            DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            InputSource is = new InputSource();
-            is.setCharacterStream(new StringReader(URLDecoder.decode(elements.get("system").get("xsd"), "UTF-8")));
-            //LOGGER.debug("carga "+_prm[0]+".xsd");
-            //LOGGER.debug(URLDecoder.decode(elements.get(_prm[0]).get("xsd"), "UTF-8"));
-            Document doc = db.parse(is);
-
-            Vector<String> v = null;
-            Vector<String> vt = null;
-            NodeList nl = doc.getChildNodes();
-            for (int i = 0; i < nl.getLength(); i++) {
-                if (nl.item(i).getNodeType() == Node.ELEMENT_NODE) {
-                    Element el = (Element) nl.item(i);
-                    v=nodeListToVector(el, new Vector<String>(), "name");
-                    vt=nodeListToVector(el, new Vector<String>(), "type");
-                    break;
-                }
-            }
-
-            //Algoritmo ELI
-
-            // 1. se buscaría el xs:element que tenga como atributo name y/o atributo ref el valor deseado. IR A PASO 2
-            LOGGER.info("1. se buscaría el xs:element que tenga como atributo name y/o atributo ref el valor deseado. IR A PASO 2");
-
-            boolean encontrado=false;
-            int posicion = 0;
-            for (int i=0; i<v.size(); i++) {
-                if (v.get(i).equals("xs:element="+hijo)) {
-                    encontrado = true;
-                    posicion=i;
-                    break;
-                }
-            }
-            if (encontrado) { // IR A PASO 2
-                LOGGER.info("encontrado pos="+posicion);
-                // 2. de la lista que salga del paso 1, nos quedamos únicamente con el caso en el que su padre sea  xs:sequence. IR A PASO 3
-                LOGGER.info("2. de la lista que salga del paso 1, nos quedamos únicamente con el caso en el que su padre sea  xs:sequence. IR A PASO 3");
-
-                if (v.get(posicion-1).equals("xs:sequence=")){ //el anterior es sequence, IR A PASO 3
-                    LOGGER.info("el anterior es xs:sequence");
-                    LOGGER.info("3. En tal caso, se busca el predecesor más cercano que sea xs:element.");
-                    encontrado=false;
-                    for (int i=posicion-2; i>=0; i--) {
-                        if (v.get(i).startsWith("xs:element")) {
-                            encontrado=true;
-                            LOGGER.info("encontrado. El padre ("+padre+") debería ser "+v.get(i).substring(v.get(i).indexOf("=")+1)+".");
-                            if (padre.equals(v.get(i).substring(v.get(i).indexOf("=")+1))) return "valid";
-                            break;
-                        }
-                    }
-
-                    if (!encontrado) {
-                        LOGGER.info("no encontrado ningún xs:element. Se buscará el xs:complexType predecesor más cercano y quedarnos con el valor de su atributo name.  IR A PASO 4");
-                        String complexTypeName="";
-                        for (int i=posicion-2; i>=0; i--) {
-                            if (v.get(i).startsWith("xs:complexType")) {
-                                encontrado=true;
-                                complexTypeName=v.get(i).substring(v.get(i).indexOf("=")+1);
-                                LOGGER.info("complexType encontrado "+complexTypeName+".");
-                                break;
-                            }
-                        }
-
-                        if (!encontrado) LOGGER.info("complexType (" + complexTypeName + ") NO encontrado ¿? .");
-
-                        LOGGER.info("Buscar en el XML schema un xs:element que tenga como atributo type el valor que hemos guardado en el PASO 3 ("+complexTypeName+")");
-                        encontrado=false;
-
-                        for (int i=0; i<vt.size(); i++) {
-                            if (vt.get(i).equals("xs:element="+complexTypeName)) {
-                                encontrado=true;
-                                LOGGER.info("padre ("+padre+") debería ser "+v.get(i).substring(v.get(i).indexOf("=")+1)+".");
-                                if (padre.equals(v.get(i).substring(v.get(i).indexOf("=")+1))) return "valid";
-                                break;
-                            }
-                        }
-                        if (!encontrado) LOGGER.info("no encontrado");
-                        return "ERROR de jerarquía";
-
-                    }
-
-                }
-
-            } else { //no lo he encontrado
-                LOGGER.info("no encontrado");
-                return "ERROR de jerarquía";
-            }
-
-        }
-
-        return output;
-    }
+    /* AQUÍ EN MEDIO TENDRÁN QUE IR EL SEREGISTER Y OTROS MÉTODOS, PORQUE HASTA AQUÍ NO SE USA EL VALIDATE */
 
     private String iValidate(String se, String conversationId) throws Exception {
 
         //localizo tipo
 
         LOGGER.info("iValidate("+se+")");
-        //String seType = sendCommand ("get "+se+" attrib=category", conversationId).getContent();
         Hashtable<String, String> aux = new Hashtable<>();
         aux.put("attrib", "category");
         String seType = get(se, aux, conversationId);
@@ -676,8 +546,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         LOGGER.info(seType+" type="+seType);
 
         //compruebo jerarquía
-        //String validateHierarchy = sendCommand("validate appValidation "+se+" "+seType, conversationId).getContent();
-        String validateHierarchy = validate("appValidation", se, seType);
+        String validateHierarchy = validate("appHierarchy", se, seType);
         if (!validateHierarchy.equals("valid")) {
             LOGGER.info(se+">"+seType+": xsd incorrecta");
             throw new Exception();
@@ -686,12 +555,11 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         }
         LOGGER.info(validateHierarchy+">"+seType+": xsd correcta");
 
-        // mover a validation
+        // mover a validation / hierarchy
 
         aux.clear();
         aux.put("attrib","seParent");
         String parentID = get(se, aux, conversationId);
-        //sendCommand("set "+se+" parent=(get "+se+" attrib=seParent) seParent=", conversationId).getContent();
         String command = "set " + se + " parent="+parentID+" seParent=";
         set(command.split(" ")[1], processAttribs(2, command.split(" ")), conversationId);
 
@@ -699,6 +567,293 @@ public class SystemModelAgent extends Agent implements IExecManagement {
     }
 
 
+
+
+
+    /**
+     * Este método comprueba la conformidad de la aplicación que se va a registrar
+     * Para ello, se apoya en los ficheros XSD refereidos en el fichero de propiedades (sa.properties).
+     * @param _prm String o array de String con la información necesaria para la validación
+     * @return Mensaje de confirmación, que indica si la aplicación es válidad o hay un error de jerarquía
+     * @throws Exception Error de lectura del documento generado
+     */
+    private String validate(String... _prm) throws Exception {
+
+        /* Se inicializan las variables que se van a utilizar en este método*/
+        String output = "valid";
+
+        /* Se el primer campo del array para determinar qué tipo de validación hay que hacer */
+        if ((_prm[0].equals("appConcept")) || (_prm[0].equals("appHierarchy"))){
+
+            /* Si se ha entrado en el if con la instrucción appHierarchy, se pone un booleano a true */
+            boolean appHierarchy = _prm[0].equals("appHierarchy");
+
+            /* Se genera un objeto de tipo Document en función del valor de _prm[1] */
+            /* Este Document constará una secuencia formada por el elemento asociado a _prm[1] y todos su hijos */
+            /* El segundo parámetro (appHierarchy) indica si los elementos tienen que tener el ID entre sus atributos */
+            Document document = listDocument(_prm[1], appHierarchy);
+
+            /* Se declaran variables para poder crear un objeto de tipo Schema */
+            /* Este Schema va a utilizarse para validar el objeto Document que se acaba de generar */
+            /* El fichero a partir del cual crear el Schema dependerá de qué se quiere validar (hierarchy o concepts) */
+            SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            Source schemaFile = new StreamSource(new StringReader(URLDecoder.decode(elements.get(appHierarchy ?"hierarchy":"concepts").get("xsd"), "UTF-8")));
+            Schema schema = schemaFactory.newSchema(schemaFile);
+
+            /* A continuación se crea una instancia del tipo de objeto Validator */
+            /* Se va a utilizar Schema recién creado para validar el Document */
+            Validator validator = schema.newValidator();
+            try {
+                validator.validate(new DOMSource(document));
+            } catch (Exception e) {
+
+                /* En caso de error en la validación, se guarda en la variable output para printearlo y devolverlo */
+                StringWriter sw = new StringWriter();
+                e.printStackTrace(new PrintWriter(sw));
+                output = sw.toString();
+            }
+
+            /* Si ha habido un error se muestra por consola */
+            if (output.indexOf(';')>0) output = output.substring(output.indexOf(";") + 2, output.indexOf('\n'));
+            LOGGER.info(output);
+
+        } else if (_prm[0].equals("hierarchy")) {
+
+            /* Si se ha entrado en este else, se comprueba la relación jerárquica padre-hijo entre dos elementos */
+            String father = _prm[2];
+            String son = _prm[1];
+            LOGGER.debug("comprobar jerarquía hijo="+ son +" padre="+ father);
+
+            /* En este caso, se va a generar un objeto Document en el que se va a meter el SystemModel */
+            /* Así, se crea el Document parseando el contenido del SystemModel (atributo xsd del elemento system) */
+            DocumentBuilder docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            InputSource is = new InputSource();
+            is.setCharacterStream(new StringReader(URLDecoder.decode(elements.get("system").get("xsd"), "UTF-8")));
+            Document doc = docBuilder.parse(is);
+
+            /* El siguiente paso consiste en obtener dos vectores que contengan los nombres y tipos de cada nodo, respectivamente */
+            Vector<String> vNames = null;
+            Vector<String> vTypes = null;
+
+            /* Para ello se obtiene el listado de nodos y se itera */
+            NodeList nl = doc.getChildNodes();
+            for (int i = 0; i < nl.getLength(); i++) {
+                if (nl.item(i).getNodeType() == Node.ELEMENT_NODE) {
+
+                    /* Si el nodo es de tipo elemento, se obtienen su nombre y su tipo */
+                    Element el = (Element) nl.item(i);
+                    vNames =nodeListToVector(el, new Vector<>(), "name");
+                    vTypes =nodeListToVector(el, new Vector<>(), "type");
+                    break;
+                }
+            }
+
+            /* A continuación, se desarrolla el algoritmo ideado por Eli para hacer la comprobación de la jerarquía */
+            /* 1. Se busca el xs:element que tenga como atributo name o ref el valor deseado (hijo) */
+            boolean encontrado=false;
+            int posicion = 0;
+            for (int i = 0; i< vNames.size(); i++) {
+                if (vNames.get(i).equals("xs:element="+ son)) {
+
+                    /* Si se encuentra el elemento buscado, se pone encontrado a true y se guarda la posición del vector */
+                    encontrado = true;
+                    posicion=i;
+                    break;
+                }
+            }
+
+            if (encontrado) {
+
+                /* Se ha encontrado el elemento buscado: IR A PASO 2 */
+                /* 2. Se comprueba que el padre del elemento que buscamos sea  xs:sequence */
+                if (vNames.get(posicion-1).equals("xs:sequence=")){
+
+                    /* El anterior es sequence: IR A PASO 3 */
+                    /* 3. Se busca el predecesor más cercano que sea xs:complexType y se obtiene su atributo name */
+                    encontrado=false;
+                    String complexTypeName="";
+                    for (int i=posicion-2; i>=0; i--) {
+                        if (vNames.get(i).startsWith("xs:complexType")) {
+
+                            /* Si se encuentra el xs:complexType, se pone encontrado a true y se guarda el nombre del xs:complexType */
+                            encontrado=true;
+                            complexTypeName= vNames.get(i).substring(vNames.get(i).indexOf("=")+1);
+                            break;
+                        }
+                    }
+
+                    if (encontrado) {
+
+                        /* Se ha encontrado un complexType: IR A PASO 4 */
+                        /* 4. Se busca un xs:element que tenga como atributo type el valor guardado en complexTypeName */
+                        encontrado=false;
+                        for (int i = 0; i < vTypes.size(); i++) {
+                            if (vTypes.get(i).equals("xs:element=" + complexTypeName)) {
+
+                                /* Si se encuentra el elemento buscado, se comprueba si el nombre coincide con el del parámetro padre */
+                                encontrado=true;
+                                if (father.equals(vNames.get(i).substring(vNames.get(i).indexOf("=") + 1))) {
+                                    return "valid";
+                                } else {
+                                    return "ERROR de jerarquía";
+                                }
+                            }
+                        }
+
+                        if (!encontrado){
+
+                            /* Si no se encuentra ningún elemento cuyo type coincida con el valor de complexTypeName, se devuelve error */
+                            return "ERROR de jerarquía";
+                        }
+                    } else {
+
+                        /* Si se termina de recorrer el Vector y no se ha encontrado ningún xs:complexType, el proceso ha fallado */
+                        return "ERROR de jerarquía";
+                    }
+                } else {
+
+                    /* Si el elemento anterior no es xs:sequence, se devuelve un mensaje de error */
+                    return "ERROR de jerarquía";
+                }
+            } else {
+
+                /* Si no se encuentra el elemento buscado, se devuelve un mensaje de error */
+                return "ERROR de jerarquía";
+            }
+        }
+
+        /* Si se ha entrado en el primer if (si la validación era de tipo appConcept o appHierarchy) se devuelve output */
+        return output;
+    }
+
+    /**
+     * Método para crear un objeto de tipo Document
+     * Este Document tendrá al elemento correspondiente al parámetro prm como elemento raiz, además de todos sus hijos
+     * @param prm String que contiene el nombre del elemento raíz del documento
+     * @param mostrarID Booleano para determinar si hay que añadir el ID como atributo en los elementos del objeto Document
+     * @return Objeto de tipo Document que contiene al elemento padre (elemento inquirido) y todos sus hijos
+     * @throws Exception Se lanza una excepción si falla la creación del DOcumentBuilder
+     */
+    private Document listDocument(String prm, boolean mostrarID) throws Exception{
+
+        /* Se declaran las variables que se van a utilizar en el método */
+        DocumentBuilder docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        Document doc = docBuilder.newDocument();
+        Attr attr;
+
+        /* Se recorre el HashMap de elementos uno a uno */
+        for (String elementID : elements.keySet()) {
+
+            /* Se busca el elemento que se llame igual que el valor del parámetro prm */
+            if (elementID.matches(prm)) {
+
+                /* Si lo encontramos, se crea el objeto de tipo Element rootElement a partir del atributo category */
+                Element rootElement = doc.createElement(elements.get(elementID).get("category"));
+
+                /* Después, se añade este elemento al documento doc creado al principio del método */
+                doc.appendChild(rootElement);
+
+                if (mostrarID) {
+
+                    /* Si se cumple esta condición, se crea un atributo ID y se asigna al rootElement */
+                    /* El valor del atributo es el nombre (key) del elemento que se está analizando */
+                    attr = doc.createAttribute("ID");
+                    attr.setValue(elementID);
+                    rootElement.setAttributeNode(attr);
+                }
+
+                /* Se comprueban todos los atributos del elemento analizado y se añaden aquellos que nos interesan */
+                /* En este caso category, parent, xsd y seParent */
+                forKeys: for (String key : elements.get(elementID).keySet()) {
+                    if (key.equals("category") || key.equals("parent") || key.equals("xsd")|| key.equals("seParent")) continue forKeys;
+                    attr =  doc.createAttribute(key);
+                    attr.setValue(elements.get(elementID).get(key));
+                    rootElement.setAttributeNode(attr);
+                }
+
+                /* Se llama al método appendChildren para que añada la información de los elementos hijos al doc */
+                appendChildren(doc, rootElement, elementID, mostrarID);
+            }
+        }
+        return doc;
+    }
+
+    /**
+     * Método recursivo para añadir a un objeto de tipo Document los elementos hijos del elemento raíz (parámetro parent)
+     * @param doc Documento que ya contiene, como mínimo, elemento raíz (tiene más elementos si la llamada es recursiva)
+     * @param parent Elemento para el que hay que buscar y añadir el elemento hijo (en caso de que tenga hijos)
+     * @param parentID ID del elemento padre, utilizado para confirmar si un elemento es hijo suyo
+     * @param mostrarID Booleano para determinar si hay que añadir el ID como atributo en los elementos del objeto Document
+     */
+    private void appendChildren(Document doc, Element parent, String parentID, boolean mostrarID) {
+
+        /* Se declaran las variables que se van a utilizar en el método */
+        Attr attr;
+
+        /* Se recorre el HashMap de elementos uno a uno */
+        for (String childID : elements.keySet()) {
+
+            /* Se recorren todos los atributos de cada elemento uno a uno */
+            for (String attrib : elements.get(childID).keySet()) {
+
+                /* Se comprueba si el atributo parent de este elemento se corresponde con la variable parentID */
+                if (attrib.equals("parent") && elements.get(childID).get(attrib).equals(parentID)) {
+
+                    /* En caso afirmativo, se crea el elemento childElement y se añade como hijo del elemento parent */
+                    Element childElement = doc.createElement(elements.get(childID).get("category"));
+                    parent.appendChild(childElement);
+
+                    if (mostrarID)  {
+
+                        /* Si se cumple esta condición, se crea un atributo ID y se asigna al rootElement */
+                        /* El valor del atributo es el nombre (key) del elemento que se está analizando */
+                        attr = doc.createAttribute("ID");
+                        attr.setValue(childID);
+                        childElement.setAttributeNode(attr);
+                    }
+
+                    /* Se comprueban todos los atributos del elemento analizado y se añaden aquellos que nos interesan */
+                    /* En este caso category, parent y xsd */
+                    forKeys: for (String eachKey : elements.get(childID).keySet()) {
+                        if (eachKey.equals("category") || eachKey.equals("parent") || eachKey.equals("xsd")) continue forKeys;
+                        attr =  doc.createAttribute(eachKey);
+                        attr.setValue(elements.get(childID).get(eachKey));
+                        childElement.setAttributeNode(attr);
+
+                    }
+
+                    /* Por último se llama de forma recursiva al método para añadir todos los hijos (y completar el doc) */
+                    appendChildren(doc, childElement, childID, mostrarID);
+                }
+            }
+        }
+    }
+
+    /**
+     * Método para recorrer todos los nodos de tipo element de un objeto Document
+     * El objetivo es generar un Vector con el nombre del element y el el valor de un atributo
+     * El parámetro attrib determina de qué atributo del element hay que consultar el valor
+     * @param element Elemento a añadir al Vector v
+     * @param v Vector en el que hay que añadir el elemento recibido en el parámetro element
+     * @param attrib Tipo de atributo del que hay que consultar el valor
+     * @return Vector actualizado con todos los elementos del objeto Document incluidos
+     */
+    private Vector<String> nodeListToVector(Element element, Vector<String> v, String attrib) {
+
+        /* Se añade al Vector v el nombre del nodo junto con el valor del atributo que se quiere guardar (name o type) */
+        v.add(element.getNodeName() + "=" +element.getAttribute(attrib));
+
+        /* A continuación, se saca el listado de nodos hijos de element y se itera */
+        NodeList nl = element.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+
+            /* Si alguno de los nodos hijos de element es a su vez de tipo element, se llama recursivamente al método */
+            if (nl.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                nodeListToVector((Element) nl.item(i), v, attrib);
+            }
+        }
+        return v;
+    }
 
     //====================================================================
     //ISYSTEMINFO INTERFACE IMPLEMENTATION
@@ -787,108 +942,6 @@ public class SystemModelAgent extends Agent implements IExecManagement {
 
 
 
-    private String getChildren(String parent, String prefijo) {
-        LOGGER.entry(parent, prefijo);
-        StringBuffer response = new StringBuffer();
-        for (String key : elements.keySet()) {
-            for (String key2 : elements.get(key).keySet()) {
-                if (key2.equals("parent") && elements.get(key).get(key2).equals(parent)) {
-                    response.append(prefijo + list(key)).append("\n");
-                    response.append(getChildren(key, prefijo + "\t"));
-                } else if (key2.equals("node") && elements.get(key).get(key2).equals(parent)) {
-                    response.append(prefijo + list(key)).append("\n");
-                    response.append(getChildren(key, prefijo + "\t"));
-                }
-            }
-        }
-        return LOGGER.exit(response.toString());
-    }
-
-    private Document listDom(String _prm, boolean mostrarID) throws Exception{
-
-        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-        Document doc = docBuilder.newDocument();
-
-        for (String element: elements.keySet()) {
-            LOGGER.debug("recorriendo "+element);
-            if (element.matches(_prm)) {
-                LOGGER.debug("*****"+elements.get(element).get("category"));
-
-                // Genero elememto raiz del DOM
-                Element rootElement = doc.createElement(elements.get(element).get("category"));
-                doc.appendChild(rootElement);
-
-                Attr attr = null;
-
-                if (mostrarID) {
-                    attr = doc.createAttribute("ID");
-                    attr.setValue(element);
-                    rootElement.setAttributeNode(attr);
-                }
-
-                //añado atributos al raiz
-                forKeys: for (String key : elements.get(element).keySet()) {
-                    if (key.equals("category") || key.equals("parent") || key.equals("xsd")|| key.equals("seParent")) continue forKeys;
-                    attr =  doc.createAttribute(key);
-                    attr.setValue(elements.get(element).get(key));
-                    rootElement.setAttributeNode(attr);
-                }
-
-                appendChildren(doc, rootElement, element, mostrarID);
-
-            }
-        } // end for
-        return doc;
-    }
-
-    private void appendChildren(Document doc, Element parent, String parentID, boolean mostrarID) {
-        LOGGER.entry(parent, parentID);
-
-        for (String key : elements.keySet()) {
-            for (String key2 : elements.get(key).keySet()) {
-                if (key2.equals("parent") && elements.get(key).get(key2).equals(parentID)) {
-
-                    Element hijo = doc.createElement(elements.get(key).get("category"));
-                    parent.appendChild(hijo);
-
-                    boolean ocutarIDHastaCambiarXSD = elements.get(key).get("category").startsWith("restriction");
-
-                    //TODO Aintzane: Ampliar ID a restriction en AppValidation
-
-                    if (mostrarID && !ocutarIDHastaCambiarXSD)  {
-                        Attr attr = doc.createAttribute("ID");
-                        attr.setValue(key);
-                        hijo.setAttributeNode(attr);
-                    }
-
-                    forKeys: for (String eachKey : elements.get(key).keySet()) {
-                        if (eachKey.equals("category") || eachKey.equals("parent") || eachKey.equals("xsd")) continue forKeys;
-                        Attr attr =  doc.createAttribute(eachKey);
-                        attr.setValue(elements.get(key).get(eachKey));
-                        hijo.setAttributeNode(attr);
-
-                    }
-
-                    //llamada recursiva para generar todo el arbol
-                    appendChildren(doc, hijo, key, mostrarID);
-                }
-            }
-        }
-
-        return ;//LOGGER.exit(response.toString());
-    }
-
-    private Vector<String> nodeListToVector(Element element, Vector<String> v, String attrib) {
-        v.add(element.getNodeName() + "=" +element.getAttribute(attrib));
-        NodeList nl = element.getChildNodes();
-        for (int i = 0; i < nl.getLength(); i++) {
-            if (nl.item(i).getNodeType() == Node.ELEMENT_NODE) nodeListToVector((Element) nl.item(i), v, attrib);
-        }
-        return v;
-    }
-
-
 
     private String list(String... prm) {
         LOGGER.entry(prm);
@@ -934,6 +987,25 @@ public class SystemModelAgent extends Agent implements IExecManagement {
             while (response.charAt(response.length()-1)=='\n') response.deleteCharAt(response.length() - 1);
         } else response.append("not found!");
 
+        return LOGGER.exit(response.toString());
+    }
+
+
+
+    private String getChildren(String parent, String prefijo) {
+        LOGGER.entry(parent, prefijo);
+        StringBuffer response = new StringBuffer();
+        for (String key : elements.keySet()) {
+            for (String key2 : elements.get(key).keySet()) {
+                if (key2.equals("parent") && elements.get(key).get(key2).equals(parent)) {
+                    response.append(prefijo + list(key)).append("\n");
+                    response.append(getChildren(key, prefijo + "\t"));
+                } else if (key2.equals("node") && elements.get(key).get(key2).equals(parent)) {
+                    response.append(prefijo + list(key)).append("\n");
+                    response.append(getChildren(key, prefijo + "\t"));
+                }
+            }
+        }
         return LOGGER.exit(response.toString());
     }
 
@@ -1070,7 +1142,6 @@ public class SystemModelAgent extends Agent implements IExecManagement {
                 auxAttribs = processAttribs(2, querys);
                 String validateRestriction = get(querys[1], auxAttribs, conversationId);
                 auxAttribs.clear();
-                //String validateRestriction = sendCommand(new StringBuilder(query), "sa", conversationId);
                 //String validateRestriction = get(query.split(" ")[1], processAttribs(2, query.split(" ")), conversationId);
                 if (validateRestriction.isEmpty()) {
                     LOGGER.info(query+">"+validateRestriction+": restricción incumplida");
@@ -1084,10 +1155,9 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         // ir a systemmodel.xsd y buscar <xs:extension base="tipo" y en sus hijos
         // getFixed (tipo, atributo) > buscar <xs:extension base="tipo" y en sus hijos devuelve el fixed del que tenga nombre atributo
 
-        // si es extensible el padre traigo la estructura desde el hijo de system con los atributos, (resolver su ID **validation**), validar appvalidar.xsd
+        // si es extensible el padre traigo la estructura desde el hijo de system con los atributos, (resolver su ID **hi**), validar appvalidar.xsd
         // si valida > volver a montarlo en systemmodel
 
-        //String parentType = sendCommand ("get "+parentId+" attrib=category", conversationId).getContent();
         auxAttribs.clear();
         auxAttribs.put("attrib", "category");
         String parentType = get(parentId, auxAttribs, conversationId);
@@ -1097,9 +1167,8 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         }
         LOGGER.info(parentId+" type="+parentType);
 
-        //compruebo jerarquía // TODO si el padre es "system" comprobar que el se es raiz del appvalidation xsd -> dom
+        //compruebo jerarquía // TODO si el padre es "system" comprobar que el se es raiz del appHierarchy xsd -> dom
 
-        //String validateHierarchy = sendCommand("validate hierarchy "+seType+" "+parentType, conversationId).getContent();
         String validateHierarchy = validate("hierarchy", seType, parentType);
         if (!validateHierarchy.equals("valid")) {
             LOGGER.info(seType+">"+parentType+": jerarquía incorrecta");
@@ -1114,32 +1183,27 @@ public class SystemModelAgent extends Agent implements IExecManagement {
                 command = command+" "+entry.getKey()+"="+entry.getValue();
             }
         }
-        //String ID = sendCommand(command, conversationId).getContent();
         String ID = reg(command.split(" ")[1], processAttribs(2, command.split(" ")));
 
         // TODO: por cada restrictionList una llamada al get y comprobar que existen en el SystemModel
         for (String keyi: restrictionLists.keySet()){
             System.out.println("*******************key="+keyi);
-            //String restrictionList = sendCommand("reg restrictionList se="+keyi+" parent="+ID, conversationId).getContent();
             String query = "reg restrictionList se="+keyi+" parent="+ID;
             String restrictionList = reg(query.split(" ")[1], processAttribs(2, query.split(" ")));
 
             for (String keyj: restrictionLists.get(keyi).keySet()){
                 query = "reg restriction attribName="+keyj+" attribValue="+restrictionLists.get(keyi).get(keyj)+" parent="+restrictionList;
-                //String restriction = sendCommand("reg restriction attribName="+keyj+" attribValue="+restrictionLists.get(keyi).get(keyj)+" parent="+restrictionList, conversationId).getContent();
                 String restriction = reg(query.split(" ")[1], processAttribs(2, query.split(" ")));
                 System.out.println("keyj="+keyj);
             }
         }
 
-        //validar elemento contra esquema systemElements
+        //validar elemento contra esquema appConcepts
 
-        //String validation =  sendCommand("validate systemElement "+ID, conversationId).getContent();
-        String validation =  validate("systemElement", ID);
+        String validation =  validate("appConcept", ID);
         LOGGER.info(validation);
 
         if (!validation.equals("valid")) {
-            //sendCommand("del "+ID, conversationId).getContent();
             del(ID);
             LOGGER.info("error xsd concepts");
             throw new Exception();
@@ -1150,10 +1214,10 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         // mover a validation.xml
 
 
-        if (parentId.equals("system")) { //sendCommand("set " + ID + " parent=validation", conversationId).getContent();
+        if (parentId.equals("system")) {
             command = "set " + ID + " parent=validation";
             set(command.split(" ")[1], processAttribs(2, command.split(" ")), conversationId);
-        } else { //sendCommand("set " + ID + " parent=(get " + ID + " attrib=seParent) seParent=", conversationId).getContent();
+        } else {
             auxAttribs.clear();
             auxAttribs.put("attrib", "seParent");
             String parentID = get(ID, auxAttribs, conversationId);
@@ -1174,34 +1238,6 @@ public class SystemModelAgent extends Agent implements IExecManagement {
     //GENERAL PURPOSE METHODS
     //====================================================================
 
-    /**
-     * Sends a command to a target agent. If sync=true the methods waits for and returns the response.
-     * @param cmd
-     * @param target
-     * @param conversationId
-     * @return if sync returns ACLMessage, if asyn returns null
-     * @throws FIPAException
-     */
-    protected String sendCommand(StringBuilder cmd, String target, String conversationId) throws FIPAException {
-        LOGGER.entry(cmd, target, conversationId);
-        if (!elements.containsKey(target)) return LOGGER.exit("element not found");
-
-        ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-        msg.setContent(cmd.toString());
-        msg.setOntology("control");
-        msg.addReceiver(new AID(target, AID.ISLOCALNAME));
-        msg.setReplyWith(cmd.append("#").append(System.currentTimeMillis()).toString());
-        msg.setConversationId(conversationId);
-
-        send(msg);
-        LOGGER.info(msg);
-
-        if (conversationId!=null) return "threaded#"; //si no hay conversationId
-
-        ACLMessage reply=blockingReceive(MessageTemplate.MatchInReplyTo(msg.getReplyWith()), 1000);
-
-        return LOGGER.exit((reply!=null)? reply.getContent() : "");
-    }
 
     private String negotiate(String targets, String negotiationCriteria, String action, String externalData){
         LOGGER.entry(targets, negotiationCriteria, action);
