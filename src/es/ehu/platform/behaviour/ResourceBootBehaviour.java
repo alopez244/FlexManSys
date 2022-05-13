@@ -8,11 +8,9 @@ import org.apache.logging.log4j.Logger;
 import jade.core.AID;
 import jade.core.behaviours.*;
 import jade.lang.acl.*;
-import jade.wrapper.AgentController;
-import jade.wrapper.StaleProxyException;
 
 import es.ehu.platform.MWAgent;
-import static es.ehu.platform.utilities.MasReconOntologies.*;
+
 
 /**
  * This behaviour receives messages from the templates used in the constructor
@@ -55,7 +53,7 @@ public class ResourceBootBehaviour extends SimpleBehaviour {
 
         LOGGER.debug("*** Constructing RunningBehaviour ***");
         this.myAgent = a;
-        this.template = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_RUN),
+        this.template = MessageTemplate.and(MessageTemplate.MatchOntology("data"),
                 MessageTemplate.MatchPerformative(ACLMessage.INFORM));
     }
 

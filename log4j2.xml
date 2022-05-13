@@ -12,8 +12,6 @@
 	
 		<console name="console">
 			<PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{1} %-7M %L - %msg%n" />
-			<!--<filters><thresholdFilter level="trace" onMatch="DENY" onMismatch="NEUTRAL"/></filters>
-			  línea %-3L -->
 		</console>
 
 		<rollingFile name="rFile" fileName="logs/mwm.log" filePattern="logs/mwm-%d{yyyy-MM-dd}-%i.log">
@@ -29,7 +27,7 @@
 			<PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{1} %-7M %L - %msg%n" />
 			<filters>
 				<thresholdFilter level="message" onMatch="DENY" onMismatch="NEUTRAL" />
-			</filters><!-- elimina todo lo que sea >=mensaje con lo que solo quedan timestamps-->
+			</filters>
 			<policies>
 				<sizeBasedTriggeringPolicy size="10 MB" />
 			</policies>
@@ -40,19 +38,28 @@
 
 	<loggers>
 
+		<!-- package es.ehu -->
+		<logger name="es.ehu.SystemModelAgent">					<appenderRef ref="console" level="info"/></logger>
+		<logger name="es.ehu.ThreadedCommandProcessor">			<appenderRef ref="console" level="info"/></logger>
 
-		<logger name="es.ehu.MiddlewareManager">						<appenderRef ref="console" level="info"/></logger>
-		<logger name="es.ehu.CommandBehaviour">							<appenderRef ref="console" level="info"/></logger>
+		<!-- package es.ehu.platform -->
+		<logger name="es.ehu.platform.MWAgent">					<appenderRef ref="console" level="info"/></logger>
+
+		<!-- package es.ehu.platform.utilities -->
+		<logger name="es.ehu.platform.utilities.StateParallel">	<appenderRef ref="console" level="info"/></logger>
+
+
+
+
+
 		<logger name="es.ehu.domain.manufacturing.utilities.Planner">	<appenderRef ref="console" level="info"/></logger>
 		<logger name="es.ehu.NodeAgent">								<appenderRef ref="console" level="info"/></logger>
-		<logger name="es.ehu.Functionality">							<appenderRef ref="console" level="info"/></logger>
-		<logger name="es.ehu.SystemModelAgent">							<appenderRef ref="console" level="info"/></logger>
-		<logger name="es.ehu.utilities.StateParallel">					<appenderRef ref="console" level="info"/></logger>
-		<logger name="es.ehu.MasReconAgent">							<appenderRef ref="console" level="info"/></logger>
+
+
+
 		<logger name="es.ehu.domain.manufacturing.utilities.Planner">	<appenderRef ref="console" level="debug"/></logger>
 		
 		<logger name="es.ehu.platform.template.interfaces.BasicFunctionality">	<appenderRef ref="console" level="info"/></logger>
-		<logger name="es.ehu.platform.utilities.MasReconAgent">					<appenderRef ref="console" level="info"/></logger>
 		<logger name="es.ehu.platform.behaviour.BootBehaviour">					<appenderRef ref="console" level="info"/></logger>
 		<logger name="es.ehu.platform.behaviour.ResourceBootBehaviour">			<appenderRef ref="console" level="info"/></logger>
 		<logger name="es.ehu.platform.behaviour.NegotiatingBehaviour">			<appenderRef ref="console" level="info"/></logger>
@@ -65,36 +72,10 @@
 		<logger name="es.ehu.RunningBehaviour">			<appenderRef ref="console" level="info"/><!-- <appenderRef ref="rFile" level="debug"/>--></logger>
 		<logger name="es.ehu.TrackingBehaviour">		<appenderRef ref="console" level="info"/><!-- <appenderRef ref="rFile" level="debug"/>--></logger>
 		<logger name="es.ehu.PausedBehaviour">			<appenderRef ref="console" level="info"/><!-- <appenderRef ref="rFile" level="debug"/>--></logger>
-		<logger name="es.ehu.ThreadedMiddlewareManager"><appenderRef ref="console" level="debug"/><!-- <appenderRef ref="rFile" level="debug"/>--></logger>
-		<!--<logger name="es.ehu.ThreadedCommandProcessor"> <appenderRef ref="console" level="info"/></logger>-->
-		
-		
-		
-		<!-- PLC Supervisor Rafa -->
-		<logger name="es.ehu.PLC.agent.MC_Agent">					<appenderRef ref="console" level="debug"/></logger>
-		<logger name="es.ehu.PLC.agent.NodeAgent">					<appenderRef ref="console" level="debug"/></logger>
-		<logger name="es.ehu.PLC.behaviour.BootBehaviour">			<appenderRef ref="console" level="debug"/></logger>
-		<logger name="es.ehu.PLC.behaviour.EndBehaviour">			<appenderRef ref="console" level="debug"/></logger>
-		<logger name="es.ehu.PLC.behaviour.NegotiatingBehaviour">	<appenderRef ref="console" level="debug"/></logger>
-		<logger name="es.ehu.PLC.behaviour.PausedBehaviour">		<appenderRef ref="console" level="debug"/></logger>
-		<logger name="es.ehu.PLC.behaviour.RecoverBehaviour">		<appenderRef ref="console" level="debug"/></logger>
-		<logger name="es.ehu.PLC.behaviour.RunningBehaviour">		<appenderRef ref="console" level="debug"/></logger>
-		<logger name="es.ehu.PLC.behaviour.StateParallel">			<appenderRef ref="console" level="debug"/></logger>
-		<!--<logger name="es.ehu.PLC.behaviour.TrackingBehaviour">		<appenderRef ref="console" level="debug"/></logger>-->
-		<logger name="es.ehu.PLC.lib.CallAdsFuncs">					<appenderRef ref="console" level="debug"/></logger>
-		<logger name="es.ehu.PLC.lib.FunctionalityPLC">				<appenderRef ref="console" level="debug"/></logger>
-		<logger name="es.ehu.PLC.lib.StateHandler">					<appenderRef ref="console" level="debug"/></logger>
-		<logger name="es.ehu.PLC.lib.Diagnosis.DiagnosisMascarasEstado">	<appenderRef ref="console" level="debug"/></logger>
-		
-		
-		<!-- <logger name="jade.core.Agent">
-			<appenderRef ref="messageFile" level="message"/>
-		</logger>-->
+
 
 		<root level="timestamp">
 			<appenderRef ref="timeStampFile" level="fatal"/>
 		</root>
-
 	</loggers>
-
 </configuration>

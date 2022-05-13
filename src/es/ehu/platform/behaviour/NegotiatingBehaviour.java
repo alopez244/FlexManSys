@@ -16,7 +16,7 @@ import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
+
 
 /**
  * Manages several simultaneous negotiations, differentiating the execution
@@ -157,7 +157,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
         LOGGER.entry(a);
         this.myAgent = a;
         this.aNegFunctionality = (NegFunctionality) a.functionalityInstance;
-        template = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_NEGOTIATE), //es negociación Y (
+        template = MessageTemplate.and(MessageTemplate.MatchOntology("negotiation"), //es negociación Y (
                 MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.CFP), //o es cfp
                         MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.PROPOSE),// o es proposal
                                 MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.FAILURE),// o es failure
@@ -331,7 +331,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                     case NEG_WON: //he ganado la negociación y termina correctamente
 
                                         ACLMessage inform_winner = new ACLMessage(ACLMessage.INFORM);
-                                        inform_winner.setOntology(ONT_NEGOTIATE);
+                                        inform_winner.setOntology("negotiation");
                                         inform_winner.setConversationId(conversationId);
                                         myAgent.send(inform_winner);
                                         System.out.println("WON!");
@@ -405,7 +405,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 //                                        }
 
                                         ACLMessage inform_winner = new ACLMessage(ACLMessage.INFORM);
-                                        inform_winner.setOntology(ONT_NEGOTIATE);
+                                        inform_winner.setOntology("negotiation");
                                         inform_winner.setConversationId(conversationId);
                                         LOGGER.debug("Targets lenght: " + negotiationRuntime.get(conversationId).getTargets().length);
                                         for (AID id : negotiationRuntime.get(conversationId).getTargets()) {
@@ -479,7 +479,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 //                                        }
 
                                         ACLMessage inform_winner = new ACLMessage(ACLMessage.INFORM);
-                                        inform_winner.setOntology(ONT_NEGOTIATE);
+                                        inform_winner.setOntology("negotiation");
                                         inform_winner.setConversationId(conversationId);
                                         LOGGER.debug("Targets lenght: " + negotiationRuntime.get(conversationId).getTargets().length);
                                         for (AID id : negotiationRuntime.get(conversationId).getTargets()) {
@@ -544,7 +544,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                             LOGGER.info(myAgent.getLocalName() + " WON negotiation(id:" + conversationId + ")!");
 //                                            negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
                                             ACLMessage inform_winner = new ACLMessage(ACLMessage.INFORM);
-                                            inform_winner.setOntology(ONT_NEGOTIATE);
+                                            inform_winner.setOntology("negotiation");
                                             inform_winner.setConversationId(conversationId);
                                             LOGGER.debug("Targets lenght: " + negotiationRuntime.get(conversationId).getTargets().length);
                                             for (AID id : negotiationRuntime.get(conversationId).getTargets()) {
@@ -599,7 +599,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                             LOGGER.info(myAgent.getLocalName() + " WON negotiation(id:" + conversationId + ")!");
 //                                            negotiationRuntime.remove(conversationId); // borrar negotiationRuntime
                                             ACLMessage inform_winner = new ACLMessage(ACLMessage.INFORM);
-                                            inform_winner.setOntology(ONT_NEGOTIATE);
+                                            inform_winner.setOntology("negotiation");
                                             inform_winner.setConversationId(conversationId);
                                             LOGGER.debug("Targets lenght: " + negotiationRuntime.get(conversationId).getTargets().length);
                                             for (AID id : negotiationRuntime.get(conversationId).getTargets()) {
@@ -714,7 +714,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                         LOGGER.info(myAgent.getLocalName() + " WON negotiation(id:" + conversationId + ")!");
 
                                         ACLMessage inform_winner = new ACLMessage(ACLMessage.INFORM);
-                                        inform_winner.setOntology(ONT_NEGOTIATE);
+                                        inform_winner.setOntology("negotiation");
                                         inform_winner.setConversationId(conversationId);
                                         LOGGER.debug("Targets lenght: " + negotiationRuntime.get(conversationId).getTargets().length);
                                         for (AID id : negotiationRuntime.get(conversationId).getTargets()) {
@@ -801,7 +801,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 //        LOGGER.entry();
 //
 //        ACLMessage cfp = new ACLMessage(ACLMessage.PROPOSE);
-//        cfp.setOntology(ONT_NEGOTIATE);
+//        cfp.setOntology("negotiation");
 //        cfp.setConversationId(negId);
 //        LOGGER.debug("Targets lenght: " + negMsg.getTargets().length);
 //        for (AID id : negMsg.getTargets()) {
@@ -851,7 +851,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 //            negotiationRuntime.put(negId, newNegotiation);
             //Segundo, enviar un mensaje al resto de agentes con mi valor de negociación
             ACLMessage cfp = new ACLMessage(ACLMessage.PROPOSE);
-            cfp.setOntology(ONT_NEGOTIATE);
+            cfp.setOntology("negotiation");
             cfp.setConversationId(negId);
             LOGGER.debug("Targets lenght: " + negMsg.getTargets().length);
             for (AID id : negMsg.getTargets()) {

@@ -1,17 +1,10 @@
 package es.ehu;
 
-import java.util.Hashtable;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import jade.core.behaviours.DataStore;
-import jade.core.behaviours.ThreadedBehaviourFactory;
-import jade.core.behaviours.ThreadedBehaviourFactory.ThreadedBehaviourWrapper;
 import jade.core.*;
 import jade.core.behaviours.*;
 import jade.lang.acl.*;
-import jade.wrapper.AgentController;
 
 /**
  * This behaviour is a simple implementation of a message receiver.
@@ -23,27 +16,18 @@ import jade.wrapper.AgentController;
  **/
 public class ThreadedCommandProcessor extends SimpleBehaviour {
 
-  /**
-   * 
-   */
-  private static final long serialVersionUID = 1L;
 
+  private static final long serialVersionUID = 1L;
   static final Logger LOGGER = LogManager.getLogger(ThreadedCommandProcessor.class.getName()) ;
 
   public String key = null;
-  private MessageTemplate template = null;
   private SystemModelAgent myAgent= null;
   public ACLMessage msg = null;
   public String condition = null;
   private String result = null; 
   private boolean done = false;
 
-  /**
-   * Constructor.
-   * 
-   * @param a
-   *            a reference to the Agent
-   **/
+  /* Constructor */
   public ThreadedCommandProcessor(String key , Agent a, ACLMessage msg) {
     super(a);
     LOGGER.entry(key, a);
@@ -60,10 +44,6 @@ public class ThreadedCommandProcessor extends SimpleBehaviour {
   public void onStart() {
     LOGGER.entry();
 
-
-//    msg = (ACLMessage)myAgent.ds.get(this.key);
-//    myAgent.ds.remove(this.key);  //Todo comentado para evitar nullpointers en negociaciones
-    // proceso el  comando
 
     result = myAgent.processCmd(msg.getContent(), key);
 
@@ -89,10 +69,6 @@ public class ThreadedCommandProcessor extends SimpleBehaviour {
          LOGGER.trace("tbf.getThread(this).suspend();");
          myAgent.tbf.getThread(this).suspend();
          LOGGER.trace("tbf.getThread(this).resume();");
-//         if (myAgent.ds.containsKey(key)) {
-//           data = ((ACLMessage)myAgent.ds.get(this.key)).getContent();
-//           myAgent.ds.remove(key);
-//         }
          LOGGER.debug("data="+data);
          
        } while (!data.matches(condition));

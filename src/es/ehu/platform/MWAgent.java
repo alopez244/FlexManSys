@@ -29,8 +29,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static es.ehu.platform.utilities.MWMCommands.*;
-import static es.ehu.platform.utilities.MasReconOntologies.*;
+
 
 public class MWAgent extends Agent {
     private static final long serialVersionUID = 8505462503088901786L;
@@ -47,15 +46,13 @@ public class MWAgent extends Agent {
      *  Instancias en tracking del componente (arraylist para actualiza el estado, actualizarla cuando al MWM llega un setState)
      */
     //TODO refresh local cache
-    public boolean doTimeStamp=false;
+
     public BasicFunctionality functionalityInstance;
     public String[] targetComponentIDs, sourceComponentIDs;
     public int period = -1;
     public String ActualState=null;
     public ArrayList<String> replicas=new ArrayList<String>();
     public boolean ExecTimeStamped=false;
-//    public static ArrayList<String> ReportedAgents=new ArrayList<String>(); //agentes reportados
-//    public ArrayList<String> IgnoredReplicas=new ArrayList<String>();
     public String cmpID = null;
     public boolean antiloopflag=false;
     public String state ="";    //para uso en autoidle
@@ -71,7 +68,7 @@ public class MWAgent extends Agent {
     public String gatewayAgentName; // Guarda el nombre del agente pasarela
     // Parámetros de configuración
     public boolean mwmStoresExecutionState = true;
-    public boolean restored_replica=false;
+
 
     /**
      * Primera transición a realizar
@@ -87,7 +84,7 @@ public class MWAgent extends Agent {
         try { resolveMWM(); } catch (Exception e) {e.printStackTrace();}
         String container="";
         try {  container=this.getContainerController().getContainerName(); } catch (Exception e) {e.printStackTrace();}
-        String cmd = CMD_SET + " " + this.getLocalName()+" node="+container;
+        String cmd = "set" + " " + this.getLocalName()+" node="+container;
         String response = sendCommand(cmd).getContent();
         this.getContainerController().getName();
         LOGGER.debug(cmd + " > " + response);
@@ -98,7 +95,7 @@ public class MWAgent extends Agent {
         LOGGER.entry();
         try { resolveMWM(); } catch (Exception e) {e.printStackTrace();}
 
-        String cmd = CMD_DELETE + " "+this.getLocalName();
+        String cmd = "del" + " "+this.getLocalName();
         String response = sendCommand(cmd).getContent();
         this.getContainerController().getName();
         LOGGER.debug(cmd + " > " + response);
@@ -148,7 +145,7 @@ public class MWAgent extends Agent {
     public void deregisterAgent(String localName) throws Exception {
         LOGGER.entry(localName);
 
-        String cmd = CMD_DELETE + "  " + localName;
+        String cmd = "del" + "  " + localName;
         String response = sendCommand(cmd).getContent();
         LOGGER.info(cmd + " > " + response);
 
@@ -164,7 +161,7 @@ public class MWAgent extends Agent {
      * @throws FIPAException
      */
     public String getComponent(String id) {
-        return (sendCommand(CMD_GETCOMPONENTS + " " + id)).getContent();
+        return (sendCommand("getcmp" + " " + id)).getContent();
     }
 
     /**
@@ -175,31 +172,14 @@ public class MWAgent extends Agent {
      * @throws FIPAException
      */
     public String getInstances(String cmpID, String state)  {
-        String msg = CMD_GETINSTANCES + " " +cmpID+" state="+state;
+        String msg = "getins" + " " +cmpID+" state="+state;
         ACLMessage reply = sendCommand(msg);
         String response = (reply==null)?"":reply.getContent();
         LOGGER.info(msg+">"+response);
         return response;
     }
 
-    /**
-     * Sends a {@code get} command to the MWM under the criteria established
-     * by the {@code params}.
-     *
-     * @param cmpID ID of the element or {@code *} in case of searching in all.
-     * @param filter Search filter.
-     * @return List of agents separated by commas; null if the request could not be completed;
-     * or empty string if there is none.
-     */
-    public String getInfoMWM(String cmpID, String filter)  {
-        if (cmpID == null) {
-            return null;
-        }
-        String msg = CMD_GET + " " + cmpID + " " + filter;
-        ACLMessage reply = sendCommand(msg);
-        String response = (reply != null) ? reply.getContent() : null;
-        return response;
-    }
+
 
     /**
      * Enviar mensaje de control al Middleware Manager
@@ -217,7 +197,7 @@ public class MWAgent extends Agent {
         ACLMessage aMsg = new ACLMessage(ACLMessage.REQUEST);
 
         aMsg.setContent(cmd);
-        aMsg.setOntology(ONT_CONTROL);
+        aMsg.setOntology("control");
         aMsg.addReceiver(new AID("sa", AID.ISLOCALNAME));
 
         aMsg.setReplyWith(cmd+"_"+System.currentTimeMillis());
@@ -274,27 +254,7 @@ public class MWAgent extends Agent {
         LOGGER.exit();
     }
 
-    /**
-     * Proceso de recibir mensaje. Este bloquea el comportamiento hasta recibir un mensaje de datos
-     *
-     * @return el mensaje recibido
-     * @throws Exception
-     */
-    public ACLMessage receiveMessage() throws Exception {
-        LOGGER.entry();
-        ACLMessage aMsg = null;
 
-        MessageTemplate mt = MessageTemplate.MatchOntology("data");
-
-        while (aMsg == null){
-            try { Thread.sleep(10); } catch (InterruptedException e) { e.printStackTrace(); }
-            aMsg = receive(mt);
-            LOGGER.info("receiveMessage()");
-        }
-
-        return LOGGER.exit(aMsg);
-
-    }
 
     /**
      * Metodo para enviar el mensaje a los distintos receptores.
@@ -316,7 +276,7 @@ public class MWAgent extends Agent {
         //try {
 
         ACLMessage aMsg = new ACLMessage(ACLMessage.INFORM);
-        aMsg.setOntology(ONT_DATA);
+        aMsg.setOntology("data");
         try { aMsg.setContentObject(msg); } catch (IOException e) { e.printStackTrace(); }
         aMsg.setReplyWith("data_"+System.currentTimeMillis());
 
@@ -364,15 +324,13 @@ public class MWAgent extends Agent {
 
             ACLMessage aMsg = new ACLMessage(ACLMessage.INFORM);
             aMsg.setConversationId("state_refresh_"+String.valueOf(convIDCounter));
-            aMsg.setOntology(ONT_STATE);
+            aMsg.setOntology("state");
             aMsg.setContent(msg);
             for (String cmpins: cmpinss){
                 aMsg.addReceiver(new AID(cmpins, AID.ISLOCALNAME));
             }
             send(aMsg);
-//            get_timestamp(this,"MsgSentDone");
             AddToExpectedMsgs(aMsg); //un mensaje esperado por cada replica
-//            get_timestamp(this,"AcknowledgeGenerated");
             convIDCounter++;
             LOGGER.debug("sendState().send("+sTargets+"):"+aMsg);
             LOGGER.info(cmpID+"("+getLocalName() + "):state("+ ((msg.getClass()==null)?"null":msg.getClass().getSimpleName())+ ") > "+cmpID+"("+sTargets+")" );
@@ -382,11 +340,7 @@ public class MWAgent extends Agent {
         }
         return LOGGER.exit(response);
     }
-    public void triggerEvent(final String eventId){
-        LOGGER.entry(eventId);
-        sendCommand("start "+eventId);
-        LOGGER.exit();
-    }
+
 
     /**
      * Search trackings of a component and the MWM to send them the state.
@@ -558,53 +512,20 @@ public class MWAgent extends Agent {
         agent.send(confirmation);
 //        sendACLMessage(ACLMessage.CONFIRM,msg.getSender(),msg.getOntology(),msg.getConversationId(),msg.getContent(),agent);
     }
-    /**
-     * Informa al middleware manager que la instancia de componente ha cambiado
-     * de estado
-     *
-     * @param cmpIns
-     *            : identificador de la instancia de componente
-     * @param state
-     *            : Nombre del estado al que se ha cambiado.
-     */
+
 
     public void setState(String cmpIns, String state) throws Exception {
         LOGGER.entry(cmpIns, state);
 
         try { resolveMWM(); } catch (Exception e) {e.printStackTrace();}
-        String cmd = CMD_SET + " " + cmpIns + " state=" + state;
+        String cmd = "set" + " " + cmpIns + " state=" + state;
         String response = sendCommand(cmd).getContent();
         LOGGER.info(response +" < " + cmd);
 
         LOGGER.exit();
     }
 
-    /**
-     * Devuelve una lista de las instancias de un componente que s encuentran en
-     * un determinado estado.
-     *
-     * @param componente
-     *            : identificador del componente
-     * @param estado
-     *            : estado de lasinstancias que se desean buscar
-     * @return
-     */
-    public AID[] getComponets(String componente, String estado) throws Exception {
-        LOGGER.entry(componente, estado);
 
-        String cmd = "getInstance " + componente + " state=" + estado;
-        LOGGER.debug("cmd=" + cmd);
-        String result = sendCommand(cmd).getContent();
-
-        String[] aux = result.split(",");
-        AID[] exit = new AID[aux.length];
-
-        for (int i = 0; i < aux.length; i++) {
-            exit[i] = new AID(aux[i], true);
-        }
-
-        return LOGGER.exit(exit);
-    }
 
     /**
      *Obtener la direccion del Middleware Manager
@@ -639,51 +560,6 @@ public class MWAgent extends Agent {
         LOGGER.exit();
     } // end resolveMM
 
-    public <T> String join(T[] array, String cement) {
-        StringBuilder builder = new StringBuilder();
-
-        if(array == null || array.length == 0)
-            return null;
-
-        for (T t : array)
-            builder.append(t).append(cement);
-
-        builder.delete(builder.length() - cement.length(), builder.length());
-
-        return builder.toString();
-    }
 
 
-    class ShutdownThread extends Thread {
-        private MWAgent myAgent = null;
-
-
-        public ShutdownThread(MWAgent myAgent) {
-            super();
-            this.myAgent = myAgent;
-
-        }
-
-        public void run() {
-            LOGGER.entry();
-            LOGGER.debug("Tarea de apagado");
-            try {
-
-                ACLMessage aMsg = new ACLMessage(ACLMessage.INFORM);
-                String cmd = CMD_DELETE + " "+myAgent.getLocalName();
-                aMsg.setContent(cmd);
-                aMsg.setOntology(ONT_CONTROL);
-                aMsg.addReceiver(new AID("tmwm", AID.ISLOCALNAME));
-
-                LOGGER.info("shutdownThread().send()");
-                send(aMsg);
-
-                LOGGER.info(myAgent.getLocalName()+"("+cmd+") > mwm");
-
-                myAgent.doDelete();
-            } catch (Exception e) {
-            }
-            LOGGER.exit();
-        }
-    }
 }

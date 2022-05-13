@@ -4,11 +4,8 @@
  **/
 package es.ehu.platform.behaviour;
 
-import static es.ehu.platform.utilities.MWMCommands.CMD_GETCOMPONENTS;
-import static es.ehu.platform.utilities.MWMCommands.CMD_REPORT;
-import static es.ehu.platform.utilities.MWMCommands.CMD_SET;
-import static es.ehu.platform.utilities.MasReconOntologies.ONT_CONTROL;
-import es.ehu.domain.manufacturing.agents.functionality.Machine_Functionality;
+
+
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.DFService;
@@ -56,7 +53,7 @@ public class ControlBehaviour extends SimpleBehaviour {
         template =  MessageTemplate.or(
                 MessageTemplate.MatchPerformative(ACLMessage.FAILURE),
                 MessageTemplate.and(
-                        MessageTemplate.MatchOntology(ONT_CONTROL),
+                        MessageTemplate.MatchOntology("control"),
                         MessageTemplate.MatchPerformative(ACLMessage.REQUEST))
 
         );
@@ -73,7 +70,7 @@ public class ControlBehaviour extends SimpleBehaviour {
         template =  MessageTemplate.or(
                 MessageTemplate.MatchPerformative(ACLMessage.FAILURE),
                 MessageTemplate.and(
-                        MessageTemplate.MatchOntology(ONT_CONTROL),
+                        MessageTemplate.MatchOntology("control"),
                         MessageTemplate.MatchPerformative(ACLMessage.REQUEST))
         );
 
@@ -112,7 +109,7 @@ public class ControlBehaviour extends SimpleBehaviour {
 //                }
 
                 try {
-                    LOGGER.info(myAgent.sendCommand(CMD_REPORT + " (" + CMD_GETCOMPONENTS + " " + name + ") type=notFound cmpins=" + name));
+                    LOGGER.info(myAgent.sendCommand("report" + " (" + "getcmp" + " " + name + ") type=notFound cmpins=" + name));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -134,7 +131,7 @@ public class ControlBehaviour extends SimpleBehaviour {
                     if (cmd[1].equals("period")) {
                         LOGGER.debug("myAgent.period = " + Integer.parseInt(cmd[2]));
                         myAgent.period = Integer.parseInt(cmd[2]);
-                        myAgent.sendCommand(CMD_SET + " " + myAgent.cmpID + " period=" + cmd[2]);
+                        myAgent.sendCommand("set" + " " + myAgent.cmpID + " period=" + cmd[2]);
 
                         result = "done";
                     } else if (cmd[1].equals("mwmStoresExecutionState")) {

@@ -17,7 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
+
 
 //import jade.util.leap.ArrayList;
 

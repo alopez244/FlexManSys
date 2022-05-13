@@ -506,7 +506,7 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
         for (String target : targets.split(","))
             msg.addReceiver(new AID(target, AID.ISLOCALNAME));
         msg.setConversationId(conversationId);
-        msg.setOntology(es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE);
+        msg.setOntology("negotiation");
 
         msg.setContent("negotiate " + targets + " criterion=" + negotiationCriteria + " action=" + action + " externaldata=" + externalData);
         agent.send(msg);

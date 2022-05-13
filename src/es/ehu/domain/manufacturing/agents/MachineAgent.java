@@ -10,16 +10,10 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.w3c.dom.Document;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
 import static es.ehu.domain.manufacturing.utilities.FmsNegotiation.ONT_DEBUG;
 
 public class MachineAgent extends DomResAgentTemplate {
@@ -42,7 +36,7 @@ public class MachineAgent extends DomResAgentTemplate {
     protected MessageTemplate variableInitialization(Object[] arguments, Behaviour behaviour) {
         LOGGER.entry(arguments);
 
-        MessageTemplate informNeg = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_NEGOTIATE),
+        MessageTemplate informNeg = MessageTemplate.and(MessageTemplate.MatchOntology("negotiation"),
                 MessageTemplate.MatchPerformative(ACLMessage.INFORM));
         MessageTemplate debugSim = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_DEBUG),
                 MessageTemplate.MatchPerformative(ACLMessage.INFORM));

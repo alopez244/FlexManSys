@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.ArrayList;
 import java.util.Date;
 
-import static es.ehu.platform.utilities.MasReconOntologies.ONT_RUN;
+
 
 /**
  * This behaviour receives messages from the templates used in the constructor
@@ -53,7 +53,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         super(a);
         LOGGER.debug("*** Constructing ResourceRunningBehaviour ***");
         this.myAgent = a;
-        this.template = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_RUN),
+        this.template = MessageTemplate.and(MessageTemplate.MatchOntology("data"),
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
         this.template2 = MessageTemplate.and(MessageTemplate.MatchOntology("release_buffer"),
                 MessageTemplate.MatchPerformative(ACLMessage.INFORM));
