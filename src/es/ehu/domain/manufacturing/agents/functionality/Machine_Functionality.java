@@ -581,7 +581,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                             if (i == consumableList.size()-1 && requestMaterial) {
 
                                 //Defino las posiciones de la negociación
-                                String positions = myAgent.resourceName+"_Buffers" + ";warehouse";
+                                String positions = "warehouse;" + myAgent.resourceName+"_Buffers";
 
                                 //Encuentro el nombre del SystemModelAgent
                                 DFAgentDescription dfd = new DFAgentDescription();
@@ -704,24 +704,13 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         ACLMessage msg = myAgent.receive(template);
         if (msg != null) {
             myAgent.msgFIFO.add((String) msg.getContent());
-            ArrayList<ArrayList<String>> newConsumables = new ArrayList<>();
-            newConsumables.add(new ArrayList<>()); newConsumables.add(new ArrayList<>());
-            String content = msg.getContent();
-            String [] contentSplited = content.split(";");
-            for (int i = 0; i < contentSplited.length ; i++) {  //Se deserializa el mensaje y se guardan los datos en un arraylist
-                newConsumables.get(0).add(contentSplited[i].split(":")[0]);
-                newConsumables.get(1).add(contentSplited[i].split(":")[1]);
-            }
+            System.out.println(msg.getContent()); //printea para saber que ya tiene los items
             // bucle para sumar los nuevos consumibles en el contador de material
-            for (int i = 0; i < newConsumables.get(0).size(); i++){
+
                 for (int j = 0; j < myAgent.availableMaterial.size(); j++){
-                    if (newConsumables.get(0).get(i).equals(myAgent.availableMaterial.get(j).get("consumable_id"))) {
-                        Integer currentConsumable = Integer.parseInt(myAgent.availableMaterial.get(j).get("current"));
-                        Integer addedconsumable = Integer.parseInt(newConsumables.get(1).get(i));
-                        myAgent.availableMaterial.get(j).put("current", Integer.toString(currentConsumable + addedconsumable));
-                    }
+                        myAgent.availableMaterial.get(j).put("current", Integer.toString(10));
                 }
-            }
+
             System.out.println("El transporte ha terminado de reponer el material pedido");
             System.out.println(myAgent.availableMaterial);
             matReqDone = false; // Una vez repuesto el material se resetea el flag
@@ -811,7 +800,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         if (!matReqDone) { // Si aun no se ha hecho la petición de material se procede a hacerlo
 
                             //Defino las posiciones de la negociación
-                            String positions = myAgent.resourceName+"_Buffers" + ";warehouse";
+                            String positions = "warehouse"+ ";"+myAgent.resourceName+"_Buffers";
 
                             //Encuentro el nombre del SystemModelAgent
                             DFAgentDescription dfd = new DFAgentDescription();
@@ -849,7 +838,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                                 if (reply2 != null) {   // If the id does not exist, it returns error
                                     targets = reply2.getContent();
                                 }
-                                String negotiationQuery = "localneg " + targets + " criterion=position action=" +
+                                String negotiationQuery = "localneg " + targets + " criterion=battery action=" +
                                         "supplyConsumables externaldata=" + positions +","+ mwm + "," + myAgent.getLocalName();
                                 ACLMessage result = sendCommand(myAgent, negotiationQuery, "TransportAgentNeg");
 
