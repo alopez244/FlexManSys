@@ -190,6 +190,8 @@ public class SystemModelAgent extends Agent implements IExecManagement {
                 case "del":
                     result.append(del(cmds[1]));
                     break;
+
+
                 case "validate":
                     result.append(validate((cmds.length > 1) ? cmds[1] : "", (cmds.length > 2 ? cmds[2] : ""), (cmds.length > 3 ? cmds[3] : "")));
                     break;
@@ -525,50 +527,40 @@ public class SystemModelAgent extends Agent implements IExecManagement {
     }
 
 
+    /* IVALIDATE INTERFACE */
 
-    /* AQUÍ EN MEDIO TENDRÁN QUE IR EL SEREGISTER Y OTROS MÉTODOS, PORQUE HASTA AQUÍ NO SE USA EL VALIDATE */
-
+    /**
+     * Método de alto nivel para realizar la validación de la jerarquía de una aplicación
+     * @param se Elemento padre de la aplicación (en nuestro caso, un MPlan)
+     * @param conversationId Identificador de la conversación a través de la que se ha solicitado la validación
+     * @return Mensaje de confirmación de la validación (o de fallo en caso de que sea incorrecta)
+     * @throws Exception Se eleva excepción si la validación resulta incorrecta
+     */
     private String iValidate(String se, String conversationId) throws Exception {
 
-        //localizo tipo
-
-        LOGGER.info("iValidate("+se+")");
-        Hashtable<String, String> aux = new Hashtable<>();
-        aux.put("attrib", "category");
-        String seType = get(se, aux, conversationId);
-
-        //no existe
-
-        if (seType.equals("")) {
-            LOGGER.info("ERROR: id not found");
-            return "";
-        }
-        LOGGER.info(seType+" type="+seType);
-
-        //compruebo jerarquía
-        String validateHierarchy = validate("appHierarchy", se, seType);
+        /* En primer lugar, se comprueba la jerarquía de la aplicación asociada al parámetro se */
+        /* Para ello, se invoca el método validate, pasando como parámetros appHierarchy y se */
+        /* Se printea un mensaje diferente por consola dependiendo del resultado de la validación */
+        String validateHierarchy = validate("appHierarchy", se);
         if (!validateHierarchy.equals("valid")) {
-            LOGGER.info(se+">"+seType+": xsd incorrecta");
+            LOGGER.info(se+" Application: jerarquía incorrecta");
             throw new Exception();
-
-            // TODO: Borrar
+        } else {
+            LOGGER.info(se+" Application: jerarquía correcta");
         }
-        LOGGER.info(validateHierarchy+">"+seType+": xsd correcta");
 
-        // mover a validation / hierarchy
-
-        aux.clear();
+        /* Después, se invoca el método get para consultar el seParent del elemento asociado al parámetro se (debería ser system) */
+        Hashtable<String, String> aux = new Hashtable<>();
         aux.put("attrib","seParent");
         String parentID = get(se, aux, conversationId);
-        String command = "set " + se + " parent="+parentID+" seParent=";
-        set(command.split(" ")[1], processAttribs(2, command.split(" ")), conversationId);
 
+        /* Por último, se invoca el método set para asignar el parentID al atributo parent, y eliminar el atributo seParent */
+        aux.clear();
+        aux.put("parent",parentID);
+        aux.put("seParent","");
+        set(se, aux, conversationId);
         return se;
     }
-
-
-
-
 
     /**
      * Este método comprueba la conformidad de la aplicación que se va a registrar
@@ -855,9 +847,7 @@ public class SystemModelAgent extends Agent implements IExecManagement {
         return v;
     }
 
-    //====================================================================
-    //ISYSTEMINFO INTERFACE IMPLEMENTATION
-    //====================================================================
+    /* ISYSTEMINFO INTERFACE */
 
     /**
      * Searches elements in database for a parameter.
