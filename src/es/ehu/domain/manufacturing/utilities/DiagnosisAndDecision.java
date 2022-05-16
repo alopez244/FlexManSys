@@ -58,8 +58,6 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                 if(negotiation_result!=null) {
                     if (negotiation_result.getOntology().equals("restored_functionality")) {
                         recover_redundancy(negotiation_result);
-                    } else if (negotiation_result.getOntology().equals("redistributed_operations")) {
-                        recalculate_timeouts(negotiation_result);
                     }
                 }
                 ACLMessage msg=myAgent.receive(expected_senders);  //solo lee mensajes de los agentes indicados en el template
@@ -304,100 +302,6 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
         reported_agent= "";
     }
 
-    public void recalculate_timeouts(ACLMessage msg){
-        String machine=msg.getSender().getLocalName();
-
-        String raw_OP=msg.getContent();
-        String batch="";
-
-        ACLMessage machine_id= null;
-        try {
-            machine_id = sendCommand(myAgent,"get "+machine+" attrib=id", String.valueOf(convIDCounter++));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        String M_id = machine_id.getContent().split("")[0];
-        String machine_xml="Machine"+M_id+".xml";
-
-        String MachinePath="classes/resources/ResInstances/";
-        XMLReader fileReader = new XMLReader();
-        String uri=MachinePath+machine_xml;
-        ArrayList<ArrayList<ArrayList<String>>> xmloperations = new ArrayList<ArrayList<ArrayList<String>>>();
-        HashMap<String,String>operation_time=new HashMap<String,String>();
-        try{
-        xmloperations = fileReader.readFile(uri);
-        for(int i=0;i<xmloperations.size();i++){
-            if(xmloperations.get(i).get(0).get(0).equals("simple_operation")){
-                operation_time.put(xmloperations.get(i).get(3).get(1),xmloperations.get(i).get(3).get(0)); //crea un hashmap con operaciones y sus tiempos
-            }
-        }
-        } catch (Exception e) {
-        LOGGER.error("Cannot read machine xml file");
-        }
-
-        while (raw_OP.contains("*")) raw_OP = raw_OP.replace("*", "="); //reconstruye el string
-        LOGGER.info(machine+" has taken over operations "+raw_OP);
-        String[] allOperations = raw_OP.split("&");
-        String batch_finish_times="";
-        String finishTime="";
-        String operation_id="";
-        for (int i = 0; i < allOperations.length; i++) { //se asume que la maquina realiza item por operación. No se contempla el caso de item subdividido en varias operaciones
-            String[] AllInformation = allOperations[i].split(" ");
-            String item=find_value_of_attrb("item_ID",AllInformation);
-            operation_id=find_value_of_attrb("id",AllInformation);
-            if(i==0){               //en el primer item obtenemos el batch y el start time
-                batch=find_value_of_attrb("batch_ID",AllInformation);
-               batch_finish_times= batch+"&";
-               String ST=find_value_of_attrb("plannedStartTime",AllInformation);
-                Date item_ST=null;
-                Date expected_time=null;
-                try {
-                    item_ST = formatter_date.parse(ST);
-                    expected_time=formatter_time.parse(operation_time.get(operation_id));
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-                finishTime=formatter_date.format(new Date(item_ST.getTime()+expected_time.getTime()+(60000*60))); //hay que sumarle un offset de 1 hora
-                batch_finish_times=batch_finish_times+item+"/"+finishTime;
-            }else{
-                String ST=finishTime; //el start time de este item sera el finishtime del anterior
-                Date item_ST=null;
-                Date expected_time=null;
-                try {
-                    item_ST = formatter_date.parse(ST);
-                    expected_time=formatter_time.parse(operation_time.get(operation_id));
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-                finishTime=formatter_date.format(new Date(item_ST.getTime()+expected_time.getTime()+(60000*60))); //hay que sumarle un offset de 1 hora
-                batch_finish_times=batch_finish_times+"_"+item+"/"+finishTime;
-            }
-        }
-        sendACL(ACLMessage.INFORM,"QoSManagerAgent","add_relation",machine+"/"+batch+"/"+operation_id,myAgent); //añade una relacion maquina-batch
-
-        try {
-            ACLMessage parent = sendCommand(myAgent, "get * category=batch reference=" + batch, String.valueOf(convIDCounter++));
-            ACLMessage running_batch = sendCommand(myAgent, "get * category=batchAgent parent=" + parent.getContent() + " state=running",  String.valueOf(convIDCounter++));
-            sendACL(ACLMessage.INFORM,running_batch.getContent(),"rebuild_finish_times",batch_finish_times,myAgent);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public String find_value_of_attrb(String toFind, String[] data){
-    String value="not_found"; //si no se actualiza este valor significa que no ha sido encontrado
-        for (String info : data) {                //consigue el item
-            String attrName = info.split("=")[0];
-            String attrValue = info.split("=")[1];
-            if(attrName.equals(toFind)){
-                value=attrValue;
-                break;
-            }
-        }
-        return value;
-    }
 
 
     public void redistribute_machine_operations(ACLMessage msg){
@@ -415,19 +319,10 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
         } catch (Exception e) {
             e.printStackTrace();
         }
-//        String batch_=get_relationship(lost_machine);
 
         LOGGER.warn(lost_machine+" operations must be redistributed. "+batch+" stoped on item "+item);
         String appPath="classes/resources/AppInstances/";
-//        String lost_machine_id="";
-//        String[] id = new String[1];
-//        try {
-//            ACLMessage LM_id= sendCommand(myAgent,"get "+lost_machine+" attrib=id", String.valueOf(convIDCounter++));
-//            lost_machine_id=LM_id.getContent();
-//            id = lost_machine_id.split("");  //obtenemos el número de la máquina: id=21 -> máquina nº2
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+
 
         XMLReader fileReader = new XMLReader();
         String uri=appPath+xmlplan;

@@ -16,7 +16,5 @@ public interface DDInterface extends Serializable {
 
     public void redistribute_machine_operations(ACLMessage msg);
 
-    public void recalculate_timeouts(ACLMessage msg);
-
 
 }

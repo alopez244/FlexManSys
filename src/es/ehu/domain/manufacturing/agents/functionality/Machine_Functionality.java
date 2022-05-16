@@ -379,20 +379,26 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     operation_time.put(myAgent.resourceModel.get(i).get(3).get(1),myAgent.resourceModel.get(i).get(3).get(0)); //crea un hashmap con operaciones y sus tiempos
                 }
             }
-
+            String OperationsWithNewFT="";
             String[] allOperations = Operations.split("&");
             String batch_finish_times="";
             String finishTime="";
             String batch="";
+            String order="";
+            String productType="";
             String operation_id="";
             for (int i = 0; i < allOperations.length; i++) { //se asume que la maquina realiza item por operación. No se contempla el caso de item subdividido en varias operaciones
                 String[] AllInformation = allOperations[i].split(" ");
                 String item=find_value_of_attrb("item_ID",AllInformation);
                 operation_id=find_value_of_attrb("id",AllInformation);
+                batch=find_value_of_attrb("batch_ID",AllInformation);
+                order=find_value_of_attrb("order_ID",AllInformation);
+                productType=find_value_of_attrb("productType",AllInformation);
+                String ST="";
                 if(i==0){               //en el primer item obtenemos el batch y el start time
-                    batch=find_value_of_attrb("batch_ID",AllInformation);
+
                     batch_finish_times= batch+"&";
-                    String ST=find_value_of_attrb("plannedStartTime",AllInformation);
+                    ST=find_value_of_attrb("plannedStartTime",AllInformation);
                     Date item_ST=null;
                     Date expected_time=null;
                     try {
@@ -403,8 +409,9 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     }
                     finishTime=formatter_date.format(new Date(item_ST.getTime()+expected_time.getTime()+(60000*60))); //hay que sumarle un offset de 1 hora
                     batch_finish_times=batch_finish_times+item+"/"+finishTime;
+
                 }else{
-                    String ST=finishTime; //el start time de este item sera el finishtime del anterior
+                    ST=finishTime; //el start time de este item sera el finishtime del anterior
                     Date item_ST=null;
                     Date expected_time=null;
                     try {
@@ -416,6 +423,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     finishTime=formatter_date.format(new Date(item_ST.getTime()+expected_time.getTime()+(60000*60))); //hay que sumarle un offset de 1 hora
                     batch_finish_times=batch_finish_times+"_"+item+"/"+finishTime;
                 }
+                OperationsWithNewFT=OperationsWithNewFT+"id="+operation_id+" plannedFinishTime="+finishTime+" plannedStartTime="+ST+" batch_ID="+batch+" item_ID="+item+" order_ID="+order+" productType="+productType+"&"; //construye las operaciones con los nuevos FT
             }
             sendACLMessage(ACLMessage.INFORM,new AID("QoSManagerAgent",false),"add_relation",String.valueOf(convIDcnt++),myAgent.getLocalName()+"/"+batch+"/"+operation_id,myAgent); //añade una relacion maquina-batch
 
@@ -427,43 +435,9 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 e.printStackTrace();
             }
 
-            //************************ Modificacion de tiempos en funcion de lo que tarde la máquina
-
-            String[] plan_sorted_by_operations = Operations.split("&");
-            for (int i = 0; i < plan_sorted_by_operations.length; i++) {
-
-                ArrayList<ArrayList<String>> operationInfo = new ArrayList<>();
-
-                ArrayList<String> names = new ArrayList<>();
-                ArrayList<String> values = new ArrayList<>();
-
-                String[] AllInformation = plan_sorted_by_operations[i].split(" ");
-                for (String info : AllInformation) {
-                    String attrName = info.split("=")[0];
-                    String attrValue = info.split("=")[1];
-
-                    names.add(attrName);
-                    values.add(attrValue);
-                }
-
-                ArrayList<String> aux = new ArrayList<>();
-                ArrayList<String> aux2 = new ArrayList<>();
-                aux.add("operation");
-                aux2.add("3");
-                operationInfo.add(0, aux);
-                operationInfo.add(1, aux2);
-                operationInfo.add(2, names);
-                operationInfo.add(3, values);
-                myAgent.machinePlan.add(operationInfo);
-
-            }
-
-            //**************************************************************
-
-
             ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
             msg.setSender(myAgent.getAID());
-            msg.setContent(Operations);
+            msg.setContent(OperationsWithNewFT);
             msg.setConversationId(conversationId);
             Object[] data = new Object[1];
             data[0]=msg;
