@@ -1,0 +1,8 @@
+prefix=/home/borjartime/catkin_ws/devel
+
+Name: ar_tag_toolbox
+Description: Description of ar_tag_toolbox
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

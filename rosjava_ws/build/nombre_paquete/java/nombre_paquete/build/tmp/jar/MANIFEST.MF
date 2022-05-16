@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Export-Package: nombre_paquete;version="0.1.0";uses:="org.ros.internal
+ .message"
+Bundle-SymbolicName: org.ros.rosjava_messages.nombre_paquete
+Bundle-Version: 0.1.0
+Bundle-Name: nombre_paquete
+Bundle-ManifestVersion: 2
+Bnd-LastModified: 1642069663000
+Import-Package: org.ros.internal.message
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.7))"
+Created-By: 1.8.0_292 (Private Build)
+Tool: Bnd-3.4.0.201707252008
+

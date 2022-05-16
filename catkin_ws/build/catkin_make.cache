@@ -1,0 +1,2 @@
+turtlebot_transport_flexmansys
+-DCATKIN_DEVEL_PREFIX=/home/borjartime/IdeaProjects/FlexManSys/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/borjartime/IdeaProjects/FlexManSys/catkin_ws/install -DCATKIN_WHITELIST_PACKAGES=turtlebot_transport_flexmansys -G Unix Makefiles

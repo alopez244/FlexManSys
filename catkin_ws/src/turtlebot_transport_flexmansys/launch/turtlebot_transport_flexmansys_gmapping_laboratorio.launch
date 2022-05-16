@@ -1,0 +1,18 @@
+<launch>
+  <arg name="scan_topic"  default="scan" />
+  <arg name="base_frame"  default="base_footprint"/>
+  <arg name="odom_frame"  default="odom"/>
+  
+  <!--<node pkg="tf" type="static_transform_publisher" name="link1_broadcaster2" args="0 0 0 0 0 0 base_link odom 100"/>-->
+  
+  <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
+      <rosparam file="$(find turtlebot_transport_flexmansys)/params/gmapping_params_laboratorio.yaml" command="load"/>
+      
+    <remap from="scan" to="$(arg scan_topic)"/>
+  </node>
+   
+  <!-- Esto del tf del laser parece ser que hay que especificarlo en el mismo launch del rplidar -->
+  <!--<node pkg="tf" type="static_transform_publisher" name="tf_laser" args="0 0 0.45 0 0 0 base_frame laser_link 30">--> 
+  <!--</node>-->
+  
+</launch>

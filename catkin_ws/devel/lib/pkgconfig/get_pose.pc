@@ -1,0 +1,8 @@
+prefix=/home/borjartime/catkin_ws/devel
+
+Name: get_pose
+Description: Description of get_pose
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

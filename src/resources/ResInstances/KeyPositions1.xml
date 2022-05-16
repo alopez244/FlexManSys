@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keyPositions xmlns="keyPositions" dockingStation="A2" warehouse="B" M_01_Input="C4" M_01_Output="D5" M_01_Buffers="A"
-              M_02_Input="C5" M_02_Output="D6" M_02_Buffers="E7" M_03_Input="C6" M_03_Output="D7" M_03_Buffers="E8"
-              M_04_Input="C7" M_04_Output="D8" M_04_Buffers="E9" M_05_Input="C8" M_05_Output="D9" M_05_Buffers="E10"/>
+<keyPositions xmlns="keyPositions" dockingStation="DOCK" rawMaterialWarehouse="B3" kukaInput="C4" kukaOutput="D5"
+              kukaBuffers="E6" kukaDTInput="F7" kukaDTOutput="G8" kukaDTBuffers="H9" urInput="I0" urOutput="J1"
+              urBuffers="K1" PointA="A" PointB="B" PointC="C" PointD="D" PointF="F" M_01_Buffers="B" warehouse="A"/>

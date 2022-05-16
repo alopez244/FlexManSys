@@ -3,22 +3,23 @@
 <xs:schema xmlns="keyPositions" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="keyPositions" elementFormDefault="qualified" attributeFormDefault="unqualified">
     <xs:complexType name="KeyPositions">
         <xs:attribute name="dockingStation" type="xs:string" use="required"/>
+        <xs:attribute name="rawMaterialWarehouse" type="xs:string" use="required"/>
+        <xs:attribute name="kukaInput" type="xs:string" use="required"/>
+        <xs:attribute name="kukaOutput" type="xs:string" use="required"/>
+        <xs:attribute name="kukaBuffers" type="xs:string" use="required"/>
+        <xs:attribute name="kukaDTInput" type="xs:string" use="required"/>
+        <xs:attribute name="kukaDTOutput" type="xs:string" use="required"/>
+        <xs:attribute name="kukaDTBuffers" type="xs:string" use="required"/>
+        <xs:attribute name="urInput" type="xs:string" use="required"/>
+        <xs:attribute name="urOutput" type="xs:string" use="required"/>
+        <xs:attribute name="urBuffers" type="xs:string" use="required"/>
+        <xs:attribute name="PointA" type="xs:string" use="required"/>
+        <xs:attribute name="PointB" type="xs:string" use="required"/>
+        <xs:attribute name="PointC" type="xs:string" use="required"/>
+        <xs:attribute name="PointD" type="xs:string" use="required"/>
+        <xs:attribute name="PointF" type="xs:string" use="required"/>
         <xs:attribute name="warehouse" type="xs:string" use="required"/>
-        <xs:attribute name="M_01_Input" type="xs:string" use="required"/>
-        <xs:attribute name="M_01_Output" type="xs:string" use="required"/>
         <xs:attribute name="M_01_Buffers" type="xs:string" use="required"/>
-        <xs:attribute name="M_02_Input" type="xs:string" use="required"/>
-        <xs:attribute name="M_02_Output" type="xs:string" use="required"/>
-        <xs:attribute name="M_02_Buffers" type="xs:string" use="required"/>
-        <xs:attribute name="M_03_Input" type="xs:string" use="required"/>
-        <xs:attribute name="M_03_Output" type="xs:string" use="required"/>
-        <xs:attribute name="M_03_Buffers" type="xs:string" use="required"/>
-        <xs:attribute name="M_04_Input" type="xs:string" use="required"/>
-        <xs:attribute name="M_04_Output" type="xs:string" use="required"/>
-        <xs:attribute name="M_04_Buffers" type="xs:string" use="required"/>
-        <xs:attribute name="M_05_Input" type="xs:string" use="required"/>
-        <xs:attribute name="M_05_Output" type="xs:string" use="required"/>
-        <xs:attribute name="M_05_Buffers" type="xs:string" use="required"/>
     </xs:complexType>
     <xs:element name="keyPositions" type="KeyPositions"/>
 </xs:schema>

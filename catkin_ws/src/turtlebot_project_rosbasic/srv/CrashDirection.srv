@@ -1,0 +1,5 @@
+#request, Empty because no data in needed
+---
+#response
+bool success
+string data

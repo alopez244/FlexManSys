@@ -1,0 +1,2 @@
+bool detected_obstacle_bumper
+bool detected_obstacle_camera

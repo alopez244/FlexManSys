@@ -61,6 +61,7 @@ public class DomResAgentTemplate extends ResourceAgentTemplate {
         /** Comportamiento lectura **/
         Behaviour asset = new AssetManagementBehaviour(this);
 
+
         /** Comportamiento end **/
         Behaviour end = new EndBehaviour(this);
 
