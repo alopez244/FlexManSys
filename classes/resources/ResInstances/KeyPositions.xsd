@@ -17,6 +17,8 @@
         <xs:attribute name="PointC" type="xs:string" use="required"/>
         <xs:attribute name="PointD" type="xs:string" use="required"/>
         <xs:attribute name="PointF" type="xs:string" use="required"/>
+        <xs:attribute name="warehouse" type="xs:string" use="required"/>
+        <xs:attribute name="M_01_Buffers" type="xs:string" use="required"/>
     </xs:complexType>
     <xs:element name="keyPositions" type="KeyPositions"/>
 </xs:schema>

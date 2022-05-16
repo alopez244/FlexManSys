@@ -102,8 +102,9 @@ public class ACLGWAgentROS extends AbstractNodeMain {
 
     // Definimos las propiedades de comunicacion entre los agentes
     Properties pp = new Properties();
-    pp.setProperty(Profile.MAIN_HOST, host);
-    //pp.setProperty(Profile.MAIN_HOST, "10.109.11.45");
+    /**pp.setProperty(Profile.MAIN_HOST, host);*/
+    pp.setProperty(Profile.MAIN_HOST, "192.168.1.100");
+    pp.setProperty(Profile.LOCAL_HOST, "192.168.1.134");
 
     pp.setProperty(Profile.MAIN_PORT, port);
     pp.setProperty(Profile.LOCAL_PORT, port);

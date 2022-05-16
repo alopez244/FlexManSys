@@ -208,6 +208,8 @@ public class GWagentROS extends GatewayAgent {
               send(msg);
 
               // ************************* PRUEBA NEGOCIACION *************************
+
+              /**
               if (neg_requested == false) {
                   ACLMessage msg_neg = new ACLMessage(ACLMessage.CFP);
                   msg_neg.addReceiver(TransportAgent);
@@ -226,6 +228,7 @@ public class GWagentROS extends GatewayAgent {
                   send(msg_neg);
                   neg_requested = true;
               }
+               **/
 
               // ************************* PRUEBA NEGOCIACION *************************
 

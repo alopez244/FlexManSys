@@ -431,7 +431,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
             // Mensaje que notifica quien es el ganador de la negociacion al agente requester del servicio de transporte
 
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-            msg.addReceiver(new AID(ReceiverAID, AID.ISLOCALNAME));
+            msg.addReceiver(new AID(RequesterAID, AID.ISLOCALNAME));
             //msg.setContent("I am the winner of:" + seOperationID);
             msg.setContent("El ganador de la negociacion es: " + TA_name);
             msg.setConversationId(conversationId);
@@ -527,7 +527,7 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                 /* Si el transporte está libre y además no tiene tareas asignadas, debe volver a la estación de carga */
                 //Si no tiene ninguna tarea mas asignada, el transporte debe de volver a su estacion de carga
 
-                sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "ComandoCoordenada", "1234", "DOCK", myAgent);
+                //sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "ComandoCoordenada", "1234", "X", myAgent);
 
             }
         }else{
@@ -568,6 +568,8 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                     sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "ComandoCoordenada", "1234", "X", myAgent);
                     myAgent.ActualState = javaTranspState.getTransport_unit_state();
                     System.out.println(myAgent.transport_unit_name + " Transport needs calibration");
+                    sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "ComandoCoordenada", "1234", "X", myAgent);
+                    sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "ComandoCoordenada", "1234", "X", myAgent);
 
                 }
 
@@ -747,7 +749,8 @@ public class Transport_Functionality extends DomRes_Functionality implements Bas
                     if (serviceReceiver != serviceRequester) {
                         // Mensaje que informa al agente receiver, es decir, el que recibe el servicio de transporte,
                         // que el servicio de transporte ha sido completado y finalizado correctamente.
-                        sendACLMessage(ACLMessage.INFORM, serviceReceiver, "data", myAgent.getLocalName() + "_" + conversationId++, "initialTimeStamp=" + myAgent.initialTimeStamp + " finalTimeStamp=" + myAgent.finalTimeStamp, myAgent);
+                        // sendACLMessage(ACLMessage.INFORM, serviceReceiver, "data", myAgent.getLocalName() + "_" + conversationId++, "initialTimeStamp=" + myAgent.initialTimeStamp + " finalTimeStamp=" + myAgent.finalTimeStamp, myAgent);
+                        sendACLMessage(ACLMessage.INFORM, serviceReceiver, "data", "ProvidedConsumables", "initialTimeStamp=" + myAgent.initialTimeStamp + " finalTimeStamp=" + myAgent.finalTimeStamp, myAgent);
                     }
 
                     // Se continúa eliminando esta tarea del plan (la primera tarea de la lista ocupa la segunda posición del submodelo)
