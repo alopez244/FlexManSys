@@ -427,6 +427,39 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 e.printStackTrace();
             }
 
+            //************************ Modificacion de tiempos en funcion de lo que tarde la máquina
+
+            String[] plan_sorted_by_operations = Operations.split("&");
+            for (int i = 0; i < plan_sorted_by_operations.length; i++) {
+
+                ArrayList<ArrayList<String>> operationInfo = new ArrayList<>();
+
+                ArrayList<String> names = new ArrayList<>();
+                ArrayList<String> values = new ArrayList<>();
+
+                String[] AllInformation = plan_sorted_by_operations[i].split(" ");
+                for (String info : AllInformation) {
+                    String attrName = info.split("=")[0];
+                    String attrValue = info.split("=")[1];
+
+                    names.add(attrName);
+                    values.add(attrValue);
+                }
+
+                ArrayList<String> aux = new ArrayList<>();
+                ArrayList<String> aux2 = new ArrayList<>();
+                aux.add("operation");
+                aux2.add("3");
+                operationInfo.add(0, aux);
+                operationInfo.add(1, aux2);
+                operationInfo.add(2, names);
+                operationInfo.add(3, values);
+                myAgent.machinePlan.add(operationInfo);
+
+            }
+
+            //**************************************************************
+
 
             ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
             msg.setSender(myAgent.getAID());
