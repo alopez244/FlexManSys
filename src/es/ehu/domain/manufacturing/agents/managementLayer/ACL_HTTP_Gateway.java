@@ -24,10 +24,6 @@ public class ACL_HTTP_Gateway {
     private String host;
     private HashMap<String,Object> cmdHashMap;
 
-    //Apaño para hacer pruebas
-    //Declaro variables incrementales
-    private int Item_Counter = 0;
-
     public ACL_HTTP_Gateway(String[] args) {
 
         //Antes de empezar, las presentaciones (portada para el usuario)
@@ -147,36 +143,20 @@ public class ACL_HTTP_Gateway {
 
             //Si la operación la hace el robot, no nos devuelve item number, hay que añadirlo
             if (assetName.contains("Robot")){
-
-                //Si es la operación de entrada, hay que incrementar el contador
-                if (cmdHashMap.get("Operation_Parameters").toString().contains("warehouse_2")){
-                    Item_Counter=Item_Counter+1;
-                    responseUpdate=responseUpdate+",\"Id_Item_number\":"+Item_Counter;
-                } else if (cmdHashMap.get("Operation_Parameters").toString().contains("warehouse_4")){
-                    //Si es la operación de salida, se mete el contador sin incrementar (ya hemos sumado en la primera operación)
-                    responseUpdate=responseUpdate+",\"Id_Item_number\":"+Item_Counter;
-                }
-            } //Si la operación la ha hecho alguna de las máquinas del demostrador, no hace falta añadir el parámetro
+                responseUpdate=responseUpdate+",\"Id_Item_number\":1";
+            }
 
             //A continuación, se coge la información que queremos recuperar del mensaje recibido
             responseUpdate=responseUpdate+",\"Control_Flag_Item_Completed\":True,\"Control_Flag_Service_Completed\":True,"+
                     "Id_Machine_Reference:"+cmdHashMap.get("Id_Machine_Reference")+",Id_Order_Reference:"
                     +cmdHashMap.get("Id_Order_Reference")+",Id_Batch_Reference:"+cmdHashMap.get("Id_Batch_Reference")
                     +",Id_Ref_Subproduct_Type:"+cmdHashMap.get("Id_Ref_Subproduct_Type")+",Id_Ref_Service_Type:"
-                    +cmdHashMap.get("Operation_Ref_Service_Type");
+                    +cmdHashMap.get("Operation_Ref_Service_Type")+",Data_Service_Time_Stamp:1234567898765"+"}";
 
-            //Si es el último ítem, se añade el Data_Service_Time_Stamp
-            if (Item_Counter == Integer.parseInt(String.valueOf(cmdHashMap.get("Operation_No_of_Items")))) {
-                responseUpdate=responseUpdate+",Data_Service_Time_Stamp:1234567898765";
-            }
-
-            //Para terminar de montar el mensaje, se cierra con el corchete
-            responseUpdate=responseUpdate+"}";
             System.out.println(responseUpdate);
 
             //Por último, se actualiza la variable response
             response=responseUpdate;
-
         }
 
         //Se declara la estructura que se le va a pasar al GatewayAgent
@@ -251,9 +231,7 @@ public class ACL_HTTP_Gateway {
 //                String bodyJson = new Gson().toJson(body);
 
                 //Obtengo el nombre y el valor de los parámetros (versión test)
-//                body.put("Ref_Subproduct_Type", String.valueOf(Item_Counter));
-                Item_Counter=Item_Counter+1;
-                body.put("Ref_Subproduct_Type", String.valueOf(Item_Counter));
+                body.put("Ref_Subproduct_Type", String.valueOf(1));
                 String bodyJson = new Gson().toJson(body);
 
                 //Recibo la respuesta al post
@@ -275,8 +253,12 @@ public class ACL_HTTP_Gateway {
                 break;
             case "POST_PB":
 
-                //Obtengo el nombre y el valor de los parámetros
-                body.put("Ref_Subproduct_Type", String.valueOf(cmdHashMap.get("Id_Ref_Subproduct_Type")));
+//                //Obtengo el nombre y el valor de los parámetros
+//                body.put("Ref_Subproduct_Type", String.valueOf(cmdHashMap.get("Id_Ref_Subproduct_Type")));
+//                bodyJson = new Gson().toJson(body);
+
+                //Obtengo el nombre y el valor de los parámetros (versión test)
+                body.put("Ref_Subproduct_Type", String.valueOf(1));
                 bodyJson = new Gson().toJson(body);
 
                 //Recibo la respuesta al post
@@ -298,8 +280,12 @@ public class ACL_HTTP_Gateway {
                 break;
             case "POST_IA":
 
-                //Obtengo el nombre y el valor de los parámetros
-                body.put("Ref_Subproduct_Type", String.valueOf(cmdHashMap.get("Id_Ref_Subproduct_Type")));
+//                //Obtengo el nombre y el valor de los parámetros
+//                body.put("Ref_Subproduct_Type", String.valueOf(cmdHashMap.get("Id_Ref_Subproduct_Type")));
+//                bodyJson = new Gson().toJson(body);
+
+                //Obtengo el nombre y el valor de los parámetros (versión test)
+                body.put("Ref_Subproduct_Type", String.valueOf(1));
                 bodyJson = new Gson().toJson(body);
 
                 //Recibo la respuesta al post
@@ -321,8 +307,12 @@ public class ACL_HTTP_Gateway {
                 break;
             case "POST_IB":
 
-                //Obtengo el nombre y el valor de los parámetros
-                body.put("Ref_Subproduct_Type", String.valueOf(cmdHashMap.get("Id_Ref_Subproduct_Type")));
+//                //Obtengo el nombre y el valor de los parámetros
+//                body.put("Ref_Subproduct_Type", String.valueOf(cmdHashMap.get("Id_Ref_Subproduct_Type")));
+//                bodyJson = new Gson().toJson(body);
+
+                //Obtengo el nombre y el valor de los parámetros (versión test)
+                body.put("Ref_Subproduct_Type", String.valueOf(1));
                 bodyJson = new Gson().toJson(body);
 
                 //Recibo la respuesta al post
