@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mPlan xmlns="ManufacturingPlan" name="MPlan1_IPB" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="ManufacturingPlan ./ManufacturingPlan.xsd">
+	<order reference="11">
+		<batch reference="111" numberOfItems="1" refProductID="3">
+			<PlannedItem productType="3" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="111" item_ID="1111">
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-18T19:51:00" plannedFinishTime="2022-05-18T19:51:20">
+					<action id="1" type="punching" actionPos="1" description="punching process" plannedStartTime="2022-05-18T19:51:00" plannedFinishTime="2022-05-18T19:51:20"/>
+				</simpleOperation>
+				<product productType="IPB" description="Industrial Plastic Base" state="Planned">
+					<simpleOperation id="1">
+						<action id="" type=""/>
+					</simpleOperation>
+					<product productType="" state="">
+						<simpleOperation id="1">
+							<action id="" type=""/>
+						</simpleOperation>
+						<product productType="" state="">
+							<simpleOperation id="1">
+								<action id="" type=""/>
+							</simpleOperation>
+							<product productType="" state="">
+								<simpleOperation id="1">
+									<action id="" type=""/>
+								</simpleOperation>
+								<product productType="IPB" description="Industrial Plastic Base" state="Planned">
+									<rawMaterial id="IPB" description="Industrial Plastic Base"/>
+								</product>
+							</product>
+						</product>
+					</product>
+				</product>
+			</PlannedItem>
+		</batch>
+	</order>
+</mPlan>

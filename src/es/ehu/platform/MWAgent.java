@@ -400,7 +400,7 @@ public class MWAgent extends Agent {
         String parts1[] = msg.split("/div0/");
 
         String sTracking = parts1[5]; //las replicas siempre van codificadas en la posicion 5 del estado
-        LOGGER.info("Tracking: " + sTracking);
+//        LOGGER.info("Tracking: " + sTracking);
 
         if(sTracking != null&&(!sTracking.equals(" "))){
             if (sTracking.length() > 0) {
@@ -408,7 +408,7 @@ public class MWAgent extends Agent {
                 this.sendStateToReplicas(msg, sTracking);
             }
         }else {
-            LOGGER.info("No tracking instances:");
+//            LOGGER.info("No tracking instances:");
         }
         LOGGER.exit();
     }

@@ -3,8 +3,8 @@
 	<order reference="11">
 		<batch reference="111" numberOfItems="1" refProductID="3">
 			<PlannedItem productType="3" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="111" item_ID="1111">
-				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-18T18:33:00" plannedFinishTime="2022-05-18T18:33:20">
-					<action id="1" type="punching" actionPos="1" description="punching process" plannedStartTime="2022-05-18T18:33:00" plannedFinishTime="2022-05-18T18:33:20"/>
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-18T19:54:00" plannedFinishTime="2022-05-18T19:54:20">
+					<action id="1" type="punching" actionPos="1" description="punching process" plannedStartTime="2022-05-18T19:54:00" plannedFinishTime="2022-05-18T19:54:20"/>
 				</simpleOperation>
 				<product productType="IPB" description="Industrial Plastic Base" state="Planned">
 					<rawMaterial id="IPB" description="Industrial Plastic Base"/>
@@ -12,9 +12,9 @@
 			</PlannedItem>
 		</batch>
 		<batch reference="112" numberOfItems="1" refProductID="3">
-			<PlannedItem productType="3" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="112" item_ID="1112">
-				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-18T18:33:30" plannedFinishTime="2022-05-18T18:33:50">
-					<action id="1" type="punching" actionPos="1" description="punching process" plannedStartTime="2022-05-18T18:33:30" plannedFinishTime="2022-05-18T18:33:50"/>
+			<PlannedItem productType="3" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="112" item_ID="1121">
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-18T19:54:30" plannedFinishTime="2022-05-18T19:54:50">
+					<action id="1" type="punching" actionPos="1" description="punching process" plannedStartTime="2022-05-18T19:54:30" plannedFinishTime="2022-05-18T19:54:50"/>
 				</simpleOperation>
 				<product productType="IPB" description="Industrial Plastic Base" state="Planned">
 					<rawMaterial id="IPB" description="Industrial Plastic Base"/>
