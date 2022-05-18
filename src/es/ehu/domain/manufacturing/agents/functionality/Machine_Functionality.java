@@ -738,11 +738,18 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 if (myAgent.resourceModel.get(j).get(3).get(1).equals(serviceType)) {
                     for (int k = j + 1; k < myAgent.resourceModel.size(); k++)  {
 
-                        /* Se buscan las acciones y se guardan en actionList
-                         *  También se guardan los id de los consumibles asociados a esa acción en consumableList */
+                        /* Se buscan las acciones y se guardan en actionList */
                         if (myAgent.resourceModel.get(k).get(0).get(0).equals("action")){
                             actionList.add(myAgent.resourceModel.get(k).get(3).get(2));
-                            consumableList.add(myAgent.resourceModel.get(k+1).get(3).get(1));
+
+                            /* También se guardan los id de los consumibles asociados a esa acción en consumableList */
+                            /* Esto solo se puede hacer si la acción no es el último elemento del modelo... */
+                            /* Y en caso de que el elemento siguiente sea un consumible (no tiene por qué serlo) */
+                            if (k < (myAgent.resourceModel.size()-1)) {
+                                if (myAgent.resourceModel.get(k+1).get(0).get(0).equals("consumable")){
+                                    consumableList.add(myAgent.resourceModel.get(k+1).get(3).get(1));
+                                }
+                            }
                         } else if (myAgent.resourceModel.get(k).get(0).get(0).equals("simple_operation")) {
                             /* Si se llega a la siguiente operación se acaba el bucle */
                             break;
