@@ -163,7 +163,15 @@ public class ACL_HTTP_Gateway {
                     "Id_Machine_Reference:"+cmdHashMap.get("Id_Machine_Reference")+",Id_Order_Reference:"
                     +cmdHashMap.get("Id_Order_Reference")+",Id_Batch_Reference:"+cmdHashMap.get("Id_Batch_Reference")
                     +",Id_Ref_Subproduct_Type:"+cmdHashMap.get("Id_Ref_Subproduct_Type")+",Id_Ref_Service_Type:"
-                    +cmdHashMap.get("Operation_Ref_Service_Type")+",Data_Service_Time_Stamp:1234567898765"+"}";
+                    +cmdHashMap.get("Operation_Ref_Service_Type");
+
+            //Si es el último ítem, se añade el Data_Service_Time_Stamp
+            if (Item_Counter == Integer.parseInt(String.valueOf(cmdHashMap.get("Operation_No_of_Items")))) {
+                responseUpdate=responseUpdate+",Data_Service_Time_Stamp:1234567898765";
+            }
+
+            //Para terminar de montar el mensaje, se cierra con el corchete
+            responseUpdate=responseUpdate+"}";
             System.out.println(responseUpdate);
 
             //Por último, se actualiza la variable response
@@ -244,7 +252,8 @@ public class ACL_HTTP_Gateway {
 
                 //Obtengo el nombre y el valor de los parámetros (versión test)
 //                body.put("Ref_Subproduct_Type", String.valueOf(Item_Counter));
-                body.put("Ref_Subproduct_Type", String.valueOf(Item_Counter+1));
+                Item_Counter=Item_Counter+1;
+                body.put("Ref_Subproduct_Type", String.valueOf(Item_Counter));
                 String bodyJson = new Gson().toJson(body);
 
                 //Recibo la respuesta al post
