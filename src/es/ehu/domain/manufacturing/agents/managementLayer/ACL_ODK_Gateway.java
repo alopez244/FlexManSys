@@ -17,7 +17,7 @@ public class ACL_ODK_Gateway {
         //A continuación, se definen el resto de parámetros que van a hacer falta para crear el gatewayAgent
         String localHostName = InetAddress.getLocalHost().getHostName();
         InetAddress[] addressses = InetAddress.getAllByName(localHostName);
-        String host = "10.253.59.133";             //host of Alejandro PC at IPB
+        String host = "10.253.7.142";             //host of Alejandro PC at IPB
         String port = "1099";
         String containerName = "GatewayCont"+machineID;
 
