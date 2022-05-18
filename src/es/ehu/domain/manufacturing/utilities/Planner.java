@@ -418,7 +418,7 @@ public class Planner extends Agent {
                     Timestamp timestamp = new Timestamp(System.currentTimeMillis());
                     start(app, agentAttributes, conversationId);
 
-//                    get_timestamp(parentIdList,timestamp);
+                    get_timestamp(parentIdList,timestamp);
 
                 } catch (Exception e) {
                     LOGGER.error("ERROR IN start METHOD OF PLANNER: Sending command to systemModelAgent");

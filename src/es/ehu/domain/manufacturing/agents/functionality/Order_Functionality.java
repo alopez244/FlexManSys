@@ -47,6 +47,8 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
     private volatile String batch_to_update=null;
     private ArrayList<ArrayList<String>> batch_last_items_ft=new ArrayList<ArrayList<String>>();
     private int convIDcnt=0;
+    public boolean operations_redistributed_flag=false;
+
 
 
     class Ordertimeout extends Thread{
@@ -146,7 +148,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 MessageTemplate.MatchOntology("delay"));
         this.myAgent = myAgent;
 
-//        myAgent.get_timestamp(myAgent,"CreationTime");
+        myAgent.get_timestamp(myAgent,"CreationTime");
         // Crear un nuevo conversationID
         String conversationId = myAgent.getLocalName() + "_" + chatID++;
 
@@ -359,7 +361,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 }
             }else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("take_down_order_timeout")){
                 batch_to_take_down=msg.getContent();
-
+                operations_redistributed_flag=true;
             }else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("delay")){
                 String rawdelay = msg.getContent();
                 String[] parts = rawdelay.split("/");
@@ -391,28 +393,17 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                     batch_last_items_ft.get(temp).add(FT_string);
                     Ordertimeout t = new Ordertimeout(expected_FT, batchref);
                     t.start();
+                    if(operations_redistributed_flag){
+                        myAgent.get_timestamp(myAgent,"RecoveredTimeoutOrder");
+                        operations_redistributed_flag=false;
+                    }
                 } else {
                     System.out.println("**ERROR**. No timeout generated for batch " + batchref);
                 }
             }
 
             }
-//            ACLMessage msg3 = myAgent.receive(template3);
-//            if (msg3 != null) {            //confirmación de timeout
-//                myAgent.msgFIFO.add((String) msg3.getContent());
-////            QoSresponse_flag=true;
-//                batch_to_take_down = msg3.getContent();
-//            }
-//            ACLMessage msg4 = myAgent.receive(template4);
-//            if (msg4 != null) {
-//
-//            }
 
-//            ACLMessage msg5 = myAgent.receive(template5);
-//            if (msg5 != null) {                                 //Genera un timeout para cada batch cuando recibe el delay. (siempre hay delay, sea 0 o no)
-//
-//
-//            }
         }
 
         return false;
@@ -423,7 +414,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         this.myAgent = myAgent;
         String parentName = "";
         unregister_from_node();
-//        myAgent.get_timestamp(myAgent,"FinishTime");
+        myAgent.get_timestamp(myAgent,"FinishTime");
         if(myAgent.ActualState=="running"){ //para filtrar las replicas ejecutando terminate
             try {
                 ACLMessage reply = sendCommand(myAgent, "get * reference=" + orderNumber, "parentAgentID");

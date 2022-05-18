@@ -129,8 +129,8 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                     } else if (msg.getOntology().equals("timeout")) { //error de tipo timeout
 
                         if (msg.getSender().getLocalName().contains("batch")) { //timeout enviado por un batch
+                            get_timestamp(myAgent,msg.getSender().getLocalName(),"DetectionTime");
                             report_back(msg); //confirmacion de recepcion de mensaje
-
                             String[] parts = msg.getContent().split("/");
                             String timeout_batch_id = parts[0];
                             String timeout_item_id = parts[1];
@@ -223,7 +223,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                         String[] parts2 = msg.getContent().split("/");
                         String batch_id = parts2[0];
                         String ms_of_delay = parts2[1];
-                        LOGGER.info("Batch " + batch_id + " started with " + ms_of_delay + " ms of delay");
+                        LOGGER.info("Batch " + batch_id + " started with " + ms_of_delay + " ms of delay on machine "+msg.getSender().getLocalName());
                         delay_list.put(batch_id,ms_of_delay); //Añade el batch especificado con su correspondiente delay a la lista de delays
                         if(delay_asking_queue.containsKey(batch_id)){  //si anteriormente han pedido el delay que acabamos de registrar debemos informar
                             sendACL(ACLMessage.INFORM, delay_asking_queue.get(batch_id), "askdelay", delay_list.get(batch_id),myAgent);
@@ -255,11 +255,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                         if (msg.getContent().contains("machine")) {
                             String content="";
 
-//                            for(Entry<String,String> machines: batch_machine.entrySet()){
-//                                if(machines.getValue().equals(msg.getContent())){
-//                                    content=content+machines.getKey()+"/";
-//                                }
-//                            }
+
                             for(Entry<String, HashMap<String,String>> batches: batch_op_machine.entrySet()){
                                 for(Entry<String,String> operations: batch_op_machine.get(batches.getKey()).entrySet()){
                                     if(operations.getValue().equals(msg.getContent())){
@@ -270,7 +266,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
 
                             sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),content,myAgent);
                         }else{
-//                            sendACL(ACLMessage.INFORM,"D&D",msg.getOntology(),batch_machine.get(msg.getContent()),myAgent);
+
                             String content="";
                             for(Entry<String,String> operations: batch_op_machine.get(msg.getContent()).entrySet()){
                                 content=content+operations.getValue()+"/";
@@ -280,14 +276,19 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
 
                     }
                     if (msg.getOntology().equals("askdelay")) { //Se recibe consulta del delay
-//                        ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
+
                         String asking_batch = msg.getContent();
 
                         if(delay_list.containsKey(msg.getContent())){
-                            sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),delay_list.get(msg.getContent()),myAgent);
-                            LOGGER.info("Informing batch " + asking_batch);
+                            if(msg.getSender().getLocalName().contains("batchagent")){ //
+                                sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),delay_list.get(msg.getContent()),myAgent);
+                                LOGGER.info("Informing batch " + asking_batch);
+                            }
+                            delay_list.remove(msg.getContent());
                         }else{
-                            delay_asking_queue.put(asking_batch,msg.getSender().getLocalName());
+                            if(msg.getSender().getLocalName().contains("batchagent")){
+                                delay_asking_queue.put(asking_batch,msg.getSender().getLocalName());
+                            }
                         }
 
                     } else if (msg.getOntology().equals("command")) { //peticiones provenientes del D&D
@@ -341,23 +342,15 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                                 for(Entry<String,String> operations2: batch_op_machine.get(batches.getKey()).entrySet()){
                                     if(operations2.getValue().equals(MA)){
                                         if(batches.getKey().equals(timeout_batch_id)){ //si se trata del batch del timeout se le pasa el item
+                                            get_timestamp(myAgent,msg.getSender().getLocalName(),"ConfirmationTime");
                                             sendACL(ACLMessage.INFORM,"D&D","redistribute",MA+"/"+get_machine_id(MA)+"/"+batches.getKey()+"/"+timeout_item_id,myAgent);
                                         }else{   //si no es el batch del timeout solo puede ser un batch que esta pendiente de ejecución, es decir se debe rehacer por completo
+                                            get_timestamp(myAgent,msg.getSender().getLocalName(),"ConfirmationTime");
                                             sendACL(ACLMessage.INFORM,"D&D","redistribute",MA+"/"+get_machine_id(MA)+"/"+batches.getKey()+"/"+"?",myAgent);
                                         }
                                     }
                                 }
                             }
-
-//                            for(Entry<String,String> machines: batch_machine.entrySet()){
-//                                if(machines.getValue().equals(MA)){
-//                                    if(machines.getKey().equals(timeout_batch_id)){ //si se trata del batch del timeout se le pasa el item
-//                                        sendACL(ACLMessage.INFORM,"D&D","redistribute",MA+"/"+get_machine_id(MA)+"/"+machines.getKey()+"/"+timeout_item_id,myAgent);
-//                                    }else{   //si no es el batch del timeout solo puede ser un batch que esta pendiente de ejecución, es decir se debe rehacer por completo
-//                                        sendACL(ACLMessage.INFORM,"D&D","redistribute",MA+"/"+get_machine_id(MA)+"/"+machines.getKey()+"/"+"?",myAgent);
-//                                    }
-//                                }
-//                            }
                         }
 
                     } else if (ping_result.equals("working")||ping_result.equals("not_working")) { //el maquina no ha comenzado el batch o se ha retrasado. Registramos el timeout, lo reseteamos y no hacemos nada más.
@@ -367,7 +360,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                         argument5 = "GW->OK";
                         add_to_error_list("timeout", argument2, argument3, argument4, argument5);  //aunque este todoo ok hay que añadir el timeout a la lista de errores
                     } else { //el sistema está parado o en error
-
+                        LOGGER.warn(MA+" operations must be redistributed to finish batch "+timeout_batch_id);
                         for(Entry<String, HashMap<String,String>> batches: batch_op_machine.entrySet()){  //tras confirmar que esta máquina está mal se redistribuyen las tareas asignadas a esta maquina
                             for(Entry<String,String> operations2: batch_op_machine.get(batches.getKey()).entrySet()){
                                 if(operations2.getValue().equals(MA)){
@@ -391,8 +384,6 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
 //                        sendACL(ACLMessage.INFORM, msg.getSender().getLocalName(), msg.getOntology(), "confirmed_timeout",myAgent);
                 }
             }
-
-
         }
 
         private ArrayList<String> getDelays(String data) {

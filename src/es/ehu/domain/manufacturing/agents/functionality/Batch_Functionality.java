@@ -57,6 +57,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private volatile boolean reset_flag=false;
     private volatile boolean delay_already_incremented=false;
     private ArrayList<ACLMessage> posponed_msgs_to_order=new ArrayList<ACLMessage>();
+    public boolean operations_redistributed_flag=false;
 
 
     @Override
@@ -167,7 +168,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     public Void init(MWAgent myAgent) {
 
         this.myAgent = myAgent;
-//         myAgent.get_timestamp(myAgent,"CreationTime");
+         myAgent.get_timestamp(myAgent,"CreationTime");
         String conversationId = myAgent.getLocalName() + "_" + chatID++;
         firstState = getArgumentOfAgent(myAgent, "firstState");
         redundancy = getArgumentOfAgent(myAgent, "redundancy");
@@ -266,6 +267,10 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     }
                     timeout thread = new timeout();
                     thread.start(); //se inicia el timeout tras recibir delay
+                    if(operations_redistributed_flag){
+                        myAgent.get_timestamp(myAgent,"RecoveredTimeoutBatch");
+                        operations_redistributed_flag=false;
+                    }
                 } else if (msg.getPerformative() == ACLMessage.INFORM && msg.getContent().equals("reset_timeout")) {
 
                     reset_flag = true;
@@ -305,7 +310,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     reset_flag=false;
                     finish_times_of_batch=msg.getContent();
                     sendACLMessage(16,QoSID,"askdelay","delayasking",batchreference,myAgent);
-
+                    operations_redistributed_flag=true;
                 } else if (msg.getPerformative() == ACLMessage.INFORM && msg.getOntology().equals("data")) {
 
 //                    Acknowledge(msg, myAgent);
@@ -423,7 +428,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         this.myAgent = myAgent;
         String parentName = "";
         unregister_from_node();
-//        myAgent.get_timestamp(myAgent,"FinishTime");
+        myAgent.get_timestamp(myAgent,"FinishTime");
         if(myAgent.ActualState=="running"){ //para filtrar las replicas ejecutando terminate
             try {
                 ACLMessage reply = sendCommand(myAgent, "get * reference=" + batchNumber, "parentAgentID");

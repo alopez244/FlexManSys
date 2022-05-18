@@ -162,8 +162,8 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
                 // Registro el agente id>appagn101. seTypeAgent ASA, APA
                 String agnID = sendCommand("reg "+seType+"Agent parent="+seID).getContent();
                 // Instancio nuevo agente
-//                get_timestamp(timestamp, seID,agnID,"Node");
-//                get_timestamp(timestamp, seID,agnID,"NegotiationTime");
+                get_timestamp(timestamp, seID,agnID,"Node");
+                get_timestamp(timestamp, seID,agnID,"NegotiationTime");
                 AgentController ac=null;
                 if(action.cmd.equals("start")){ //si es action value es start la replica inicia normal. Si es "recover_tracking" se añade informacion a los atributos para que la propia replica sepa que ha sido generada por un error
                     ac = ((AgentController) myAgent.getContainerController().createNewAgent(agnID, seClass, new Object[] { "firstState="+seFirstTransition , "redundancy="+redundancy , "parentAgent=" + parentAgentID,"recovery=false"}));

@@ -1,6 +1,7 @@
 package es.ehu.platform.test;
 
 import com.opencsv.CSVWriter;
+import com.sun.org.apache.xpath.internal.operations.Or;
 import es.ehu.domain.manufacturing.utilities.StructMessage;
 import jade.core.Profile;
 import jade.util.leap.Properties;
@@ -300,92 +301,159 @@ public class AgentToCSVgw {
         List<String[]> testResultsErrCSV = new ArrayList<>();
 
         //Añado la cabecera raw
-        testResultsErrCSV_raw.add(new String[] {"Parent","Agent","t0_AgentKilled","t1_Detection","t2_Confirmation","t3_SystemRecovery","t4_RedundancyRecovery"});
+//        testResultsErrCSV_raw.add(new String[] {"Parent","Agent","t0_AgentKilled","t1_Detection","t2_Confirmation","t3_SystemRecovery","t4_RedundancyRecovery"});
+        testResultsErrCSV_raw.add(new String[] {"Parent/ID","Agent","t0_AgentKilled","t1_Detection","t2_Confirmation","t3_NegotiationStart","t4_NegotiationFinish","t5_OperationsReady","t6_OperationsStart","t7_BatchTimeoutRecovered","t8_OrderTimeoutRecovered"});
 
         //Añado la cabecera final
-        testResultsErrCSV.add(new String[]{"Parent","DetectionTime (t1-t0)","ConfirmationTime (t2-t1)","FuntionalityRecoveryTime (t3-t1)","RedundancyRecoveryTime (t4-t1)"});
+//        testResultsErrCSV.add(new String[]{"Parent","DetectionTime (t1-t0)","ConfirmationTime (t2-t1)","FuntionalityRecoveryTime (t3-t1)","RedundancyRecoveryTime (t4-t1)"});
+        testResultsErrCSV.add(new String[]{"LostMachine","NegotiationWinner","DetectionTime (t1-t0)","ConfirmationTime (t2-t1)","NegotiationPreparingTime (t3-t2)","NegotiationTime (t4-t3)","OperationRebuildTime (t5-t4)","ExecutionTime (t6-t5)","RecoveryTime (t6-t1)","BatchTimeoutRecoverTime (t7-t1)","OrderTimeoutRecoverTime (t8-t1)"});
 
         //Itero todas las posiciones del HasMap de componentes
-
+        t0="";
+        t1="";
+        t2="";
+        t3="";
+        t4="";
+        t5="";
+        t6="";
+        t7="";
+        t8="";
+        String MachineLostID ="";
+        String WinnerMachineID ="";
+        String DetectionTime =""; //t1-t0
+        String ConfirmationTime =""; //t2-t1
+        String NegotiationPreparingTime  =""; //t3-t2
+        String NegotiationTime  =""; //t4-t3
+        String OperationRebuildTime  =""; //t5-t4
+        String ExecutionTime  =""; //t6-t5
+        String RecoveryTime  =""; //t6-t1
+        String BatchTimeoutRecoverTime  =""; //t7-t1
+        String OrderTimeoutRecoverTime  =""; //t8-t1
         for(Map.Entry<String, HashMap<String, HashMap<String, String>>> parentErr : ParentResultsErr.entrySet()){
-            t0="";
-            t1="";
-            t2="";
-            t3="";
-            t4="";
-
 
             String agentname = " ";
+//            String DetectionTime ="";
+//            String ConfirmationTime ="";
+//            String FuntionalityRecoveryTime ="";
+//            String SystemRecoveryTime="";
 
-            String DetectionTime ="";
-            String ConfirmationTime ="";
-            String FuntionalityRecoveryTime ="";
-            String SystemRecoveryTime="";
+
 
             for (Map.Entry<String, HashMap<String, String>> agentErr : parentErr.getValue().entrySet()){
 
-                String ta0="";
-                String ta1="";
-                String ta2="";
-                String ta3="";
-                String ta4="";
+//                String ta0="";
+//                String ta1="";
+//                String ta2="";
+//                String ta3="";
+//                String ta4="";
                 System.out.println(agentErr.getKey());
-                if(agentErr.getKey().contains("mplanagent")||agentErr.getKey().contains("orderagent")||agentErr.getKey().contains("batchagent")){
+//                if(agentErr.getKey().contains("mplanagent")||agentErr.getKey().contains("orderagent")||agentErr.getKey().contains("batchagent")){
                     agentname=agentErr.getKey();
                     if(agentErr.getValue().get("AgentKilled")!=null){
                         t0 = agentErr.getValue().get("AgentKilled");
-                        ta0=t0;
+                        MachineLostID=parentErr.getKey();
+//                        ta0=t0;
                     }
-                    if(agentErr.getValue().get("DeadAgentDetection")!=null){
-                        t1 = agentErr.getValue().get("DeadAgentDetection");  //QoS recibe la denuncia
-                        ta1=t1;
+//                    if(agentErr.getValue().get("DeadAgentDetection")!=null){
+//                        t1 = agentErr.getValue().get("DeadAgentDetection");  //QoS recibe la denuncia
+//                        ta1=t1;
+//                    }
+                    if(agentErr.getValue().get("DetectionTime")!=null){
+                        t1 = agentErr.getValue().get("DetectionTime");  //QoS recibe la denuncia
                     }
-                    if(agentErr.getValue().get("DeadAgentConfirmation")!=null){
-                        t2 = agentErr.getValue().get("DeadAgentConfirmation"); //D&D recibe confirmacion del QoS
-                        ta2=t2;
+//                    if(agentErr.getValue().get("DeadAgentConfirmation")!=null){
+//                        t2 = agentErr.getValue().get("DeadAgentConfirmation"); //D&D recibe confirmacion del QoS
+//                        ta2=t2;
+//                    }
+                    if(agentErr.getValue().get("ConfirmationTime")!=null){
+                        t2 = agentErr.getValue().get("ConfirmationTime");
                     }
-                    if(agentErr.getValue().get("RunningAgentRecovery")!=null){
-                        t3 = agentErr.getValue().get("RunningAgentRecovery");  //El sistema ya puede funcionar (si procede)
-                        ta3=t3;
+                    if(agentErr.getValue().get("NegotiationStart")!=null){
+                        t3 = agentErr.getValue().get("NegotiationStart");
                     }
-                    if(agentErr.getValue().get("RedundancyRecovery")!=null){
-                        t4 = agentErr.getValue().get("RedundancyRecovery"); //El sistema se encuentra en el mismo estado que originalmente
-                        ta4=t4;
+                    if(agentErr.getValue().get("NegotiationFinish")!=null){
+                        t4 = agentErr.getValue().get("NegotiationFinish");
+                        WinnerMachineID=parentErr.getKey();
                     }
+                    if(agentErr.getValue().get("OperationsRebuilt")!=null){
+                        t5 = agentErr.getValue().get("NegotiationFinish");
+                    }
+                    if(agentErr.getValue().get("OperationsStart")!=null){
+                        t6 = agentErr.getValue().get("OperationsStart");
+                    }
+                    if(agentErr.getValue().get("RecoveredTimeoutBatch")!=null){
+                        t7 = agentErr.getValue().get("RecoveredTimeoutBatch");
+                    }
+                    if(agentErr.getValue().get("RecoveredTimeoutOrder")!=null){
+                        t8 = agentErr.getValue().get("RecoveredTimeoutOrder");
+                    }
+//                    if(agentErr.getValue().get("RunningAgentRecovery")!=null){
+//                        t3 = agentErr.getValue().get("RunningAgentRecovery");  //El sistema ya puede funcionar (si procede)
+//                        ta3=t3;
+//                    }
+//                    if(agentErr.getValue().get("RedundancyRecovery")!=null){
+//                        t4 = agentErr.getValue().get("RedundancyRecovery"); //El sistema se encuentra en el mismo estado que originalmente
+//                        ta4=t4;
+//                    }
 
-
-                    String [] data_raw = new String[] {parentErr.getKey(), agentname, ta0, ta1, ta2, ta3, ta4}; //Los datos raw se escriben por agente
+//                    String [] data_raw = new String[] {parentErr.getKey(), agentname, ta0, ta1, ta2, ta3, ta4}; //Los datos raw se escriben por agente
+                    String [] data_raw = new String[] {parentErr.getKey(), agentname, t0, t1, t2, t3, t4, t5, t6, t7, t8}; //Los datos raw se escriben por agente
                     testResultsErrCSV_raw.add(data_raw);
-                }
+//                }
             }
 
-            if(!t1.equals("")&&!t0.equals("")){
-                DetectionTime = String.valueOf((Double.valueOf(t1)-Double.valueOf(t0))/1000);
-            }
+//            if(!t1.equals("")&&!t0.equals("")){
+//                DetectionTime = String.valueOf((Double.valueOf(t1)-Double.valueOf(t0))/1000);
+//            }
+//
+//            if(!t2.equals("")&&!t1.equals("")){
+//                ConfirmationTime = String.valueOf((Double.valueOf(t2)-Double.valueOf(t1))/1000);
+//            }
 
-            if(!t2.equals("")&&!t1.equals("")){
-                ConfirmationTime = String.valueOf((Double.valueOf(t2)-Double.valueOf(t1))/1000);
-            }
+//            if(!t3.equals("")&&!t1.equals("")){
+//                FuntionalityRecoveryTime = String.valueOf((Double.valueOf(t3)-Double.valueOf(t1))/1000);
+//            }
+//
+//            if(!t4.equals("")&&!t1.equals("")){
+//                SystemRecoveryTime = String.valueOf((Double.valueOf(t4)-Double.valueOf(t1))/1000);
+//            }
 
-            if(!t3.equals("")&&!t1.equals("")){
-                FuntionalityRecoveryTime = String.valueOf((Double.valueOf(t3)-Double.valueOf(t1))/1000);
-            }
-
-            if(!t4.equals("")&&!t1.equals("")){
-                SystemRecoveryTime = String.valueOf((Double.valueOf(t4)-Double.valueOf(t1))/1000);
-            }
-
-
-            //Generamos el array en el que metemos todos los datos sin restas y lo añadimos donde corresponde
-
-
-            //Generamos el aerray en el que metemos todos los datos con restas y lo añadimos donde corresponde
-            String[] data = new String[] {parentErr.getKey(), DetectionTime,ConfirmationTime,FuntionalityRecoveryTime,SystemRecoveryTime};
-            testResultsErrCSV.add(data);
-
-            //Por último, se calculan las restas y se pasan a segundos
+//            String[] data = new String[] {parentErr.getKey(), DetectionTime,ConfirmationTime,FuntionalityRecoveryTime,SystemRecoveryTime};
+//            testResultsErrCSV.add(data);
 
         }
+
+        if(!t1.equals("")&&!t0.equals("")){
+            DetectionTime = String.valueOf((Double.valueOf(t1)-Double.valueOf(t0))/1000);
+        }
+        if(!t2.equals("")&&!t1.equals("")){
+            ConfirmationTime = String.valueOf((Double.valueOf(t2)-Double.valueOf(t1))/1000);
+        }
+        if(!t3.equals("")&&!t2.equals("")){
+            NegotiationPreparingTime = String.valueOf((Double.valueOf(t3)-Double.valueOf(t2))/1000);
+        }
+        if(!t4.equals("")&&!t3.equals("")){
+            NegotiationTime = String.valueOf((Double.valueOf(t4)-Double.valueOf(t3))/1000);
+        }
+        if(!t5.equals("")&&!t4.equals("")){
+            OperationRebuildTime = String.valueOf((Double.valueOf(t5)-Double.valueOf(t4))/1000);
+        }
+        if(!t6.equals("")&&!t5.equals("")){
+            ExecutionTime = String.valueOf((Double.valueOf(t6)-Double.valueOf(t5))/1000);
+        }
+        if(!t6.equals("")&&!t1.equals("")){
+            RecoveryTime = String.valueOf((Double.valueOf(t6)-Double.valueOf(t1))/1000);
+        }
+        if(!t7.equals("")&&!t1.equals("")){
+            BatchTimeoutRecoverTime= String.valueOf((Double.valueOf(t7)-Double.valueOf(t1))/1000);
+        }
+        if(!t8.equals("")&&!t1.equals("")){
+            OrderTimeoutRecoverTime= String.valueOf((Double.valueOf(t8)-Double.valueOf(t1))/1000);
+        }
+
+        String[] data = new String[] {MachineLostID,WinnerMachineID, DetectionTime,ConfirmationTime,NegotiationPreparingTime,NegotiationTime,OperationRebuildTime,ExecutionTime,RecoveryTime,BatchTimeoutRecoverTime,OrderTimeoutRecoverTime};
+        testResultsErrCSV.add(data);
+
         //Ruta al fichero raw (sin restas)
         String errorsRawPath = "C:/FlexManSys/timestamps/errors_raw.csv";
         //Ruta al fichero final (con restas)
@@ -515,10 +583,10 @@ public class AgentToCSVgw {
                     }
 
 
-                    String[] data = new String[] {parentNeg.getKey(), agentname,MemoryCalcTime,CPUCalcTime,GetStateInterval, MsgSendInterval, AckGererationInterval};
+                    String[] data_neg = new String[] {parentNeg.getKey(), agentname,MemoryCalcTime,CPUCalcTime,GetStateInterval, MsgSendInterval, AckGererationInterval};
 
 //                    String[] data = new String[] {parentNeg.getKey(),agentname,PLCCheck,TransitionToRunning, Total};
-                    testResultsNegCSV.add(data);
+                    testResultsNegCSV.add(data_neg);
 
 //                }
             }

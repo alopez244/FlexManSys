@@ -446,6 +446,7 @@ public class MWAgent extends Agent {
 
         if(type.equals("AgentKilled")){
 
+        if(a.getLocalName().contains("pnodeagent"))    {
             String[] number_of_node=a.getLocalName().split("pnodeagent");
             ACLMessage HE= sendCommand("get * node="+number_of_node[1]);
             String[] agents_killed=new String[1];
@@ -469,30 +470,53 @@ public class MWAgent extends Agent {
                     a.send(msg);
                 }
             }
+        }else if(a.getLocalName().contains("machine")){
+            ACLMessage M_ID= sendCommand("get "+a.getLocalName()+" attrib=id");
 
-        }else if(type.equals("RedundancyRecovery")||type.equals("StartSendState")||type.equals("GetStateDone")||type.equals("MsgSentDone")||type.equals("AcknowledgeGenerated")||type.equals("FinishSendState")) {
+            String contenido = M_ID.getContent()+","+a.getLocalName() +","+type+","+String.valueOf(timestamp.getTime());
+            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+            msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
+            msg.setOntology("timestamp_err");
+            msg.setConversationId(a.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
+            msg.setContent(contenido);
+            a.send(msg);
+        }
+        }
+//        else if(type.equals("RedundancyRecovery")||type.equals("StartSendState")||type.equals("GetStateDone")||type.equals("MsgSentDone")||type.equals("AcknowledgeGenerated")||type.equals("FinishSendState")) {
+//            ACLMessage parent = sendCommand("get " + a.getLocalName() + " attrib=parent");
+//            if(parent!=null){
+//                String contenido = parent.getContent()+","+a.getLocalName() +","+type+","+String.valueOf(timestamp.getTime());
+//                ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+//                msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
+//                if(type.equals("RedundancyRecovery")){
+//                    msg.setOntology("timestamp_err");
+//                }else{
+//                    msg.setOntology("timestamp_neg");
+//                }
+//
+//                msg.setConversationId(a.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
+//                msg.setContent(contenido);
+//                a.send(msg);
+//            }
+//        }
+        else if(type.equals("RecoveredTimeoutBatch")||type.equals("RecoveredTimeoutOrder")) {
             ACLMessage parent = sendCommand("get " + a.getLocalName() + " attrib=parent");
             if(parent!=null){
                 String contenido = parent.getContent()+","+a.getLocalName() +","+type+","+String.valueOf(timestamp.getTime());
                 ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
                 msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
-                if(type.equals("RedundancyRecovery")){
-                    msg.setOntology("timestamp_err");
-                }else{
-                    msg.setOntology("timestamp_neg");
-                }
-
+                msg.setOntology("timestamp_err");
                 msg.setConversationId(a.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
                 msg.setContent(contenido);
                 a.send(msg);
             }
 
-        }else if(type.equals("MachineStart")||type.equals("GWAnswer")||type.equals("MachineRunning")){
-            String number="1";
-            String contenido = number+","+a.getLocalName() +","+type+","+String.valueOf(timestamp.getTime());
+        }else if(type.equals("NegotiationFinish")||type.equals("OperationsRebuilt")||type.equals("OperationsStart")){
+            ACLMessage M_ID= sendCommand("get "+a.getLocalName()+" attrib=id");
+            String contenido = M_ID.getContent()+","+a.getLocalName() +","+type+","+String.valueOf(timestamp.getTime());
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
             msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
-            msg.setOntology("timestamp_neg");
+            msg.setOntology("timestamp_err");
             msg.setConversationId(a.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
             msg.setContent(contenido);
             a.send(msg);

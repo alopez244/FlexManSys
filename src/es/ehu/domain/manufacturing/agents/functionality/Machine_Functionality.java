@@ -57,9 +57,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private SimpleDateFormat formatter_time = new SimpleDateFormat(TIME_FORMAT);
     private AID QoSID = new AID("QoSManagerAgent", false);
     public ArrayList<ACLMessage> posponed_msgs_to_batch=new ArrayList<ACLMessage>();
-    public ArrayList<ACLMessage> posponed_msgs_to_gw=new ArrayList<ACLMessage>();
-//    public static String state ="";
-//    public static boolean change_state=false;
+    public boolean operations_redistributed_flag=false;
+//    public ArrayList<ACLMessage> posponed_msgs_to_gw=new ArrayList<ACLMessage>();
 
 
 
@@ -356,21 +355,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         Cmd action = new Cmd(sAction);
 
         if (action.cmd.equals("execute")) {
-//            operationsWithBatchAgents.put(seOperationID, seID);
-
-            // Envio un mensaje al BatchAgent para avisarle de que soy el ganador para asociarme esa operacion
-//            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-//            msg.addReceiver(new AID(seID, AID.ISLOCALNAME));
-//            msg.setContent("I am the winner of:" + seOperationID);
-//            msg.setConversationId(conversationId);
-//            myAgent.send(msg);
-
-//            System.out.println("\tI am the winner to get operations " +seOperationID+ " from batch " + seID + ". NumItems: " + seNumOfItems);
+            //timestamp 3
+            myAgent.get_timestamp(myAgent,"NegotiationFinish");
             System.out.println("\tI am the winner to get operations: " +Operations);
-//            Object[] data = new Object[2];
-//            data[0]=seOperationID;
-//            data[1]=seID;
-//            execute(data);
+
             while (Operations.contains("*")) Operations = Operations.replace("*", "="); //reconstruye el string
 
             HashMap<String,String>operation_time=new HashMap<String,String>();
@@ -430,6 +418,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             try {
                 ACLMessage parent = sendCommand(myAgent, "get * category=batch reference=" + batch, String.valueOf(convIDcnt++));
                 ACLMessage running_batch = sendCommand(myAgent, "get * category=batchAgent parent=" + parent.getContent() + " state=running", String.valueOf(convIDcnt++));
+                sendACLMessage(ACLMessage.REQUEST,new AID("QoSManagerAgent",false),"askdelay",String.valueOf(convIDcnt++),batch,myAgent); //recicla la funcionalidad del QoS para que con un mensaje con ontologia "askdelay" elimine los posibles delays registrados en el QoS para este batch (caso múltiples máquinas-multiples delays)
                 sendACLMessage(ACLMessage.INFORM,new AID(running_batch.getContent(),false),"rebuild_finish_times",String.valueOf(convIDcnt++),batch_finish_times,myAgent);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -441,6 +430,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             msg.setConversationId(conversationId);
             Object[] data = new Object[1];
             data[0]=msg;
+
+            operations_redistributed_flag=true;//flag para timestamps
+            myAgent.get_timestamp(myAgent,"OperationsRebuilt");
+            //timestamp 4
             execute(data);
         }
 
@@ -777,7 +770,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                                     String content = BathcID;
                                     String delay = String.valueOf(diferencia);
                                     content = content + "/" + delay;
-                                    sendACLMessage(ACLMessage.INFORM, QoSID, "delay", "batch_delay", content, myAgent);
+                                    sendACLMessage(ACLMessage.INFORM, QoSID, "delay", "batch_delay_"+content, content, myAgent);
                                     firstItemFlag = true;
                                 }
                             }
@@ -789,6 +782,12 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     PLCmsgOut.remove("Index");
                     String MessageContent = new Gson().toJson(PLCmsgOut);
                     AID gatewayAgentID = new AID(myAgent.gatewayAgentName, false);
+
+                    if(operations_redistributed_flag){
+                        myAgent.get_timestamp(myAgent,"OperationsStart");
+                        operations_redistributed_flag=false;
+                    }
+
                     ACLMessage msg_to_gw = sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "data", "PLCdata", MessageContent, myAgent);
 
                     myAgent.AddToExpectedMsgs(msg_to_gw);

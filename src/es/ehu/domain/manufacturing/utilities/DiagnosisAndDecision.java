@@ -330,7 +330,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
         ArrayList<ArrayList<ArrayList<String>>> xmlelements = fileReader.readFile(uri);
         int batch_position=0;
         ArrayList<String> needed_operations=new ArrayList<String >();
-        if(!item.equals("?")){
+        if(!item.equals("?")){    //podemos saber o no en que item se ha parado la máquina
             boolean first_item_found=false;
 //          reconstruccion de plan para máquina a partir de batch y item proporcionado
             for(int i=0;i<xmlelements.size();i++){
@@ -368,6 +368,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                             if(!needed_operations.contains(xmlelements.get(j).get(3).get(1))){
                                 needed_operations.add(xmlelements.get(j).get(3).get(1));
                             }
+                            //el finish time es provisional. El real dependerá de qué máquina asuma la negociación
                             new_operations=new_operations+ "id*"+xmlelements.get(j).get(3).get(1)+" plannedFinishTime*"+xmlelements.get(j).get(3).get(2)+ " plannedStartTime*"+xmlelements.get(j).get(3).get(4)+ " batch_ID*"+xmlelements.get(i).get(3).get(0)+" item_ID*"+xmlelements.get(i).get(3).get(1)+" order_ID*"+xmlelements.get(i).get(3).get(2)+" productType*"+xmlelements.get(i).get(3).get(3)+"&";//hay que codificar los "=" como otro caracter para evitar malinterpretaciones por parte del SMA y del mensaje de negociacion
                         }
                     }
@@ -424,6 +425,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                     }
                     String negotationdata="localneg "+targets+ " criterion=finish_time action=execute externaldata=" + new_operations;
                     LOGGER.debug(new_operations);
+                    get_timestamp(myAgent,targets,"NegotiationStart");
                     sendCommand(myAgent,negotationdata,String.valueOf(convIDCounter++));
                     sendCommand(myAgent,"del "+lost_machine,String.valueOf(convIDCounter++)); //eliminamos la máquina del SMA
                 }else{
