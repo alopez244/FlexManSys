@@ -354,10 +354,6 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 ACLMessage msg = (ACLMessage) input[0];
                 System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
 
-//        ACLMessage msg = myAgent.receive(template);
-//        if (msg != null) {
-                myAgent.msgFIFO.add((String) msg.getContent());
-
             if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("Information")&&msg.getConversationId().equals("ItemsInfo")){
 //                Acknowledge(msg, myAgent);
                 if (firstTime) {
