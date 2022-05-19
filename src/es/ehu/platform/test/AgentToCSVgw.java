@@ -302,7 +302,7 @@ public class AgentToCSVgw {
 
         //Añado la cabecera raw
 //        testResultsErrCSV_raw.add(new String[] {"Parent","Agent","t0_AgentKilled","t1_Detection","t2_Confirmation","t3_SystemRecovery","t4_RedundancyRecovery"});
-        testResultsErrCSV_raw.add(new String[] {"Parent/ID","Agent","t0_AgentKilled","t1_Detection","t2_Confirmation","t3_NegotiationStart","t4_NegotiationFinish","t5_OperationsReady","t6_OperationsStart","t7_BatchTimeoutRecovered","t8_OrderTimeoutRecovered"});
+        testResultsErrCSV_raw.add(new String[] {"Parent/ID","Agent","t0_AgentKilled","t1_Detection","t2_Confirmation","t3_NegotiationStart","t4_NegotiationFinish","t5_OperationsReady","t6_OperationsPlanned","t7_BatchTimeoutRecovered","t8_OrderTimeoutRecovered"});
 
         //Añado la cabecera final
 //        testResultsErrCSV.add(new String[]{"Parent","DetectionTime (t1-t0)","ConfirmationTime (t2-t1)","FuntionalityRecoveryTime (t3-t1)","RedundancyRecoveryTime (t4-t1)"});
@@ -341,18 +341,22 @@ public class AgentToCSVgw {
 
             for (Map.Entry<String, HashMap<String, String>> agentErr : parentErr.getValue().entrySet()){
 
-//                String ta0="";
-//                String ta1="";
-//                String ta2="";
-//                String ta3="";
-//                String ta4="";
+                String ta0="";
+                String ta1="";
+                String ta2="";
+                String ta3="";
+                String ta4="";
+                String ta5="";
+                String ta6="";
+                String ta7="";
+                String ta8="";
                 System.out.println(agentErr.getKey());
 //                if(agentErr.getKey().contains("mplanagent")||agentErr.getKey().contains("orderagent")||agentErr.getKey().contains("batchagent")){
                     agentname=agentErr.getKey();
                     if(agentErr.getValue().get("AgentKilled")!=null){
                         t0 = agentErr.getValue().get("AgentKilled");
                         MachineLostID=parentErr.getKey();
-//                        ta0=t0;
+                        ta0=t0;
                     }
 //                    if(agentErr.getValue().get("DeadAgentDetection")!=null){
 //                        t1 = agentErr.getValue().get("DeadAgentDetection");  //QoS recibe la denuncia
@@ -360,6 +364,7 @@ public class AgentToCSVgw {
 //                    }
                     if(agentErr.getValue().get("DetectionTime")!=null){
                         t1 = agentErr.getValue().get("DetectionTime");  //QoS recibe la denuncia
+                        ta1=t1;
                     }
 //                    if(agentErr.getValue().get("DeadAgentConfirmation")!=null){
 //                        t2 = agentErr.getValue().get("DeadAgentConfirmation"); //D&D recibe confirmacion del QoS
@@ -367,25 +372,32 @@ public class AgentToCSVgw {
 //                    }
                     if(agentErr.getValue().get("ConfirmationTime")!=null){
                         t2 = agentErr.getValue().get("ConfirmationTime");
+                        ta2=t2;
                     }
                     if(agentErr.getValue().get("NegotiationStart")!=null){
                         t3 = agentErr.getValue().get("NegotiationStart");
+                        ta3=t3;
                     }
                     if(agentErr.getValue().get("NegotiationFinish")!=null){
                         t4 = agentErr.getValue().get("NegotiationFinish");
+                        ta4=t4;
                         WinnerMachineID=parentErr.getKey();
                     }
                     if(agentErr.getValue().get("OperationsRebuilt")!=null){
-                        t5 = agentErr.getValue().get("NegotiationFinish");
+                        t5 = agentErr.getValue().get("OperationsRebuilt");
+                        ta5=t5;
                     }
-                    if(agentErr.getValue().get("OperationsStart")!=null){
-                        t6 = agentErr.getValue().get("OperationsStart");
+                    if(agentErr.getValue().get("OperationsPlanned")!=null){
+                        t6 = agentErr.getValue().get("OperationsPlanned");
+                        ta6=t6;
                     }
                     if(agentErr.getValue().get("RecoveredTimeoutBatch")!=null){
                         t7 = agentErr.getValue().get("RecoveredTimeoutBatch");
+                        ta7=t7;
                     }
                     if(agentErr.getValue().get("RecoveredTimeoutOrder")!=null){
                         t8 = agentErr.getValue().get("RecoveredTimeoutOrder");
+                        ta8=t8;
                     }
 //                    if(agentErr.getValue().get("RunningAgentRecovery")!=null){
 //                        t3 = agentErr.getValue().get("RunningAgentRecovery");  //El sistema ya puede funcionar (si procede)
@@ -397,7 +409,7 @@ public class AgentToCSVgw {
 //                    }
 
 //                    String [] data_raw = new String[] {parentErr.getKey(), agentname, ta0, ta1, ta2, ta3, ta4}; //Los datos raw se escriben por agente
-                    String [] data_raw = new String[] {parentErr.getKey(), agentname, t0, t1, t2, t3, t4, t5, t6, t7, t8}; //Los datos raw se escriben por agente
+                    String [] data_raw = new String[] {parentErr.getKey(), agentname, ta0, ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8}; //Los datos raw se escriben por agente
                     testResultsErrCSV_raw.add(data_raw);
 //                }
             }

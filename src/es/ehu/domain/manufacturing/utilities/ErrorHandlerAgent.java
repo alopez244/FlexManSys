@@ -181,8 +181,7 @@ public class ErrorHandlerAgent extends Agent{
                 }
                 for(int i=0;i<AllAgents.length;i++){
                     try {
-                        ACLMessage id= sendCommand(myAgent,"get "+AllAgents[i]+" attrib=id","check_machine_id_for_timestamp_"+timeStmp++);
-                        String contenido = id.getContent()+","+AllAgents[i] +","+type+","+String.valueOf(timestamp.getTime());
+                    ACLMessage id= sendCommand(a,"get "+AllAgents[i]+" attrib=id","check_machine_id_for_timestamp_"+timeStmp++);String contenido = id.getContent()+","+AllAgents[i] +","+type+","+String.valueOf(timestamp.getTime());
                     ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
                     msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
                     msg.setOntology("timestamp_err");

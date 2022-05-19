@@ -57,7 +57,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
         this.template2 = MessageTemplate.and(MessageTemplate.MatchOntology("release_buffer"),
                 MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-        this.template3 = MessageTemplate.and(MessageTemplate.MatchOntology("node_kill"),
+        this.template3 = MessageTemplate.and(MessageTemplate.MatchOntology("kill"),
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
     }
 
@@ -191,7 +191,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         ACLMessage err_simulation = myAgent.receive(template3);
         if (err_simulation!=null) {
             System.out.println(err_simulation.getSender().getLocalName()+" politely asked to kill myself");
-//            myAgent.get_timestamp(myAgent,"AgentKilled");
+            myAgent.get_timestamp(myAgent,"AgentKilled");
             System.out.println(System.currentTimeMillis()); //timestamp para comparar tiempos entre muerte real y timestamp: ~12ms en PC
             System.exit(0); //mata al nodo completo
         }

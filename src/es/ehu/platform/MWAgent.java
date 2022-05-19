@@ -511,7 +511,7 @@ public class MWAgent extends Agent {
                 a.send(msg);
             }
 
-        }else if(type.equals("NegotiationFinish")||type.equals("OperationsRebuilt")||type.equals("OperationsStart")){
+        }else if(type.equals("NegotiationFinish")||type.equals("OperationsRebuilt")||type.equals("OperationsPlanned")){
             ACLMessage M_ID= sendCommand("get "+a.getLocalName()+" attrib=id");
             String contenido = M_ID.getContent()+","+a.getLocalName() +","+type+","+String.valueOf(timestamp.getTime());
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);

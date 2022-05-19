@@ -280,7 +280,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     operationInfo.add(2, names);
                     operationInfo.add(3, values);
                     myAgent.machinePlan.add(operationInfo);
-
+                    if(operations_redistributed_flag){
+                        myAgent.get_timestamp(myAgent,"OperationsPlanned"); //cambiar nombre
+                        operations_redistributed_flag=false;
+                    }
                 }
 
                 if(orderQueueFlag == false) {   //flags update to avoid order overlaps
@@ -783,10 +786,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     String MessageContent = new Gson().toJson(PLCmsgOut);
                     AID gatewayAgentID = new AID(myAgent.gatewayAgentName, false);
 
-                    if(operations_redistributed_flag){
-                        myAgent.get_timestamp(myAgent,"OperationsStart");
-                        operations_redistributed_flag=false;
-                    }
+
 
                     ACLMessage msg_to_gw = sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "data", "PLCdata", MessageContent, myAgent);
 

@@ -110,6 +110,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
     class timeout extends Thread{
     private boolean timeout=false;
+    private boolean kill_done=false;
         public void run() {
 
             System.out.println("Item timeout initialized");
@@ -147,6 +148,11 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 while (getactualtime().before(expected_finish_date)&&actual_item_number<items_finish_times.size()&&!timeout) {  //se queda a la espera siempre que no se supere la fecha de finishtime
 
                     if (update_timeout_flag) {
+                        if(!kill_done&&actual_item_number==0&&batchreference.equals("221")){ // mata el agente maquina tras completar un item
+                            sendACLMessage(ACLMessage.REQUEST,new AID("machine3",false),"kill","","",myAgent);
+                            kill_done=true;
+                        }
+
                         actual_item_number++;
                         if(actual_item_number<items_finish_times.size()) {
                             expected_finish_date = UpdateFinishTimes(actual_item_number); //actualiza la fecha de finish time
@@ -250,7 +256,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 //        ACLMessage msg = myAgent.receive(batch_f_template);
 
 
-                myAgent.msgFIFO.add((String) msg.getContent()); //se añade en buffer de listado de mensajes recibidos
+
 
                 if (msg.getPerformative() == ACLMessage.INFORM && msg.getOntology().equals("askdelay")) { //si es un mensaje con info del delay creamos el timeout
                     date_when_delay_was_asked = getactualtime();
