@@ -792,13 +792,38 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         return actualdate;
     }
 
-    public void get_timestamp(String timestamp, String batchID, String agent, String type){
+    public void get_timestamp(String timestamp, String batchNumber, String machine, String type) {
 
-        String contenido = agent + "," + batchID + "," + type + "," + timestamp;
+        String batchId = "";
+        ACLMessage batchIdmsg = null;
+
+        String machineName = "";
+        ACLMessage machineNamemsg = null;
+
+        /* Primero, conseguimos la referencia del batch a partir del batchNumber*/
+        try {
+            machineNamemsg = sendCommand(myAgent, "get "+machine+" attrib=description",myAgent.getLocalName());
+            batchIdmsg = sendCommand(myAgent, "get * reference=" + batchNumber, myAgent.getLocalName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (machineNamemsg != null){
+            machineName = machineNamemsg.getContent();
+        }
+
+        if (batchIdmsg != null) {
+            batchId = batchIdmsg.getContent();
+        }
+
+
+
+        /* Después, construimos y enviamos el mensaje */
+        String contenido = machineName + "," + batchId + "," + type + "," + timestamp;
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
         msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
         msg.setOntology("timestamp_machine");
-        msg.setConversationId(myAgent.getLocalName()+"_"+type+"_"+TMSTMP_cnt++);
+        msg.setConversationId(myAgent.getLocalName() + "_" + type + "_" + TMSTMP_cnt++);
         msg.setContent(contenido);
         myAgent.send(msg);
 
