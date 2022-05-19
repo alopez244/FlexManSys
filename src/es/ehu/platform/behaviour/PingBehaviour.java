@@ -74,7 +74,7 @@ public class PingBehaviour extends SimpleBehaviour{
                                 reply.setContent(myAgent.gatewayAgentName + ":OK & PLC:?");
                             }
                         } else {
-                            reply.setContent(myAgent.gatewayAgentName + ":DOWN & PLC:?"); //con el tecnomatix en pausa siempre se devuelve esto aunque el GW este bien porque no contesta
+                            reply.setContent(myAgent.gatewayAgentName + ":OK & PLC:?"); //con el tecnomatix en pausa siempre se devuelve esto aunque el GW este bien porque no contesta
                         }
                     }
                 }else{

@@ -190,7 +190,6 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 orderreference=reference.getContent();
                 sendACLMessage(16, plannerID,"Ftime_order_ask", "finnish_time", reference.getContent(), myAgent ); //pide el finish time de cada item al planner
                 ACLMessage finishtime= myAgent.blockingReceive(templateFT); //recibe los finish times concatenados
-                myAgent.msgFIFO.add((String) finishtime.getContent());
                 System.out.println(finishtime.getContent());
                 raw_ft=finishtime.getContent();
                 batch_last_items_ft=batch_finish_times(raw_ft);
@@ -240,7 +239,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
 //        ACLMessage msg = myAgent.receive(template);
 //        if (msg != null) {
-                myAgent.msgFIFO.add((String) msg.getContent());
+
 
             if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("Information")&&msg.getConversationId().equals("ItemsInfo")){
 //                Acknowledge(msg, myAgent);
@@ -296,7 +295,6 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                         posponed_msgs_to_mplan = myAgent.msg_buffer.get(mplan_parent.getContent());
                         if (posponed_msgs_to_mplan == null) {  //si no se encuentra el parent en el listado de mensajes postpuestos entonces el receptor ha confirmado la recepcion de todos los mensajes hasta ahora. Seguimos con la ejecución normal.
                             ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + mplan_parent.getContent() + " state=running", myAgent.getLocalName() + "_parent_running_replica");
-                            myAgent.msgFIFO.add((String) running_replica.getContent());
                             if (!running_replica.getContent().equals("")) {
                                 AID mplanAgentID = new AID(running_replica.getContent(), false);
                                 ACLMessage msg_to_mplan = sendACLMessage(7, mplanAgentID, "Information", "OrderInfo", msgToMPLan, myAgent);

@@ -148,10 +148,10 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 while (getactualtime().before(expected_finish_date)&&actual_item_number<items_finish_times.size()&&!timeout) {  //se queda a la espera siempre que no se supere la fecha de finishtime
 
                     if (update_timeout_flag) {
-                        if(!kill_done&&actual_item_number==0&&batchreference.equals("221")){ // mata el agente maquina tras completar un item
-                            sendACLMessage(ACLMessage.REQUEST,new AID("machine3",false),"kill","","",myAgent);
-                            kill_done=true;
-                        }
+//                        if(!kill_done&&actual_item_number==0&&batchreference.equals("221")){ // mata el agente maquina tras completar un item
+//                            sendACLMessage(ACLMessage.REQUEST,new AID("machine3",false),"kill","","",myAgent);
+//                            kill_done=true;
+//                        }
 
                         actual_item_number++;
                         if(actual_item_number<items_finish_times.size()) {
@@ -386,7 +386,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                             posponed_msgs_to_order = myAgent.msg_buffer.get(order_parent.getContent());
                             if (posponed_msgs_to_order == null) {  //si no se encuentra el parent en el listado de mensajes postpuestos entonces el receptor ha confirmado la recepcion de todos los mensajes hasta ahora. Seguimos con la ejecución normal.
                                 ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + order_parent.getContent() + " state=running", myAgent.getLocalName() + "_parent_running_replica");
-                                myAgent.msgFIFO.add((String) running_replica.getContent());
                                 if (!running_replica.getContent().equals("")) {
                                     AID orderAgentID = new AID(running_replica.getContent(), false);
                                     ACLMessage msg_to_order = sendACLMessage(7, orderAgentID, "Information", "ItemsInfo", msgToOrder, myAgent);
@@ -559,7 +558,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         while (!machinesForOperations.isEmpty()) {
             ACLMessage msg = myAgent.receive();
             if (msg != null) {
-                myAgent.msgFIFO.add((String) msg.getContent());
+
                 // TODO COMPROBAR TAMBIEN LOS TRACKING si esta bien programado (sin probar)
                 if ((msg.getPerformative() == ACLMessage.INFORM) && (msg.getContent().contains("I am the winner"))) {
 

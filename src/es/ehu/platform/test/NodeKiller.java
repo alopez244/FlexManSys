@@ -12,15 +12,15 @@ public class NodeKiller extends ErrorHandlerAgent {
             public void action() {
                 String cmd = "";
             while(true){
-                ACLMessage batch_machine=blockingReceive();
-                System.out.println(batch_machine.getOntology());
-                if(batch_machine.getOntology().equals("machine1")){ //elimina el batch en running asignado a la mquina que primero arrancados
+                ACLMessage agent_to_kill=blockingReceive();
+                System.out.println(agent_to_kill.getContent());
+                if(agent_to_kill.getOntology().equals("killpls")){
 
                     ACLMessage reply = null;
                     try {
-                        Thread.sleep(20000); // por ajustar
+                        Thread.sleep(28000);
 
-                        sendACL(ACLMessage.REQUEST,"machine1","node_kill","",myAgent);
+                        sendACL(ACLMessage.REQUEST,agent_to_kill.getContent(),"kill","",myAgent);
 
 //                        reply = sendCommand(myAgent, "get * category=batch reference=" + batch_machine.getContent(), "");
 //                        ACLMessage reply2 = sendCommand(myAgent, "get * category=batchAgent parent=" + reply.getContent() + " state=running", "");

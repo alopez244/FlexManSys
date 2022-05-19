@@ -458,7 +458,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
     public void rcvDataFromDevice(ACLMessage msg2) {
 
-        myAgent.msgFIFO.add((String) msg2.getContent());
+
         this.PLCmsgIn = new Gson().fromJson(msg2.getContent(), HashMap.class);   //Data type conversion Json->Hashmap class
         if(PLCmsgIn.containsKey("Received")){   //Checks if it is a confirmation message
             if(PLCmsgIn.get("Received").equals(true)){
@@ -507,7 +507,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     // El metodo recvBatchInfo se encarga de enviar al agente batch la informacion con la trazabilidad de cada item fabricado
     @Override
     public void recvBatchInfo(ACLMessage msg) {
-        myAgent.msgFIFO.add((String) msg.getContent());
+
         ACLMessage reply = null;
         String targets = "";
         ArrayList<String> actionList = new ArrayList<String>(); // Lista de acciones que componen el servicio actual
@@ -649,7 +649,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                     reply = sendCommand(myAgent, "get * reference=" + BathcID, "BatchAgentID");
                     //returns the id of the element that matches with the reference of the required batch
                     if (reply != null) {   // If the id does not exist, it returns error
-                        myAgent.msgFIFO.add((String) reply.getContent());
                         batchName = reply.getContent();
                     }
                 } catch (Exception e) {

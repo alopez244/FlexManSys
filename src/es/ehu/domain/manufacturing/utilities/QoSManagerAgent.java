@@ -217,13 +217,19 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                         LOGGER.info("Batch " + finishing_batch + " finished.");
 
                     } else if (msg.getOntology().equals("remove_relation")) {
-                        batch_op_machine.get(msg.getContent().split("/")[0]).remove(msg.getContent().split("/")[1]);
-
+                        LOGGER.info("Removed relation "+msg.getContent().split("/")[0]+" -> "+msg.getContent().split("/")[1]+" -> "+msg.getSender().getLocalName());
+                        if(batch_op_machine.containsKey(msg.getContent().split("/")[0])){
+                            batch_op_machine.get(msg.getContent().split("/")[0]).remove(msg.getContent().split("/")[1]);
+                        }
                     } else if (msg.getOntology().equals("delay")) {     //ejemplo: 221/133234000
                         String[] parts2 = msg.getContent().split("/");
                         String batch_id = parts2[0];
                         String ms_of_delay = parts2[1];
                         LOGGER.info("Batch " + batch_id + " started with " + ms_of_delay + " ms of delay on machine "+msg.getSender().getLocalName());
+                        if(msg.getSender().getLocalName().equals("machine3")){
+                            sendACL(7,"NodeKiller","killpls",msg.getSender().getLocalName(),myAgent);
+                        }
+
                         delay_list.put(batch_id,ms_of_delay); //Añade el batch especificado con su correspondiente delay a la lista de delays
                         if(delay_asking_queue.containsKey(batch_id)){  //si anteriormente han pedido el delay que acabamos de registrar debemos informar
                             sendACL(ACLMessage.INFORM, delay_asking_queue.get(batch_id), "askdelay", delay_list.get(batch_id),myAgent);
@@ -241,7 +247,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                         }
                         batch_op_machine.get(batch).put(operation,machine);  //se asume que un batch puede disponer de varias maquinas asignadas y viceversa, pero si tiene diferentes maquinas será para ejecutar difernetes operaciones
 //                        batch_machine.put(data[0],data[1]);
-                        System.out.println("Added relation "+batch+" -> "+operation+" -> "+machine);
+                        LOGGER.info("Added relation "+batch+" -> "+operation+" -> "+machine);
                     } else if (msg.getOntology().equals("asset_state")) { //recibe ping de vuelta del asset fuera de tiempo de espera de mensaje (solo para testing, no deberia ocurrir en funcionamiento normal)
                         LOGGER.warn("Recieved asset state out of the timeout: " + msg.getContent());
                     } else if (msg.getOntology().equals("reported_on_dead_node")) {
@@ -337,15 +343,13 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                         } else {
                             LOGGER.warn(MA+" operations must be redistributed to finish batch "+timeout_batch_id);
                             add_to_error_list("not_found", dead_agent[0], "", "", ""); //añadimos agente caido
-
+                            get_timestamp(myAgent,msg.getSender().getLocalName(),"ConfirmationTime");
                             for(Entry<String, HashMap<String,String>> batches: batch_op_machine.entrySet()){  //tras confirmar que esta máquina está mal se redistribuyen las tareas asignadas a esta maquina
                                 for(Entry<String,String> operations2: batch_op_machine.get(batches.getKey()).entrySet()){
                                     if(operations2.getValue().equals(MA)){
                                         if(batches.getKey().equals(timeout_batch_id)){ //si se trata del batch del timeout se le pasa el item
-                                            get_timestamp(myAgent,msg.getSender().getLocalName(),"ConfirmationTime");
                                             sendACL(ACLMessage.INFORM,"D&D","redistribute",MA+"/"+get_machine_id(MA)+"/"+batches.getKey()+"/"+timeout_item_id,myAgent);
                                         }else{   //si no es el batch del timeout solo puede ser un batch que esta pendiente de ejecución, es decir se debe rehacer por completo
-                                            get_timestamp(myAgent,msg.getSender().getLocalName(),"ConfirmationTime");
                                             sendACL(ACLMessage.INFORM,"D&D","redistribute",MA+"/"+get_machine_id(MA)+"/"+batches.getKey()+"/"+"?",myAgent);
                                         }
                                     }
@@ -360,6 +364,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                         argument5 = "GW->OK";
                         add_to_error_list("timeout", argument2, argument3, argument4, argument5);  //aunque este todoo ok hay que añadir el timeout a la lista de errores
                     } else { //el sistema está parado o en error
+                        get_timestamp(myAgent,msg.getSender().getLocalName(),"ConfirmationTime");
                         LOGGER.warn(MA+" operations must be redistributed to finish batch "+timeout_batch_id);
                         for(Entry<String, HashMap<String,String>> batches: batch_op_machine.entrySet()){  //tras confirmar que esta máquina está mal se redistribuyen las tareas asignadas a esta maquina
                             for(Entry<String,String> operations2: batch_op_machine.get(batches.getKey()).entrySet()){
@@ -427,24 +432,24 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                     String[] gw_state = content_div[0].split(":");
                     System.out.println("Ping result: ");
                     if (gw_state[1].contains("DOWN")) {
-                        System.out.println(myAgent.getLocalName() + "->" + machine + "-/>" + content_div[0] + "->?");
+                        System.out.println(myAgent.getLocalName() + "->" + machine + "-/>" + gw_state[0] + "->?");
                         return gw_state[0] + "_down";
                     } else {
                         String[] plc_state = content_div[1].split(":");
                         if (plc_state[1].contains("ENW")) {
-                            System.out.println(myAgent.getLocalName() + "->" + machine + "->" + content_div[0] + "->PLC(IDLE)-/>Process");
+                            System.out.println(myAgent.getLocalName() + "->" + machine + "->" + gw_state[0] + "->PLC(IDLE)-/>Process");
                             return "error_while_not_working";
                         } else if (plc_state[1].contains("EW")) {
-                            System.out.println(myAgent.getLocalName() + "->" + machine + "->" + content_div[0] + "->PLC(RUN)-/>Process");
+                            System.out.println(myAgent.getLocalName() + "->" + machine + "->" + gw_state[0] + "->PLC(RUN)-/>Process");
                             return "error_while_working";
                         } else if (plc_state[1].contains("NW")) {
-                            System.out.println(myAgent.getLocalName() + "->" + machine + "->" + content_div[0] + "->PLC(IDLE)->Process");
+                            System.out.println(myAgent.getLocalName() + "->" + machine + "->" + gw_state[0] + "->PLC(IDLE)->Process");
                             return "not_working";
                         } else if (plc_state[1].contains("W")) {
-                            System.out.println(myAgent.getLocalName() + "->" + machine + "->" + content_div[0] + "->PLC(RUN)->Process");
+                            System.out.println(myAgent.getLocalName() + "->" + machine + "->" + gw_state[0] + "->PLC(RUN)->Process");
                             return "working";
                         } else {
-                            System.out.println(myAgent.getLocalName() + "->" + machine + "->" + content_div[0] + "-/>PLC(?)->?");
+                            System.out.println(myAgent.getLocalName() + "->" + machine + "->" + gw_state[0] + "-/>PLC(?)->?");
                             return "plc_down";
                         }
                     }
