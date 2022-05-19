@@ -2,7 +2,7 @@
 <!-- editado con XMLSpy v2020 sp1 (x64) (http://www.altova.com) por  (University of the Basque Country) -->
 <!-- edited with XMLSpy v2020 (http://www.altova.com) by  (University of the Basque Country) -->
 <TypeOfProduct xmlns="ManufacturingPlan" productType="3" refRecipe="recipe02" description="Simple Product IPB" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="ManufacturingPlan ../TypeOfProduct.xsd">
-	<action id="1" type="punching" description="punching process"/>
+	<action id="2" type="punching" description="punching process"/>
 	<TypeOfProduct productType="IPB" description="Small base">
 		<rawMaterial id="IPB" description="Industrial Plastic Base"/>
 	</TypeOfProduct>

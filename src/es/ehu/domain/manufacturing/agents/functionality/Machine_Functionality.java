@@ -14,6 +14,7 @@ import jade.lang.acl.MessageTemplate;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -64,6 +65,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     /* Lista de mensajes ACL que se están guardando para enviar al batchAgent cuando corresponda */
     public ArrayList<ACLMessage> posponed_msgs_to_batch= new ArrayList<>();
 
+    /* Contador para los conversationId de los timeStamp */
+    private int TMSTMP_cnt=0;
 
     /* OPERACIONES DE INICIALIZACIÓN Y PUESTA EN MARCHA */
 
@@ -494,6 +497,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                         }
                     }
 
+                    /* Se envían los timeStamps al DataAcq_GWAgent */
+                    get_timestamp(String.valueOf(msgFromAsset.get("Data_Initial_Time_Stamp")),String.valueOf(msgFromAsset.get("Id_Batch_Reference")),myAgent.getLocalName(),"Initial_Time_Stamp");
+                    get_timestamp(String.valueOf(msgFromAsset.get("Data_Final_Time_Stamp")),String.valueOf(msgFromAsset.get("Id_Batch_Reference")),myAgent.getLocalName(),"Final_Time_Stamp");
+
                     /* Por último, se resetea el flag para indicar que el transaporte ha quedado libre*/
                     workInProgress=false;
                 }
@@ -783,6 +790,18 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             e.printStackTrace();
         }
         return actualdate;
+    }
+
+    public void get_timestamp(String timestamp, String batchID, String agent, String type){
+
+        String contenido = agent + "," + batchID + "," + type + "," + timestamp;
+        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+        msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
+        msg.setOntology("timestamp_machine");
+        msg.setConversationId(myAgent.getLocalName()+"_"+type+"_"+TMSTMP_cnt++);
+        msg.setContent(contenido);
+        myAgent.send(msg);
+
     }
 
 }

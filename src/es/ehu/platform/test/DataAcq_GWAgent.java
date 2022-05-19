@@ -14,6 +14,7 @@ public class DataAcq_GWAgent extends GatewayAgent {
     public HashMap<String,HashMap<String,HashMap<String,String>>> times = new HashMap<>();
     public HashMap<String,HashMap<String,HashMap<String,String>>> apptimes = new HashMap<>();
     public HashMap<String,HashMap<String,HashMap<String,String>>> errtimes= new HashMap<>();
+    public HashMap<String,HashMap<String,HashMap<String,String>>> machinetimes= new HashMap<>();
 
     protected void processCommand(java.lang.Object command) { //The method is called each time a request to process a command is received from the JSP Gateway. receive strmessage
 
@@ -41,6 +42,7 @@ public class DataAcq_GWAgent extends GatewayAgent {
             ((StructMessageTest) command).setTestResults(times);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
             ((StructMessageTest) command).setTestResultsApp(apptimes);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
             ((StructMessageTest) command).setTestResultsErr(errtimes);
+            ((StructMessageTest) command).setTestResultsMachine(machinetimes);
             ((StructMessageTest) command).setNewData(true);
 
         } else if (action.equals("init")) {
@@ -62,6 +64,8 @@ public class DataAcq_GWAgent extends GatewayAgent {
                 MessageTemplate.MatchOntology("timestamp"));
         MessageTemplate template_err = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                 MessageTemplate.MatchOntology("timestamp_err"));
+        MessageTemplate template_machine = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                MessageTemplate.MatchOntology("timestamp_machine"));
         // MENSAJE DESDE TRANSPORT AGENT
 
         addBehaviour(new CyclicBehaviour() { //keep executing constantly
@@ -71,6 +75,7 @@ public class DataAcq_GWAgent extends GatewayAgent {
                 //System.out.println("Entering CyclicBehaviour");
                 ACLMessage msg = receive(template); //recivir mensaje desde Transport Agent
                 ACLMessage msg_err=receive(template_err);
+                ACLMessage msg_machine=receive(template_machine);
                 if (msg != null) {
                     System.out.println("GWagent, message received");
 
@@ -95,19 +100,24 @@ public class DataAcq_GWAgent extends GatewayAgent {
 //                            apptimes.get(dataArray[0]).put(dataArray[1],dataArray[2]);
 //                        }
 
-                        apptimes=time_contructor(dataArray, apptimes);
+                        apptimes= time_constructor(dataArray, apptimes);
                     } else {
 
                         //Guardo la información en el HashMap de componentes
                         //Se comprueba si ya hay en el HashMap información sobre este componente
-                        times=time_contructor(dataArray, times);
+                        times= time_constructor(dataArray, times);
                     }
                 } else if(msg_err!=null) {
                     String data = msg_err.getContent();
                     String[] dataArray = data.split(",");
-                   errtimes =time_contructor(dataArray, errtimes);
+                   errtimes = time_constructor(dataArray, errtimes);
 
-                }else{
+                } else if(msg_machine!=null) {
+                String data = msg_machine.getContent();
+                String[] dataArray = data.split(",");
+                machinetimes = time_constructor(dataArray, machinetimes);
+
+            }else{
                     //System.out.println("Block the agent");
                     block();
                 }
@@ -116,7 +126,7 @@ public class DataAcq_GWAgent extends GatewayAgent {
         super.setup();
     }
 
-    private HashMap<String, HashMap<String, HashMap<String, String>>> time_contructor(String[] dataArray, HashMap<String, HashMap<String, HashMap<String, String>>> t) {
+    private HashMap<String, HashMap<String, HashMap<String, String>>> time_constructor(String[] dataArray, HashMap<String, HashMap<String, HashMap<String, String>>> t) {
         if (!t.containsKey(dataArray[0])){
             //Si el HashMap no tiene ninguna clave con el nombre del componente, es el primer mensaje que recibo sobre él.
             //Por tanto, primero creo la clave, y luego añado los datos

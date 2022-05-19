@@ -11,18 +11,10 @@ public class StructMessageTest {
     private HashMap<String,HashMap<String,HashMap<String,String>>> testResults;
     private HashMap<String,HashMap<String,HashMap<String,String>>> testResultsApp;
     private HashMap<String,HashMap<String,HashMap<String,String>>> testResultsErr;
+    private HashMap<String,HashMap<String,HashMap<String,String>>> testResultsMachine;
 
 
     public StructMessageTest() {
-    }
-
-
-    public void setAction(String _action) {
-        this.action = _action;
-    }
-
-    public void setMessage(String _message) {
-        this.messageGson = _message;
     }
 
     public void setTestResults(HashMap _results) {
@@ -34,6 +26,35 @@ public class StructMessageTest {
     }
 
     public void setTestResultsErr(HashMap _resultsErr) { this.testResultsErr = _resultsErr; }
+
+    public void setTestResultsMachine(HashMap _resultsMachine) { this.testResultsMachine = _resultsMachine; }
+
+
+    public HashMap readTestResults() {
+        return this.testResults;
+    }
+
+    public HashMap readTestResultsErr() {
+        return this.testResultsErr;
+    }
+
+    public HashMap readTestResultsApp() {
+        return this.testResultsApp;
+    }
+
+    public HashMap readTestResultsMachine() { return this.testResultsMachine; }
+
+
+
+
+
+    public void setAction(String _action) {
+        this.action = _action;
+    }
+
+    public void setMessage(String _message) {
+        this.messageGson = _message;
+    }
 
     public void setPerformative(int _performative) {
         this.performative = _performative;
@@ -51,18 +72,6 @@ public class StructMessageTest {
         return this.messageGson;
     }
 
-    public HashMap readTestResults() {
-        return this.testResults;
-    }
-
-    public HashMap readTestResultsErr() {
-        return this.testResultsErr;
-    }
-
-    public HashMap readTestResultsApp() {
-        return this.testResultsApp;
-    }
-
     public boolean readNewData() {
         return this.newData;
     }
@@ -70,4 +79,7 @@ public class StructMessageTest {
     public int readPerformative() {
         return this.performative;
     }
+
+
+
 }
