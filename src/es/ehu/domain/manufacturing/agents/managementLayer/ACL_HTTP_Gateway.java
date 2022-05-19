@@ -276,7 +276,10 @@ public class ACL_HTTP_Gateway {
                 HttpResponse<JsonNode> get_IA = Unirest.get("http://127.0.0.1:1880/State/ManufacturingStation/IA").asJson();
 
                 //Solo me quedo con el contenido si la comunicación ha sido corecta
-                if (get_IA.getStatus() == 200) result = get_IA.getBody().toString();
+                if (get_IA.getStatus() == 200) {
+                    //result = get_IA.getBody().toString();
+                    result = "Not working"; //Prueba, si hago un GET, devuelvo un Not working
+                }
                 break;
             case "POST_IA":
 

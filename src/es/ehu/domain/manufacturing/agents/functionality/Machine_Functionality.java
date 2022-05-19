@@ -95,30 +95,30 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
 
 		/* En caso negativo, se trata del agente auxiliar y hay que realizar más acciones */
 		/* En primer lugar, hay que comprobar la conectividad con el asset en dos pasos: */
-		/* Paso 1: contacto con el gatewayAgent y espero respuesta (si no hay, no se puede continuar con el registro) */
-		sendACLMessage(ACLMessage.REQUEST,gatewayAgentID,"ping",
-                myAgent.getLocalName()+"_"+methodName+"_"+conversationId++,"",myAgent);
-		ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 300);
-		if(answer_gw==null){
-			System.out.println("GW is not online. Start GW and repeat.");
-			System.exit(0);
-		}
-
-		/* Paso 2: contacto con el asset a través del gatewayAgent y espero respuesta (si no hay, no se puede continuar con el registro) */
-		sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "check_asset",
-                myAgent.getLocalName()+"_"+methodName+"_"+conversationId++,"ask_state",myAgent);
-		ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 2500);
-		if(answer!=null){
-			if(!answer.getContent().equals("Working")&&!answer.getContent().equals("Not working")){
-				System.out.println("PLC is not prepared to work.");
-				System.exit(0); //si el asset o el gwAgent no están disponibles no tiene sentido que iniciemos el agente
-			}else{
-				System.out.println("PLC is "+answer.getContent());
-			}
-		}else{
-			System.out.println("PLC is not prepared to work.");
-			System.exit(0); //si el asset o el gwAgent no están disponible no tiene sentido que iniciemos el agente máquina
-		}
+//		/* Paso 1: contacto con el gatewayAgent y espero respuesta (si no hay, no se puede continuar con el registro) */
+//		sendACLMessage(ACLMessage.REQUEST,gatewayAgentID,"ping",
+//                myAgent.getLocalName()+"_"+methodName+"_"+conversationId++,"",myAgent);
+//		ACLMessage answer_gw = myAgent.blockingReceive(MessageTemplate.MatchOntology("ping"), 300);
+//		if(answer_gw==null){
+//			System.out.println("GW is not online. Start GW and repeat.");
+//			System.exit(0);
+//		}
+//
+//		/* Paso 2: contacto con el asset a través del gatewayAgent y espero respuesta (si no hay, no se puede continuar con el registro) */
+//		sendACLMessage(ACLMessage.REQUEST, gatewayAgentID, "check_asset",
+//                myAgent.getLocalName()+"_"+methodName+"_"+conversationId++,"ask_state",myAgent);
+//		ACLMessage answer = myAgent.blockingReceive(MessageTemplate.MatchOntology("asset_state"), 2500);
+//		if(answer!=null){
+//			if(!answer.getContent().equals("Working")&&!answer.getContent().equals("Not working")){
+//				System.out.println("PLC is not prepared to work.");
+//				System.exit(0); //si el asset o el gwAgent no están disponibles no tiene sentido que iniciemos el agente
+//			}else{
+//				System.out.println("PLC is "+answer.getContent());
+//			}
+//		}else{
+//			System.out.println("PLC is not prepared to work.");
+//			System.exit(0); //si el asset o el gwAgent no están disponible no tiene sentido que iniciemos el agente máquina
+//		}
 
         /* Si la comunicación con el asset es correcta, se procede a registrar el agente transporte en el SystemModelAgent */
         /* Primero, se registra el listado de materiales disponibles en la estación */
@@ -202,7 +202,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             String[] allOperations = msg.getContent().split("&");
 
             /* Se recorre el array para ir grabando las operaciones una a una*/
-            for (String singleOperation : allOperations) {
+            for (int i=allOperations.length;i>0;i--) {
 
                 /* Se declara un arraylist para guardar la información sobre cada operación recibida */
                 ArrayList<ArrayList<String>> operationInfo = new ArrayList<>();
@@ -218,7 +218,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 ArrayList<String> attValues = new ArrayList<>();
 
                 /* Se guardan en un array de String todos los atributos de la operación */
-                String[] allAttributes = singleOperation.split(" ");
+                String[] allAttributes = allOperations[i-1].split(" ");
 
                 /* Se recorre el array para ir grabando los atributos uno a uno */
                 for (String singleAttribute : allAttributes) {
