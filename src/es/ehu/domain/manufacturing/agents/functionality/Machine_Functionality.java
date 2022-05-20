@@ -484,6 +484,10 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 /* Se comprueba si el mensaje corresponde a la última pieza del lote evaluando el flag de servicio completo */
                 if (serviceCompleted) {
 
+                    /* Se envían los timeStamps al DataAcq_GWAgent */
+                    get_timestamp(String.valueOf(msgFromAsset.get("Data_Initial_Time_Stamp")),String.valueOf(msgFromAsset.get("Id_Batch_Reference")),myAgent.getLocalName(),"Initial_Time_Stamp");
+                    get_timestamp(String.valueOf(msgFromAsset.get("Data_Final_Time_Stamp")),String.valueOf(msgFromAsset.get("Id_Batch_Reference")),myAgent.getLocalName(),"Final_Time_Stamp");
+
                     /* Si se ha terminado el servicio, se eliminan las operaciones del plan de máquina */
                     BatchID = String.valueOf(msgFromAsset.get("Id_Batch_Reference"));
 
@@ -496,10 +500,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                             }
                         }
                     }
-
-                    /* Se envían los timeStamps al DataAcq_GWAgent */
-                    get_timestamp(String.valueOf(msgFromAsset.get("Data_Initial_Time_Stamp")),String.valueOf(msgFromAsset.get("Id_Batch_Reference")),myAgent.getLocalName(),"Initial_Time_Stamp");
-                    get_timestamp(String.valueOf(msgFromAsset.get("Data_Final_Time_Stamp")),String.valueOf(msgFromAsset.get("Id_Batch_Reference")),myAgent.getLocalName(),"Final_Time_Stamp");
 
                     /* Por último, se resetea el flag para indicar que el transaporte ha quedado libre*/
                     workInProgress=false;
@@ -822,7 +822,15 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             batchId = batchIdmsg.getContent();
         }
 
-
+        /* Si se trata del robot ABB, añadimos los parámetros para que no se pisen en el HashMap */
+        if (machineName.equals("Robot")) {
+            String parameters = myAgent.machinePlan.get(2).get(3).get(7);
+            String [] parametersArray = parameters.split(",");
+            for (int i=0; i<parametersArray.length; i++){
+                String [] parameterSplitted = parametersArray[i].split(":");
+                machineName = machineName + "_" + parameterSplitted[1];
+            }
+        }
 
         /* Después, construimos y enviamos el mensaje */
         String contenido = machineName + "," + batchId + "," + type + "," + timestamp;

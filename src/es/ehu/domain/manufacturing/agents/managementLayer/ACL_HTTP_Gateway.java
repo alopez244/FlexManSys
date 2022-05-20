@@ -143,7 +143,7 @@ public class ACL_HTTP_Gateway {
 
             //Si la operación la hace el robot, no nos devuelve item number, hay que añadirlo
             if (assetName.contains("Robot")){
-                responseUpdate=responseUpdate+",\"Id_Item_number\":1";
+                responseUpdate=responseUpdate+",\"Id_Item_Number\":1";
             }
 
             //A continuación, se coge la información que queremos recuperar del mensaje recibido

@@ -491,24 +491,24 @@ public class MWAgent extends Agent {
 
     public void AddToExpectedMsgs(ACLMessage msg){ //como se trata de un envío multiple en este caso hay que añadir un expected mesage para cada receptor
 
-        jade.util.leap.Iterator itor = msg.getAllReceiver();
-
-        while (itor.hasNext()) {
-            ACLMessage confirmation=new ACLMessage(msg.getPerformative());
-            Object[] ExpMsg=new Object[2];
-            confirmation.setOntology(msg.getOntology());
-            confirmation.setConversationId(msg.getConversationId());
-            confirmation.setContent(msg.getContent());
-            Date date = new Date();
-            long instant = date.getTime();
-            instant=instant+1500; //añade una espera de 1.5 seg
-            ExpMsg[1]=instant;
-            AID receiver=(AID) itor.next();
-            confirmation.addReceiver(receiver);
-            LOGGER.debug("Added expected mesage from: "+receiver.getLocalName()+" with ID conv: "+String.valueOf(convIDCounter));
-            ExpMsg[0]=confirmation; //codificamos en el object el mensaje de confirmacion para un unico receptor
-            expected_msgs.add(ExpMsg);
-        }
+//        jade.util.leap.Iterator itor = msg.getAllReceiver();
+//
+//        while (itor.hasNext()) {
+//            ACLMessage confirmation=new ACLMessage(msg.getPerformative());
+//            Object[] ExpMsg=new Object[2];
+//            confirmation.setOntology(msg.getOntology());
+//            confirmation.setConversationId(msg.getConversationId());
+//            confirmation.setContent(msg.getContent());
+//            Date date = new Date();
+//            long instant = date.getTime();
+//            instant=instant+1500; //añade una espera de 1.5 seg
+//            ExpMsg[1]=instant;
+//            AID receiver=(AID) itor.next();
+//            confirmation.addReceiver(receiver);
+//            LOGGER.debug("Added expected mesage from: "+receiver.getLocalName()+" with ID conv: "+String.valueOf(convIDCounter));
+//            ExpMsg[0]=confirmation; //codificamos en el object el mensaje de confirmacion para un unico receptor
+//            expected_msgs.add(ExpMsg);
+//        }
     }
     public void Acknowledge(ACLMessage msg, Agent agent){
         ACLMessage confirmation=new ACLMessage(ACLMessage.CONFIRM);
