@@ -717,11 +717,17 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         /* Sé que tengo al menos un item, pero no sé si tengo más. Lo compruebo */
         if (myAgent.machinePlan.size()>=4) {
 
+            String itemId = myAgent.machinePlan.get(2).get(3).get(4);
+
             /* Ahora recorro el resto del plan para ir incrementando el número de items que pertenecen al batch */
             for (int i = 3; i< myAgent.machinePlan.size(); i++){
 
-                /* Si el batch_Id coincide, hay que incrementar el número de items */
-                if (myAgent.machinePlan.get(i).get(3).get(3).equals(msgToAsset.get("Id_Batch_Reference").toString())){
+                /* Si el batch_Id coincide y la referencia del item es diferente, hay que incrementar el número de items */
+                String batchId = String.valueOf(msgToAsset.get("Id_Batch_Reference"));
+
+
+                if (myAgent.machinePlan.get(i).get(3).get(3).equals(batchId) &&
+                        !myAgent.machinePlan.get(i).get(3).get(4).equals(itemId)){
                     NumOfItems++;
                     msgToAsset.put("Operation_No_of_Items", NumOfItems);
 
