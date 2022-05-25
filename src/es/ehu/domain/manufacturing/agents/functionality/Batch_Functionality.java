@@ -114,7 +114,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         public void run() {
 
             System.out.println("Item timeout initialized");
-            while (finish_times_of_batch == null) {} //tramo de espera de seguridad hasta tener los finish times
+
             items_finish_times = take_finish_times(finish_times_of_batch); //extrae la información útil que se usa en el timeout
             itemreference=take_item_references(finish_times_of_batch);//nos devuelve las referencias de los item para este batch, ordenados como los tiempos extraidos en la anterior función
             if(!reset_flag) { //si no ha sido un reset pedido externamente debemos construir los FT, si es un reset por replica caida etc., ya los tenemos
@@ -130,13 +130,12 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     if(!delay_already_incremented){ //en caso de no haberse incrementado el timeout con el delay aun, se realiza
                         expected_finish_date=FIUpdateFinishTimes();
 
-                        //Actualiza el estado de las replicas tras obtener el delay
+                        //Actualiza el estado de las replicas tras aumentar el expected finish date con el delay
                         String currentState = (String) ((AvailabilityFunctionality) myAgent.functionalityInstance).getState(); //se actualiza el estado de las replicas
                         if (currentState != null) {
                             System.out.println("Send state");
                             myAgent.sendStateToTracking(currentState,"batch"); //comunicamos a las replicas nuestro estado
                         }
-
                     }else { //si ya ha sido incrementado el delay no queda otra que considerarlo timeout y el thread desaparece
                         System.out.println(getactualtime() + " " + myAgent.getLocalName() + " WARN " + batchreference + " batch has thrown a timeout on item number " + itemreference.get(actual_item_number) + " Checking failure with QoS Agent...");
                         ACLMessage report_to_QoS= sendACLMessage(ACLMessage.FAILURE, QoSID, "timeout", "timeout " + batchreference, batchreference + "/" + itemreference.get(actual_item_number), myAgent); //avisa al QoS de fallo por timeout
@@ -145,17 +144,12 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     }
                 }
 
-                while (getactualtime().before(expected_finish_date)&&actual_item_number<items_finish_times.size()&&!timeout) {  //se queda a la espera siempre que no se supere la fecha de finishtime
+                while (getactualtime().before(expected_finish_date)&&actual_item_number<items_finish_times.size()&&!timeout) {  //se queda a la espera siempre que no se supere la fecha de finishtime ya incrementada por el delay
 
-                    if (update_timeout_flag) {
-//                        if(!kill_done&&actual_item_number==0&&batchreference.equals("221")){ // mata el agente maquina tras completar un item
-//                            sendACLMessage(ACLMessage.REQUEST,new AID("machine3",false),"kill","","",myAgent);
-//                            kill_done=true;
-//                        }
-
-                        actual_item_number++;
+                    if (update_timeout_flag) { //el flag se pone a 1 al recibir la trazabilidad de un item completo
+                        actual_item_number++; //incrementamos el item actual
                         if(actual_item_number<items_finish_times.size()) {
-                            expected_finish_date = UpdateFinishTimes(actual_item_number); //actualiza la fecha de finish time
+                            expected_finish_date = UpdateFinishTimes(actual_item_number); //actualiza la fecha esperada de finalizacion a la del siguiente item
                             update_timeout_flag = false;
                         }
                     }
@@ -211,7 +205,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 ACLMessage reference=sendCommand(myAgent,"get "+batchName.getContent()+" attrib=reference","Reference"); //consigue la referencia del batch
                 AID plannerID = new AID("planner", false);
                 batchreference=reference.getContent();
-                sendACLMessage(16, plannerID,"Ftime_batch_ask", "finnish_time", reference.getContent(), myAgent ); //pide el finish time de cada item al planner
+                sendACLMessage(16, plannerID,"Ftime_batch_ask", "finish_time", reference.getContent(), myAgent ); //pide el finish time de cada item al planner
                 ACLMessage finishtime= myAgent.blockingReceive(templateFT); //recibe los finish times concatenados
                 myAgent.msgFIFO.add((String) finishtime.getContent());
                 System.out.println(finishtime.getContent());
@@ -240,8 +234,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
                 HashMap infoForTraceability = new HashMap();
 
-//        System.out.println(input);
-
                 System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
 
                 System.out.println("Ahora el agente " + myAgent.getLocalName() + " se va a quedar a la espera de la informacion de las operaciones");
@@ -253,10 +245,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                         MessageTemplate.and(MessageTemplate.MatchOntology("data"), MessageTemplate.MatchPerformative(ACLMessage.INFORM)));
 
                 ACLMessage msg = (ACLMessage) input[0];
-//        ACLMessage msg = myAgent.receive(batch_f_template);
-
-
-
 
                 if (msg.getPerformative() == ACLMessage.INFORM && msg.getOntology().equals("askdelay")) { //si es un mensaje con info del delay creamos el timeout
                     date_when_delay_was_asked = getactualtime();
@@ -304,22 +292,23 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                         thread.start();
                     }
 
-                } else if (msg.getPerformative() == ACLMessage.INFORM && msg.getContent().equals("confirmed_timeout")) {
+                } else if (msg.getPerformative() == ACLMessage.INFORM && msg.getContent().equals("confirmed_timeout")) { //por ahora en desuso
 //                    System.out.println("Timeout confirmed by QoS. Preparing for resetting timeout with new conditions");
 //                    delay_already_incremented=false;
-                } else if(msg.getPerformative() == ACLMessage.INFORM && msg.getOntology().equals("rebuild_finish_times")){
+                } else if(msg.getPerformative() == ACLMessage.INFORM && msg.getOntology().equals("rebuild_finish_times")){ //Si una maquina asume el trabajo de otra, el timeout hace falta rehacerlo
                     System.out.println("New machine is assigned to batch "+batchreference+". Timeouts must be rebuilt for new operation times.");
+                    //se resetean las variables para emular el estado inicial del agente antes de crear el threat de timeout
                     delay_already_incremented=false;
                     date_when_delay_was_asked=null;
                     delaynum=0;
+                    //empezaria por el item 0 bajo el criterio del timeout pej: Plan original ->1111 (item 0), 1112 (item 1), 1113 (item 2) / Plan recuperado tras el primer item -> 1112 (item 0), 1113 (item 1)
                     actual_item_number=0;
                     reset_flag=false;
-                    finish_times_of_batch=msg.getContent();
-                    sendACLMessage(16,QoSID,"askdelay","delayasking",batchreference,myAgent);
+                    finish_times_of_batch=msg.getContent(); //los finishtime se reciben del agente maquina segun el tiempo que tarde en ejecutarlos
+                    sendACLMessage(16,QoSID,"askdelay","delayasking",batchreference,myAgent); //pide el delay al QoS y de aquí en adelante es como al inicio del plan
                     operations_redistributed_flag=true;
                 } else if (msg.getPerformative() == ACLMessage.INFORM && msg.getOntology().equals("data")) {
 
-//                    Acknowledge(msg, myAgent);
                     System.out.println("Mensaje con la informacion del PLC");
                     System.out.println("Quien envia el mensaje: " + msg.getSender());
                     System.out.println("Contenido: " + msg.getContent());
@@ -383,14 +372,14 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                             ACLMessage batch_parent = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", myAgent.getLocalName() + "_parent");
                             ACLMessage order_parent = sendCommand(myAgent, "get " + batch_parent.getContent() + " attrib=parent", myAgent.getLocalName() + "_parent_parent");
 
-                            posponed_msgs_to_order = myAgent.msg_buffer.get(order_parent.getContent());
+                            posponed_msgs_to_order = myAgent.msg_buffer.get(order_parent.getContent()); //se comprueba si hay mensajes a la espera de ser enviados al receptor
                             if (posponed_msgs_to_order == null) {  //si no se encuentra el parent en el listado de mensajes postpuestos entonces el receptor ha confirmado la recepcion de todos los mensajes hasta ahora. Seguimos con la ejecución normal.
                                 ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + order_parent.getContent() + " state=running", myAgent.getLocalName() + "_parent_running_replica");
                                 if (!running_replica.getContent().equals("")) {
                                     AID orderAgentID = new AID(running_replica.getContent(), false);
                                     ACLMessage msg_to_order = sendACLMessage(7, orderAgentID, "Information", "ItemsInfo", msgToOrder, myAgent);
                                     myAgent.AddToExpectedMsgs(msg_to_order);
-                                } else {
+                                } else { //si el SMA nos devuelve "" significa que actualmente no hay una replica en running. Se guarda el mensaje apra cuando haya uno
                                     posponed_msgs_to_order = new ArrayList<ACLMessage>();
                                     ACLMessage msg_to_buffer = new ACLMessage(ACLMessage.INFORM);
                                     msg_to_buffer.setConversationId("ItemsInfo");
@@ -399,7 +388,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                                     posponed_msgs_to_order.add(msg_to_buffer);
                                     myAgent.msg_buffer.put(order_parent.getContent(), posponed_msgs_to_order);
                                 }
-                            } else {  //si no es null significa que el agente sigue denunciado y aun no se ha resuelto el problema.
+                            } else {  //si el receptor tenia algun mensaje retenido significa que el agente sigue denunciado y aun no se ha resuelto el problema. Se añade el mensaje al listado.
 
                                 System.out.println("Added message to buffer:\nContent" + "\nTo: " + order_parent.getContent() + "\n Still waiting for a solution.");
                                 ACLMessage msg_to_buffer = new ACLMessage(ACLMessage.INFORM);

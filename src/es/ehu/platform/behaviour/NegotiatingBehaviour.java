@@ -189,10 +189,10 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                     System.out.println("externaldata="+cmd.attribs.get("externaldata"));
 
                     StringTokenizer externaldata = new StringTokenizer(cmd.attribs.get("externaldata"),",");
-                    actionValue_temp = cmd.attribs.get("action");
+                    actionValue_temp = cmd.attribs.get("action"); //se usa una variable temporal para que no se mezclen las negociaciones
                 MsgNegotiation negMsg = null;
 
-                        actionValue_temp = cmd.attribs.get("action");
+//                        actionValue_temp = cmd.attribs.get("action");
                         if (actionValue_temp.equals("start")) {
                             negMsg = new MsgNegotiation((Iterator<AID>) msg.getAllReceiver(), conversationId, cmd.attribs.get("action"), cmd.attribs.get("criterion"),
                                     externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString());
@@ -215,7 +215,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                         break;
                                 }
                             }
-                        } else if (actionValue_temp.equals("recover_tracking")) {
+                        } else if (actionValue_temp.equals("recover_tracking")) { //funciona igual que "start" pero se ha utilizado "recover_tracking" para distinguirlo de un inicio normal del agente
                                 negMsg = new MsgNegotiation((Iterator<AID>) msg.getAllReceiver(), conversationId, cmd.attribs.get("action"), cmd.attribs.get("criterion"),
                                         externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString(), externaldata.nextElement().toString());
                                 if(negMsg.getTargets().length<=1){
@@ -256,12 +256,6 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                         case NEG_WON: //he ganado la negociación y termina correctamente
                                             System.out.println("WON!");
 
-//                                            ACLMessage DD_inform=new ACLMessage(ACLMessage.INFORM);
-//                                            DD_inform.addReceiver(new AID("D&D",false));
-//                                            DD_inform.setOntology("redistributed_operations");
-//                                            DD_inform.setConversationId(conversationId);
-//                                            DD_inform.setContent((String) negMsg.getExternalData()[0]);
-//                                            myAgent.send(DD_inform);
 
                                             direct_win=true;
                                         case NEG_FAIL:
@@ -348,13 +342,13 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                 }
                             }
                         }
-                    if(!direct_win){ //significa que solo habia una instancia para negociar por lo que no tiene
+                    if(!direct_win){ //significa que solo habia una instancia por lo que no tiene que negociar
                         regNegotiation(conversationId, msg.getSender(), negMsg);
                         initNegotiation();
                     }
                     direct_win=false;
 
-            } else if (msg.getPerformative() == ACLMessage.INFORM){
+            } else if (msg.getPerformative() == ACLMessage.INFORM){ //se reciben mensajes de los ganadores de la negociacion actual
                 busy=false;
                 actionValue=null; //ya esta disponible para un nuevo CFP
             } else{
@@ -472,11 +466,6 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                     case NEG_WON: //he ganado la negociación y termina correctamente
                                         LOGGER.info(myAgent.getLocalName() + " WON negotiation(id:" + conversationId + ")!");
 
-//                                        try {
-//                                            Thread.sleep(100);
-//                                        } catch (InterruptedException e) {
-//                                            e.printStackTrace();
-//                                        }
 
                                         ACLMessage inform_winner = new ACLMessage(ACLMessage.INFORM);
                                         inform_winner.setOntology(ONT_NEGOTIATE);
@@ -555,12 +544,6 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                             }
                                             myAgent.send(inform_winner);
 
-//                                            ACLMessage DD_inform=new ACLMessage(ACLMessage.INFORM);
-//                                            DD_inform.addReceiver(new AID("D&D",false));
-//                                            DD_inform.setOntology("redistributed_operations");
-//                                            DD_inform.setConversationId(conversationId);
-//                                            DD_inform.setContent(Operations);
-//                                            myAgent.send(DD_inform);
 
                                             busy = false;
 
@@ -571,7 +554,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                     if (negotiationRuntime.get(conversationId).checkReplies()) { //si he pasado por todos las pujas y sea ganador o perdedor
                                         negotiationRuntime.remove(conversationId);
                                     }
-                                }else{
+                                }else{ //TODO añadir aqui el resto de criterios
                                     LOGGER.info(msg.getSender().getLocalName() + "(" + receivedVal + ") ");
                                     negotiationRuntime.get(conversationId).cntReplies();
 
@@ -609,12 +592,7 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                                 }
                                             }
                                             myAgent.send(inform_winner);
-//
-//                                            ACLMessage new_operations=new ACLMessage(ACLMessage.REQUEST);
-//                                            new_operations.setOntology(ONT_RUN);
-//                                            new_operations.setContent(Operations);
-//                                            new_operations.addReceiver(myAgent.getAID());
-//                                            myAgent.send(new_operations);
+
                                             busy = false;
 
                                         case NEG_FAIL:

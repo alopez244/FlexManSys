@@ -116,7 +116,7 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
 
         if (negReceivedValue>negScalarValue) return NegotiatingBehaviour.NEG_LOST; //pierde negociación
         if ((negReceivedValue==negScalarValue) && !tieBreak ) return NegotiatingBehaviour.NEG_LOST; //empata negocicación pero no es quien fija desempate
-//        if ((negReceivedValue==negScalarValue) && !tieBreak ) return NegotiatingBehaviour.NEG_RETRY;
+
 
         LOGGER.info("negotiation(id:"+conversationId+") partial winner "+myAgent.getLocalName()+"(value:"+negScalarValue+")");
         if (!checkReplies) return NegotiatingBehaviour.NEG_PARTIAL_WON; // es ganador parcial, faltan negociaciones por finalizar
@@ -140,7 +140,7 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
             LOGGER.info("id="+action.who);
 //            ACLMessage hosted_elements =null;
             try {
-//                hosted_elements = sendCommand("get "+myAgent.getLocalName()+" attrib=HostedElements");
+
                     if(!ListAttrib.contains(seID)) { //Si la lista de atributos no tiene la ID del sistem element lo añade
                         ACLMessage Actual_Attrib= sendCommand("get " + myAgent.getLocalName() + " attrib=HostedElements");
                         ListAttrib=Actual_Attrib.getContent(); //primero actualizamos la variable (para ejecucion de planes de manera consecutiva sin reinicializar el sistema).
@@ -165,7 +165,7 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
                 get_timestamp(timestamp, seID,agnID,"Node");
                 get_timestamp(timestamp, seID,agnID,"NegotiationTime");
                 AgentController ac=null;
-                if(action.cmd.equals("start")){ //si es action value es start la replica inicia normal. Si es "recover_tracking" se añade informacion a los atributos para que la propia replica sepa que ha sido generada por un error
+                if(action.cmd.equals("start")){ //si el action value es "start" la replica inicia normal. Si es "recover_tracking" se añade informacion a los atributos para que la propia replica pida la actualizacion de estado al inicio de la misma
                     ac = ((AgentController) myAgent.getContainerController().createNewAgent(agnID, seClass, new Object[] { "firstState="+seFirstTransition , "redundancy="+redundancy , "parentAgent=" + parentAgentID,"recovery=false"}));
                 }else{
                     ac = ((AgentController) myAgent.getContainerController().createNewAgent(agnID, seClass, new Object[]{"firstState=" + seFirstTransition, "redundancy=" + redundancy, "parentAgent=" + parentAgentID,"recovery=true"}));

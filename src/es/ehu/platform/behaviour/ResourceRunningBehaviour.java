@@ -90,18 +90,17 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         //****************** 2) Etapa de checkeo para mensajes retenidos por falta de disponibilidad de agentes
         ACLMessage new_target= myAgent.receive(template2);
         if(new_target!=null){     //D&D avisa de que ya se puede vaciar el buffer de mensajes
-            if(new_target.getContent().contains("batchagent")){ //nuevo agente batch disponble para registrar la trazabilidad.
-                ACLMessage parent= myAgent.sendCommand("get "+new_target.getContent()+" attrib=parent"); //se ha registrado el parent como key
+            if(new_target.getContent().contains("batchagent")){ //nuevo agente batch disponible para registrar la trazabilidad.
+                ACLMessage parent= myAgent.sendCommand("get "+new_target.getContent()+" attrib=parent"); //se ha registrado el parent como key del hashmap
                 ArrayList<ACLMessage> postponed_msgs=new ArrayList<ACLMessage>();
                 postponed_msgs=myAgent.msg_buffer.get(parent.getContent()); //se obtiene el listado de mensajes pendientes para el batch
                 if(postponed_msgs!=null){
-                    for(int i=0; i<postponed_msgs.size();i++){
+                    for(int i=0; i<postponed_msgs.size();i++){ //hay que liberar todos los mensajes para este agente
                         ACLMessage msg_to_release=new ACLMessage(postponed_msgs.get(i).getPerformative());
                         msg_to_release.setContent(postponed_msgs.get(i).getContent());
                         msg_to_release.setOntology(postponed_msgs.get(i).getOntology());
                         msg_to_release.setConversationId(postponed_msgs.get(i).getConversationId());
                         msg_to_release.addReceiver(new AID(new_target.getContent(),false));
-
                         myAgent.send(msg_to_release);  //se libera el mensaje retenido con nuevo destinatario
                         myAgent.AddToExpectedMsgs(msg_to_release);
                     }
@@ -109,9 +108,8 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
                 }else{
                     LOGGER.error("Buffer already released.");
                 }
-
-            }else{   //si no es un agente de apliación será GW
-                //todo añadir aqui para relese de agente GW
+            }else{
+                //todo añadir aqui para release de otros agentes
             }
         }
         //****************** Fin de etapa de checkeo para mensajes retenidos por falta de disponibilidad de agentes
@@ -119,10 +117,10 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         //****************** 3) Etapa de checkeo de mensajes de acknowledge
         for(int i=0;i<myAgent.expected_msgs.size();i++){         //realiza el checkeo de mensajes de acknowledge
             Object[] exp_msg;
-            exp_msg=myAgent.expected_msgs.get(i);
-            ACLMessage complete_msg=(ACLMessage) exp_msg[0];     //el mensaje que se ha enviado
+            exp_msg=myAgent.expected_msgs.get(i); //objeto de 2 dimensiones conteniendo el mensaje que requiere respuesta y el timeout
+            ACLMessage complete_msg=(ACLMessage) exp_msg[0];
             jade.util.leap.Iterator itor = complete_msg.getAllReceiver();
-            AID exp_msg_sender= (AID)itor.next();   //usa el iterador para obtener el AID de el receptor original del mensaje
+            AID exp_msg_sender= (AID)itor.next();   //usa el iterador para obtener el AID de el receptor original del mensaje (solo uno porque se genera un unico expected msg por receptor)
             String convID=complete_msg.getConversationId();
             String content=complete_msg.getContent();
             long timeout=(long) exp_msg[1];        //el instante para el cual ya se deberia haber obtenido respuesta
@@ -134,13 +132,19 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
             ACLMessage ack= myAgent.receive(ack_template);
             if(ack==null){
                 if(instant>timeout){
-                    if(exp_msg_sender.getLocalName().equals(QoSID.getLocalName())){ //si no contesta el QoS este agente se asume que esta aislado
+                    if(exp_msg_sender.getLocalName().equals(QoSID.getLocalName())){
+                        //si no contesta el QoS, significa que ya ha denunciado a un agente y no esta recibiendo respuesta de dicha denuncia. Se asume que este agente esta aislado
                         LOGGER.info("QoS did not answer on time. THIS AGENT MIGHT BE ISOLATED.");
+                        //hay que tomar medidas en funcion de la identidad del agente aislado
                         if(myAgent.getLocalName().contains("machine")){
-                            myAgent.state="idle";	//es un agente máquina por lo que transiciona a idle
+                            //si es un agente máquina debe transicionar a idle
+                            myAgent.state="idle";
                             myAgent.change_state=true;
-                        }else{ //TODO añadir aquí agentes no contemplados cuando proceda
-
+                        }else if(myAgent.getLocalName().contains("pnodeagent")){
+                            //si es un nodo se elimina a si mismo llevandose consigo los agentes de aplicacion que hosteaba
+                            System.exit(0);
+                        } else{
+                            //TODO programar aqui que hacer cuando el agente transporte se queda aislado de la red
                         }
                     }else{
                         String sender_on_msgbuffer="";  //para guardar el mensaje en el buffer hay que asignarle un receptor
@@ -156,7 +160,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
                         postponed_msgs=myAgent.msg_buffer.get(sender_on_msgbuffer); //por si habia algún mensaje anteriormente
                         if(postponed_msgs==null){
                             postponed_msgs=new ArrayList<ACLMessage>();
-                            postponed_msgs.add(complete_msg);  //como vamos a denunciar a este agente debemos guardar el mensaje para enviarselo a su sustituto
+                            postponed_msgs.add(complete_msg);  //como vamos a denunciar a este agente debemos guardar el mensaje para enviarselo a su futuro sustituto
                         }else{
                             postponed_msgs.add(complete_msg);
                         }
@@ -188,13 +192,13 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         }
         //***************** Fin de etapa de ejecución de funtionality
 
-        //***************** 5) Etapa de muerte deliberada de Nodo
+        //***************** 5) Etapa de muerte deliberada de Nodo/maquina
         ACLMessage err_simulation = myAgent.receive(template3);
         if (err_simulation!=null) {
             System.out.println(err_simulation.getSender().getLocalName()+" politely asked to kill myself");
             myAgent.get_timestamp(myAgent,"AgentKilled");
             System.out.println(System.currentTimeMillis()); //timestamp para comparar tiempos entre muerte real y timestamp: ~12ms en PC
-            System.exit(0); //mata al nodo completo
+            System.exit(0); //mata al agente completo
         }
         //***************** Fin de etapa de muerte deliberada de agente
 

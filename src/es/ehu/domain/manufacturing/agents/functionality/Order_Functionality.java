@@ -75,7 +75,6 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                             expected_finish_time = new_expected_finish_time;
                             System.out.println("BATCH FINISH-TIME UPDATED");
                             System.out.println("***********************************"+batch+" batch expected finish time: "+expected_finish_time+"***********************************");
-                            //System.out.println("Batch " + batch + " finish time updated to: " + expected_finish_time);
                             new_expected_finish_time = null;
                             batch_to_update=null;
                         }
@@ -89,7 +88,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 }
                 if (batch_to_take_down.equals(batch)) { //cuando la variable volatil batch_to_take_down coincide con el batch del timeout el timeout finaliza porque el batch ha terminado
                     exit_timeout = true;
-                    batch_to_take_down=""; //resetea la variable para el siguiente batch (evita bugs)
+                    batch_to_take_down=""; //resetea la variable para el siguiente batch
                 }
             }
             batch_to_take_down = "";
@@ -188,7 +187,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 ACLMessage reference = sendCommand(myAgent, "get " + orderName.getContent() + " attrib=reference", "Reference"); //consigue la referencia del order
                 AID plannerID = new AID("planner", false);
                 orderreference=reference.getContent();
-                sendACLMessage(16, plannerID,"Ftime_order_ask", "finnish_time", reference.getContent(), myAgent ); //pide el finish time de cada item al planner
+                sendACLMessage(16, plannerID,"Ftime_order_ask", "finish_time", reference.getContent(), myAgent ); //pide el finish time de cada item al planner
                 ACLMessage finishtime= myAgent.blockingReceive(templateFT); //recibe los finish times concatenados
                 System.out.println(finishtime.getContent());
                 raw_ft=finishtime.getContent();
@@ -237,12 +236,8 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 ACLMessage msg = (ACLMessage) input[0];
                 System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
 
-//        ACLMessage msg = myAgent.receive(template);
-//        if (msg != null) {
-
 
             if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("Information")&&msg.getConversationId().equals("ItemsInfo")){
-//                Acknowledge(msg, myAgent);
                 if (firstTime) {
                     deserializedMessage = deserializeMsg(msg.getContent());
                     batchTraceability = addNewLevel(batchTraceability, deserializedMessage, true); //añade el espacio para la informacion de la orden en primera posicion, sumando un nivel mas a los datos anteriores

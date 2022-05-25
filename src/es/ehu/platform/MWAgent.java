@@ -57,7 +57,6 @@ public class MWAgent extends Agent {
 //    public static ArrayList<String> ReportedAgents=new ArrayList<String>(); //agentes reportados
 //    public ArrayList<String> IgnoredReplicas=new ArrayList<String>();
     public String cmpID = null;
-    public boolean antiloopflag=false;
     public String state ="";    //para uso en autoidle
     public boolean change_state=false; //para cambiar el estado de una máquina a si misma
     public CircularFifoQueue msgFIFO = new CircularFifoQueue(5);    //variable de almacenamiento de ACL
@@ -552,11 +551,11 @@ public class MWAgent extends Agent {
     }
 
 
-    public void AddToExpectedMsgs(ACLMessage msg){ //como se trata de un envío multiple en este caso hay que añadir un expected mesage para cada receptor
+    public void AddToExpectedMsgs(ACLMessage msg){
 
         jade.util.leap.Iterator itor = msg.getAllReceiver();
 
-        while (itor.hasNext()) {
+        while (itor.hasNext()) { //espera un mensaje de confirmación por cada receptor del mensaje
             ACLMessage confirmation=new ACLMessage(msg.getPerformative());
             Object[] ExpMsg=new Object[2];
             confirmation.setOntology(msg.getOntology());

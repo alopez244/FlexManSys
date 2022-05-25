@@ -173,25 +173,37 @@ public class ErrorHandlerAgent extends Agent{
                 msg.setContent(contenido);
                 send(msg);
             }else if(agent.contains("machine")){
-                String[] AllAgents=new String[1];
-                if(agent.contains(",")){
-                    AllAgents=agent.split(",");
-                }else{
-                    AllAgents[0]=agent;
-                }
-                for(int i=0;i<AllAgents.length;i++){
-                    try {
-                    ACLMessage id= sendCommand(a,"get "+AllAgents[i]+" attrib=id","check_machine_id_for_timestamp_"+timeStmp++);String contenido = id.getContent()+","+AllAgents[i] +","+type+","+String.valueOf(timestamp.getTime());
+                if(type.equals("StartSearch")||type.equals("FinishSearch")||type.equals("StartPing")||type.equals("FinishPing")){
                     ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
                     msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
-                    msg.setOntology("timestamp_err");
+                    msg.setOntology("timestamp_neg");
                     msg.setConversationId(agent+"_"+type+"_timestamp_"+timeStmp);
+                    String contenido = "QoS"+","+"PingOfQoS" +","+type+","+String.valueOf(timestamp.getTime());
                     msg.setContent(contenido);
                     send(msg);
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                }else{
+                    String[] AllAgents=new String[1];
+                    if(agent.contains(",")){
+                        AllAgents=agent.split(",");
+                    }else{
+                        AllAgents[0]=agent;
+                    }
+                    for(int i=0;i<AllAgents.length;i++){
+                        try {
+                            ACLMessage id= sendCommand(a,"get "+AllAgents[i]+" attrib=id","check_machine_id_for_timestamp_"+timeStmp++);
+                            String contenido = id.getContent()+","+AllAgents[i] +","+type+","+String.valueOf(timestamp.getTime());
+                            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+                            msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
+                            msg.setOntology("timestamp_err");
+                            msg.setConversationId(agent+"_"+type+"_timestamp_"+timeStmp);
+                            msg.setContent(contenido);
+                            send(msg);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
+
             }else{
                 System.out.println("Not a valid agent for capturing a timestamp");
             }
@@ -214,7 +226,7 @@ public class ErrorHandlerAgent extends Agent{
             msg.setOntology("timestamp_err");
             msg.setConversationId(agent+"_"+type+"_timestamp_"+timeStmp);
             msg.setContent(contenido);
-            send(msg);
+//            send(msg);  //descomentar para pruebas
         }else{
             System.out.println("Not a valid agent for capturing a timestamp");
         }

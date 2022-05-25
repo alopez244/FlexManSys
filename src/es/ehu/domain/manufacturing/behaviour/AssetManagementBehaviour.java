@@ -3,7 +3,6 @@ package es.ehu.domain.manufacturing.behaviour;
 import es.ehu.domain.manufacturing.agents.functionality.Machine_Functionality;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.template.interfaces.AssetManagement;
-import es.ehu.platform.template.interfaces.AssetManagementFunctionality;
 import es.ehu.platform.template.interfaces.Traceability;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;

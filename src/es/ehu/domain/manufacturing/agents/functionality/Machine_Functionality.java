@@ -309,11 +309,11 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             for(int i = 0 ; i < myAgent.machinePlan.size();i++) {    //Buscamos de todos los plannedStartTime el primero (se asume que estan ordenados)
                 if (myAgent.machinePlan.get(i).get(0).get(0).equals("operation")) {
                     if (myAgent.machinePlan.get(i).get(2).get(1).equals("plannedFinishTime")) {
-                        last_FT=myAgent.machinePlan.get(i).get(3).get(1);  //coge el valor del finish-time,
+                        last_FT=myAgent.machinePlan.get(i).get(3).get(1);  //coge el valor del finish-time y pisa el valor del anterior
                     }
                 }
             }
-            if(last_FT.equals("")){ //podría ser una máquina sin tareas
+            if(last_FT.equals("")){ //podría ser una máquina sin tareas, en cuyo caso se pasa un valor muy bajo
                 return 1;
             }else{
                 Date FT=null;
@@ -378,7 +378,8 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             String order="";
             String productType="";
             String operation_id="";
-            for (int i = 0; i < allOperations.length; i++) { //se asume que la maquina realiza item por operación. No se contempla el caso de item subdividido en varias operaciones
+            for (int i = 0; i < allOperations.length; i++) { //se asume que la maquina realiza item por operación. No se contempla el caso de item subdividido en varias operaciones para una misma maquina
+                //en cada iteracion se obtienen los parametros necesarios para reconstruir las operaciones
                 String[] AllInformation = allOperations[i].split(" ");
                 String item=find_value_of_attrb("item_ID",AllInformation);
                 operation_id=find_value_of_attrb("id",AllInformation);
@@ -386,21 +387,20 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 order=find_value_of_attrb("order_ID",AllInformation);
                 productType=find_value_of_attrb("productType",AllInformation);
                 String ST="";
-                if(i==0){               //en el primer item obtenemos el batch y el start time
-
+                if(i==0){
+                    //en el primer item obtenemos el batch y el start time
                     batch_finish_times= batch+"&";
                     ST=find_value_of_attrb("plannedStartTime",AllInformation);
                     Date item_ST=null;
                     Date expected_time=null;
                     try {
                         item_ST = formatter_date.parse(ST);
-                        expected_time=formatter_time.parse(operation_time.get(operation_id));
+                        expected_time=formatter_time.parse(operation_time.get(operation_id)); //obtenemos el tiempo de ejecucion de la operacion para esta máquina
                     } catch (ParseException e) {
                         e.printStackTrace();
                     }
                     finishTime=formatter_date.format(new Date(item_ST.getTime()+expected_time.getTime()+(60000*60))); //hay que sumarle un offset de 1 hora
                     batch_finish_times=batch_finish_times+item+"/"+finishTime;
-
                 }else{
                     ST=finishTime; //el start time de este item sera el finishtime del anterior
                     Date item_ST=null;
@@ -416,13 +416,15 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
                 }
                 OperationsWithNewFT=OperationsWithNewFT+"id="+operation_id+" plannedFinishTime="+finishTime+" plannedStartTime="+ST+" batch_ID="+batch+" item_ID="+item+" order_ID="+order+" productType="+productType+"&"; //construye las operaciones con los nuevos FT
             }
-            sendACLMessage(ACLMessage.INFORM,new AID("QoSManagerAgent",false),"add_relation",String.valueOf(convIDcnt++),myAgent.getLocalName()+"/"+batch+"/"+operation_id,myAgent); //añade una relacion maquina-batch
+            sendACLMessage(ACLMessage.INFORM,new AID("QoSManagerAgent",false),"add_relation",String.valueOf(convIDcnt++),myAgent.getLocalName()+"/"+batch+"/"+operation_id,myAgent); //añade una relacion maquina-batch como el planner
 
             try {
                 ACLMessage parent = sendCommand(myAgent, "get * category=batch reference=" + batch, String.valueOf(convIDcnt++));
                 ACLMessage running_batch = sendCommand(myAgent, "get * category=batchAgent parent=" + parent.getContent() + " state=running", String.valueOf(convIDcnt++));
-                sendACLMessage(ACLMessage.REQUEST,new AID("QoSManagerAgent",false),"askdelay",String.valueOf(convIDcnt++),batch,myAgent); //recicla la funcionalidad del QoS para que con un mensaje con ontologia "askdelay" elimine los posibles delays registrados en el QoS para este batch (caso múltiples máquinas-multiples delays)
+                sendACLMessage(ACLMessage.REQUEST,new AID("QoSManagerAgent",false),"askdelay",String.valueOf(convIDcnt++),batch,myAgent);
+                //recicla la funcionalidad del QoS para que con un mensaje con ontologia "askdelay" elimine los posibles delays registrados en el QoS para este batch (caso múltiples máquinas-multiples delays)
                 sendACLMessage(ACLMessage.INFORM,new AID(running_batch.getContent(),false),"rebuild_finish_times",String.valueOf(convIDcnt++),batch_finish_times,myAgent);
+                //pide la reconstruccion del timeout al batch pero hasta no tener el delay no lo lanza
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -437,7 +439,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
             operations_redistributed_flag=true;//flag para timestamps
             myAgent.get_timestamp(myAgent,"OperationsRebuilt");
             //timestamp 4
-            execute(data);
+            execute(data); //añade a la lista de tareas las nuevas operaciones
         }
 
         return NegotiatingBehaviour.NEG_WON;

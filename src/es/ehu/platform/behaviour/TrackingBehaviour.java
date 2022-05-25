@@ -67,22 +67,23 @@ public class TrackingBehaviour extends SimpleBehaviour {
 	public void onStart(){
 		template = MessageTemplate.MatchOntology("state");
 
-		String recovery_value = get_recovery_value();
+		String recovery_value = get_recovery_value(); //checkea si el agente es generado a raiz de un fallo o es normal
 		if (recovery_value.equals("true")){ //si es recovery significa que el D&D ha pedido restaurar una replica en tracking
 			ACLMessage parent= myAgent.sendCommand("get "+myAgent.getLocalName()+" attrib=parent");
 			ACLMessage running_replica= myAgent.sendCommand("get * parent="+ parent.getContent()+" state=running");
 			if(running_replica!=null){
 				if(!running_replica.getContent().equals("")){
 					AID target=new AID(running_replica.getContent(),false);
-					sendACLMessage(ACLMessage.REQUEST,target,"trigger_getState",myAgent.getLocalName(),""); //pedimos al agente en running que nos envie el estado
+					sendACLMessage(ACLMessage.REQUEST,target,"trigger_getState",myAgent.getLocalName(),""); //pedimos al agente en running que nos envie el estado porque este agente se ha generado a raiz de un error
 				}
 			}
 //			myAgent.get_timestamp(myAgent,"RedundancyRecovery"); //replica lista para funcionar, se recoge el timestamp
 		}
-		if(!myAgent.ExecTimeStamped){
+
+//		if(!myAgent.ExecTimeStamped){
 //			myAgent.get_timestamp(myAgent,"ExecutionTime"); //para que solo se ejecute una vez
-			myAgent.ExecTimeStamped=true;
-		}
+//			myAgent.ExecTimeStamped=true;
+//		}
 
 		myAgent.ActualState="tracking";
 		timeout = 0;
@@ -116,33 +117,13 @@ public class TrackingBehaviour extends SimpleBehaviour {
 			if (myAgent.period>0) timeout = System.currentTimeMillis()+(int)(myAgent.period*1.5); // se producirá timeout si se excede de (horaActual + D)
 				// TODO el deadline sólo se debe calcular para componentes periódicos
 				LOGGER.trace(" trackingBehaviour.onStart() msg != null");
-//				try {
-//					String stateClassName = (msg.getContentObject()==null || msg.getContentObject().getClass()==null)?"null"  //anterior
 
-					String stateClassName = (msg.getContent()==null || msg.getContent().getClass()==null)?"null"
-
-//					    :msg.getContentObject().getClass().getSimpleName();  //anterior
-
-							:msg.getContent().getClass().getSimpleName();
-
-//					LOGGER.info("functionalityInstance.setState("+stateClassName+"="+
-//					    ((msg.getContentObject()==null)?"null":msg.getContentObject().toString())+
-////					        ")"); //anterior
-
-					LOGGER.info("functionalityInstance.setState("+stateClassName+"="+
-							((msg.getContent()==null)));
-					
-//					((AvailabilityFunctionality)myAgent.functionalityInstance).setState(msg.getContentObject());  //anterior
-					myAgent.msgFIFO.add((String) msg.getContent());
-					myAgent.Acknowledge(msg, myAgent);
-					((AvailabilityFunctionality)myAgent.functionalityInstance).setState(msg.getContent());
-					LOGGER.debug(myAgent.cmpID+"("+((MWAgent) myAgent).getLocalName()+") < " + myAgent.cmpID+"("+msg.getSender().getLocalName()+"):"
-							+ "state("+stateClassName+")");
-
-//				} catch (UnreadableException e) {
-//					LOGGER.warn(e.getLocalizedMessage());
-//					e.printStackTrace();
-//				}
+				String stateClassName = (msg.getContent()==null || msg.getContent().getClass()==null)?"null":msg.getContent().getClass().getSimpleName();
+				LOGGER.info("functionalityInstance.setState("+stateClassName+"="+((msg.getContent()==null)));
+				myAgent.msgFIFO.add((String) msg.getContent());
+				myAgent.Acknowledge(msg, myAgent);
+				((AvailabilityFunctionality)myAgent.functionalityInstance).setState(msg.getContent());
+				LOGGER.debug(myAgent.cmpID+"("+((MWAgent) myAgent).getLocalName()+") < " + myAgent.cmpID+"("+msg.getSender().getLocalName()+"):"+ "state("+stateClassName+")");
 			} else {
 				if (timeout > 0) { //he recibido el primer estado y es periódico
 
@@ -190,7 +171,6 @@ public class TrackingBehaviour extends SimpleBehaviour {
 						block(blockTime);
 					}
 				} else { // no he recibido ningun estado, timeout a partir del primero
-//					LOGGER.debug("tracking.beh.block()");
 					block();
 				}
 			}
@@ -206,13 +186,11 @@ public class TrackingBehaviour extends SimpleBehaviour {
 		return expired;
 	}
 
-	public void setState(ACLMessage msg){
-
-
-	}
-//	public void Acknowledge(ACLMessage msg){
-//		sendACLMessage(ACLMessage.CONFIRM,msg.getSender(),msg.getOntology(),msg.getConversationId(),msg.getContent());
+//	public void setState(ACLMessage msg){
+//
+//
 //	}
+
 	public void sendACLMessage(int performative, AID reciever, String ontology, String conversationId, String content) {
 		ACLMessage msg = new ACLMessage(performative); //envio del mensaje
 		msg.addReceiver(reciever);

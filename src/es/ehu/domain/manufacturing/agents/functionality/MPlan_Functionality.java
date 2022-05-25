@@ -197,7 +197,6 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
         }else if(msg.getPerformative()==ACLMessage.INFORM&&msg.getContent().equals("Order completed")&&msg.getConversationId().equals("Shutdown")){
           String msgSender = msg.getOntology();
           for (int i = 0; i < sonAgentID.size(); i++) {
-//          if (sonAgentID.get(i).getName().split("@")[0].equals(msgSender)) {
             if (sonAgentID.get(i).equals(msgSender)) {
               sonAgentID.remove(i);
               i--;

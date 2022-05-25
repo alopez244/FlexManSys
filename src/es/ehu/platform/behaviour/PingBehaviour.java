@@ -74,14 +74,14 @@ public class PingBehaviour extends SimpleBehaviour{
                                 reply.setContent(myAgent.gatewayAgentName + ":OK & PLC:?");
                             }
                         } else {
-                            reply.setContent(myAgent.gatewayAgentName + ":OK & PLC:?"); //con el tecnomatix en pausa siempre se devuelve esto aunque el GW este bien porque no contesta
+                            reply.setContent(myAgent.gatewayAgentName + ":OK & PLC:?"); //con el tecnomatix en pausa siempre se devuelve esto porque no contesta
                         }
                     }
                 }else{
                     reply.setContent("Alive");
                 }
                 myAgent.send(reply);
-            }else{ //si el mensaje de ping tiene content, es una consulta de si hemos recibido otro mensaje anteriormente "te ha llegado este mensaje:...?"
+            }else{ //si el mensaje de ping tiene content, es una consulta de si hemos recibido un mensaje anteriormente "te ha llegado este mensaje:...?"
                 msgFIFO = myAgent.msgFIFO;
                 boolean found=false;
                 if(msgFIFO!=null) {
@@ -93,6 +93,7 @@ public class PingBehaviour extends SimpleBehaviour{
                             reply.setContent("Y");
                             myAgent.send(reply);
                             found = true;
+                            break;
                         }
                     }
                     if(!found){
