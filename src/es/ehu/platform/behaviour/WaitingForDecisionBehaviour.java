@@ -3,9 +3,8 @@ package es.ehu.platform.behaviour;
 import jade.core.behaviours.SimpleBehaviour;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import es.ehu.platform.MWAgent;
-import jade.core.behaviours.OneShotBehaviour;
+
 
 public class WaitingForDecisionBehaviour extends SimpleBehaviour {
   private static final long serialVersionUID = -2673578185687045396L;
@@ -32,9 +31,6 @@ public class WaitingForDecisionBehaviour extends SimpleBehaviour {
     
   } // end action
 
-//  public int onEnd() {
-//    return 1;
-//  }
 @Override
 public boolean done(){return false;}
  

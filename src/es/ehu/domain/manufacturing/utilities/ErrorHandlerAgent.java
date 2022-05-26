@@ -13,16 +13,14 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.sql.Timestamp;
-import java.util.HashMap;
 
 
 
 public class ErrorHandlerAgent extends Agent{
     private Agent myAgent;
     public int timeStmp=0;
-    public String ConvID="EHAget_";
+    public String ConvID="EHAgent_";
     public int cnt=0;
 
 
@@ -46,9 +44,7 @@ public class ErrorHandlerAgent extends Agent{
         }
     }
 
-    public ACLMessage sendCommand(Agent agent, String cmd, String conversationId) throws Exception {
-
-//        this.myAgent = agent;
+    public ACLMessage sendCommand(Agent agent, String cmd) throws Exception {
 
             DFAgentDescription dfd = new DFAgentDescription();
             ServiceDescription sd = new ServiceDescription();
@@ -73,7 +69,8 @@ public class ErrorHandlerAgent extends Agent{
             LOGGER.entry(mwm, cmd);
             ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
             msg.addReceiver(new AID(mwm, AID.ISLOCALNAME));
-            msg.setConversationId(conversationId);
+//            msg.setConversationId(conversationId);
+            msg.setConversationId(agent.getLocalName()+"_cmd_"+String.valueOf(cnt++));
             msg.setOntology("control");
             msg.setContent(cmd);
             msg.setReplyWith(cmd);
@@ -107,7 +104,6 @@ public class ErrorHandlerAgent extends Agent{
             for (int i=0; i<agents.length;i++){
                 AID agentID = agents[i].getName();
                 String agent_to_check=agentID.getLocalName();
-//            System.out.println(agent_to_check);
                 if(agent_to_check.contains(name)){
                     found++;
                 }
@@ -123,12 +119,6 @@ public class ErrorHandlerAgent extends Agent{
             boolean state;
             int n=SearchAgent(name,agent); //primero se observa cuantos agentes ve el ams con en nombre proporcionado
             if(n>0){
-//            AID Agent_to_ping_ID=new AID(name,false);
-//            ACLMessage ping=new ACLMessage(ACLMessage.REQUEST);
-//            ping.setOntology("ping");
-//            ping.addReceiver(Agent_to_ping_ID);
-//            ping.setContent("");
-//            myAgent.send(ping);
                 sendACL(16,name,"ping","",agent);
                 ACLMessage echo=agent.blockingReceive(pingtemplate,500);
                 if(echo!=null) {
@@ -144,7 +134,6 @@ public class ErrorHandlerAgent extends Agent{
             return state;
         }
         public void sendACL(int performative,String receiver,String ontology,String content,Agent agent){ //Funcion estándar de envío de mensajes
-//        this.myAgent = agent;
             AID receiverAID=new AID(receiver,false); //pasamos la máquina a estado idle
             ACLMessage msg=new ACLMessage(performative);
             msg.addReceiver(receiverAID);
@@ -159,7 +148,7 @@ public class ErrorHandlerAgent extends Agent{
             if(agent.contains("batchagent")||agent.contains("orderagent")||agent.contains("mplanagent")){
                 String ParentID=null;
                 try {
-                    ACLMessage reply = sendCommand(a,"get " + agent + " attrib=parent","TMSTMP_"+timeStmp++);
+                    ACLMessage reply = sendCommand(a,"get " + agent + " attrib=parent");
                     if (reply != null)
                         ParentID = reply.getContent();
                 } catch (Exception e) {
@@ -171,7 +160,7 @@ public class ErrorHandlerAgent extends Agent{
                 msg.setOntology("timestamp_err");
                 msg.setConversationId(agent+"_"+type+"_timestamp_"+timeStmp);
                 msg.setContent(contenido);
-                send(msg);
+//                send(msg);
             }else if(agent.contains("machine")){
                 if(type.equals("StartSearch")||type.equals("FinishSearch")||type.equals("StartPing")||type.equals("FinishPing")){
                     ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
@@ -180,7 +169,7 @@ public class ErrorHandlerAgent extends Agent{
                     msg.setConversationId(agent+"_"+type+"_timestamp_"+timeStmp);
                     String contenido = "QoS"+","+"PingOfQoS" +","+type+","+String.valueOf(timestamp.getTime());
                     msg.setContent(contenido);
-                    send(msg);
+//                    send(msg);
                 }else{
                     String[] AllAgents=new String[1];
                     if(agent.contains(",")){
@@ -190,14 +179,14 @@ public class ErrorHandlerAgent extends Agent{
                     }
                     for(int i=0;i<AllAgents.length;i++){
                         try {
-                            ACLMessage id= sendCommand(a,"get "+AllAgents[i]+" attrib=id","check_machine_id_for_timestamp_"+timeStmp++);
+                            ACLMessage id= sendCommand(a,"get "+AllAgents[i]+" attrib=id");
                             String contenido = id.getContent()+","+AllAgents[i] +","+type+","+String.valueOf(timestamp.getTime());
                             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
                             msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
                             msg.setOntology("timestamp_err");
                             msg.setConversationId(agent+"_"+type+"_timestamp_"+timeStmp);
                             msg.setContent(contenido);
-                            send(msg);
+//                            send(msg);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -214,7 +203,7 @@ public class ErrorHandlerAgent extends Agent{
         if(agent.contains("batchagent")||agent.contains("orderagent")||agent.contains("mplanagent")){
             String ParentID=null;
             try {
-                ACLMessage reply = sendCommand(a,"get " + agent + " attrib=parent","TMSTMP_"+timeStmp++);
+                ACLMessage reply = sendCommand(a,"get " + agent + " attrib=parent");
                 if (reply != null)
                     ParentID = reply.getContent();
             } catch (Exception e) {

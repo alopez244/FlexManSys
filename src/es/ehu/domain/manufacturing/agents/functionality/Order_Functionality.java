@@ -28,25 +28,21 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
     private String firstState;
     private String redundancy;
     private String parentAgentID, orderNumber;
-//    private ArrayList<String> myReplicasID = new ArrayList<>();
-//    private ArrayList<AID> sonAgentID = new ArrayList<>(); // lista con los nombres de los agentes de los que es padre
     private ArrayList<String> sonAgentID = new ArrayList<>();
     private Integer batchIndex = 1;
     private Boolean newBatch = true, firstTime = true;
     private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> batchTraceability = new ArrayList<>();
     private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> deserializedMessage = new ArrayList<>(); // Mensaje recibido desde el batchAgent deserializado
     private String mySeType;
-    private MessageTemplate template, template2,templateFT,template3,template4,template5, template6,template7;
+    private MessageTemplate template, template2,templateFT;
     private volatile String orderreference=null;
     private volatile String raw_ft=null;
     private volatile AID QoSID = new AID("QoSManagerAgent", false);
     private volatile ArrayList<String> online_batches=new ArrayList<String>();
     private volatile String batch_to_take_down="";
     private volatile Date new_expected_finish_time=null;
-    private volatile boolean QoSresponse_flag=false;
     private volatile String batch_to_update=null;
     private ArrayList<ArrayList<String>> batch_last_items_ft=new ArrayList<ArrayList<String>>();
-    private int convIDcnt=0;
     public boolean operations_redistributed_flag=false;
 
 
@@ -139,12 +135,6 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 MessageTemplate.MatchOntology("Information")),MessageTemplate.MatchConversationId("ItemsInfo"));
         this.template2 = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                 MessageTemplate.MatchConversationId("Shutdown"));
-        this.template3 = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                MessageTemplate.MatchOntology("timeout_confirmed"));
-        this.template4 = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                MessageTemplate.MatchOntology("update_timeout"));
-        this.template5=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                MessageTemplate.MatchOntology("delay"));
         this.myAgent = myAgent;
 
         myAgent.get_timestamp(myAgent,"CreationTime");
@@ -171,7 +161,6 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
             seStart(myAgent.getLocalName(), attributes, conversationId);
 
-            // TODO primero comprobara que todas las replicas (tracking) se han creado correctamente, y despues comprobara los batches
             // Es decir, antes de avisar a su padre que esta creado, comprueba las replicas y despues los batches
             // Le añadimos un comportamiento para que consiga todos los mensajes que le van a enviar los batch cuando se arranquen correctamente
 
@@ -187,7 +176,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                 ACLMessage reference = sendCommand(myAgent, "get " + orderName.getContent() + " attrib=reference", "Reference"); //consigue la referencia del order
                 AID plannerID = new AID("planner", false);
                 orderreference=reference.getContent();
-                sendACLMessage(16, plannerID,"Ftime_order_ask", "finish_time", reference.getContent(), myAgent ); //pide el finish time de cada item al planner
+                sendACLMessage(ACLMessage.REQUEST, plannerID,"Ftime_order_ask", "finish_time", reference.getContent(), myAgent ); //pide el finish time de cada item al planner
                 ACLMessage finishtime= myAgent.blockingReceive(templateFT); //recibe los finish times concatenados
                 System.out.println(finishtime.getContent());
                 raw_ft=finishtime.getContent();
@@ -212,12 +201,10 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
         return null;
     }
 
-    // TODO quitamos el atributo attribs y lo creamos dentro del metodo seStart ???
     public String seStart(String seID, Hashtable<String, String> attribs, String conversationId) {
 
         ArrayList<String> creationCategories = new ArrayList<>();
         creationCategories.add("batch");  // Aqui decidiremos que tipos de elementos queremos crear --> Order, Batch, las dos...
-
         List result = seStart(myAgent, seID, attribs, conversationId, creationCategories, chatID, redundancy);
         elementsToCreate = (List<String>) result.get(0);
         chatID = (int) result.get(1);
@@ -283,7 +270,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                         aux = a.toString();
                         msgToMPLan = msgToMPLan.concat(aux);
                     }
-//                AID Agent = new AID(parentAgentID, false);
+
                     try {
                         ACLMessage orde_parent = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", myAgent.getLocalName() + "_parent");
                         ACLMessage mplan_parent = sendCommand(myAgent, "get " + orde_parent.getContent() + " attrib=parent", myAgent.getLocalName() + "_parent_parent");
@@ -292,7 +279,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                             ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + mplan_parent.getContent() + " state=running", myAgent.getLocalName() + "_parent_running_replica");
                             if (!running_replica.getContent().equals("")) {
                                 AID mplanAgentID = new AID(running_replica.getContent(), false);
-                                ACLMessage msg_to_mplan = sendACLMessage(7, mplanAgentID, "Information", "OrderInfo", msgToMPLan, myAgent);
+                                ACLMessage msg_to_mplan = sendACLMessage(ACLMessage.INFORM, mplanAgentID, "Information", "OrderInfo", msgToMPLan, myAgent);
                                 myAgent.AddToExpectedMsgs(msg_to_mplan);
                             } else {
                                 posponed_msgs_to_mplan = new ArrayList<ACLMessage>();
@@ -318,10 +305,8 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
                     }
 
 
-//                ACLMessage msg_to_mplan= sendACLMessage(7, Agent, "Information", "OrderInfo", msgToMPLan, myAgent);
-//                myAgent.AddToExpectedMsgs(msg_to_mplan);
                     if (sonAgentID.size() == 0) { // todos los batch agent de los que es padre ya le han enviado la informacion
-//                        sendACLMessage(7, myAgent.getAID(), "Information", "Shutdown", "Shutdown", myAgent); // autoenvio de mensaje para asegurar que el agente de desregistre y se apague
+//                        sendACLMessage(7, myAgent.getAID(), "Information", "Shutdown", "Shutdown", myAgent); // autoenvio de mensaje para asegurar que el agente de desregistre y se apague. No necesario
                         return true;
                     }
                     batchIndex = batchTraceability.size() - 1;

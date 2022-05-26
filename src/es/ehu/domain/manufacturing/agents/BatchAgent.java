@@ -2,10 +2,7 @@ package es.ehu.domain.manufacturing.agents;
 
 import es.ehu.domain.manufacturing.agents.functionality.Batch_Functionality;
 import es.ehu.platform.template.ApplicationAgentTemplate;
-import jade.core.AID;
 import jade.core.behaviours.Behaviour;
-import jade.core.behaviours.CyclicBehaviour;
-import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
 public class BatchAgent extends ApplicationAgentTemplate {

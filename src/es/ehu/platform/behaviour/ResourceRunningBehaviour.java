@@ -89,7 +89,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
 
         //****************** 2) Etapa de checkeo para mensajes retenidos por falta de disponibilidad de agentes
         ACLMessage new_target= myAgent.receive(template2);
-        if(new_target!=null){     //D&D avisa de que ya se puede vaciar el buffer de mensajes
+        if(new_target!=null){     //D&D avisa de que ya se puede vaciar el buffer de mensajes a otro agente
             if(new_target.getContent().contains("batchagent")){ //nuevo agente batch disponible para registrar la trazabilidad.
                 ACLMessage parent= myAgent.sendCommand("get "+new_target.getContent()+" attrib=parent"); //se ha registrado el parent como key del hashmap
                 ArrayList<ACLMessage> postponed_msgs=new ArrayList<ACLMessage>();
@@ -109,7 +109,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
                     LOGGER.error("Buffer already released.");
                 }
             }else{
-                //todo añadir aqui para release de otros agentes
+                //todo añadir aqui para release de agentes transporte
             }
         }
         //****************** Fin de etapa de checkeo para mensajes retenidos por falta de disponibilidad de agentes
@@ -139,7 +139,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
                         if(myAgent.getLocalName().contains("machine")){
                             //si es un agente máquina debe transicionar a idle
                             myAgent.state="idle";
-                            myAgent.change_state=true;
+                            myAgent.change_state=true; //flag para forzar un estado para la máquina evitando usar ACLs que requieren no estar aislado para utilizarlos
                         }else if(myAgent.getLocalName().contains("pnodeagent")){
                             //si es un nodo se elimina a si mismo llevandose consigo los agentes de aplicacion que hosteaba
                             System.exit(0);

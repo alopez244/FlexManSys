@@ -46,16 +46,13 @@ public class MWAgent extends Agent {
     /**
      *  Instancias en tracking del componente (arraylist para actualiza el estado, actualizarla cuando al MWM llega un setState)
      */
-    //TODO refresh local cache
-    public boolean doTimeStamp=false;
+
     public BasicFunctionality functionalityInstance;
     public String[] targetComponentIDs, sourceComponentIDs;
     public int period = -1;
     public String ActualState=null;
     public ArrayList<String> replicas=new ArrayList<String>();
     public boolean ExecTimeStamped=false;
-//    public static ArrayList<String> ReportedAgents=new ArrayList<String>(); //agentes reportados
-//    public ArrayList<String> IgnoredReplicas=new ArrayList<String>();
     public String cmpID = null;
     public String state ="";    //para uso en autoidle
     public boolean change_state=false; //para cambiar el estado de una máquina a si misma
@@ -70,7 +67,8 @@ public class MWAgent extends Agent {
     public String gatewayAgentName; // Guarda el nombre del agente pasarela
     // Parámetros de configuración
     public boolean mwmStoresExecutionState = true;
-    public boolean restored_replica=false;
+    public int timeout=1000; //millis máximos de espera para el mensaje de confirmación
+
 
     /**
      * Primera transición a realizar
@@ -466,7 +464,7 @@ public class MWAgent extends Agent {
                     msg.setOntology("timestamp_err");
                     msg.setConversationId(a.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
                     msg.setContent(contenido);
-                    a.send(msg);
+//                    a.send(msg);
                 }
             }
         }else if(a.getLocalName().contains("machine")){
@@ -478,7 +476,7 @@ public class MWAgent extends Agent {
             msg.setOntology("timestamp_err");
             msg.setConversationId(a.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
             msg.setContent(contenido);
-            a.send(msg);
+//            a.send(msg);
         }
         }
 //        else if(type.equals("RedundancyRecovery")||type.equals("StartSendState")||type.equals("GetStateDone")||type.equals("MsgSentDone")||type.equals("AcknowledgeGenerated")||type.equals("FinishSendState")) {
@@ -507,7 +505,7 @@ public class MWAgent extends Agent {
                 msg.setOntology("timestamp_err");
                 msg.setConversationId(a.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
                 msg.setContent(contenido);
-                a.send(msg);
+//                a.send(msg);
             }
 
         }else if(type.equals("NegotiationFinish")||type.equals("OperationsRebuilt")||type.equals("OperationsPlanned")){
@@ -518,7 +516,7 @@ public class MWAgent extends Agent {
             msg.setOntology("timestamp_err");
             msg.setConversationId(a.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
             msg.setContent(contenido);
-            a.send(msg);
+//            a.send(msg);
         }else{
             ACLMessage reply = sendCommand("get " + a.getLocalName() + " attrib=parent");
             if (reply != null){
@@ -531,7 +529,7 @@ public class MWAgent extends Agent {
             msg.setOntology("timestamp");
             msg.setConversationId(a.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
             msg.setContent(contenido);
-            a.send(msg);
+//            a.send(msg);
 
 
             String contenido1 = "app, "+","+type+","+String.valueOf(timestamp.getTime()); //pisa el ultimo dato hasta terminar de generar todos los agentes
@@ -540,7 +538,7 @@ public class MWAgent extends Agent {
             msg2.setOntology("timestamp");
             msg2.setConversationId(conversationId);
             msg2.setContent(contenido1);
-            a.send(msg2);
+//            a.send(msg2);
 
         }
 
@@ -563,7 +561,7 @@ public class MWAgent extends Agent {
             confirmation.setContent(msg.getContent());
             Date date = new Date();
             long instant = date.getTime();
-            instant=instant+1000; //añade una espera de 1.5 seg (orig) / 3 seg(pruebas Raspberrys) / 1 seg (pruebas cluster PCs)
+            instant=instant+timeout; //añade una espera de 1.5 seg (orig) / >3 seg(pruebas Raspberrys) / 1 seg (pruebas cluster PCs)
             ExpMsg[1]=instant;
             AID receiver=(AID) itor.next();
             confirmation.addReceiver(receiver);
@@ -579,7 +577,6 @@ public class MWAgent extends Agent {
         confirmation.setConversationId(msg.getConversationId());
         confirmation.addReceiver(msg.getSender());
         agent.send(confirmation);
-//        sendACLMessage(ACLMessage.CONFIRM,msg.getSender(),msg.getOntology(),msg.getConversationId(),msg.getContent(),agent);
     }
     /**
      * Informa al middleware manager que la instancia de componente ha cambiado

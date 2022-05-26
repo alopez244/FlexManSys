@@ -927,7 +927,7 @@ public class Planner extends Agent {
                     msg.setOntology("timestamp");
                     msg.setConversationId("");
                     msg.setContent(contenido);
-                    myAgent.send(msg);
+//                    myAgent.send(msg);
 
                     String contenido1 = id+",planner"+",DeploymentRequestTime,"+String.valueOf(timestamp.getTime());
                     ACLMessage msg3 = new ACLMessage(ACLMessage.INFORM);
@@ -935,7 +935,7 @@ public class Planner extends Agent {
                     msg3.setOntology("timestamp");
                     msg3.setConversationId("");
                     msg3.setContent(contenido1);
-                    myAgent.send(msg3);
+//                    myAgent.send(msg3);
                 }
                 //Por último, mando un otro mensaje para añadir el tiempo en el que se solicita la creación del componente
 

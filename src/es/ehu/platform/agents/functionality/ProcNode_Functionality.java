@@ -13,8 +13,6 @@ import es.ehu.platform.MWAgent;
 import es.ehu.platform.template.interfaces.*;
 import es.ehu.platform.utilities.Cmd;
 import es.ehu.platform.behaviour.*;
-
-import java.sql.Time;
 import java.sql.Timestamp;
 
 public class ProcNode_Functionality implements BasicFunctionality, NegFunctionality{
@@ -221,11 +219,7 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
         msg.setContent(cmd);
         msg.setReplyWith(cmd);
         myAgent.send(msg);
-//        ACLMessage reply = myAgent.blockingReceive(
-//                MessageTemplate.and(
-//                        MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
-//                        MessageTemplate.MatchPerformative(ACLMessage.INFORM))
-//                , 1000);
+
         ACLMessage reply = myAgent.blockingReceive(
                 MessageTemplate.and(
                         MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
@@ -259,8 +253,7 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
                 msg3.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
                 msg3.setOntology("timestamp");
                 msg3.setContent(contenido1);
-                myAgent.send(msg3);
-//            }
+              //  myAgent.send(msg3);  //Descomentar para captura de tiempos
         }
 
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
@@ -272,7 +265,7 @@ public class ProcNode_Functionality implements BasicFunctionality, NegFunctional
         }
         msg.setConversationId(myAgent.getLocalName()+"_"+type+"_timestamp_"+TMSTMP_cnt++);
         msg.setContent(contenido);
-        myAgent.send(msg);
+//        myAgent.send(msg);
 
     }
 }

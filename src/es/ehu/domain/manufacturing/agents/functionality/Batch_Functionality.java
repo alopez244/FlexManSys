@@ -11,7 +11,6 @@ import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import org.apache.commons.io.FilenameUtils;
-import com.google.gson.Gson;
 import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -39,13 +38,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
     private String parentAgentID;
     private volatile String finish_times_of_batch=null;
     private String mySeType;
-    private MessageTemplate echotemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-            MessageTemplate.MatchOntology("Acknowledge"));
-    private MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-            MessageTemplate.MatchOntology("acl_error"));
-//    private Object myReplicasID  = new HashMap<>();
     private Object[] myReplicasID  = new Object[2];
-    public volatile int wait=0;
     private volatile Date now=null;
     private volatile Date date_when_delay_was_asked=null;
     private volatile Date expected_finish_date=null;
@@ -110,7 +103,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
     class timeout extends Thread{
     private boolean timeout=false;
-    private boolean kill_done=false;
         public void run() {
 
             System.out.println("Item timeout initialized");
@@ -238,12 +230,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
                 System.out.println("Ahora el agente " + myAgent.getLocalName() + " se va a quedar a la espera de la informacion de las operaciones");
 
-                MessageTemplate batch_f_template = MessageTemplate.or(MessageTemplate.or(MessageTemplate.or(
-                        MessageTemplate.and(MessageTemplate.MatchOntology("askdelay"), MessageTemplate.MatchPerformative(ACLMessage.INFORM)),
-                        MessageTemplate.and(MessageTemplate.MatchContent("reset_timeout"), MessageTemplate.MatchPerformative(ACLMessage.INFORM))),
-                        MessageTemplate.and(MessageTemplate.MatchContent("confirmed_timeout"), MessageTemplate.MatchPerformative(ACLMessage.INFORM))),
-                        MessageTemplate.and(MessageTemplate.MatchOntology("data"), MessageTemplate.MatchPerformative(ACLMessage.INFORM)));
-
                 ACLMessage msg = (ACLMessage) input[0];
 
                 if (msg.getPerformative() == ACLMessage.INFORM && msg.getOntology().equals("askdelay")) { //si es un mensaje con info del delay creamos el timeout
@@ -255,7 +241,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     try {
                         batchName = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "name"); //consigue el nombre del batch
                         ACLMessage reference = sendCommand(myAgent, "get " + batchName.getContent() + " attrib=reference", "Reference");
-                        sendACLMessage(7, OrderAgent, "delay", "inform delay", reference.getContent() + "/" + delay, myAgent); //informa al parent
+                        sendACLMessage(ACLMessage.INFORM, OrderAgent, "delay", "inform delay", reference.getContent() + "/" + delay, myAgent); //informa al parent
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -283,7 +269,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                         try {
                             batchName = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "name"); //consigue el nombre del batch
                             ACLMessage reference = sendCommand(myAgent, "get " + batchName.getContent() + " attrib=reference", "Reference");
-                            //TODO timeout de ACL aquí
                             sendACLMessage(ACLMessage.INFORM, OrderAgent, "update_timeout", "timeout", reference.getContent() + "/" + difference, myAgent);
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -292,9 +277,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                         thread.start();
                     }
 
-                } else if (msg.getPerformative() == ACLMessage.INFORM && msg.getContent().equals("confirmed_timeout")) { //por ahora en desuso
-//                    System.out.println("Timeout confirmed by QoS. Preparing for resetting timeout with new conditions");
-//                    delay_already_incremented=false;
                 } else if(msg.getPerformative() == ACLMessage.INFORM && msg.getOntology().equals("rebuild_finish_times")){ //Si una maquina asume el trabajo de otra, el timeout hace falta rehacerlo
                     System.out.println("New machine is assigned to batch "+batchreference+". Timeouts must be rebuilt for new operation times.");
                     //se resetean las variables para emular el estado inicial del agente antes de crear el threat de timeout

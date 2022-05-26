@@ -4,15 +4,9 @@ import jade.core.AID;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import es.ehu.platform.MWAgent;
-import es.ehu.domain.manufacturing.agents.functionality.Batch_Functionality;
-import es.ehu.domain.manufacturing.agents.functionality.Order_Functionality;
 import jade.core.behaviours.*;
 import jade.lang.acl.*;
-
-import java.util.ArrayList;
-
 
 public class PingBehaviour extends SimpleBehaviour{
 
@@ -26,7 +20,7 @@ public class PingBehaviour extends SimpleBehaviour{
         LOGGER.debug("*******Ping behaviour started*******");
         this.myAgent = a;
         this.template = MessageTemplate.and(MessageTemplate.or(MessageTemplate.MatchOntology("ping"),MessageTemplate.MatchOntology("ping_PLC")),
-                MessageTemplate.MatchPerformative(ACLMessage.REQUEST)); //hay 2 tipos de ping: ping a agente y ping hasta el PLC, que se le envía al agente máquina
+                MessageTemplate.MatchPerformative(ACLMessage.REQUEST)); //hay 3 tipos de ping: ping a agente, ping hasta el PLC y checkeo de mensajes recibidos
         LOGGER.exit();
     }
 @Override

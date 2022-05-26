@@ -76,14 +76,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
      *
      * @return The name used for registering the agent in the MWM (or SM)
      */
-    private void get_Timestamp(Timestamp T, String type){
-        String contenido = "1"+","+"machine1" +","+type+","+String.valueOf(T.getTime());
-        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-        msg.addReceiver(new AID("ControlContainer-GWDataAcq", AID.ISLOCALNAME));
-        msg.setOntology("timestamp_neg");
-        msg.setContent(contenido);
-        myAgent.send(msg);
-    }
+
     @Override
     public Void init(MWAgent mwAgent) {
 

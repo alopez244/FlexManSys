@@ -8,7 +8,6 @@ import static es.ehu.platform.utilities.MWMCommands.CMD_GETCOMPONENTS;
 import static es.ehu.platform.utilities.MWMCommands.CMD_REPORT;
 import static es.ehu.platform.utilities.MWMCommands.CMD_SET;
 import static es.ehu.platform.utilities.MasReconOntologies.ONT_CONTROL;
-import es.ehu.domain.manufacturing.agents.functionality.Machine_Functionality;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.DFService;
@@ -46,7 +45,6 @@ public class ControlBehaviour extends SimpleBehaviour {
     protected MessageTemplate template;
     int exitValue = 0;
     boolean exit = false;
-    private AID QoSID = new AID("QoSManagerAgent", false);
 
     public ControlBehaviour(MWAgent a) {
         super(a);
@@ -86,7 +84,6 @@ public class ControlBehaviour extends SimpleBehaviour {
         this.exitValue=0;
         this.exit=false;
 
-//        LOGGER.debug(myAgent.cmpID+"("+myAgent.getLocalName()+"): SupervisorControl.action()");
         ACLMessage msg = myAgent.receive(template);
 
         if (msg != null|| myAgent.change_state) {
@@ -102,14 +99,6 @@ public class ControlBehaviour extends SimpleBehaviour {
                 String name = msg.getContent().substring(msg.getContent().indexOf(":name ", msg.getContent().indexOf("MTS-error")) + ":name ".length());
                 name = name.substring(0, name.indexOf('@'));
                 LOGGER.info("msg.getPerformative()==ACLMessage.FAILURE (sender=" + name + ")");
-
-//                    ACLMessage report= new ACLMessage(ACLMessage.FAILURE);
-//                    report.setOntology("ctrlbhv_failure");
-//                    report.setContent(name);
-//                    report.addReceiver(QoSID);
-//                if(myAgent.getLocalName().contains("batchagent")||myAgent.getLocalName().contains("orderagent")||myAgent.getLocalName().contains("mplanagent")){
-//                    myAgent.send(report);
-//                }
 
                 try {
                     LOGGER.info(myAgent.sendCommand(CMD_REPORT + " (" + CMD_GETCOMPONENTS + " " + name + ") type=notFound cmpins=" + name));
@@ -186,7 +175,7 @@ public class ControlBehaviour extends SimpleBehaviour {
                         result = "done";
                     }
                 } else if (cmd[0].equals("move")) {
-                    LOGGER.debug("doMove(new ContainerID(" + cmd[1] + ", null));"); //TODO comprobar que el nodo args[1] existe
+                    LOGGER.debug("doMove(new ContainerID(" + cmd[1] + ", null));");
                     myAgent.doMove(new ContainerID(cmd[1], null));
                 }
 
@@ -199,9 +188,8 @@ public class ControlBehaviour extends SimpleBehaviour {
                     myAgent.send(aReply);
                 }
             }
-        }else if(myAgent.getLocalName().contains("machine")&&  myAgent.change_state){ //autoidle del machine agent, para cuando se queda aislado
+        }else if(myAgent.getLocalName().contains("machine")&&  myAgent.change_state){ //Autoidle del machine agent, para cuando se queda aislado. Fuerza el estado de IDLE sin necesidad de ACLs
 
-                String result = "";
                 LOGGER.info("Set State ---------------");
                 switch( myAgent.state){
                     case "idle":  exitValue = IDLE;
@@ -213,7 +201,7 @@ public class ControlBehaviour extends SimpleBehaviour {
                     default:  LOGGER.error("Asked a not valid state");
                     break;
                 }
-                myAgent.change_state=false;
+                myAgent.change_state=false; //bajamos flag
             }
         } else {
             LOGGER.trace("ControlBehaviour.beh.block()");
@@ -255,11 +243,7 @@ public class ControlBehaviour extends SimpleBehaviour {
         msg.setReplyWith(cmd);
         myAgent.send(msg);
         if(cmd.contains("localneg")){
-//            ACLMessage reply = myAgent.blockingReceive(
-//                    MessageTemplate.and(
-//                            MessageTemplate.MatchInReplyTo(msg.getReplyWith()),
-//                            MessageTemplate.MatchPerformative(ACLMessage.INFORM))
-//                    , 400);
+
             return LOGGER.exit(null);
         }else{
             ACLMessage reply = myAgent.blockingReceive(

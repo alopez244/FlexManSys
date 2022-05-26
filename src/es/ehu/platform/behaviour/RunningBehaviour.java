@@ -19,8 +19,6 @@ import java.util.Date;
 
 import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
 
-//import jade.util.leap.ArrayList;
-
 /**
  * This behaviour receives messages from the templates used in the constructor
  * and execute the functionality to perform its activity.
@@ -61,11 +59,6 @@ public class RunningBehaviour extends SimpleBehaviour {
 		super(a);
 		LOGGER.debug("*** Constructing RunningBehaviour ***");
 		this.myAgent = a;
-//		this.template = MessageTemplate.and(MessageTemplate.MatchOntology(ONT_DATA),
-//				MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-
-
-
 	}
 
 	// Constructor. Use the template received as parameter

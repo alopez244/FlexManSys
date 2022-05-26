@@ -27,9 +27,7 @@ public class TrackingBehaviour extends SimpleBehaviour {
 
   private MWAgent myAgent;
 
-  	public ArrayList<ArrayList<ArrayList<ArrayList<String>>>> Traceability=new ArrayList<>();
   	public ArrayList<String> remaining=new ArrayList<String>();
-	public ArrayList<String> FinishTimes=new ArrayList<String>();
 	public ArrayList<String> Replicas=new ArrayList<String>();
   	public String parent;
 	public boolean firstime;

@@ -278,7 +278,7 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
 
             msg.setConversationId(a.getLocalName()+"_"+type+"_timestamp");
             msg.setContent(contenido);
-            a.send(msg);
+//            a.send(msg);
         }
         } catch (Exception e) {
             e.printStackTrace();

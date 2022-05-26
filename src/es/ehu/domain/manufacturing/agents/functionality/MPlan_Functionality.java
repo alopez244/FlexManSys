@@ -2,19 +2,15 @@ package es.ehu.domain.manufacturing.agents.functionality;
 
 import com.google.gson.Gson;
 import es.ehu.domain.manufacturing.utilities.StructMplanAgentState;
-import es.ehu.domain.manufacturing.utilities.StructOrderAgentState;
 import es.ehu.platform.MWAgent;
 import es.ehu.platform.behaviour.ControlBehaviour;
 import es.ehu.platform.template.interfaces.AvailabilityFunctionality;
 import es.ehu.platform.template.interfaces.BasicFunctionality;
-import es.ehu.platform.utilities.XMLWriter;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -29,26 +25,16 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   
   private MWAgent myAgent;
 
-  private List<String> myElements;
   private List<String> elementsToCreate = new ArrayList<>();
   private HashMap<String, String> elementsClasses;
   private int chatID = 0; // Numero incremental para crear conversationID
-  private AID QoSID = new AID("QoSManagerAgent", false);
   private String firstState, redundancy, parentAgentID, planNumber;
   private Boolean newOrder = true, firstTime = true;
-//  private ArrayList<AID> sonAgentID = new ArrayList<>();
   private ArrayList<String> sonAgentID = new ArrayList<>();
-//  private ArrayList<String> myReplicasID = new ArrayList<>();
-  private ArrayList<ArrayList<String>> finishtimes = new ArrayList<>();
   private String mySeType;
-  private MessageTemplate template,template2,template3;
   private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> ordersTraceability = new ArrayList<>();
   private ArrayList<ArrayList<ArrayList<ArrayList<String>>>> deserializedMessage = new ArrayList<>();
   private Integer orderIndex = 1;
-
-  private int convIDcnt=0;
-
-
 
   @Override
   public void setState(String state) {
@@ -87,10 +73,10 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
   public Void init(MWAgent myAgent) {
 
     this.myAgent = myAgent;
-    this.template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-            MessageTemplate.MatchOntology("Information")),MessageTemplate.MatchConversationId("OrderInfo"));
-    this.template2=MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-            MessageTemplate.MatchContent("Order completed")),MessageTemplate.MatchConversationId("Shutdown"));
+//    this.template = MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+//            MessageTemplate.MatchOntology("Information")),MessageTemplate.MatchConversationId("OrderInfo"));
+//    this.template2=MessageTemplate.and(MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+//            MessageTemplate.MatchContent("Order completed")),MessageTemplate.MatchConversationId("Shutdown"));
 
     myAgent.get_timestamp(myAgent,"CreationTime");
     // Crear un nuevo conversationID
@@ -174,7 +160,6 @@ public class MPlan_Functionality extends DomApp_Functionality implements BasicFu
 //        System.out.println("El agente " + myAgent.getLocalName() + " esta en el metodo execute de su estado running");
         ACLMessage msg = (ACLMessage) input[0];
         if(msg.getPerformative()==ACLMessage.INFORM&&msg.getOntology().equals("Information")&&msg.getConversationId().equals("OrderInfo")){
-//          Acknowledge(msg,myAgent);
           if (firstTime) { //solo se quiere añadir el nuevo nivel la primera vez
             deserializedMessage = deserializeMsg(msg.getContent());
             ordersTraceability = addNewLevel(ordersTraceability, deserializedMessage, true); //añade el espacio para la informacion de la orden en primera posicion, sumando un nivel mas a los datos anteriores
