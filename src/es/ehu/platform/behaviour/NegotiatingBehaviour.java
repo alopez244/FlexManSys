@@ -329,7 +329,6 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                         inform_winner.setConversationId(conversationId);
                                         myAgent.send(inform_winner);
                                         System.out.println("WON!");
-
                                         ACLMessage DD_inform=new ACLMessage(ACLMessage.INFORM);
                                         DD_inform.setOntology("restored_functionality");
                                         DD_inform.addReceiver(new AID("D&D", false)); //para este caso solo hay que avisar al D&D pues no hay replicas
@@ -392,11 +391,6 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
                                     case NEG_WON: //he ganado la negociación y termina correctamente
                                         LOGGER.info(myAgent.getLocalName() + " WON negotiation(id:" + conversationId + ")!");
 
-//                                        try {
-//                                            Thread.sleep(100);
-//                                        } catch (InterruptedException e) {
-//                                            e.printStackTrace();
-//                                        }
 
                                         ACLMessage inform_winner = new ACLMessage(ACLMessage.INFORM);
                                         inform_winner.setOntology(ONT_NEGOTIATE);
@@ -775,35 +769,6 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
 //     * @param requester AID of the requester agent
 //     * @param negMsg    necessary information to start the negotiation
      */
-//    private void initNegotiation(String negId, AID requester, MsgNegotiation negMsg) {
-//        LOGGER.entry();
-//
-//        ACLMessage cfp = new ACLMessage(ACLMessage.PROPOSE);
-//        cfp.setOntology(ONT_NEGOTIATE);
-//        cfp.setConversationId(negId);
-//        LOGGER.debug("Targets lenght: " + negMsg.getTargets().length);
-//        for (AID id : negMsg.getTargets()) {
-//            // Removes the own agent from the list
-//            if (!id.getLocalName().equals(myAgent.getLocalName())) {
-//                cfp.addReceiver(id);
-//            }
-//        }
-//            //get distance of transport to X.
-//        long value = aNegFunctionality.calculateNegotiationValue(negMsg.getNegAction(), negMsg.getCriterion(), negMsg.getExternalData());
-//
-//
-//        try {
-//            cfp.setContentObject(new Long(value));
-//        } catch (Exception e) {
-//            LOGGER.error("Negotiation content in " + myAgent.getLocalName() + " could not be sent!! - " + negId);
-//        }
-//        myAgent.send(cfp);
-//        LOGGER.debug("Sent Negotiation Propose msg");
-//        NegotiationData newNegotiation = new NegotiationData(requester, negMsg);
-//        newNegotiation.setScalarValue(value);
-//        negotiationRuntime.put(negId, newNegotiation);
-//        LOGGER.exit();
-//    }
 
 
 //    String negId, AID requester, MsgNegotiation negMsg
@@ -857,10 +822,6 @@ public class NegotiatingBehaviour extends SimpleBehaviour {
         data[0]=negId;
         data[1]=requester;
         data[2]=negMsg;
-//        long value = aNegFunctionality.calculateNegotiationValue(negMsg.getNegAction(), negMsg.getCriterion(), negMsg.getExternalData());
-//        NegotiationData newNegotiation = new NegotiationData(requester, negMsg);        //mantener
-//        newNegotiation.setScalarValue(value);
-//        negotiationRuntime.put(negId, newNegotiation);       //mantener
         CFP_FIFO.add((Object[]) data);
         LOGGER.exit();
     }

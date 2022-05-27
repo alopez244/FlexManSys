@@ -167,7 +167,6 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                                             add_to_error_list("not_found", batch_to_ping, "", "", "");
                                             //informar a D&D par que ponga  anegociar las replicas
                                         }
-
                                     }
                                 }
                             } catch (Exception e) {

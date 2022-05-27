@@ -883,7 +883,7 @@ public class Planner extends Agent {
     private void PrintErrorList(){
         MessageTemplate errtemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                 MessageTemplate.MatchOntology("command"));
-        sendACL(16, "QoSManagerAgent", "command", "errorlist");
+        sendACL(ACLMessage.REQUEST, "QoSManagerAgent", "command", "errorlist");
         ACLMessage reply = blockingReceive(errtemplate, 500);
         if(reply!=null) {
             if (!reply.getContent().equals("")) {
@@ -942,7 +942,6 @@ public class Planner extends Agent {
             }
 
         }
-
     }
 
     private void AskRelationship(){

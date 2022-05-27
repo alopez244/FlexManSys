@@ -30,13 +30,11 @@ import java.util.*;
 
 public class Machine_Functionality extends DomRes_Functionality implements BasicFunctionality, NegFunctionality, AssetManagement, Traceability {
     private boolean firstItemFlag=false;
-//    public static CircularFifoQueue msgFIFO = new CircularFifoQueue(5);
     private static final long serialVersionUID = -4307559193624552630L;
     static final Logger LOGGER = LogManager.getLogger(Machine_Functionality.class.getName());
     private ArrayList<ArrayList<String>> productInfo;
     private HashMap<String, String> operationsWithBatchAgents = new HashMap<>();
     private HashMap PLCmsgIn = new HashMap(); // Estructura de datos que se envia al PLC
-//    private HashMap rcvd=new HashMap();
     private HashMap PLCmsgOut = new HashMap(); // Estructura de datos que se recibe del PLC
     private String BathcID = ""; // Variable que guarda el identificador del lote que se esta fabricando
     private Integer NumOfItems = 0; // Representa el numero de intems que se estan fabricando (todos perteneciente al mismo lote)
@@ -49,8 +47,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private AID gatewayAgentID =null;
     private Timestamp MStart;
     private Timestamp GWAnswer;
-    private MessageTemplate QoStemplate=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-            MessageTemplate.MatchOntology("acl_error"));
     public static final String DATE_FORMAT="yyyy-MM-dd'T'HH:mm:ss";
     public static final String TIME_FORMAT="HH:mm:ss";
     private SimpleDateFormat formatter_date = new SimpleDateFormat(DATE_FORMAT);
@@ -58,10 +54,6 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
     private AID QoSID = new AID("QoSManagerAgent", false);
     public ArrayList<ACLMessage> posponed_msgs_to_batch=new ArrayList<ACLMessage>();
     public boolean operations_redistributed_flag=false;
-//    public ArrayList<ACLMessage> posponed_msgs_to_gw=new ArrayList<ACLMessage>();
-
-
-
     private MessageTemplate template;
 
     /** Identifier of the agent. */

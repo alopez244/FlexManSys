@@ -26,7 +26,6 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
     public static final String TIME_FORMAT="HH:mm:ss";
     private SimpleDateFormat formatter_date = new SimpleDateFormat(DATE_FORMAT);
     private SimpleDateFormat formatter_time = new SimpleDateFormat(TIME_FORMAT);
-
     public String control="automatic"; //variable que conmutamos cuando la interfaz (planner) lo pide
     private MessageTemplate expected_senders=MessageTemplate.or(MessageTemplate.MatchSender(new AID("planner",AID.ISLOCALNAME)),
                                             MessageTemplate.MatchSender(new AID("QoSManagerAgent",AID.ISLOCALNAME)));
@@ -412,6 +411,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                     get_timestamp(myAgent,targets,"NegotiationStart");
                     sendCommand(myAgent,negotationdata);
                     sendCommand(myAgent,"del "+lost_machine); //eliminamos la máquina del SMA para que no participe en negociaciones futuras
+                    LOGGER.info(lost_machine+" has been erased from system");
                 }else{
                     LOGGER.warn("No machines available to take over operations "+OPL);
                 }
