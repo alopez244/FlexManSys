@@ -3,6 +3,7 @@ package es.ehu.platform.test;
 import com.opencsv.CSVWriter;
 import com.sun.org.apache.xpath.internal.operations.Or;
 import es.ehu.domain.manufacturing.utilities.StructMessage;
+import es.ehu.domain.manufacturing.utilities.StructMessageTest;
 import jade.core.Profile;
 import jade.util.leap.Properties;
 import jade.wrapper.gateway.JadeGateway;
@@ -678,7 +679,7 @@ public class AgentToCSVgw {
         pp.setProperty(Profile.CONTAINER_NAME, containerName);
 
         JadeGateway.init("es.ehu.platform.test.DataAcq_GWAgent",pp);    //Gateway Agent Initialization, must define package directory
-        StructMessage strMessage = new StructMessage();
+        StructMessageTest strMessage = new StructMessageTest();
         strMessage.setAction("print");
         try {
             JadeGateway.execute(strMessage);    // calls processCommand method of Gateway Agent

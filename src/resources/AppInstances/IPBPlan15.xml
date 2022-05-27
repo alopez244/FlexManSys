@@ -1,0 +1,545 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mPlan xmlns="ManufacturingPlan" name="MPlan1_IPB" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="ManufacturingPlan ./ManufacturingPlan.xsd">
+	<order reference="11">
+		<batch reference="125" numberOfItems="1" refProductID="4">
+			<PlannedItem productType="4" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="125" item_ID="1251">
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:59:16" plannedFinishTime="2022-05-23T09:59:28">
+					<action id="1" type="pick_and_place" actionPos="5" description="robot moving piece" plannedStartTime="2022-05-23T09:59:16" plannedFinishTime="2022-05-23T09:59:28"/>
+					<parameter id="Initial" value="IA"/>
+					<parameter id="Final" value="warehouse_4"/>
+				</simpleOperation>
+				<product productType="IPB_4" description="Industrial Plastic Base 4" state="Planned">
+					<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="3" plannedStationId="31" plannedStartTime="2022-05-23T09:58:33" plannedFinishTime="2022-05-23T09:59:16">
+						<action id="3" type="indexing" actionPos="4" description="indexing process" plannedStartTime="2022-05-23T09:58:33" plannedFinishTime="2022-05-23T09:59:16"/>
+					</simpleOperation>
+					<product productType="IPB_3" description="Industrial Plastic Base 3" state="Planned">
+						<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:58:33" plannedFinishTime="2022-05-23T09:58:49">
+							<action id="1" type="pick_and_place" actionPos="3" description="robot moving piece" plannedStartTime="2022-05-23T09:58:33" plannedFinishTime="2022-05-23T09:58:49"/>
+							<parameter id="Initial" value="PA"/>
+							<parameter id="Final" value="IA"/>
+						</simpleOperation>
+						<product productType="IPB_2" description="Industrial Plastic Base 2" state="Planned">
+							<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-23T09:58:00" plannedFinishTime="2022-05-23T09:58:33">
+								<action id="2" type="punching" actionPos="2" description="punching process" plannedStartTime="2022-05-23T09:58:00" plannedFinishTime="2022-05-23T09:58:33"/>
+							</simpleOperation>
+							<product productType="IPB_1" description="Industrial Plastic Base 1" state="Planned">
+								<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:58:00" plannedFinishTime="2022-05-23T09:58:15">
+									<action id="1" type="pick_and_place" actionPos="1" description="robot moving piece" plannedStartTime="2022-05-23T09:58:00" plannedFinishTime="2022-05-23T09:58:15"/>
+									<parameter id="Initial" value="warehouse_2"/>
+									<parameter id="Final" value="PA"/>
+								</simpleOperation>
+								<product productType="IPB" description="Industrial Plastic Base" state="Planned">
+									<rawMaterial id="IPB" description="Industrial Plastic Base"/>
+								</product>
+							</product>
+						</product>
+					</product>
+				</product>
+			</PlannedItem>
+		</batch>
+		<batch reference="124" numberOfItems="1" refProductID="4">
+			<PlannedItem productType="4" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="124" item_ID="1241">
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:57:46" plannedFinishTime="2022-05-23T09:57:58">
+					<action id="1" type="pick_and_place" actionPos="5" description="robot moving piece" plannedStartTime="2022-05-23T09:57:46" plannedFinishTime="2022-05-23T09:57:58"/>
+					<parameter id="Initial" value="IA"/>
+					<parameter id="Final" value="warehouse_4"/>
+				</simpleOperation>
+				<product productType="IPB_4" description="Industrial Plastic Base 4" state="Planned">
+					<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="3" plannedStationId="31" plannedStartTime="2022-05-23T09:57:03" plannedFinishTime="2022-05-23T09:57:46">
+						<action id="3" type="indexing" actionPos="4" description="indexing process" plannedStartTime="2022-05-23T09:57:03" plannedFinishTime="2022-05-23T09:57:46"/>
+					</simpleOperation>
+					<product productType="IPB_3" description="Industrial Plastic Base 3" state="Planned">
+						<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:57:03" plannedFinishTime="2022-05-23T09:57:19">
+							<action id="1" type="pick_and_place" actionPos="3" description="robot moving piece" plannedStartTime="2022-05-23T09:57:03" plannedFinishTime="2022-05-23T09:57:19"/>
+							<parameter id="Initial" value="PA"/>
+							<parameter id="Final" value="IA"/>
+						</simpleOperation>
+						<product productType="IPB_2" description="Industrial Plastic Base 2" state="Planned">
+							<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-23T09:56:30" plannedFinishTime="2022-05-23T09:57:03">
+								<action id="2" type="punching" actionPos="2" description="punching process" plannedStartTime="2022-05-23T09:56:30" plannedFinishTime="2022-05-23T09:57:03"/>
+							</simpleOperation>
+							<product productType="IPB_1" description="Industrial Plastic Base 1" state="Planned">
+								<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:56:30" plannedFinishTime="2022-05-23T09:56:45">
+									<action id="1" type="pick_and_place" actionPos="1" description="robot moving piece" plannedStartTime="2022-05-23T09:56:30" plannedFinishTime="2022-05-23T09:56:45"/>
+									<parameter id="Initial" value="warehouse_2"/>
+									<parameter id="Final" value="PA"/>
+								</simpleOperation>
+								<product productType="IPB" description="Industrial Plastic Base" state="Planned">
+									<rawMaterial id="IPB" description="Industrial Plastic Base"/>
+								</product>
+							</product>
+						</product>
+					</product>
+				</product>
+			</PlannedItem>
+		</batch>
+		<batch reference="123" numberOfItems="1" refProductID="4">
+			<PlannedItem productType="4" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="123" item_ID="1231">
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:56:16" plannedFinishTime="2022-05-23T09:56:28">
+					<action id="1" type="pick_and_place" actionPos="5" description="robot moving piece" plannedStartTime="2022-05-23T09:56:16" plannedFinishTime="2022-05-23T09:56:28"/>
+					<parameter id="Initial" value="IA"/>
+					<parameter id="Final" value="warehouse_4"/>
+				</simpleOperation>
+				<product productType="IPB_4" description="Industrial Plastic Base 4" state="Planned">
+					<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="3" plannedStationId="31" plannedStartTime="2022-05-23T09:55:33" plannedFinishTime="2022-05-23T09:56:16">
+						<action id="3" type="indexing" actionPos="4" description="indexing process" plannedStartTime="2022-05-23T09:55:33" plannedFinishTime="2022-05-23T09:56:16"/>
+					</simpleOperation>
+					<product productType="IPB_3" description="Industrial Plastic Base 3" state="Planned">
+						<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:55:33" plannedFinishTime="2022-05-23T09:55:49">
+							<action id="1" type="pick_and_place" actionPos="3" description="robot moving piece" plannedStartTime="2022-05-23T09:55:33" plannedFinishTime="2022-05-23T09:55:49"/>
+							<parameter id="Initial" value="PA"/>
+							<parameter id="Final" value="IA"/>
+						</simpleOperation>
+						<product productType="IPB_2" description="Industrial Plastic Base 2" state="Planned">
+							<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-23T09:55:00" plannedFinishTime="2022-05-23T09:55:33">
+								<action id="2" type="punching" actionPos="2" description="punching process" plannedStartTime="2022-05-23T09:55:00" plannedFinishTime="2022-05-23T09:55:33"/>
+							</simpleOperation>
+							<product productType="IPB_1" description="Industrial Plastic Base 1" state="Planned">
+								<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:55:00" plannedFinishTime="2022-05-23T09:55:15">
+									<action id="1" type="pick_and_place" actionPos="1" description="robot moving piece" plannedStartTime="2022-05-23T09:55:00" plannedFinishTime="2022-05-23T09:55:15"/>
+									<parameter id="Initial" value="warehouse_2"/>
+									<parameter id="Final" value="PA"/>
+								</simpleOperation>
+								<product productType="IPB" description="Industrial Plastic Base" state="Planned">
+									<rawMaterial id="IPB" description="Industrial Plastic Base"/>
+								</product>
+							</product>
+						</product>
+					</product>
+				</product>
+			</PlannedItem>
+		</batch>
+		<batch reference="122" numberOfItems="1" refProductID="4">
+			<PlannedItem productType="4" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="122" item_ID="1221">
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:54:46" plannedFinishTime="2022-05-23T09:54:58">
+					<action id="1" type="pick_and_place" actionPos="5" description="robot moving piece" plannedStartTime="2022-05-23T09:54:46" plannedFinishTime="2022-05-23T09:54:58"/>
+					<parameter id="Initial" value="IA"/>
+					<parameter id="Final" value="warehouse_4"/>
+				</simpleOperation>
+				<product productType="IPB_4" description="Industrial Plastic Base 4" state="Planned">
+					<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="3" plannedStationId="31" plannedStartTime="2022-05-23T09:54:03" plannedFinishTime="2022-05-23T09:54:46">
+						<action id="3" type="indexing" actionPos="4" description="indexing process" plannedStartTime="2022-05-23T09:54:03" plannedFinishTime="2022-05-23T09:54:46"/>
+					</simpleOperation>
+					<product productType="IPB_3" description="Industrial Plastic Base 3" state="Planned">
+						<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:54:03" plannedFinishTime="2022-05-23T09:54:19">
+							<action id="1" type="pick_and_place" actionPos="3" description="robot moving piece" plannedStartTime="2022-05-23T09:54:03" plannedFinishTime="2022-05-23T09:54:19"/>
+							<parameter id="Initial" value="PA"/>
+							<parameter id="Final" value="IA"/>
+						</simpleOperation>
+						<product productType="IPB_2" description="Industrial Plastic Base 2" state="Planned">
+							<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-23T09:53:30" plannedFinishTime="2022-05-23T09:54:03">
+								<action id="2" type="punching" actionPos="2" description="punching process" plannedStartTime="2022-05-23T09:53:30" plannedFinishTime="2022-05-23T09:54:03"/>
+							</simpleOperation>
+							<product productType="IPB_1" description="Industrial Plastic Base 1" state="Planned">
+								<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:53:30" plannedFinishTime="2022-05-23T09:53:45">
+									<action id="1" type="pick_and_place" actionPos="1" description="robot moving piece" plannedStartTime="2022-05-23T09:53:30" plannedFinishTime="2022-05-23T09:53:45"/>
+									<parameter id="Initial" value="warehouse_2"/>
+									<parameter id="Final" value="PA"/>
+								</simpleOperation>
+								<product productType="IPB" description="Industrial Plastic Base" state="Planned">
+									<rawMaterial id="IPB" description="Industrial Plastic Base"/>
+								</product>
+							</product>
+						</product>
+					</product>
+				</product>
+			</PlannedItem>
+		</batch>
+		<batch reference="121" numberOfItems="1" refProductID="4">
+			<PlannedItem productType="4" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="121" item_ID="1211">
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:53:16" plannedFinishTime="2022-05-23T09:53:28">
+					<action id="1" type="pick_and_place" actionPos="5" description="robot moving piece" plannedStartTime="2022-05-23T09:53:16" plannedFinishTime="2022-05-23T09:53:28"/>
+					<parameter id="Initial" value="IA"/>
+					<parameter id="Final" value="warehouse_4"/>
+				</simpleOperation>
+				<product productType="IPB_4" description="Industrial Plastic Base 4" state="Planned">
+					<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="3" plannedStationId="31" plannedStartTime="2022-05-23T09:52:33" plannedFinishTime="2022-05-23T09:53:16">
+						<action id="3" type="indexing" actionPos="4" description="indexing process" plannedStartTime="2022-05-23T09:52:33" plannedFinishTime="2022-05-23T09:53:16"/>
+					</simpleOperation>
+					<product productType="IPB_3" description="Industrial Plastic Base 3" state="Planned">
+						<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:52:33" plannedFinishTime="2022-05-23T09:52:49">
+							<action id="1" type="pick_and_place" actionPos="3" description="robot moving piece" plannedStartTime="2022-05-23T09:52:33" plannedFinishTime="2022-05-23T09:52:49"/>
+							<parameter id="Initial" value="PA"/>
+							<parameter id="Final" value="IA"/>
+						</simpleOperation>
+						<product productType="IPB_2" description="Industrial Plastic Base 2" state="Planned">
+							<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-23T09:52:00" plannedFinishTime="2022-05-23T09:52:33">
+								<action id="2" type="punching" actionPos="2" description="punching process" plannedStartTime="2022-05-23T09:52:00" plannedFinishTime="2022-05-23T09:52:33"/>
+							</simpleOperation>
+							<product productType="IPB_1" description="Industrial Plastic Base 1" state="Planned">
+								<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:52:00" plannedFinishTime="2022-05-23T09:52:15">
+									<action id="1" type="pick_and_place" actionPos="1" description="robot moving piece" plannedStartTime="2022-05-23T09:52:00" plannedFinishTime="2022-05-23T09:52:15"/>
+									<parameter id="Initial" value="warehouse_2"/>
+									<parameter id="Final" value="PA"/>
+								</simpleOperation>
+								<product productType="IPB" description="Industrial Plastic Base" state="Planned">
+									<rawMaterial id="IPB" description="Industrial Plastic Base"/>
+								</product>
+							</product>
+						</product>
+					</product>
+				</product>
+			</PlannedItem>
+		</batch>
+		<batch reference="110" numberOfItems="1" refProductID="4">
+			<PlannedItem productType="4" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="110" item_ID="1101">
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:51:46" plannedFinishTime="2022-05-23T09:51:58">
+					<action id="1" type="pick_and_place" actionPos="5" description="robot moving piece" plannedStartTime="2022-05-23T09:51:46" plannedFinishTime="2022-05-23T09:51:58"/>
+					<parameter id="Initial" value="IA"/>
+					<parameter id="Final" value="warehouse_4"/>
+				</simpleOperation>
+				<product productType="IPB_4" description="Industrial Plastic Base 4" state="Planned">
+					<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="3" plannedStationId="31" plannedStartTime="2022-05-23T09:51:03" plannedFinishTime="2022-05-23T09:51:46">
+						<action id="3" type="indexing" actionPos="4" description="indexing process" plannedStartTime="2022-05-23T09:51:03" plannedFinishTime="2022-05-23T09:51:46"/>
+					</simpleOperation>
+					<product productType="IPB_3" description="Industrial Plastic Base 3" state="Planned">
+						<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:51:03" plannedFinishTime="2022-05-23T09:51:19">
+							<action id="1" type="pick_and_place" actionPos="3" description="robot moving piece" plannedStartTime="2022-05-23T09:51:03" plannedFinishTime="2022-05-23T09:51:19"/>
+							<parameter id="Initial" value="PA"/>
+							<parameter id="Final" value="IA"/>
+						</simpleOperation>
+						<product productType="IPB_2" description="Industrial Plastic Base 2" state="Planned">
+							<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-23T09:50:30" plannedFinishTime="2022-05-23T09:51:03">
+								<action id="2" type="punching" actionPos="2" description="punching process" plannedStartTime="2022-05-23T09:50:30" plannedFinishTime="2022-05-23T09:51:03"/>
+							</simpleOperation>
+							<product productType="IPB_1" description="Industrial Plastic Base 1" state="Planned">
+								<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:50:30" plannedFinishTime="2022-05-23T09:50:45">
+									<action id="1" type="pick_and_place" actionPos="1" description="robot moving piece" plannedStartTime="2022-05-23T09:50:30" plannedFinishTime="2022-05-23T09:50:45"/>
+									<parameter id="Initial" value="warehouse_2"/>
+									<parameter id="Final" value="PA"/>
+								</simpleOperation>
+								<product productType="IPB" description="Industrial Plastic Base" state="Planned">
+									<rawMaterial id="IPB" description="Industrial Plastic Base"/>
+								</product>
+							</product>
+						</product>
+					</product>
+				</product>
+			</PlannedItem>
+		</batch>
+		<batch reference="119" numberOfItems="1" refProductID="4">
+			<PlannedItem productType="4" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="119" item_ID="1191">
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:50:16" plannedFinishTime="2022-05-23T09:50:28">
+					<action id="1" type="pick_and_place" actionPos="5" description="robot moving piece" plannedStartTime="2022-05-23T09:50:16" plannedFinishTime="2022-05-23T09:50:28"/>
+					<parameter id="Initial" value="IA"/>
+					<parameter id="Final" value="warehouse_4"/>
+				</simpleOperation>
+				<product productType="IPB_4" description="Industrial Plastic Base 4" state="Planned">
+					<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="3" plannedStationId="31" plannedStartTime="2022-05-23T09:49:33" plannedFinishTime="2022-05-23T09:50:16">
+						<action id="3" type="indexing" actionPos="4" description="indexing process" plannedStartTime="2022-05-23T09:49:33" plannedFinishTime="2022-05-23T09:50:16"/>
+					</simpleOperation>
+					<product productType="IPB_3" description="Industrial Plastic Base 3" state="Planned">
+						<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:49:33" plannedFinishTime="2022-05-23T09:49:49">
+							<action id="1" type="pick_and_place" actionPos="3" description="robot moving piece" plannedStartTime="2022-05-23T09:49:33" plannedFinishTime="2022-05-23T09:49:49"/>
+							<parameter id="Initial" value="PA"/>
+							<parameter id="Final" value="IA"/>
+						</simpleOperation>
+						<product productType="IPB_2" description="Industrial Plastic Base 2" state="Planned">
+							<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-23T09:49:00" plannedFinishTime="2022-05-23T09:49:33">
+								<action id="2" type="punching" actionPos="2" description="punching process" plannedStartTime="2022-05-23T09:49:00" plannedFinishTime="2022-05-23T09:49:33"/>
+							</simpleOperation>
+							<product productType="IPB_1" description="Industrial Plastic Base 1" state="Planned">
+								<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:49:00" plannedFinishTime="2022-05-23T09:49:15">
+									<action id="1" type="pick_and_place" actionPos="1" description="robot moving piece" plannedStartTime="2022-05-23T09:49:00" plannedFinishTime="2022-05-23T09:49:15"/>
+									<parameter id="Initial" value="warehouse_2"/>
+									<parameter id="Final" value="PA"/>
+								</simpleOperation>
+								<product productType="IPB" description="Industrial Plastic Base" state="Planned">
+									<rawMaterial id="IPB" description="Industrial Plastic Base"/>
+								</product>
+							</product>
+						</product>
+					</product>
+				</product>
+			</PlannedItem>
+		</batch>
+		<batch reference="118" numberOfItems="1" refProductID="4">
+			<PlannedItem productType="4" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="118" item_ID="1181">
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:48:46" plannedFinishTime="2022-05-23T09:48:58">
+					<action id="1" type="pick_and_place" actionPos="5" description="robot moving piece" plannedStartTime="2022-05-23T09:48:46" plannedFinishTime="2022-05-23T09:48:58"/>
+					<parameter id="Initial" value="IA"/>
+					<parameter id="Final" value="warehouse_4"/>
+				</simpleOperation>
+				<product productType="IPB_4" description="Industrial Plastic Base 4" state="Planned">
+					<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="3" plannedStationId="31" plannedStartTime="2022-05-23T09:48:03" plannedFinishTime="2022-05-23T09:48:46">
+						<action id="3" type="indexing" actionPos="4" description="indexing process" plannedStartTime="2022-05-23T09:48:03" plannedFinishTime="2022-05-23T09:48:46"/>
+					</simpleOperation>
+					<product productType="IPB_3" description="Industrial Plastic Base 3" state="Planned">
+						<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:48:03" plannedFinishTime="2022-05-23T09:48:19">
+							<action id="1" type="pick_and_place" actionPos="3" description="robot moving piece" plannedStartTime="2022-05-23T09:48:03" plannedFinishTime="2022-05-23T09:48:19"/>
+							<parameter id="Initial" value="PA"/>
+							<parameter id="Final" value="IA"/>
+						</simpleOperation>
+						<product productType="IPB_2" description="Industrial Plastic Base 2" state="Planned">
+							<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-23T09:47:30" plannedFinishTime="2022-05-23T09:48:03">
+								<action id="2" type="punching" actionPos="2" description="punching process" plannedStartTime="2022-05-23T09:47:30" plannedFinishTime="2022-05-23T09:48:03"/>
+							</simpleOperation>
+							<product productType="IPB_1" description="Industrial Plastic Base 1" state="Planned">
+								<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:47:30" plannedFinishTime="2022-05-23T09:47:45">
+									<action id="1" type="pick_and_place" actionPos="1" description="robot moving piece" plannedStartTime="2022-05-23T09:47:30" plannedFinishTime="2022-05-23T09:47:45"/>
+									<parameter id="Initial" value="warehouse_2"/>
+									<parameter id="Final" value="PA"/>
+								</simpleOperation>
+								<product productType="IPB" description="Industrial Plastic Base" state="Planned">
+									<rawMaterial id="IPB" description="Industrial Plastic Base"/>
+								</product>
+							</product>
+						</product>
+					</product>
+				</product>
+			</PlannedItem>
+		</batch>
+		<batch reference="117" numberOfItems="1" refProductID="4">
+			<PlannedItem productType="4" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="117" item_ID="1171">
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:47:16" plannedFinishTime="2022-05-23T09:47:28">
+					<action id="1" type="pick_and_place" actionPos="5" description="robot moving piece" plannedStartTime="2022-05-23T09:47:16" plannedFinishTime="2022-05-23T09:47:28"/>
+					<parameter id="Initial" value="IA"/>
+					<parameter id="Final" value="warehouse_4"/>
+				</simpleOperation>
+				<product productType="IPB_4" description="Industrial Plastic Base 4" state="Planned">
+					<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="3" plannedStationId="31" plannedStartTime="2022-05-23T09:46:33" plannedFinishTime="2022-05-23T09:47:16">
+						<action id="3" type="indexing" actionPos="4" description="indexing process" plannedStartTime="2022-05-23T09:46:33" plannedFinishTime="2022-05-23T09:47:16"/>
+					</simpleOperation>
+					<product productType="IPB_3" description="Industrial Plastic Base 3" state="Planned">
+						<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:46:33" plannedFinishTime="2022-05-23T09:46:49">
+							<action id="1" type="pick_and_place" actionPos="3" description="robot moving piece" plannedStartTime="2022-05-23T09:46:33" plannedFinishTime="2022-05-23T09:46:49"/>
+							<parameter id="Initial" value="PA"/>
+							<parameter id="Final" value="IA"/>
+						</simpleOperation>
+						<product productType="IPB_2" description="Industrial Plastic Base 2" state="Planned">
+							<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-23T09:46:00" plannedFinishTime="2022-05-23T09:46:33">
+								<action id="2" type="punching" actionPos="2" description="punching process" plannedStartTime="2022-05-23T09:46:00" plannedFinishTime="2022-05-23T09:46:33"/>
+							</simpleOperation>
+							<product productType="IPB_1" description="Industrial Plastic Base 1" state="Planned">
+								<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:46:00" plannedFinishTime="2022-05-23T09:46:15">
+									<action id="1" type="pick_and_place" actionPos="1" description="robot moving piece" plannedStartTime="2022-05-23T09:46:00" plannedFinishTime="2022-05-23T09:46:15"/>
+									<parameter id="Initial" value="warehouse_2"/>
+									<parameter id="Final" value="PA"/>
+								</simpleOperation>
+								<product productType="IPB" description="Industrial Plastic Base" state="Planned">
+									<rawMaterial id="IPB" description="Industrial Plastic Base"/>
+								</product>
+							</product>
+						</product>
+					</product>
+				</product>
+			</PlannedItem>
+		</batch>
+		<batch reference="116" numberOfItems="1" refProductID="4">
+			<PlannedItem productType="4" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="116" item_ID="1161">
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:45:46" plannedFinishTime="2022-05-23T09:45:58">
+					<action id="1" type="pick_and_place" actionPos="5" description="robot moving piece" plannedStartTime="2022-05-23T09:45:46" plannedFinishTime="2022-05-23T09:45:58"/>
+					<parameter id="Initial" value="IA"/>
+					<parameter id="Final" value="warehouse_4"/>
+				</simpleOperation>
+				<product productType="IPB_4" description="Industrial Plastic Base 4" state="Planned">
+					<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="3" plannedStationId="31" plannedStartTime="2022-05-23T09:45:03" plannedFinishTime="2022-05-23T09:45:46">
+						<action id="3" type="indexing" actionPos="4" description="indexing process" plannedStartTime="2022-05-23T09:45:03" plannedFinishTime="2022-05-23T09:45:46"/>
+					</simpleOperation>
+					<product productType="IPB_3" description="Industrial Plastic Base 3" state="Planned">
+						<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:45:03" plannedFinishTime="2022-05-23T09:45:19">
+							<action id="1" type="pick_and_place" actionPos="3" description="robot moving piece" plannedStartTime="2022-05-23T09:45:03" plannedFinishTime="2022-05-23T09:45:19"/>
+							<parameter id="Initial" value="PA"/>
+							<parameter id="Final" value="IA"/>
+						</simpleOperation>
+						<product productType="IPB_2" description="Industrial Plastic Base 2" state="Planned">
+							<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-23T09:44:30" plannedFinishTime="2022-05-23T09:45:03">
+								<action id="2" type="punching" actionPos="2" description="punching process" plannedStartTime="2022-05-23T09:44:30" plannedFinishTime="2022-05-23T09:45:03"/>
+							</simpleOperation>
+							<product productType="IPB_1" description="Industrial Plastic Base 1" state="Planned">
+								<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:44:30" plannedFinishTime="2022-05-23T09:44:45">
+									<action id="1" type="pick_and_place" actionPos="1" description="robot moving piece" plannedStartTime="2022-05-23T09:44:30" plannedFinishTime="2022-05-23T09:44:45"/>
+									<parameter id="Initial" value="warehouse_2"/>
+									<parameter id="Final" value="PA"/>
+								</simpleOperation>
+								<product productType="IPB" description="Industrial Plastic Base" state="Planned">
+									<rawMaterial id="IPB" description="Industrial Plastic Base"/>
+								</product>
+							</product>
+						</product>
+					</product>
+				</product>
+			</PlannedItem>
+		</batch>
+		<batch reference="115" numberOfItems="1" refProductID="4">
+			<PlannedItem productType="4" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="115" item_ID="1151">
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:44:16" plannedFinishTime="2022-05-23T09:44:28">
+					<action id="1" type="pick_and_place" actionPos="5" description="robot moving piece" plannedStartTime="2022-05-23T09:44:16" plannedFinishTime="2022-05-23T09:44:28"/>
+					<parameter id="Initial" value="IA"/>
+					<parameter id="Final" value="warehouse_4"/>
+				</simpleOperation>
+				<product productType="IPB_4" description="Industrial Plastic Base 4" state="Planned">
+					<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="3" plannedStationId="31" plannedStartTime="2022-05-23T09:43:33" plannedFinishTime="2022-05-23T09:44:16">
+						<action id="3" type="indexing" actionPos="4" description="indexing process" plannedStartTime="2022-05-23T09:43:33" plannedFinishTime="2022-05-23T09:44:16"/>
+					</simpleOperation>
+					<product productType="IPB_3" description="Industrial Plastic Base 3" state="Planned">
+						<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:43:33" plannedFinishTime="2022-05-23T09:43:49">
+							<action id="1" type="pick_and_place" actionPos="3" description="robot moving piece" plannedStartTime="2022-05-23T09:43:33" plannedFinishTime="2022-05-23T09:43:49"/>
+							<parameter id="Initial" value="PA"/>
+							<parameter id="Final" value="IA"/>
+						</simpleOperation>
+						<product productType="IPB_2" description="Industrial Plastic Base 2" state="Planned">
+							<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-23T09:43:00" plannedFinishTime="2022-05-23T09:43:33">
+								<action id="2" type="punching" actionPos="2" description="punching process" plannedStartTime="2022-05-23T09:43:00" plannedFinishTime="2022-05-23T09:43:33"/>
+							</simpleOperation>
+							<product productType="IPB_1" description="Industrial Plastic Base 1" state="Planned">
+								<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:43:00" plannedFinishTime="2022-05-23T09:43:15">
+									<action id="1" type="pick_and_place" actionPos="1" description="robot moving piece" plannedStartTime="2022-05-23T09:43:00" plannedFinishTime="2022-05-23T09:43:15"/>
+									<parameter id="Initial" value="warehouse_2"/>
+									<parameter id="Final" value="PA"/>
+								</simpleOperation>
+								<product productType="IPB" description="Industrial Plastic Base" state="Planned">
+									<rawMaterial id="IPB" description="Industrial Plastic Base"/>
+								</product>
+							</product>
+						</product>
+					</product>
+				</product>
+			</PlannedItem>
+		</batch>
+		<batch reference="114" numberOfItems="1" refProductID="4">
+			<PlannedItem productType="4" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="114" item_ID="1141">
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:42:46" plannedFinishTime="2022-05-23T09:42:58">
+					<action id="1" type="pick_and_place" actionPos="5" description="robot moving piece" plannedStartTime="2022-05-23T09:42:46" plannedFinishTime="2022-05-23T09:42:58"/>
+					<parameter id="Initial" value="IA"/>
+					<parameter id="Final" value="warehouse_4"/>
+				</simpleOperation>
+				<product productType="IPB_4" description="Industrial Plastic Base 4" state="Planned">
+					<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="3" plannedStationId="31" plannedStartTime="2022-05-23T09:42:03" plannedFinishTime="2022-05-23T09:42:46">
+						<action id="3" type="indexing" actionPos="4" description="indexing process" plannedStartTime="2022-05-23T09:42:03" plannedFinishTime="2022-05-23T09:42:46"/>
+					</simpleOperation>
+					<product productType="IPB_3" description="Industrial Plastic Base 3" state="Planned">
+						<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:42:03" plannedFinishTime="2022-05-23T09:42:19">
+							<action id="1" type="pick_and_place" actionPos="3" description="robot moving piece" plannedStartTime="2022-05-23T09:42:03" plannedFinishTime="2022-05-23T09:42:19"/>
+							<parameter id="Initial" value="PA"/>
+							<parameter id="Final" value="IA"/>
+						</simpleOperation>
+						<product productType="IPB_2" description="Industrial Plastic Base 2" state="Planned">
+							<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-23T09:41:30" plannedFinishTime="2022-05-23T09:42:03">
+								<action id="2" type="punching" actionPos="2" description="punching process" plannedStartTime="2022-05-23T09:41:30" plannedFinishTime="2022-05-23T09:42:03"/>
+							</simpleOperation>
+							<product productType="IPB_1" description="Industrial Plastic Base 1" state="Planned">
+								<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:41:30" plannedFinishTime="2022-05-23T09:41:45">
+									<action id="1" type="pick_and_place" actionPos="1" description="robot moving piece" plannedStartTime="2022-05-23T09:41:30" plannedFinishTime="2022-05-23T09:41:45"/>
+									<parameter id="Initial" value="warehouse_2"/>
+									<parameter id="Final" value="PA"/>
+								</simpleOperation>
+								<product productType="IPB" description="Industrial Plastic Base" state="Planned">
+									<rawMaterial id="IPB" description="Industrial Plastic Base"/>
+								</product>
+							</product>
+						</product>
+					</product>
+				</product>
+			</PlannedItem>
+		</batch>
+		<batch reference="113" numberOfItems="1" refProductID="4">
+			<PlannedItem productType="4" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="113" item_ID="1131">
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:41:16" plannedFinishTime="2022-05-23T09:41:28">
+					<action id="1" type="pick_and_place" actionPos="5" description="robot moving piece" plannedStartTime="2022-05-23T09:41:16" plannedFinishTime="2022-05-23T09:41:28"/>
+					<parameter id="Initial" value="IA"/>
+					<parameter id="Final" value="warehouse_4"/>
+				</simpleOperation>
+				<product productType="IPB_4" description="Industrial Plastic Base 4" state="Planned">
+					<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="3" plannedStationId="31" plannedStartTime="2022-05-23T09:40:33" plannedFinishTime="2022-05-23T09:41:16">
+						<action id="3" type="indexing" actionPos="4" description="indexing process" plannedStartTime="2022-05-23T09:40:33" plannedFinishTime="2022-05-23T09:41:16"/>
+					</simpleOperation>
+					<product productType="IPB_3" description="Industrial Plastic Base 3" state="Planned">
+						<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:40:33" plannedFinishTime="2022-05-23T09:40:49">
+							<action id="1" type="pick_and_place" actionPos="3" description="robot moving piece" plannedStartTime="2022-05-23T09:40:33" plannedFinishTime="2022-05-23T09:40:49"/>
+							<parameter id="Initial" value="PA"/>
+							<parameter id="Final" value="IA"/>
+						</simpleOperation>
+						<product productType="IPB_2" description="Industrial Plastic Base 2" state="Planned">
+							<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-23T09:40:00" plannedFinishTime="2022-05-23T09:40:33">
+								<action id="2" type="punching" actionPos="2" description="punching process" plannedStartTime="2022-05-23T09:40:00" plannedFinishTime="2022-05-23T09:40:33"/>
+							</simpleOperation>
+							<product productType="IPB_1" description="Industrial Plastic Base 1" state="Planned">
+								<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:40:00" plannedFinishTime="2022-05-23T09:40:15">
+									<action id="1" type="pick_and_place" actionPos="1" description="robot moving piece" plannedStartTime="2022-05-23T09:40:00" plannedFinishTime="2022-05-23T09:40:15"/>
+									<parameter id="Initial" value="warehouse_2"/>
+									<parameter id="Final" value="PA"/>
+								</simpleOperation>
+								<product productType="IPB" description="Industrial Plastic Base" state="Planned">
+									<rawMaterial id="IPB" description="Industrial Plastic Base"/>
+								</product>
+							</product>
+						</product>
+					</product>
+				</product>
+			</PlannedItem>
+		</batch>
+		<batch reference="112" numberOfItems="1" refProductID="4">
+			<PlannedItem productType="4" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="112" item_ID="1121">
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:39:46" plannedFinishTime="2022-05-23T09:39:58">
+					<action id="1" type="pick_and_place" actionPos="5" description="robot moving piece" plannedStartTime="2022-05-23T09:39:46" plannedFinishTime="2022-05-23T09:39:58"/>
+					<parameter id="Initial" value="IA"/>
+					<parameter id="Final" value="warehouse_4"/>
+				</simpleOperation>
+				<product productType="IPB_4" description="Industrial Plastic Base 4" state="Planned">
+					<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="3" plannedStationId="31" plannedStartTime="2022-05-23T09:39:03" plannedFinishTime="2022-05-23T09:39:46">
+						<action id="3" type="indexing" actionPos="4" description="indexing process" plannedStartTime="2022-05-23T09:39:03" plannedFinishTime="2022-05-23T09:39:46"/>
+					</simpleOperation>
+					<product productType="IPB_3" description="Industrial Plastic Base 3" state="Planned">
+						<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:39:03" plannedFinishTime="2022-05-23T09:39:19">
+							<action id="1" type="pick_and_place" actionPos="3" description="robot moving piece" plannedStartTime="2022-05-23T09:39:03" plannedFinishTime="2022-05-23T09:39:19"/>
+							<parameter id="Initial" value="PA"/>
+							<parameter id="Final" value="IA"/>
+						</simpleOperation>
+						<product productType="IPB_2" description="Industrial Plastic Base 2" state="Planned">
+							<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-23T09:38:30" plannedFinishTime="2022-05-23T09:39:03">
+								<action id="2" type="punching" actionPos="2" description="punching process" plannedStartTime="2022-05-23T09:38:30" plannedFinishTime="2022-05-23T09:39:03"/>
+							</simpleOperation>
+							<product productType="IPB_1" description="Industrial Plastic Base 1" state="Planned">
+								<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:38:30" plannedFinishTime="2022-05-23T09:38:45">
+									<action id="1" type="pick_and_place" actionPos="1" description="robot moving piece" plannedStartTime="2022-05-23T09:38:30" plannedFinishTime="2022-05-23T09:38:45"/>
+									<parameter id="Initial" value="warehouse_2"/>
+									<parameter id="Final" value="PA"/>
+								</simpleOperation>
+								<product productType="IPB" description="Industrial Plastic Base" state="Planned">
+									<rawMaterial id="IPB" description="Industrial Plastic Base"/>
+								</product>
+							</product>
+						</product>
+					</product>
+				</product>
+			</PlannedItem>
+		</batch>
+		<batch reference="111" numberOfItems="1" refProductID="4">
+			<PlannedItem productType="4" state="Planned" refRecipe="recipe02" order_ID="11" batch_ID="111" item_ID="1111">
+				<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:38:16" plannedFinishTime="2022-05-23T09:38:28">
+					<action id="1" type="pick_and_place" actionPos="5" description="robot moving piece" plannedStartTime="2022-05-23T09:38:16" plannedFinishTime="2022-05-23T09:38:28"/>
+					<parameter id="Initial" value="IA"/>
+					<parameter id="Final" value="warehouse_4"/>
+				</simpleOperation>
+				<product productType="IPB_4" description="Industrial Plastic Base 4" state="Planned">
+					<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="3" plannedStationId="31" plannedStartTime="2022-05-23T09:37:33" plannedFinishTime="2022-05-23T09:38:16">
+						<action id="3" type="indexing" actionPos="4" description="indexing process" plannedStartTime="2022-05-23T09:37:33" plannedFinishTime="2022-05-23T09:38:16"/>
+					</simpleOperation>
+					<product productType="IPB_3" description="Industrial Plastic Base 3" state="Planned">
+						<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:37:33" plannedFinishTime="2022-05-23T09:37:49">
+							<action id="1" type="pick_and_place" actionPos="3" description="robot moving piece" plannedStartTime="2022-05-23T09:37:33" plannedFinishTime="2022-05-23T09:37:49"/>
+							<parameter id="Initial" value="PA"/>
+							<parameter id="Final" value="IA"/>
+						</simpleOperation>
+						<product productType="IPB_2" description="Industrial Plastic Base 2" state="Planned">
+							<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="1" plannedStationId="11" plannedStartTime="2022-05-23T09:37:00" plannedFinishTime="2022-05-23T09:37:33">
+								<action id="2" type="punching" actionPos="2" description="punching process" plannedStartTime="2022-05-23T09:37:00" plannedFinishTime="2022-05-23T09:37:33"/>
+							</simpleOperation>
+							<product productType="IPB_1" description="Industrial Plastic Base 1" state="Planned">
+								<simpleOperation id="1" description="0=GET,1=POST" plannedMachineId="5" plannedStationId="51" plannedStartTime="2022-05-23T09:37:00" plannedFinishTime="2022-05-23T09:37:15">
+									<action id="1" type="pick_and_place" actionPos="1" description="robot moving piece" plannedStartTime="2022-05-23T09:37:00" plannedFinishTime="2022-05-23T09:37:15"/>
+									<parameter id="Initial" value="warehouse_2"/>
+									<parameter id="Final" value="PA"/>
+								</simpleOperation>
+								<product productType="IPB" description="Industrial Plastic Base" state="Planned">
+									<rawMaterial id="IPB" description="Industrial Plastic Base"/>
+								</product>
+							</product>
+						</product>
+					</product>
+				</product>
+			</PlannedItem>
+		</batch>
+	</order>
+</mPlan>

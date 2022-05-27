@@ -4,6 +4,8 @@
     <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/agents/cognitive/Ros_Jade.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/agents/cognitive/Ros_Jade_Msg.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/agents/cognitive/ros" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/agents/management_layer/ACL_ROS_Gateway.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/es/ehu/domain/manufacturing/agents/management_layer/GWAgentROS.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/es/ehu/platform/MWAgent.java" charset="windows-1252" />
     <file url="PROJECT" charset="windows-1252" />
   </component>

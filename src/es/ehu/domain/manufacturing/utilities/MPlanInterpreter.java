@@ -1,12 +1,10 @@
 package es.ehu.domain.manufacturing.utilities;
 
-import com.sun.org.apache.xerces.internal.xs.ItemPSVI;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
-import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
@@ -82,31 +80,24 @@ public class MPlanInterpreter {
         attribsToFind.add("plannedFinishTime");
         attribsToFind.add("plannedStartTime");
         attribsToFind.add("productType");
-        attribsToFind.add("type");
 
         String masterAttributes = "";
         String machineId = null;
-        HashMap<String,HashMap<String,String>> machine_batch_operation=new  HashMap<String,HashMap<String,String>>();
-        String batch_id="";
+        String parameters = "";
+
         for (int i = 0; i < roughPlan.size(); i++) {
             if (roughPlan.get(i).get(0).get(0).equals("PlannedItem")) {
+                // Si un elemento es de tipo PlannedItem, se recuperan los atributos que interesan (attribsToFind) y se guardan en la variable masterAttributes
                 masterAttributes = "";
                 for (int m = 0; m < roughPlan.get(i).get(2).size(); m++) {
-                    if (attribsToFind.contains(roughPlan.get(i).get(2).get(m))){
+                    if (attribsToFind.contains(roughPlan.get(i).get(2).get(m)))
                         masterAttributes = masterAttributes + roughPlan.get(i).get(2).get(m) + "=" + roughPlan.get(i).get(3).get(m) + " ";
-                    }
-
-
-                    if (roughPlan.get(i).get(2).get(m).equals("batch_ID")) {
-                        batch_id = roughPlan.get(i).get(3).get(m);
-                    }
                 }
+            } else if (roughPlan.get(i).get(0).get(0).contains("Operation")) {
 
-
-            }else if (roughPlan.get(i).get(0).get(0).contains("Operation")) {
-
-                // Get machine ID
-
+                parameters = "";
+                // Se obtiene el nombre del agente al que hay que enviar el mensaje con la información de las operaciones
+                // Para ello, se obtiene el atributo plannedStationId de la operación, y se utiliza para consultar al SMA
                 for (int z = 0; z < roughPlan.get(i).get(2).size(); z++) {
                     if (roughPlan.get(i).get(2).get(z).equals("plannedStationId")) {
                         ACLMessage reply = null;
@@ -120,30 +111,38 @@ public class MPlanInterpreter {
                         }
                     }
                 }
-                String operation_id="";
-
-
-                // Añadimos las informacion que se le va a enviar a las maquinas
+                // Se termina la búsqueda de los atributos que nos interesan (attribsToFind) mirando en los atributos del elemento Operation
                 for (int j = 0; j < roughPlan.get(i).get(2).size(); j++) {
-                    if (attribsToFind.contains(roughPlan.get(i).get(2).get(j))) {
-                        if (machinesWithAllOpInfo.get(machineId) == null) {
+                    if (attribsToFind.contains(roughPlan.get(i).get(2).get(j)))
+                        if (machinesWithAllOpInfo.get(machineId) == null)
                             machinesWithAllOpInfo.put(machineId, roughPlan.get(i).get(2).get(j) + "=" + roughPlan.get(i).get(3).get(j) + " ");
-                        } else {
+                        else
                             machinesWithAllOpInfo.put(machineId, machinesWithAllOpInfo.get(machineId) + roughPlan.get(i).get(2).get(j) + "=" + roughPlan.get(i).get(3).get(j) + " ");
+                }
+
+                // Se comprueba si hay atributos. Para ello, se recorre el roughPlan a partir de la siguiente posición
+                // Se rompe el bucle cuando se encuentre un elemento que no sea ni una acción ni un parámetro
+                for (int w = i+1; w < roughPlan.size(); w++){
+                    if (roughPlan.get(w).get(0).get(0).contains("parameter")){
+
+                        //Si es el primer parámetro (si el elemento anterior no es un paráemtro), añado la cabecera
+                        if (!roughPlan.get(w-1).get(0).get(0).contains("parameter")){
+                            parameters="parameters=";
                         }
 
-                        if (roughPlan.get(i).get(2).get(j).equals("id")) {
-                            operation_id = roughPlan.get(i).get(3).get(j);
-                        }
-
+                        //Se obtienen los parámetros y se concatenan
+                        parameters=parameters+roughPlan.get(w).get(3).get(0)+":"+roughPlan.get(w).get(3).get(1)+",";
+                    } else if (!roughPlan.get(w).get(0).get(0).contains("action")&&!roughPlan.get(w).get(0).get(0).contains("parameter")){
+                        break;
                     }
                 }
-                if(!machine_batch_operation.containsKey(machineId)){
-                    machine_batch_operation.put(machineId,new HashMap<String,String>());
-                }
-                    machine_batch_operation.get(machineId).put(batch_id,operation_id);
 
-                machinesWithAllOpInfo.put(machineId, machinesWithAllOpInfo.get(machineId) + masterAttributes + "&");
+                //Después de guardar los atributos de interés del elemento Operation, se guardan los atributos recogidos del elemento PlannedItem
+                if (!parameters.equals("")){
+                    parameters = parameters.substring(0,parameters.length()-1);
+                }
+                machinesWithAllOpInfo.put(machineId, machinesWithAllOpInfo.get(machineId) + masterAttributes + parameters + "&");
+
 
             }
         }
@@ -155,53 +154,15 @@ public class MPlanInterpreter {
             ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
             msg.addReceiver(new AID((String) pair.getKey(), AID.ISLOCALNAME));
             msg.setOntology("data");
-
-
-            String data=(String)pair.getValue();
-            ArrayList<String> batch_list=new ArrayList<String>();
-            String previous_batch="";
-            String[] batch_raw_data=data.split("batch_ID=");
-            int index=1;
-            while(batch_raw_data.length>index){
-                String[] actual_batch=batch_raw_data[index].split(" ");
-                if(!actual_batch[0].equals(previous_batch)){
-                    batch_list.add(actual_batch[0]);
-                }
-                previous_batch=actual_batch[0];
-                index++;
-            }
-
             msg.setContent((String) pair.getValue());
             myAgent.send(msg);
             ACLMessage ack= myAgent.blockingReceive(MessageTemplate.MatchPerformative(ACLMessage.CONFIRM),500);
             if(ack==null){
-                System.out.println("ERROR. "+msg.getAllReceiver()+" did not answer on time.");
+//                System.out.println("ERROR. "+msg.getAllReceiver()+" did not answer on time.");
                 return null;
             }
 
-            for(Map.Entry<String,HashMap<String, String>> machines: machine_batch_operation.entrySet()){
-                if(machines.getKey().equals((String)pair.getKey())){
-                    for(Map.Entry<String,String> batchs: machines.getValue().entrySet()){
-                        ACLMessage inform_QoS=new ACLMessage(ACLMessage.INFORM);
-                        inform_QoS.setOntology("add_relation");
-                        inform_QoS.setContent(machines.getKey()+"/"+batchs.getKey()+"/"+batchs.getValue());
-                        inform_QoS.addReceiver(new AID("QoSManagerAgent", AID.ISLOCALNAME));
-                        myAgent.send(inform_QoS);
-                    }
-                }
-            }
-
-
-
-//            for(int i=0;i<batch_list.size();i++){
-//                ACLMessage inform_QoS=new ACLMessage(ACLMessage.INFORM);
-//                inform_QoS.setOntology("add_relation");
-//                inform_QoS.setContent(batch_list.get(i)+"/"+(String)pair.getKey());
-//                inform_QoS.addReceiver(new AID("QoSManagerAgent", AID.ISLOCALNAME));
-//                myAgent.send(inform_QoS);
-//            }
         }
-
         //No es necesario con la estructura nueva de XML ***************************************************************
 
 

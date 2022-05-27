@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<station xmlns="station" id="31" description="Indexed A" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="station ./Station.xsd">
+	<palletIn id="PI1_ST_01" xPos="80" yPos="80" zPos="50"/>
+	<palletOut id="PO1_ST_01" xPos="620" yPos="380" zPos="50"/>
+	<tool id="T1_ST_01" type="gripper" changeoverT="00:15:00" description="Double gripper"/>
+	<simple_operation id="0" executionTime="00:00:01"/>
+	<simple_operation id="1" executionTime="00:00:20">
+		<action id="3" type="indexing" actionPos="3" description="indexing process"/>
+	</simple_operation>
+</station>

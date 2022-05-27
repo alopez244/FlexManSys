@@ -301,7 +301,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     // Cada mensaje contiene informacion del  fabricado
                     String idItem = String.valueOf(infoForTraceability.get("Id_Item_Number"));
                     batchNumber = String.valueOf(infoForTraceability.get("Id_Batch_Reference"));
-                    String ActionTypes = String.valueOf(infoForTraceability.get("Id_Action_Type"));
+                    ArrayList<String> ActionTypes = (ArrayList<String>) infoForTraceability.get("Id_Action_Type");
                     update_timeout_flag = true; //se pide al timeout que actualice el item
                     itemreference = take_item_references(finish_times_of_batch);
                     for (int i = 0; i < productsTraceability.size(); i++) {
@@ -327,12 +327,18 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
 
                     if (infoForTraceability.containsKey("Data_Service_Time_Stamp")) { //El lote ha terminado de fabricarse y se envian los datos al order agent
                         sendACLMessage(7, QoSID, "batch_finish", batchNumber + " finish", batchNumber, myAgent);
-                        for (int k = 0; k < actionList.size(); k++) { // Se eliminan las acciones que ya se han realizado
-                            if (ActionTypes.contains(actionList.get(k))) {
-                                actionList.remove(k);
-                                k--;
+                        // Voy iterando el arrayList de acciones realizadas (recibidas en mensaje de la máquina
+                        for (int i = 0; i < ActionTypes.size(); i++) {
+                            // Para cada posición, itero el listado de acciones registrado del modelo de producto
+                            for (int k = 0; k < actionList.size(); k++) {
+                                // Si se encuentra la acción, se elimina (solo una vez) y se rompe el bucle de actionList
+                                if (ActionTypes.contains(actionList.get(k))) {
+                                    actionList.remove(k);
+                                    break;
+                                }
                             }
                         }
+
                         if (firstTime) { //solo se añade la informacion la primera vez
                             ArrayList<ArrayList<ArrayList<ArrayList<String>>>> traceability = new ArrayList<>();
                             productsTraceability = addNewLevel(traceability, productsTraceability, true); //añade el espacio para la informacion del lote en primera posicion, sumando un nivel mas a los datos anteriores

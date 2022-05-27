@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="unirest">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/lib/unirest" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+    <jarDirectory url="file://$PROJECT_DIR$/lib/unirest" recursive="false" />
+  </library>
+</component>

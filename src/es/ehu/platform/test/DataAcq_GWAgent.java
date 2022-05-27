@@ -1,6 +1,7 @@
 package es.ehu.platform.test;
 
 import es.ehu.domain.manufacturing.utilities.StructMessage;
+import es.ehu.domain.manufacturing.utilities.StructMessageTest;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -25,7 +26,7 @@ public class DataAcq_GWAgent extends GatewayAgent {
             System.out.println("---Error, unexpected type");
             releaseCommand(command);
         }
-        StructMessage msgStruct = (StructMessage) command;
+        StructMessageTest msgStruct = (StructMessageTest) command;
         String action = msgStruct.readAction();
         if (action.equals("print")) {     // JadeGateway.execute command was called for new message reading (Agent -> PLC)
             System.out.println("---GW, print function");
@@ -39,11 +40,11 @@ public class DataAcq_GWAgent extends GatewayAgent {
                 }
             }
 
-            ((StructMessage) command).setTestResults(times);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
-            ((StructMessage) command).setTestResultsApp(apptimes);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
-            ((StructMessage) command).setTestResultsErr(errtimes);
-            ((StructMessage) command).setTestResultsNeg(negtimes);
-            ((StructMessage) command).setNewData(true);
+            ((StructMessageTest) command).setTestResults(times);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
+            ((StructMessageTest) command).setTestResultsApp(apptimes);  //message is saved in StructMessage data structure, then ExternalJADEgw class will read it from there
+            ((StructMessageTest) command).setTestResultsErr(errtimes);
+            ((StructMessageTest) command).setTestResultsNeg(negtimes);
+            ((StructMessageTest) command).setNewData(true);
 
         } else if (action.equals("init")) {
             System.out.println("---GW, init function");
