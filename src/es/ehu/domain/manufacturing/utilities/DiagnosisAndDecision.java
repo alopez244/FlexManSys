@@ -77,21 +77,17 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
 
     public void recover_redundancy(ACLMessage msg){
         LOGGER.info("New agent started: "+msg.getSender().getLocalName());
-        String convID="negotiation_winner_";
         String winner=msg.getSender().getLocalName();
         if(winner.contains("batchagent")){
             LOGGER.info("New batch agent is in running state: "+winner);
-            sendACL(7,winner,"restart_timeout","reset_timeout",myAgent); //si es batch debe resetear el timeout
+            sendACL(ACLMessage.INFORM,winner,"restart_timeout","reset_timeout",myAgent); //si es batch debe resetear el timeout
             try {
                 ACLMessage parent=sendCommand(myAgent,"get "+winner+" attrib=parent");
                 ACLMessage reference = sendCommand(myAgent, "get " + parent.getContent() + " attrib=reference");
-
                 ArrayList<String> targets=get_relationship(reference.getContent()); //devuelve el agente máquina que cuelga del batch
-
-
                 if(targets!=null){
                     for(int i=0;i<targets.size();i++){
-                        sendACL(ACLMessage.INFORM,targets.get(i),"release_buffer",winner,myAgent); //pide al machine que vacie el buffer de mensajes retenidos
+                        sendACL(ACLMessage.INFORM,targets.get(i),"release_buffer",winner,myAgent); //pide a las máquinas asignadas que vacien el buffer de mensajes retenidos
                     }
                 }
                 restart_replica(parent.getContent()); //hay que generar una replica en tracking si es posible para mantener el numero de replicas constante
@@ -120,10 +116,16 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                 }
                 for(int i=0; i<target_parents.length;i++){
                     ACLMessage target=sendCommand(myAgent,"get * parent="+target_parents[i]+" state=running");
+                    int cnt=0;
                     while(target.getContent().equals("")){ // es posible no tener una replica en running disponible por lo que hay que esperar hasta poder informarla
                         LOGGER.debug("Running replica not found for "+target_parents[i]+". Retrying.");
                         target=sendCommand(myAgent,"get * parent="+target_parents[i]+" state=running");
                         Thread.sleep(1000);
+                        cnt++;
+                        if(cnt==5){
+                            LOGGER.error("Given up trying to obtain running replica.");
+                            break;
+                        }
                     }
                     sendACL(ACLMessage.INFORM,target.getContent(),"release_buffer",winner,myAgent);
                 }
@@ -139,11 +141,10 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
     }
 
     public void actions_after_not_found(ACLMessage msg){
-        reported_agent= msg.getContent();
+        reported_agent= msg.getContent(); //variable para guardar el agente reportado
 
             if(msg.getContent().contains("batchagent")||msg.getContent().contains("orderagent")||msg.getContent().contains("mplanagent")){ //Es agente de aplicacion
                 try {
-
                     ACLMessage state= sendCommand(myAgent, "get "+msg.getContent()+" attrib=state"); //consigue el estado de la replcia caida
                     if(state.getContent().equals("")){
                         LOGGER.warn(msg.getContent()+" reported by QoS but no data available. Already solved."); //si el QoS denuncia un agente ya detectado mientras se ha estado trabajando en ello no se debe hacer nada
@@ -279,8 +280,6 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                             agents_sorted_by_state.remove("tracking");  //ya no quedan agentes en tracking por iniciar
                         }
                     }
-
-//                agents_sorted_by_state.clear();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -506,7 +505,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
     }
 
 
-    private ArrayList<String> get_relationship(String agent){ //obtiene la relacion entre agente máquina y batch. TODO Haría falta un sistema mejor.
+    private ArrayList<String> get_relationship(String agent){ //obtiene la relacion entre agente máquina y batch. TODO Haría falta un sistema mejor. fue pensado
         MessageTemplate t=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                 MessageTemplate.MatchOntology("askrelationship"));
         sendACL(ACLMessage.REQUEST,"QoSManagerAgent" , "askrelationship", agent,myAgent);
@@ -520,7 +519,6 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
                     relationed_agents.add(agents[i]);
                 }
             }
-
             return relationed_agents;
         }else{
             LOGGER.error("QoSManagerAgent did not answer on time");
@@ -557,7 +555,6 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
             }else{
                 LOGGER.error("No tracking instances found");
             }
-
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -569,8 +566,7 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
         LOGGER.info(parent+" needs a new tracking replica");
         try {
             ACLMessage process_nodes = sendCommand(myAgent, "get * category=pNodeAgent");
-
-        ArrayList<String> NegotiatingPnodes = new ArrayList<>();
+            ArrayList<String> NegotiatingPnodes = new ArrayList<>();
         if (process_nodes != null) {
             String[] AllPnode=new String[1];
             if(process_nodes.getContent().contains(",")){
@@ -630,6 +626,4 @@ public class DiagnosisAndDecision extends ErrorHandlerAgent implements DDInterfa
         }
         return false;
     }
-
-
 }

@@ -76,7 +76,7 @@ public class PingBehaviour extends SimpleBehaviour{
                 }
                 myAgent.send(reply);
             }else{ //si el mensaje de ping tiene content, es una consulta de si hemos recibido un mensaje anteriormente "te ha llegado este mensaje:...?"
-                msgFIFO = myAgent.msgFIFO;
+                msgFIFO = myAgent.recieved_msgs;
                 boolean found=false;
                 if(msgFIFO!=null) {
                     for (int i = 0; i < msgFIFO.size(); i++) {

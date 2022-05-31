@@ -23,8 +23,6 @@ public class ErrorHandlerAgent extends Agent{
     public String ConvID="EHAgent_";
     public int cnt=0;
 
-
-
     static final Logger LOGGER = LogManager.getLogger(ErrorHandlerAgent.class.getName());
     public ErrorHandlerAgent() {
     }
@@ -69,7 +67,6 @@ public class ErrorHandlerAgent extends Agent{
             LOGGER.entry(mwm, cmd);
             ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
             msg.addReceiver(new AID(mwm, AID.ISLOCALNAME));
-//            msg.setConversationId(conversationId);
             msg.setConversationId(agent.getLocalName()+"_cmd_"+String.valueOf(cnt++));
             msg.setOntology("control");
             msg.setContent(cmd);

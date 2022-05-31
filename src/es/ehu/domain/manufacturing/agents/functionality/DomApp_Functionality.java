@@ -662,48 +662,48 @@ public class DomApp_Functionality extends Dom_Functionality implements NegFuncti
         }
     }
 
-    private String getTargets(String HostedElements) {
-        String targets = "";
-        ACLMessage All_process_nodes = null;
-        try {
-            All_process_nodes = sendCommand(myAgent, "get * category=pNodeAgent", "GetAllNodes");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        ArrayList<String> ParticipatingPnodes = new ArrayList<>();
-        if (All_process_nodes != null) {
-            String[] ListOfAllPnodes = new String[1];
-            if (All_process_nodes.getContent().contains(",")) {
-                ListOfAllPnodes = All_process_nodes.getContent().split(",");
-            } else {
-                ListOfAllPnodes[0] = All_process_nodes.getContent();
-            }
-            try{
-
-            for (int i = 0; i < ListOfAllPnodes.length; i++) {
-                ACLMessage UsedPNodes = sendCommand(myAgent, "get " + ListOfAllPnodes[i] + " attrib=HostedElements", "CheckIfValidNode"); //todas los pnode.
-                if (!UsedPNodes.getContent().contains(HostedElements)) {
-                    ParticipatingPnodes.add(ListOfAllPnodes[i]);
-                }
-            }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            if(ParticipatingPnodes.size()==0){
-                LOGGER.warn("There is no node available to host a replica. Some nodes may host multiple replicas.");
-                return All_process_nodes.getContent(); //si no hay nodos disponibles que permita que se repita alguna replica en algun nodo
-            }
-            for (int i = 0; i < ParticipatingPnodes.size(); i++) {
-                if (i == 0) {
-                    targets = ParticipatingPnodes.get(i);
-                } else {
-                    targets = targets + "," + ParticipatingPnodes.get(i);
-                }
-            }
-        }
-
-            return targets;
-    }
+//    private String getTargets(String HostedElements) {
+//        String targets = "";
+//        ACLMessage All_process_nodes = null;
+//        try {
+//            All_process_nodes = sendCommand(myAgent, "get * category=pNodeAgent", "GetAllNodes");
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        ArrayList<String> ParticipatingPnodes = new ArrayList<>();
+//        if (All_process_nodes != null) {
+//            String[] ListOfAllPnodes = new String[1];
+//            if (All_process_nodes.getContent().contains(",")) {
+//                ListOfAllPnodes = All_process_nodes.getContent().split(",");
+//            } else {
+//                ListOfAllPnodes[0] = All_process_nodes.getContent();
+//            }
+//            try{
+//
+//            for (int i = 0; i < ListOfAllPnodes.length; i++) {
+//                ACLMessage UsedPNodes = sendCommand(myAgent, "get " + ListOfAllPnodes[i] + " attrib=HostedElements", "CheckIfValidNode"); //todas los pnode.
+//                if (!UsedPNodes.getContent().contains(HostedElements)) {
+//                    ParticipatingPnodes.add(ListOfAllPnodes[i]);
+//                }
+//            }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//            if(ParticipatingPnodes.size()==0){
+//                LOGGER.warn("There is no node available to host a replica. Some nodes may host multiple replicas.");
+//                return All_process_nodes.getContent(); //si no hay nodos disponibles que permita que se repita alguna replica en algun nodo
+//            }
+//            for (int i = 0; i < ParticipatingPnodes.size(); i++) {
+//                if (i == 0) {
+//                    targets = ParticipatingPnodes.get(i);
+//                } else {
+//                    targets = targets + "," + ParticipatingPnodes.get(i);
+//                }
+//            }
+//        }
+//
+//            return targets;
+//    }
 
     private int SearchAgent (String agent){
         int found=0;

@@ -20,7 +20,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
 
     private ArrayList<ArrayList<String>> ErrorList=new ArrayList<ArrayList<String>>();
     private int l=0;
-    private HashMap<String,HashMap<String, String>> batch_op_machine=new HashMap<String,HashMap<String, String>>();
+    private HashMap<String,HashMap<String, String>> batch_op_machine=new HashMap<String,HashMap<String, String>>();  //221 -> 4 -> machine1 pej
     private HashMap<String,String> delay_asking_queue =new HashMap<String,String >();
     private HashMap<String,String> delay_list=new HashMap<String,String >();
     static final Logger LOGGER = LogManager.getLogger(QoSManagerAgent.class.getName());
@@ -47,7 +47,6 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                 if (msg.getPerformative() == ACLMessage.FAILURE && !msg.getSender().getLocalName().equals("ams")) { //Se recibe un posible error no perteneciente al ams
                     if (msg.getOntology().equals("acl_error")) { //error de tipo comunicación
                         String[] msgparts = msg.getContent().split("/div/");
-
                         String receiver = msgparts[0];
                         String intercepted_msg = msgparts[1];
                         report_back(msg);
@@ -62,10 +61,10 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                                     LOGGER.error(msg.getSender().getLocalName() + " agent who reported the error is isolated");
                                     sendACL(ACLMessage.INFORM, "D&D", "msg_lost", msg.getContent(),myAgent);
                                     String msgtoDD = msg.getSender().getLocalName();
-
                                     add_to_error_list("not_found", msg.getSender().getLocalName(), "", "", "");
+                                    add_to_error_list("communication", msg.getSender().getLocalName(), receiver, intercepted_msg, "");
                                     sendACL(ACLMessage.INFORM, "D&D", "not_found", msgtoDD,myAgent);
-                                } else {
+                                } else { //ambos agentes vivos pero mensaje perdido
                                     LOGGER.info("Receiver and sender are online, although message is lost.");
                                     add_to_error_list("communication", msg.getSender().getLocalName(), receiver, intercepted_msg, "");
                                     sendACL(ACLMessage.INFORM, "D&D", "msg_lost", msg.getContent(),myAgent);
@@ -77,9 +76,11 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                             } else { //si no responde el receiver, se trata de un agente aislado o muerto
                                 LOGGER.warn("No answer from " + receiver + ". Confirming error.");
                                 String msgtoDD = receiver;
+                                //dos fallos para registrar: comunicacion porque un mensaje se ha perdido, y not_found porque sabemos que hay un agente caido
                                 add_to_error_list("not_found", receiver, "", "", "");
+                                add_to_error_list("communication", msg.getSender().getLocalName(), receiver, intercepted_msg, "");
 //                                get_timestamp(myAgent,receiver,"DeadAgentConfirmation");
-                                if(receiver.contains("ControlGatewayCont")){ //si el agente denunciado es un GW hay que redistribuir las tareas de su máquina
+                                if(receiver.contains("ControlGatewayCont")){ //si el agente denunciado es un GW o un agente máquina hay que redistribuir las tareas
                                     for(Entry<String, HashMap<String,String>> batches: batch_op_machine.entrySet()){
                                         for(Entry<String,String> operations: batch_op_machine.get(batches.getKey()).entrySet()){
                                             if(operations.getValue().equals(msg.getSender().getLocalName())){ //el unico posible denunciante del GW es la misma maquina
@@ -90,17 +91,16 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                                 } else if(receiver.contains("machine")){
                                     for(Entry<String, HashMap<String,String>> batches: batch_op_machine.entrySet()){
                                         for(Entry<String,String> operations: batch_op_machine.get(batches.getKey()).entrySet()){
-                                            if(operations.getValue().equals(receiver)){ //el unico posible denunciante del GW es la misma maquina
+                                            if(operations.getValue().equals(receiver)){
                                                 sendACL(ACLMessage.INFORM,"D&D","redistribute",receiver+"/"+get_machine_id(receiver)+"/"+batches.getKey()+"/"+"?",myAgent);
                                             }
                                         }
                                     }
-                                }else{
+                                }else{ //si se trata de un agente de aplicacion la solución la gestiona el D&D por completo
                                     sendACL(ACLMessage.INFORM, "D&D", "not_found", msgtoDD,myAgent);
                                 }
                             }
                         }
-
                     } else if (msg.getOntology().equals("timeout")) { //error de tipo timeout
 
                         if (msg.getSender().getLocalName().contains("batch")) { //timeout enviado por un batch
@@ -213,7 +213,6 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                             batch_op_machine.put(batch,new HashMap<String,String>());
                         }
                         batch_op_machine.get(batch).put(operation,machine);  //se asume que un batch puede disponer de varias maquinas asignadas y viceversa, pero si tiene diferentes maquinas será para ejecutar difernetes operaciones
-
                         LOGGER.info("Added relation "+batch+" -> "+operation+" -> "+machine);
                     } else if (msg.getOntology().equals("asset_state")) { //recibe ping de vuelta del asset fuera de tiempo de espera de mensaje (solo para testing, no deberia ocurrir en funcionamiento normal)
                         LOGGER.warn("Recieved asset state out of the timeout: " + msg.getContent());
@@ -227,7 +226,6 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                     if (msg.getOntology().equals("askrelationship")) {  //devuelve la relacion máquina-batch
                         if (msg.getContent().contains("machine")) {
                             String content="";
-
                             for(Entry<String, HashMap<String,String>> batches: batch_op_machine.entrySet()){
                                 for(Entry<String,String> operations: batch_op_machine.get(batches.getKey()).entrySet()){
                                     if(operations.getValue().equals(msg.getContent())){
@@ -235,10 +233,8 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                                     }
                                 }
                             }
-
                             sendACL(ACLMessage.INFORM,msg.getSender().getLocalName(),msg.getOntology(),content,myAgent);
                         }else{
-
                             String content="";
                             for(Entry<String,String> operations: batch_op_machine.get(msg.getContent()).entrySet()){
                                 content=content+operations.getValue()+"/";
@@ -287,7 +283,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
         }
 
         private void timeout_handler(ACLMessage msg, String timeout_batch_id, String timeout_item_id) {
-//                    String MA = batch_machine.get(timeout_batch_id);
+
             for(Entry<String,String> operations: batch_op_machine.get(timeout_batch_id).entrySet()){ //hay que checkear cada maquina asignada al batch
                 String MA = operations.getValue();
                 argument2 = timeout_batch_id;
@@ -308,7 +304,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                             LOGGER.info("Agent " + dead_agent[0] + " has already been reported");
                         } else {
                             LOGGER.warn(MA+" operations must be redistributed to finish batch "+timeout_batch_id);
-                            add_to_error_list("not_found", dead_agent[0], "", "", ""); //añadimos agente caido
+                            add_to_error_list("not_found", dead_agent[0], "", "", ""); //añadimos agente caido a la lista de errores
                             get_timestamp(myAgent,msg.getSender().getLocalName(),"ConfirmationTime");
                             for(Entry<String, HashMap<String,String>> batches: batch_op_machine.entrySet()){  //tras confirmar que esta máquina está mal se redistribuyen las tareas asignadas a esta maquina
                                 for(Entry<String,String> operations2: batch_op_machine.get(batches.getKey()).entrySet()){
@@ -329,7 +325,7 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
                         argument4 = MA + "->OK";
                         argument5 = "GW->OK";
                         add_to_error_list("timeout", argument2, argument3, argument4, argument5);  //aunque este todoo ok hay que añadir el timeout a la lista de errores
-                    } else { //el sistema está parado o en error
+                    } else { //el sistema en error
                         get_timestamp(myAgent,msg.getSender().getLocalName(),"ConfirmationTime");
                         LOGGER.warn(MA+" operations must be redistributed to finish batch "+timeout_batch_id);
                         for(Entry<String, HashMap<String,String>> batches: batch_op_machine.entrySet()){  //tras confirmar que esta máquina está mal se redistribuyen las tareas asignadas a esta maquina
@@ -471,9 +467,9 @@ public class QoSManagerAgent extends ErrorHandlerAgent {
             DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
             now = dateFormat.format(getactualtime());
             ErrorList.add(l, new ArrayList<>());
-            ErrorList.get(l).add(0, type);
-            ErrorList.get(l).add(1, now);
-            ErrorList.get(l).add(2, arg2);
+            ErrorList.get(l).add(0, type); //tipo de fallo: not_found, timeout, communication...
+            ErrorList.get(l).add(1, now); //fecha de deteccion del fallo
+            ErrorList.get(l).add(2, arg2); //Datos dependientes del fallo: item de timeout, denunciante de fallo de comunicación, etc
             ErrorList.get(l).add(3, arg3);
             ErrorList.get(l).add(4, arg4);
             ErrorList.get(l).add(5, arg5);

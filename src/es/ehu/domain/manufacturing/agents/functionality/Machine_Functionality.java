@@ -692,7 +692,7 @@ public class Machine_Functionality extends DomRes_Functionality implements Basic
         // El codigo implementado dentro de la condicion IF se encarga de añadir al contador de consumibles los nuevos consumibles que han sido repuestos
         ACLMessage msg = myAgent.receive(template);
         if (msg != null) {
-            myAgent.msgFIFO.add((String) msg.getContent());
+            myAgent.recieved_msgs.add((String) msg.getContent());
             System.out.println(msg.getContent()); //printea para saber que ya tiene los items
             // bucle para sumar los nuevos consumibles en el contador de material
 

@@ -49,7 +49,7 @@ public class Order_Functionality extends DomApp_Functionality implements BasicFu
 
     class Ordertimeout extends Thread{
 
-        private boolean exit_timeout=false,QoSreported=false;
+        private boolean exit_timeout=false;
         private Date expected_finish_time;
         private String batch;
 

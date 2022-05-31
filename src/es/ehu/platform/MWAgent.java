@@ -56,7 +56,7 @@ public class MWAgent extends Agent {
     public String cmpID = null;
     public String state ="";    //para uso en autoidle
     public boolean change_state=false; //para cambiar el estado de una máquina a si misma
-    public CircularFifoQueue msgFIFO = new CircularFifoQueue(5);    //variable de almacenamiento de ACL
+    public CircularFifoQueue recieved_msgs = new CircularFifoQueue(5);    //variable de almacenamiento de ACL
     public int initTransition;
     public String conversationId;
     public int TMSTMP_cnt=0;

@@ -17,8 +17,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import static es.ehu.platform.utilities.MasReconOntologies.ONT_NEGOTIATE;
-
 /**
  * This behaviour receives messages from the templates used in the constructor
  * and execute the functionality to perform its activity.
@@ -221,7 +219,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 		ACLMessage msg = myAgent.receive(template);
 		if(msg!=null){
 			update_replicas=true;
-			myAgent.msgFIFO.add((String) msg.getContent());
+			myAgent.recieved_msgs.add((String) msg.getContent());
 		}
 		receivedMsgs = manageReceivedMsg(msg);
 
@@ -238,7 +236,7 @@ public class RunningBehaviour extends SimpleBehaviour {
 			}
 		}
 		if(endFlag&&(!myAgent.msg_buffer.isEmpty()||myAgent.expected_msgs.size()!=0)){ //en caso de que el agente haya terminado pero aun conserve mensajes pendientes de recibir o enviar hay que evitar que desaparezca
-			//endFlag=false;
+//			endFlag=false;
 //			result=false;
 			agent_block_flag =true;
 		}

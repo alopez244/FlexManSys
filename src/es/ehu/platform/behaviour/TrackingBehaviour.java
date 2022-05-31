@@ -118,7 +118,7 @@ public class TrackingBehaviour extends SimpleBehaviour {
 
 				String stateClassName = (msg.getContent()==null || msg.getContent().getClass()==null)?"null":msg.getContent().getClass().getSimpleName();
 				LOGGER.info("functionalityInstance.setState("+stateClassName+"="+((msg.getContent()==null)));
-				myAgent.msgFIFO.add((String) msg.getContent());
+				myAgent.recieved_msgs.add((String) msg.getContent());
 				myAgent.Acknowledge(msg, myAgent);
 				((AvailabilityFunctionality)myAgent.functionalityInstance).setState(msg.getContent());
 				LOGGER.debug(myAgent.cmpID+"("+((MWAgent) myAgent).getLocalName()+") < " + myAgent.cmpID+"("+msg.getSender().getLocalName()+"):"+ "state("+stateClassName+")");

@@ -92,7 +92,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         BAstate.setDateOfDelayAsk(date_when_delay_was_asked);
         BAstate.setdelaynum(delaynum);
         BAstate.setExpFinishDate(expected_finish_date);
-
         Gson gson = new Gson();
         String state=gson.toJson(BAstate);
 
@@ -165,8 +164,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
         firstState = getArgumentOfAgent(myAgent, "firstState");
         redundancy = getArgumentOfAgent(myAgent, "redundancy");
         parentAgentID = getArgumentOfAgent(myAgent, "parentAgent");
-
-
         mySeType = getMySeType(myAgent, conversationId);
 
         // Hay que leer el modelo de trazabilidad que estara en alguna carpeta
@@ -197,18 +194,17 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 ACLMessage reference=sendCommand(myAgent,"get "+batchName.getContent()+" attrib=reference","Reference"); //consigue la referencia del batch
                 AID plannerID = new AID("planner", false);
                 batchreference=reference.getContent();
-                sendACLMessage(16, plannerID,"Ftime_batch_ask", "finish_time", reference.getContent(), myAgent ); //pide el finish time de cada item al planner
+                sendACLMessage(ACLMessage.REQUEST, plannerID,"Ftime_batch_ask", "finish_time", reference.getContent(), myAgent ); //pide el finish time de cada item al planner
                 ACLMessage finishtime= myAgent.blockingReceive(templateFT); //recibe los finish times concatenados
-                myAgent.msgFIFO.add((String) finishtime.getContent());
+                myAgent.recieved_msgs.add((String) finishtime.getContent());
                 System.out.println(finishtime.getContent());
                 finish_times_of_batch=finishtime.getContent();
-                sendACLMessage(16,QoSID,"askdelay","delayasking",batchreference,myAgent);
+                sendACLMessage(ACLMessage.REQUEST,QoSID,"askdelay","delayasking",batchreference,myAgent);
 
             } catch (Exception e) {
                 System.out.println("ERROR. Something happened asking for finish time to planner");
                 e.printStackTrace();
             }
-
 
         } else {
             // Si su estado es tracking
@@ -237,7 +233,6 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     String delay = msg.getContent();
                     delaynum = Long.parseLong(delay);
                     AID OrderAgent = new AID(parentAgentID, false);
-
                     try {
                         batchName = sendCommand(myAgent, "get " + myAgent.getLocalName() + " attrib=parent", "name"); //consigue el nombre del batch
                         ACLMessage reference = sendCommand(myAgent, "get " + batchName.getContent() + " attrib=reference", "Reference");
@@ -287,7 +282,7 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                     actual_item_number=0;
                     reset_flag=false;
                     finish_times_of_batch=msg.getContent(); //los finishtime se reciben del agente maquina segun el tiempo que tarde en ejecutarlos
-                    sendACLMessage(16,QoSID,"askdelay","delayasking",batchreference,myAgent); //pide el delay al QoS y de aquí en adelante es como al inicio del plan
+                    sendACLMessage(ACLMessage.REQUEST,QoSID,"askdelay","delayasking",batchreference,myAgent); //pide el delay al QoS y de aquí en adelante es como al inicio del plan
                     operations_redistributed_flag=true;
                 } else if (msg.getPerformative() == ACLMessage.INFORM && msg.getOntology().equals("data")) {
 
@@ -411,14 +406,11 @@ public class Batch_Functionality extends DomApp_Functionality implements BasicFu
                 //returns the names of all the agents that are sons
                 if (reply != null)   // Si no existe el id en el registro devuelve error
                     parentName = reply.getContent(); //gets the name of the agent´s parent
-
-                KillReplicas(myAgent);
-//            sendACLMessage(7, Agent, myAgent.getLocalName(), "Shutdown", "Batch completed", myAgent);
-
-                ACLMessage order_parent= sendCommand(myAgent, "get "+parentName+" attrib=parent", myAgent.getLocalName()+"_parent_parent");
-                ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + order_parent.getContent()+" state=running", myAgent.getLocalName()+"_parent_running_replica");
-                AID Agent = new AID(running_replica.getContent(), false);
-                sendACLMessage(7, Agent, parentName, "Shutdown", "Batch completed", myAgent);
+                    KillReplicas(myAgent);
+                    ACLMessage order_parent= sendCommand(myAgent, "get "+parentName+" attrib=parent", myAgent.getLocalName()+"_parent_parent");
+                    ACLMessage running_replica = sendCommand(myAgent, "get * parent=" + order_parent.getContent()+" state=running", myAgent.getLocalName()+"_parent_running_replica");
+                    AID Agent = new AID(running_replica.getContent(), false);
+                    sendACLMessage(ACLMessage.INFORM, Agent, parentName, "Shutdown", "Batch completed", myAgent);
 
             } catch (Exception e) {
                 e.printStackTrace();

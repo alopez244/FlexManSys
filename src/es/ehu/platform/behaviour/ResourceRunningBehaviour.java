@@ -183,7 +183,7 @@ public class ResourceRunningBehaviour extends SimpleBehaviour {
         //***************** 4) Etapa de ejecución de funtionality
         ACLMessage msg = myAgent.receive(template);
         if (msg!=null) {
-            myAgent.msgFIFO.add((String) msg.getContent());
+            myAgent.recieved_msgs.add((String) msg.getContent());
             //lo que haga en el running
             // Esto deberia ir dentro del if anterior, pero de momento no se le mandan mensajes de ese tipo (ontology: ONT_RUN)
             // TODO CUIDADO --> Se ha copiado de RunningBehaviour

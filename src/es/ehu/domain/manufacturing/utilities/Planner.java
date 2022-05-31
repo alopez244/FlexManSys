@@ -26,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Planner extends Agent {
     private MessageTemplate template;
-    private String itemfinishtime=null;
     private static final long serialVersionUID = 1L;
     static final Logger LOGGER = LogManager.getLogger(Planner.class.getName()) ;
     private int chatID = 0;
@@ -36,7 +35,6 @@ public class Planner extends Agent {
     private Agent myAgent=this;
     private MessageTemplate template1=MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.CONFIRM),
             MessageTemplate.MatchOntology("man/auto"));
-    private int TMSTMP_cnt=0;
 
     protected void setup() {
         LOGGER.entry();
@@ -360,8 +358,8 @@ public class Planner extends Agent {
 //                                            itemfinishtime = xmlelements.get(j).get(3).get(index) + "/" + xmlelements.get(n).get(3).get(2);
                                         }
                                     }
-
-                                }attributes.put("numberOfItems",itemList);
+                                }
+                                attributes.put("numberOfItems",itemList);
                             }
                             attributes.put("reference",xmlelements.get(i).get(3).get(2));
                             attributes.put("refProductID",xmlelements.get(i).get(3).get(1));
@@ -384,7 +382,6 @@ public class Planner extends Agent {
                                 }
                             }
                         }
-
 
                         try {
                             ACLMessage reply = sendCommand(commandSeReg, conversationId);
@@ -411,7 +408,6 @@ public class Planner extends Agent {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-
 
                 //Start
                 try {
@@ -573,7 +569,6 @@ public class Planner extends Agent {
                             orderlist.add(xmlelements.get(i).get(3).get(0));
 
                         }
-                        int l=0;
                         if(attrName.equals("batch")){ //buscamos y añadimos los atributos para el agente batch
                             batchlist.add(xmlelements.get(i).get(3).get(2));
 
@@ -593,7 +588,6 @@ public class Planner extends Agent {
                             attributes.put("reference",xmlelements.get(i).get(3).get(2));
                             attributes.put("refProductID",xmlelements.get(i).get(3).get(1));
                         }
-                        l++;
                         //The parent Id is always the last element Id of the upper level
                         parentId = parentIdList.get(Integer.parseInt(xmlelements.get(i).get(1).get(0)) - 1);
 
@@ -788,9 +782,6 @@ public class Planner extends Agent {
         if(!cmd.contains("get *")){
             LOGGER.info((cmd.startsWith("validate"))?"xsd: "+reply.getContent(): cmd+" > "+reply.getContent());
         }
-
-
-
         return LOGGER.exit(reply);
     }
     private void sendACL(int performative,String receiver,String ontology,String content){ //Funcion estándar de envío de mensajes
@@ -956,7 +947,7 @@ public class Planner extends Agent {
             if (found != 1) {
                 LOGGER.error("Multiple or no resource agents found for provided name "+cmd2);
             } else {
-                sendACL(16, "QoSManagerAgent","askrelationship" , cmd2);
+                sendACL(ACLMessage.REQUEST, "QoSManagerAgent","askrelationship" , cmd2);
                 ACLMessage reply = blockingReceive(reltemplate, 500);
                 if(reply!=null) {
                     System.out.print(cmd2 +" is assigned to "+reply.getContent());
