@@ -7,7 +7,6 @@ import jade.core.Profile;
 import jade.util.leap.Properties;
 import jade.wrapper.ControllerException;
 import jade.wrapper.gateway.JadeGateway;
-
 import java.net.Inet4Address;
 import java.net.InetAddress;
 
