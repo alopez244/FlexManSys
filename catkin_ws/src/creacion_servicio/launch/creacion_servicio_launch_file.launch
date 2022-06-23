@@ -1,4 +1,0 @@
-<launch>
-   <node pkg="creacion_servicio" type="creacion_del_servicio.py" name="service_server" output="screen">
-   </node>
-</launch>

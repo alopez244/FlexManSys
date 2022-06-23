@@ -1,0 +1,616 @@
+ Program
+   Robot Program
+     'Estas variables hay que borrarlas en la prueba final. Se deben resetear en el Agente'
+     'Antes de comenzar con el programa principal,  comprobamos que el robot esta en la posicion inicial.'
+     Home
+     'MARCHA_Reset'
+     write_output_boolean_register(2, False )
+     write_output_boolean_register(3, False )
+     'Flag_Service_Completed'
+     write_output_boolean_register(1, False )
+     i≔1
+     Wait: 2.0
+     'Leemos la variable que indica el comienzo del programa.'
+     MARCHA≔read_input_boolean_register(0)
+     'Una vez este la variable de MARCHA en TRUE accedemos al bucle y se comienza con la fabricacion del servicio requerido.'
+     Loop MARCHA≟ True 
+       Home
+       'Inicializamos el numero de items completados a cero'
+       write_output_integer_register(0,0)
+       'Leemos el servicio que debemos realizar'
+       Serv≔read_input_integer_register(0)
+       Wait: 2.0
+       'Leemos la cantidad de items a realizar'
+       CantItems≔read_input_integer_register(1)
+       'Flanc para guardar la hora de cuando se comienza con el servicio'
+       write_output_boolean_register(4, True )
+       Wait: 0.01
+       write_output_boolean_register(4, False )
+       If Serv≟1
+         Call Fase1
+         i≔1
+         Loop i≤CantItems
+           write_output_boolean_register(5, True )
+           Wait: 0.01
+           write_output_boolean_register(5, False )
+           Call Fase2
+           'Asignamos la cantidad de item-s finalizamos al registro de enteros. Este valir llega al TIAPortal para que sea enviado al broker, consiguiendl que llegue al Agente.'
+           write_output_integer_register(0,i)
+           'Activamos en flag con el que se muestra que un item ha sido finalizado'
+           write_output_boolean_register(0, True )
+           Wait: 1.0
+           i≔i+1
+           'Publicacion de los datos'
+           write_output_boolean_register(3, True )
+           Wait: 2.0
+           write_output_boolean_register(0, False )
+           write_output_boolean_register(3, False )
+         Home
+         Call Fase6
+       ElseIf Serv≟2
+         Call Fase1
+         i≔1
+         Loop i≤CantItems
+           write_output_boolean_register(5, True )
+           Wait: 0.01
+           write_output_boolean_register(5, False )
+           Call Fase2
+           Call Fase3
+           write_output_integer_register(0,i)
+           write_output_boolean_register(0, True )
+           Wait: 1.0
+           i≔i+1
+           write_output_boolean_register(3, True )
+           Wait: 2.0
+           write_output_boolean_register(0, False )
+           write_output_boolean_register(3, False )
+         Home
+         Call Fase6
+       ElseIf Serv≟3
+         Call Fase1
+         i≔1
+         Loop i≤CantItems
+           write_output_boolean_register(5, True )
+           Wait: 0.01
+           write_output_boolean_register(5, False )
+           Call Fase2
+           Call Fase3
+           Call Fase4
+           write_output_integer_register(0,i)
+           write_output_boolean_register(0, True )
+           Wait: 1.0
+           i≔i+1
+           write_output_boolean_register(3, True )
+           Wait: 2.0
+           write_output_boolean_register(0, False )
+           write_output_boolean_register(3, False )
+         Home
+         Call Fase6
+       ElseIf Serv≟4
+         Call Fase1
+         i≔1
+         Loop i≤CantItems
+           write_output_boolean_register(5, True )
+           Wait: 0.01
+           write_output_boolean_register(5, False )
+           Call Fase2
+           Call Fase3
+           Call Fase4
+           Call Fase5
+           write_output_integer_register(0,i)
+           write_output_boolean_register(0, True )
+           Wait: 1.0
+           i≔i+1
+           write_output_boolean_register(0, False )
+           write_output_boolean_register(3, True )
+           Wait: 2.0
+           write_output_boolean_register(3, False )
+         Home
+         Call Fase6
+       ElseIf Serv≟5
+         Call Fase1
+         i≔1
+         Loop i≤CantItems
+           MoveJ
+             Waypoint_1
+           write_output_boolean_register(5, True )
+           Wait: 0.01
+           write_output_boolean_register(5, False )
+           Call Fase3
+           write_output_integer_register(0,i)
+           write_output_boolean_register(0, True )
+           Wait: 1.0
+           i≔i+1
+           write_output_boolean_register(3, True )
+           Wait: 2.0
+           write_output_boolean_register(0, False )
+           write_output_boolean_register(3, False )
+         Home
+         Call Fase6
+       ElseIf Serv≟6
+         Call Fase1
+         i≔1
+         Loop i≤CantItems
+           write_output_boolean_register(5, True )
+           Wait: 0.01
+           write_output_boolean_register(5, False )
+           Call Fase3
+           Call Fase4
+           write_output_integer_register(0,i)
+           write_output_boolean_register(0, True )
+           Wait: 1.0
+           i≔i+1
+           write_output_boolean_register(3, True )
+           Wait: 2.0
+           write_output_boolean_register(0, False )
+           write_output_boolean_register(3, False )
+         Home
+         Call Fase6
+       ElseIf Serv≟7
+         Call Fase1
+         i≔1
+         Loop i≤CantItems
+           write_output_boolean_register(5, True )
+           Wait: 0.01
+           write_output_boolean_register(5, False )
+           Call Fase3
+           Call Fase4
+           Call Fase5
+           write_output_integer_register(0,i)
+           write_output_boolean_register(0, True )
+           Wait: 1.0
+           i≔i+1
+           write_output_boolean_register(3, True )
+           Wait: 2.0
+           write_output_boolean_register(0, False )
+           write_output_boolean_register(3,3)
+         Home
+         Call Fase6
+       ElseIf Serv≟8
+         Call Fase1
+         i≔1
+         Loop i≤CantItems
+           write_output_boolean_register(5, True )
+           Wait: 0.01
+           write_output_boolean_register(5, False )
+           Call Fase4
+           write_output_integer_register(0,i)
+           write_output_boolean_register(0, True )
+           Wait: 1.0
+           i≔i+1
+           write_output_boolean_register(3, True )
+           Wait: 2.0
+           write_output_boolean_register(0, False )
+           write_output_boolean_register(3, False )
+         Home
+         Call Fase6
+       ElseIf Serv≟9
+         Call Fase1
+         i≔1
+         Loop i≤CantItems
+           write_output_boolean_register(5, True )
+           Wait: 0.01
+           write_output_boolean_register(5, False )
+           Call Fase4
+           Call Fase5
+           write_output_integer_register(0,i)
+           write_output_boolean_register(0, True )
+           Wait: 1.0
+           i≔i+1
+           write_output_boolean_register(3, True )
+           Wait: 2.0
+           write_output_boolean_register(0, False )
+           write_output_boolean_register(3, False )
+         Home
+         Call Fase6
+       ElseIf Serv≟10
+         Call Fase1
+         i≔1
+         Loop i≤CantItems
+           write_output_boolean_register(5, True )
+           Wait: 0.01
+           write_output_boolean_register(5, False )
+           Call Fase5
+           write_output_integer_register(0,i)
+           write_output_boolean_register(0, True )
+           Wait: 0.01
+           i≔i+1
+           write_output_boolean_register(3, True )
+           Wait: 2.0
+           write_output_boolean_register(0, False )
+           write_output_boolean_register(3, False )
+         Home
+         Call Fase6
+       Else
+         Popup: El servicio seleccionado no existe. Elije un servicio entre 1-10
+       'Reseteamos la variable de MARCHA'
+       write_output_boolean_register(2, True )
+       'SET de la variable que indica que el servicio ha sido finalizado.'
+       write_output_boolean_register(1, True )
+       Wait: 1.0
+       write_output_boolean_register(3, True )
+       Wait: 2.0
+       write_output_boolean_register(3, False )
+       'Ponemos a 0 la variablr que hace que se resetee el valor de MARCHA'
+       write_output_boolean_register(2, False )
+       Wait: 5.0
+       write_output_boolean_register(1, False )
+       write_output_boolean_register(4, True )
+   Fase1
+     Set DO[0]=Apagar
+     Home
+     MoveJ
+       arribaA_F1
+     MoveL
+       abajoA_F1
+     Set DO[0]=Encender
+     Wait: 0.25
+     MoveL
+       arribaA_F1
+     MoveJ
+       Punto_de_paso_1
+       Punto_de_paso_2
+       arribaB_F1
+     MoveL
+       abajoB_F1
+     Wait: 0.25
+     Set DO[0]=Apagar
+     MoveL
+       arribaB_F1
+     MoveJ
+       Punto_de_paso_3
+     Home
+   Fase2
+     Set DO[1]=Apagar
+     set_tcp(p[0.000000, 0.000000, 0.200000, 0.000000, 0.000000, 0.000000])
+     MoveJ
+       arribaRodB
+     MoveL
+       abajoRodB
+     Wait: 0.25
+     Set DO[1]=Encender
+     MoveL
+       arribaRodB
+     If i≟1
+       MoveJ
+         arribaP1_F2
+       MoveL
+         abajoP1_F2
+       Wait: 0.5
+       Set DO[1]=Apagar
+       Wait: 0.5
+       MoveL
+         arribaP1_F2
+     ElseIf i≟2
+       MoveJ
+         arribaP2_F2
+       MoveL
+         abajoP2_F2
+       Wait: 0.5
+       Set DO[1]=Apagar
+       Wait: 0.5
+       MoveL
+         arribaP2_F2
+     ElseIf i≟3
+       MoveJ
+         arribaP3_F2
+       MoveL
+         abajoP3_F2
+       Wait: 0.5
+       Set DO[1]=Apagar
+       Wait: 0.5
+       MoveL
+         arribaP3_F2
+     ElseIf i≟4
+       MoveJ
+         arribaP4_F2
+       MoveL
+         abajoP4_F2
+       Wait: 0.5
+       Set DO[1]=Apagar
+       Wait: 0.5
+       MoveL
+         arribaP4_F2
+     ElseIf i≟5
+       MoveJ
+         arribaP5_F2
+       MoveL
+         abajoP5_F2
+       Wait: 0.5
+       Set DO[1]=Apagar
+       Wait: 0.5
+       MoveL
+         arribaP5_F2
+     Else
+       MoveJ
+         arribaP6_F2
+       MoveL
+         abajoP6_F2
+       Wait: 0.5
+       Set DO[1]=Apagar
+       Wait: 0.5
+       MoveL
+         arribaP6_F2
+   Fase3
+     Set DO[0]=Apagar
+     MoveJ
+       arribaBulon
+     MoveJ
+       atrasBulon
+     MoveJ
+       delanteBulon
+     Set DO[0]=Encender
+     Wait: 0.25
+     MoveJ
+       atrasBulon
+     MoveJ
+       arribaBulon
+     If i≟1
+       MoveJ
+         arribaP1_F3
+       MoveL
+         abajoP1_F3
+       Wait: 0.25
+       Set DO[0]=Apagar
+       MoveL
+         arribaP1_F3
+     ElseIf i≟2
+       MoveJ
+         arribaP2_F3
+       MoveL
+         abajoP2_F3
+       Wait: 0.25
+       Set DO[0]=Apagar
+       MoveL
+         arribaP2_F3
+     ElseIf i≟3
+       MoveJ
+         arribaP3_F3
+         PuntoPaso_P3_F3
+       MoveL
+         abajoP3_F3
+       Wait: 0.25
+       Set DO[0]=Apagar
+       MoveL
+         arribaP3_F3
+     ElseIf i≟4
+       MoveJ
+         arribaP4_F3
+       MoveL
+         abajoP4_F3
+       Wait: 0.25
+       Set DO[0]=Apagar
+       MoveL
+         arribaP4_F3
+     ElseIf i≟5
+       MoveJ
+         arribaP5_F3
+       MoveL
+         abajoP5_F3
+       Wait: 0.25
+       Set DO[0]=Apagar
+       MoveL
+         arribaP5_F3
+     ElseIf i≟6
+       MoveJ
+         arribaP6_F3
+       MoveL
+         abajoP6_F3
+       Wait: 0.25
+       Set DO[0]=Apagar
+       MoveL
+         arribaP6_F3
+   Fase4
+     Set DO[1]=Apagar
+     set_tcp(p[0.000000, 0.000000, 0.200000, 0.000000, 0.000000, 0.000000])
+     MoveJ
+       arribaTapaInt
+     MoveL
+       abajoTapaInt
+     Set DO[1]=Encender
+     Wait: 0.5
+     MoveL
+       arribaTapaInt
+     If i≟1
+       MoveJ
+         arribaP1_F4
+       MoveL
+         abajoP1_F4
+       Wait: 0.25
+       Set DO[1]=Apagar
+       Wait: 0.25
+       MoveL
+         arribaP1_F4
+     ElseIf i≟2
+       MoveJ
+         arribaP2_F4
+       MoveL
+         abajoP2_F4
+       Wait: 0.25
+       Set DO[1]=Apagar
+       Wait: 0.25
+       MoveL
+         arribaP2_F4
+     ElseIf i≟3
+       MoveJ
+         arribaP3_F4
+       MoveL
+         abajoP3_F4
+       Wait: 0.25
+       Set DO[1]=Apagar
+       Wait: 0.25
+       MoveL
+         arribaP3_F4
+     ElseIf i≟4
+       MoveJ
+         arribaP4_F4
+       MoveL
+         abajoP4_F4
+       Wait: 0.25
+       Set DO[1]=Apagar
+       Wait: 0.25
+       MoveL
+         arribaP4_F4
+     ElseIf i≟5
+       MoveJ
+         arribaP5_F4
+       MoveL
+         abajoP5_F4
+       Wait: 0.25
+       Set DO[1]=Apagar
+       Wait: 0.25
+       MoveL
+         arribaP5_F4
+     Else
+       MoveJ
+         arribaP6_F4
+       MoveL
+         abajoP6_F4
+       Wait: 0.25
+       Set DO[1]=Apagar
+       Wait: 0.25
+       MoveL
+         arribaP6_F4
+     'PiezasFin≔i'
+     'movej([0.017453, -1.553343, 0.017453, -1.553343, 0.017453, 0.017453],1.20000,0.25000,0,0.0000)'
+     'Home'
+   Fase5
+     Set DO[1]=Apagar
+     'Home'
+     set_tcp(p[0.000000, 0.000000, 0.200000, 0.000000, 0.000000, 0.000000])
+     If i≟1
+       MoveJ
+         arribaD1_F5
+       MoveL
+         abajoD1_F5
+       Wait: 0.5
+       Set DO[1]=Encender
+       Wait: 0.5
+       MoveL
+         arribaD1_F5
+       MoveJ
+         arribaP1_F5
+       MoveL
+         abajoP1_F5
+       Wait: 0.5
+       Set DO[1]=Apagar
+       Wait: 0.5
+       MoveL
+         arribaP1_F5
+     ElseIf i≟2
+       MoveJ
+         arribaD2_F5
+       MoveL
+         abajoD2_F5
+       Wait: 0.5
+       Set DO[1]=Encender
+       Wait: 0.5
+       MoveJ
+         arribaD2_F5
+         arribaP2_F5
+       MoveL
+         abajoP2_F5
+       Wait: 0.5
+       Set DO[1]=Apagar
+       Wait: 0.5
+       MoveL
+         arribaP2_F5
+     ElseIf i≟3
+       MoveJ
+         arribaD3_F5
+       MoveL
+         abajoD3_F5
+       Wait: 0.5
+       Set DO[1]=Encender
+       Wait: 0.5
+       MoveL
+         arribaD3_F5
+       MoveJ
+         arribaP3_F5
+       MoveL
+         abajoP3_F5
+       Wait: 0.5
+       Set DO[1]=Apagar
+       Wait: 0.5
+       MoveJ
+         arribaP3_F5
+     ElseIf i≟4
+       MoveJ
+         arribaD4_F5
+       MoveL
+         abajoD4_F5
+       Wait: 0.5
+       Set DO[1]=Encender
+       Wait: 0.5
+       MoveJ
+         arribaD4_F5
+       MoveJ
+         arribaP4_F5
+       MoveL
+         abajoP4_F5
+       Wait: 0.5
+       Set DO[1]=Apagar
+       Wait: 0.5
+       MoveL
+         arribaP4_F5
+     ElseIf i≟5
+       MoveJ
+         arribaD5_F5
+       MoveJ
+         abajoD5_F5
+       Wait: 0.5
+       Set DO[1]=Encender
+       Wait: 0.5
+       MoveL
+         arribaD5_F5
+       MoveJ
+         arribaP5_F5
+       MoveL
+         abajoP5_F5
+       Wait: 0.5
+       Set DO[1]=Apagar
+       Wait: 0.5
+       MoveJ
+         arribaP5_F5
+     ElseIf i≟6
+       MoveJ
+         arribaD6_F5
+       MoveL
+         abajoD6_F5
+       Wait: 0.5
+       Set DO[1]=Encender
+       Wait: 0.5
+       MoveL
+         arribaD6_F5
+       MoveJ
+         arribaP6_F6
+       MoveL
+         abajoP6_F5
+       Wait: 0.5
+       Set DO[1]=Apagar
+       Wait: 0.5
+       MoveJ
+         arribaP6_F6
+   Fase6
+     'Home'
+     Set DO[0]=Apagar
+     MoveJ
+       PuntoDePasoB_F6
+       arribaB_F6
+     MoveL
+       abajoB_F6
+     Set DO[0]=Encender
+     Wait: 0.25
+     MoveL
+       arribaB_F6
+     MoveJ
+       PuntoDePaso_F6
+       arribaC_F6
+     MoveL
+       abajoC_F6
+     Wait: 0.25
+     Set DO[0]=Apagar
+     MoveL
+       arribaC_F6
+     Home
+     Set DO[7]=Apagar

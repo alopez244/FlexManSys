@@ -1,0 +1,74 @@
+ Program
+   Robot Program
+     Set DO[0]=Apagar
+     i≔1
+     Loop i≤6
+       MoveJ
+         arribaBulon
+       MoveJ
+         atrasBulon
+       MoveJ
+         delanteBulon
+       Set DO[0]=Encender
+       Wait: 0.25
+       MoveJ
+         atrasBulon
+       MoveJ
+         arribaBulon
+       If i≟1
+         MoveJ
+           arribaP1_F3
+         MoveL
+           abajoP1_F3
+         Wait: 0.25
+         Set DO[0]=Apagar
+         MoveL
+           arribaP1_F3
+       ElseIf i≟2
+         MoveJ
+           arribaP2_F3
+         MoveL
+           abajoP2_F3
+         Wait: 0.25
+         Set DO[0]=Apagar
+         MoveL
+           arribaP2_F3
+       ElseIf i≟3
+         MoveJ
+           arribaP3_F3
+         MoveL
+           abajoP3_F3
+         Wait: 0.25
+         Set DO[0]=Apagar
+         MoveL
+           arribaP3_F3
+       ElseIf i≟4
+         MoveJ
+           arribaP4_F3
+         MoveL
+           abajoP4_F3
+         Wait: 0.25
+         Set DO[0]=Apagar
+         MoveL
+           arribaP4_F3
+       ElseIf i≟5
+         MoveJ
+           arribaP5_F3
+         MoveL
+           abajoP5_F3
+         Wait: 0.25
+         Set DO[0]=Apagar
+         MoveL
+           arribaP5_F3
+       ElseIf i≟6
+         MoveJ
+           arribaP6_F3
+         MoveL
+           abajoP6_F3
+         Wait: 0.25
+         Set DO[0]=Apagar
+         MoveL
+           arribaP6_F3
+       NumPiezas≔i
+       i≔i+1
+     Home

@@ -1,4 +1,0 @@
-<launch>
-   <node pkg="topics_quiz" type="topics_quiz_subscriber.py" name="obstacle_navigation" output="screen">
-   </node>
-</launch>

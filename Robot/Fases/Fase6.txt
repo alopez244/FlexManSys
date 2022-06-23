@@ -1,0 +1,27 @@
+ Program
+   Robot Program
+     Home
+     Set DO[0]=Apagar
+     'set_tcp(p[0.000000, 0.000000, 0.200000, 0.000000, 0.000000, 0.000000])'
+     MoveJ
+       PuntoDePasoB_F6
+       arribaB_F6
+     MoveL
+       abajoB_F6
+     Set DO[0]=Encender
+     Wait: 0.25
+     MoveL
+       arribaB_F6
+     'movej([-1.732864, -1.799993, -1.141102, -1.773778, 1.554874, -3.308289],1.20000,0.25000,0,0.0000)'
+     MoveJ
+       PuntoDePaso_F6
+       arribaC_F6
+     MoveL
+       abajoC_F6
+     Wait: 0.25
+     Set DO[0]=Apagar
+     MoveL
+       arribaC_F6
+     Home
+     'mirar que es esta variable de salida'
+     Set DO[7]=Apagar

@@ -1,9 +1,0 @@
-<launch>
-
-    <node pkg ="turtlebot_project_rosbasic"
-        type="easy_solution.py"
-        name="easy_project_node"
-        output="screen">
-    </node>
-
-</launch>

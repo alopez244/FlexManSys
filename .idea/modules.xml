@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/FlexManSys.iml" filepath="$PROJECT_DIR$/.idea/FlexManSys.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jadeFirst.iml" filepath="$PROJECT_DIR$/jadeFirst.iml" />
     </modules>
   </component>
 </project>

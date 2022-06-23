@@ -1,0 +1,2160 @@
+def Main1():
+  set_tcp(p[0.00755148296704608,0.003639298738154023,0.026409592411711,0.0,0.0,0.0])
+  set_payload(1.14, [0.022, -0.007, 0.054])
+  set_safety_mode_transition_hardness(1)
+  set_gravity([0.0, 0.0, 9.82])
+  set_tool_communication(True, 1000000, 2, 1, 1.5, 3.5)
+  set_tool_output_mode(0)
+  set_tool_digital_output_mode(0, 1)
+  set_tool_digital_output_mode(1, 1)
+  set_tool_voltage(0)
+  step_count_c0045739_9642_4e93_996f_8cfe11d559ec = 0.0
+  thread Step_Counter_Thread_e0c1f18b_f258_4bfc_bc42_57676b825175():
+    while (True):
+      step_count_c0045739_9642_4e93_996f_8cfe11d559ec = step_count_c0045739_9642_4e93_996f_8cfe11d559ec + 1.0
+      sync()
+    end
+  end
+  run Step_Counter_Thread_e0c1f18b_f258_4bfc_bc42_57676b825175()
+  set_standard_analog_input_domain(0, 1)
+  set_standard_analog_input_domain(1, 1)
+  set_tool_analog_input_domain(0, 1)
+  set_tool_analog_input_domain(1, 1)
+  set_analog_outputdomain(0, 0)
+  set_analog_outputdomain(1, 0)
+  set_input_actions_to_default()
+  global Mesa=p[-0.3283222416297581,-0.20095078680444134,-0.01154506462095492,-2.1087277613487028,-2.3273776320839428,-7.166709239352482E-4]
+  # begin: URCap Installation Node
+  #   Source: Remote TCP & Toolpath, 1.2.65.build36, Universal Robots A/S
+  #   Type: Remote TCP & Toolpath
+  # end: URCap Installation Node
+  # begin: URCap Installation Node
+  #   Source: OnRobot, 5.9.1, OnRobot A/S
+  #   Type: Configuración de OnRobot
+  if (False):
+  end
+  ON_BASE_SHIFT_BOOL = 64
+  ON_BASE_SHIFT_INT = 24
+  ON_BASE_SHIFT_FLOAT = 24
+  ON_DEVICE_SHIFT_BOOL_ARR = [64, 64, 64]
+  ON_DEVICE_SHIFT_INT_ARR = [25, 25, 25]
+  ON_DEVICE_SHIFT_FLOAT_ARR = [24, 24, 24]
+  ON_REGISTERS_SUM_BOOL = 0
+  ON_REGISTERS_SUM_INT = 1
+  ON_REGISTERS_SUM_FLOAT = 0
+  ON_REGISTERS_SPEEDL_INT = 0
+  ON_DI_SINGLE = 0
+  ON_DI_PRIMARY = 1
+  ON_DI_SECONDARY = 2
+  ON_DI_DUAL = 3
+  on_robot_type = 3
+  on_robot_cycle = 2.0
+  on_device_ip = "localhost"
+  on_device_socket_port = 51234
+  on_xmlrpc = rpc_factory("xmlrpc", "http://localhost:41414")
+  on_RPC = rpc_factory("xmlrpc", "http://127.0.0.1:31416")
+  ON_DEBUG_LOG = False
+  on_isMetric = True
+  on_toolConnector = True
+  on_ioqc = False
+  on_dual = False
+  on_computebox = False
+  on_devices = 0
+  on_gripper = [False, False, False]
+  on_ft = False
+  #======    OnRobot Globals    ======#
+  
+  ON_MATH_PI=3.141593
+  ON_ZEROPOSE=p[0.0,0.0,0.0,0.0,0.0,0.0]
+  ON_ZEROFRAME=p[0.0,0.0,0.0,0.0,0.0,0.0]
+  ON_ZERO3D=[0.0,0.0,0.0]
+  ON_ZERO6D=[0.0,0.0,0.0,0.0,0.0,0.0]
+  ON_ZERO8D=[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
+  ON_FALSE3D=[False,False,False]
+  ON_FALSE6D=[False,False,False,False,False,False]
+  ON_FALSE8D=[False,False,False,False,False,False,False,False]
+  global on_return=0
+  on_speedL=ON_ZERO6D
+  on_speedBase=ON_ZERO6D
+  on_speedVect=ON_ZERO6D
+  on_speedExtra=ON_ZERO6D
+  on_speedCB=ON_ZERO6D
+  on_speedGecko=ON_ZERO6D
+  on_RTDE_error=0
+  on_dataProcess_thrd=0
+  ON_DEVICE_ID_MISSING=0
+  ON_INIT_WATCHDOG_HZ=5
+  ON_INIT_TIMEOUT=500
+  on_robot_TCP_offset=ON_ZEROFRAME
+  on_tcp_offset_actual=ON_ZEROFRAME
+  on_cog_actual=ON_ZEROFRAME
+  on_mass_actual=0.0
+  on_robot_mount=[0.0,0.0]
+  
+  #======    End of OnRobot Globals    ======#
+  #======    OnRobot Interface Messages    ======#
+  
+  on_devices_primary_log="Dispositivos de OnRobot"
+  on_devices_secondary_log="Dispositivo secundario de OnRobot"
+  on_device_error_title="OnRobot - Error de dispositivo"
+  on_install_error="La configuración de OnRobot no es correcta.<br>Compruebe el estado en la página de configuración de OnRobot, en la pestaña de instalación.<br>Programa detenido."
+  on_device_missing="No hay ningún dispositivo conectado.<br>Programa detenido."
+  ft_device_missing="No hay ningún sensor F/T OnRobot conectado.<br>Programa detenido."
+  cb_device_missing="No hay ningún dispositivo F/T OnRobot conectado.<br>Programa detenido."
+  hex_device_missing="No hay ningún sensor HEX conectado.<br>Programa detenido."
+  rg2ft_device_missing="No hay ninguna pinza RG2-FT conectada.<br>Programa detenido."
+  rg_device_missing="No hay ninguna pinza RG conectada.<br>Programa detenido."
+  vg_device_missing="No hay ninguna pinza VG conectada.<br>Programa detenido."
+  gg_device_missing="No hay ninguna Gecko Gripper conectada.<br>Programa detenido."
+  sg_device_missing="No hay ninguna Soft Gripper conectada.<br>Programa detenido."
+  tfg_device_missing="No hay ninguna pinza 3FG conectada.<br>Programa detenido."
+  sdr_device_missing="No hay ninguna OnRobot Sander conectada.<br>Programa detenido."
+  twofg_device_missing="No hay ninguna pinza 2FG conectada.<br>Programa detenido."
+  vgp_device_missing="No hay ninguna pinza VGP conectada.<br>Programa detenido."
+  mg_device_missing="No hay ninguna Magnetic Gripper conectada.<br>Programa detenido."
+  on_xmlrpc_start_ip="Conexión al servidor XML-RPC de OnRobot:"
+  on_java_comm_error_textmsg_title="OnRobot - Error de comunicación:"
+  on_java_comm_controlsocket_open_error="Apertura de la toma 'javaSocket' incorrecta."
+  on_java_comm_error_title="OnRobot - Error de comunicación"
+  on_java_comm_socket_open_error="El establecimiento de la conexión con el URCap ha excedido el tiempo.<br>Compruebe el estado en la página de configuración de OnRobot, en la pestaña de instalación.<br>Programa detenido."
+  on_rtde_feed_error_textmsg_title="OnRobot - Error RTDE:"
+  on_rtde_feed_error="Error de alimentación RTDE. Discrepancia en el recuento de dispositivos de OnRobot.<br>Programa detenido."
+  on_rtde_feed_open_error_textmsg="Apertura de la toma 'rtdeFeed' incorrecta."
+  on_rtde_feed_error_title="OnRobot - Error RTDE"
+  on_rtde_feed_count_error="Detección de configuración de desplazamiento RTDE no válida. Compruebe los desplazamientos RTDE en la página de configuración de OnRobot en la pestaña de instalación.<br>Programa detenido."
+  on_rtde_feed_open_error="El establecimiento de la conexión con los dispositivos ha excedido el tiempo.<br>Asegúrese de que los dispositivos de OnRobot funcionen y compruebe el estado en la página de configuración de OnRobot, en la pestaña de instalación."
+  
+  #======    End of OnRobot Interface Messages    ======#
+  #======    OnRobot Interface    ======#
+  
+  on_portopened_javaSocket=False
+  on_rtde_feed_opened=False
+  on_dataProcess_running=False
+  def on_missing():
+  popup(on_device_missing,title=on_device_error_title,error=True,blocking=False)
+  halt
+  end 
+  def ft_missing():
+  popup(ft_device_missing,title=on_device_error_title,error=True,blocking=False)
+  halt
+  end 
+  def cb_missing():
+  popup(ft_device_missing,title=on_device_error_title,error=True,blocking=False)
+  halt
+  end 
+  def hex_missing():
+  popup(hex_device_missing,title=on_device_error_title,error=True,blocking=False)
+  halt
+  end 
+  def rg2ft_missing():
+  popup(rg2ft_device_missing,title=on_device_error_title,error=True,blocking=False)
+  halt
+  end 
+  def rg_missing():
+  popup(rg_device_missing,title=on_device_error_title,error=True,blocking=False)
+  halt
+  end 
+  def vg_missing():
+  popup(vg_device_missing,title=on_device_error_title,error=True,blocking=False)
+  halt
+  end 
+  def gg_missing():
+  popup(gg_device_missing,title=on_device_error_title,error=True,blocking=False)
+  halt
+  end 
+  def sg_missing():
+  popup(sg_device_missing,title=on_device_error_title,error=True,blocking=False)
+  halt
+  end 
+  def tfg_missing():
+  popup(tfg_device_missing,title=on_device_error_title,error=True,blocking=False)
+  halt
+  end 
+  def sdr_missing():
+  popup(sdr_device_missing,title=on_device_error_title,error=True,blocking=False)
+  halt
+  end 
+  def twofg_missing():
+  popup(twofg_device_missing,title=on_device_error_title,error=True,blocking=False)
+  halt
+  end 
+  def vgp_missing():
+  popup(vgp_device_missing,title=on_device_error_title,error=True,blocking=False)
+  halt
+  end 
+  def mg_missing():
+  popup(mg_device_missing,title=on_device_error_title,error=True,blocking=False)
+  halt
+  end 
+  def on_portclose_javaSocket():
+  socket_close("javaSocket")
+  on_portopened_javaSocket=False
+  end 
+  def on_portopen_javaSocket():
+  on_portclose_javaSocket()
+  on_portopened_javaSocket=socket_open("127.0.0.1",44005,"javaSocket")
+  if not on_portopened_javaSocket:
+  textmsg(on_java_comm_error_textmsg_title,on_java_comm_controlsocket_open_error)
+  popup(on_java_comm_socket_open_error,title=on_java_comm_error_title,error=True,blocking=False)
+  halt
+  end 
+  end 
+  def on_rtde_feed_close():
+  socket_close("rtdeFeed")
+  on_rtde_feed_opened=False
+  end 
+  def on_rtde_feed_open():
+  on_rtde_feed_close()
+  if((ON_BASE_SHIFT_BOOL+ON_REGISTERS_SUM_BOOL)>128)or((ON_BASE_SHIFT_INT+ON_REGISTERS_SUM_INT)>48)or((ON_BASE_SHIFT_FLOAT+ON_REGISTERS_SUM_FLOAT)>48):
+  popup(on_rtde_feed_count_error,title=on_rtde_feed_error_title,error=True,blocking=False)
+  halt
+  end 
+  on_rtde_feed_opened=socket_open(on_device_ip,on_device_socket_port,"rtdeFeed")
+  if not on_rtde_feed_opened:
+  on_rtde_feed_opened=socket_open(on_device_ip,on_device_socket_port,"rtdeFeed")
+  end 
+  if not on_rtde_feed_opened:
+  textmsg(on_rtde_feed_error_textmsg_title,on_rtde_feed_open_error_textmsg)
+  popup(on_rtde_feed_open_error,title=on_rtde_feed_error_title,error=True,blocking=False)
+  halt
+  end 
+  socket_send_int(ON_BASE_SHIFT_BOOL,"rtdeFeed")
+  socket_send_int(ON_REGISTERS_SUM_BOOL,"rtdeFeed")
+  socket_send_int(ON_BASE_SHIFT_INT,"rtdeFeed")
+  socket_send_int(ON_REGISTERS_SUM_INT,"rtdeFeed")
+  socket_send_int(ON_BASE_SHIFT_FLOAT,"rtdeFeed")
+  socket_send_int(ON_REGISTERS_SUM_FLOAT,"rtdeFeed")
+  socket_send_int(ON_REGISTERS_SPEEDL_INT,"rtdeFeed")
+  end 
+  def on_dataRead():
+  enter_critical
+  on_RTDE_error=read_input_integer_register(ON_BASE_SHIFT_INT)
+  exit_critical
+  end 
+  def on_set_rtde_watchdog(updateHz=ON_INIT_WATCHDOG_HZ):
+  if(on_devices>0):
+  watchdog_int_reg_str=str_cat("input_int_register_",ON_BASE_SHIFT_INT)
+  rtde_set_watchdog(watchdog_int_reg_str,updateHz,"stop")
+  if ON_DEBUG_LOG:
+  local update_str=str_cat(" watchdog set to [Hz]: ",updateHz)
+  textmsg(watchdog_int_reg_str,update_str)
+  end 
+  end 
+  end 
+  def on_speedCB_get():
+  return[on_speedCB[0],on_speedCB[1],on_speedCB[2],on_speedCB[3],on_speedCB[4],on_speedCB[5]]
+  end 
+  def on_speedGecko_get():
+  local speedExtra=ON_ZERO6D
+  if on_speedl_for_gecko:
+  speedExtra=[on_speedGecko[0],on_speedGecko[1],on_speedGecko[2],on_speedGecko[3],on_speedGecko[4],on_speedGecko[5]]
+  end 
+  return speedExtra
+  end 
+  def on_speedGecko_set(speedGecko):
+  on_speedGecko=[speedGecko[0],speedGecko[1],speedGecko[2],speedGecko[3],speedGecko[4],speedGecko[5]]
+  end 
+  thread on_dataProcess_thread():
+  if ON_DEBUG_LOG:
+  textmsg("Starting on_dataRead thread")
+  end 
+  local error=False
+  on_dataProcess_running=True
+  sync()
+  while on_dataProcess_running:
+  sync()
+  on_dataRead()
+  error=on_error((on_RTDE_error<0),on_rtde_feed_error,on_rtde_feed_error_title,False)
+  on_dataProcess_running=not error
+  end 
+  if error:
+  halt
+  end 
+  if ON_DEBUG_LOG:
+  textmsg("Stopping on_dataRead thread")
+  end 
+  end 
+  thread on_set_watchdog_thread():
+  sleep(1)
+  on_set_rtde_watchdog(updateHz=ON_INIT_WATCHDOG_HZ)
+  sleep(1/ON_INIT_WATCHDOG_HZ)
+  on_dataProcess_running=False
+  kill on_dataProcess_thrd
+  end 
+  
+  #======    End of OnRobot Interface    ======#
+  #======    OnRobot QC Setup Tool Connector    ======#
+  
+  def tc_setup_tool():
+  if ON_DEBUG_LOG:
+  textmsg("QC Setup Tool Connector start...")
+  end 
+  set_tool_voltage(24)
+  
+  set_tool_communication(True,1000000,2,1,1.5,3.5)
+  
+  if ON_DEBUG_LOG:
+  textmsg("QC Setup Tool Connector end.")
+  end 
+  end 
+  
+  #======    End of OnRobot QC Setup Tool Connector    ======#
+  #======    OnRobot TCP Messages    ======#
+  
+  on_tcp_log_msg_default="OnRobot: Desplazamiento del TCP del robot establecido en:"
+  on_tcp_log_msg_primary="OnRobot: Desplazamiento del TCP del robot establecido en primario:"
+  on_tcp_log_msg_secondary="OnRobot: Desplazamiento del TCP del robot establecido en secundario:"
+  
+  #======    End of OnRobot TCP Messages    ======#
+  #======    OnRobot TCP    ======#
+  
+  on_tcp_offset_actual=ON_ZEROFRAME
+  on_tcp_offset_primary=ON_ZEROFRAME
+  on_tcp_static_primary=ON_ZEROFRAME
+  on_tcp_dynamic_primary=ON_ZEROFRAME
+  on_tcp_vision_primary=ON_ZEROFRAME
+  on_tcp_qc_primary=ON_ZEROFRAME
+  on_tcp_base_primary=ON_ZEROFRAME
+  on_tcp_gripper_static_primary=ON_ZEROFRAME
+  on_tcp_tool_primary=ON_ZEROFRAME
+  on_tcp_gripper_dynamic_primary=ON_ZEROFRAME
+  on_tcp_gripper_primary=ON_ZEROFRAME
+  on_tcp_offset_secondary=ON_ZEROFRAME
+  on_tcp_static_secondary=ON_ZEROFRAME
+  on_tcp_dynamic_secondary=ON_ZEROFRAME
+  on_tcp_vision_secondary=ON_ZEROFRAME
+  on_tcp_qc_secondary=ON_ZEROFRAME
+  on_tcp_base_secondary=ON_ZEROFRAME
+  on_tcp_gripper_static_secondary=ON_ZEROFRAME
+  on_tcp_tool_secondary=ON_ZEROFRAME
+  on_tcp_gripper_dynamic_secondary=ON_ZEROFRAME
+  on_tcp_gripper_secondary=ON_ZEROFRAME
+  def on_tcp_update_primary():
+  if ON_DEBUG_LOG:
+  textmsg("TCP Update Primary start..")
+  end 
+  on_tcp_gripper_dynamic_primary=p[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  enter_critical
+  on_tcp_dynamic_primary=pose_trans(on_tcp_static_primary,on_tcp_gripper_dynamic_primary)
+  on_tcp_offset_primary=pose_trans(on_tcp_dynamic_primary,on_tcp_tool_primary)
+  exit_critical
+  if ON_DEBUG_LOG:
+  textmsg("TCP Update Primary end.")
+  end 
+  end 
+  def on_tcp_init_primary():
+  if ON_DEBUG_LOG:
+  textmsg("TCP Init Primary start..")
+  end 
+  enter_critical
+  on_tcp_base_primary=pose_trans(on_tcp_vision_primary,on_tcp_qc_primary)
+  on_tcp_static_primary=pose_trans(on_tcp_base_primary,on_tcp_gripper_static_primary)
+  exit_critical
+  on_tcp_update_primary()
+  if ON_DEBUG_LOG:
+  textmsg("TCP Init Primary end.")
+  end 
+  end 
+  def on_tcp_offset_set(TCP_offset):
+  if ON_DEBUG_LOG:
+  textmsg("TCP Offset set started!")
+  end 
+  on_tcp_offset_send(TCP_offset)
+  if(on_follow_tcp):
+  set_tcp(TCP_offset)
+  end 
+  on_robot_TCP_offset=TCP_offset
+  if ON_DEBUG_LOG:
+  textmsg("TCP Offset set to: ",on_robot_TCP_offset)
+  end 
+  end 
+  def on_tcp_offset_forced_set_actual(isPrimary=True):
+  if(not on_follow_tcp):
+  
+  local tcp_log_msg=on_tcp_log_msg_default
+  
+  textmsg(tcp_log_msg,on_tcp_offset_actual)
+  set_tcp(on_tcp_offset_actual)
+  end 
+  end 
+  def on_tcp_update(isPrimary=True):
+  on_tcp_update_primary()
+  
+  on_tcp_set_actual_to(isPrimary)
+  end 
+  def on_tcp_set_actual_to(isPrimary=True):
+  
+  on_tcp_offset_actual=on_tcp_offset_primary
+  if(on_follow_tcp):
+  textmsg(on_tcp_log_msg_default,on_tcp_offset_actual)
+  end 
+  
+  on_tcp_active_is_primary=isPrimary
+  on_tcp_offset_set(on_tcp_offset_actual)
+  end 
+  def on_tcp_update_tool_primary(tool_offset):
+  if ON_DEBUG_LOG:
+  textmsg("TCP Update Tool Primary start..")
+  end 
+  on_tcp_tool_primary=tool_offset
+  on_tcp_update_primary()
+  if ON_DEBUG_LOG:
+  textmsg("TCP Update Tool Primary end.")
+  end 
+  end 
+  def on_tcp_tool_rpy_get(xyz=[0.0,0.0,0.0],rpy=[0.0,0.0,0.0]):
+  local rotvec=rpy2rotvec(rpy)
+  local tool_offset=p[xyz[0],xyz[1],xyz[2],rotvec[0],rotvec[1],rotvec[2]]
+  return tool_offset
+  end 
+  
+  def on_tcp_update_tool(tool_offset,tool_index=0):
+  if ON_DEBUG_LOG:
+  textmsg("TCP Update Tool start..")
+  end 
+  if(tool_index!=ON_DI_SECONDARY):
+  on_tcp_update_tool_primary(tool_offset)
+  local isPrimary=True
+  
+  end 
+  on_tcp_set_actual_to(isPrimary)
+  if ON_DEBUG_LOG:
+  textmsg("TCP Update Tool end.")
+  end 
+  end 
+  def on_get_tcp_for(tool_index):
+  if tool_index==ON_DI_SECONDARY:
+  local actual_tcp=on_tcp_static_secondary
+  else:
+  local actual_tcp=on_tcp_static_primary
+  end 
+  return actual_tcp
+  end 
+  
+  #======    End of OnRobot TCP    ======#
+  #======    OnRobot Payload Messages    ======#
+  
+  on_mass_log_msg="OnRobot: Masa de la carga útil del robot establecida en:"
+  on_cog_log_msg="OnRobot: Centro de gravedad de la carga útil del robot establecido en:"
+  
+  #======    End of OnRobot Payload Messages    ======#
+  #======    OnRobot Payload    ======#
+  
+  on_cog_actual=ON_ZEROFRAME
+  on_mass_actual=0.0
+  on_cog_primary=ON_ZEROFRAME
+  on_cog_L1L2_primary=ON_ZEROFRAME
+  on_mass_primary=0.0
+  on_mass_L1L2_primary=0.0
+  on_cog_vision_primary=ON_ZEROFRAME
+  on_cog_qc_primary=ON_ZEROFRAME
+  on_cog_base_primary=ON_ZEROFRAME
+  on_cog_gripper_primary=ON_ZEROFRAME
+  on_cog_tool_primary=ON_ZEROFRAME
+  on_mass_vision_primary=0.0
+  on_mass_qc_primary=0.0
+  on_mass_base_primary=0.0
+  on_mass_gripper_primary=0.0
+  on_mass_tool_primary=0.0
+  on_cog_secondary=ON_ZEROFRAME
+  on_mass_secondary=0.0
+  on_cog_gripper_secondary=ON_ZEROFRAME
+  on_mass_gripper_secondary=0.0
+  on_cog_tool_secondary=ON_ZEROFRAME
+  on_mass_tool_secondary=0.0
+  ON_LB2KG001=0.45359237/100
+  def on_payload_update_primary():
+  if ON_DEBUG_LOG:
+  textmsg("Payload Update Primary start..")
+  end 
+  enter_critical
+  on_mass_primary=on_mass_L1L2_primary+on_mass_tool_primary
+  local massL1L2L3Ratio=on_mass_tool_primary/on_mass_primary
+  local toolAbsCOG=pose_trans(on_tcp_dynamic_primary,on_cog_tool_primary)
+  toolAbsCOG=p[toolAbsCOG[0],toolAbsCOG[1],toolAbsCOG[2],0.0,0.0,0.0]
+  on_cog_primary=interpolate_pose(on_cog_L1L2_primary,toolAbsCOG,massL1L2L3Ratio)
+  on_cog_primary=p[on_cog_primary[0],on_cog_primary[1],on_cog_primary[2],0.0,0.0,0.0]
+  exit_critical
+  if ON_DEBUG_LOG:
+  textmsg("Payload Update Primary end.")
+  end 
+  end 
+  def on_payload_init_primary():
+  if ON_DEBUG_LOG:
+  textmsg("Payload Init Primary start..")
+  end 
+  enter_critical
+  on_mass_base_primary=on_mass_vision_primary+on_mass_qc_primary
+  local massL0L1Ratio=on_mass_qc_primary/on_mass_base_primary
+  on_mass_L1L2_primary=on_mass_base_primary+on_mass_gripper_primary
+  local massL1L2Ratio=on_mass_gripper_primary/on_mass_L1L2_primary
+  local qcAbsCOG=pose_trans(on_tcp_vision_primary,on_cog_qc_primary)
+  qcAbsCOG=p[qcAbsCOG[0],qcAbsCOG[1],qcAbsCOG[2],0.0,0.0,0.0]
+  on_cog_base_primary=interpolate_pose(on_cog_vision_primary,qcAbsCOG,massL0L1Ratio)
+  on_cog_base_primary=p[on_cog_base_primary[0],on_cog_base_primary[1],on_cog_base_primary[2],0.0,0.0,0.0]
+  local gripperAbsCOG=pose_trans(on_tcp_base_primary,on_cog_gripper_primary)
+  gripperAbsCOG=p[gripperAbsCOG[0],gripperAbsCOG[1],gripperAbsCOG[2],0.0,0.0,0.0]
+  on_cog_L1L2_primary=interpolate_pose(on_cog_base_primary,gripperAbsCOG,massL1L2Ratio)
+  on_cog_L1L2_primary=p[on_cog_L1L2_primary[0],on_cog_L1L2_primary[1],on_cog_L1L2_primary[2],0.0,0.0,0.0]
+  exit_critical
+  on_payload_update_primary()
+  if ON_DEBUG_LOG:
+  textmsg("Payload Init Primary end.")
+  end 
+  end 
+  def on_payload_update():
+  on_payload_update_primary()
+  
+  on_mass_actual =on_mass_primary
+  on_cog_actual=on_cog_primary
+  
+  on_payload_set_actual()
+  end 
+  def on_payload_set_actual():
+  
+  on_mass_actual =on_mass_primary
+  on_cog_actual=on_cog_primary
+  
+  local CoG=[on_cog_actual[0],on_cog_actual[1],on_cog_actual[2]]
+  on_payload_set(on_mass_actual,CoG)
+  end 
+  def on_payload_update_tool_primary(tool_mass=0,tool_cog=[0.0,0.0,0.0]):
+  if ON_DEBUG_LOG:
+  textmsg("Payload Update Tool Primary start..")
+  end 
+  on_cog_tool_primary=p[tool_cog[0],tool_cog[1],tool_cog[2],0.0,0.0,0.0]
+  on_mass_tool_primary=tool_mass
+  on_payload_update_primary()
+  if ON_DEBUG_LOG:
+  textmsg("Payload Update Tool Primary end.")
+  end 
+  end 
+  def on_payload_set(mass,CoG):
+  if ON_DEBUG_LOG:
+  textmsg("Payload set started!")
+  end 
+  local center_of_gravity=[CoG[0],CoG[1],CoG[2]]
+  on_payload_send(center_of_gravity,mass)
+  if(on_isMetric):
+  local roundedMass=floor(mass*100+0.5)/100
+  else:
+  local roundedMass=floor(mass/ON_LB2KG001+0.5)*ON_LB2KG001
+  end 
+  set_payload(roundedMass,center_of_gravity)
+  on_mass_actual=roundedMass
+  on_cog_actual=p[CoG[0],CoG[1],CoG[2],0.0,0.0,0.0]
+  if ON_DEBUG_LOG:
+  textmsg("Payload mass, CoG set to: ",str_cat(str_cat(mass,", "),CoG))
+  end 
+  end 
+  
+  def on_payload_update_secondary():
+  end 
+  def on_payload_init_secondary():
+  end 
+  
+  def on_payload_update_tool(tool_mass,tool_cog=[0.0,0.0,0.0],tool_index=0):
+  if ON_DEBUG_LOG:
+  textmsg("Payload Update Tool start..")
+  end 
+  if(tool_index!=ON_DI_SECONDARY):
+  on_cog_tool_primary=p[tool_cog[0],tool_cog[1],tool_cog[2],0.0,0.0,0.0]
+  on_mass_tool_primary=tool_mass
+  else:
+  on_cog_tool_secondary=p[tool_cog[0],tool_cog[1],tool_cog[2],0.0,0.0,0.0]
+  on_mass_tool_secondary=tool_mass
+  end 
+  on_payload_update()
+  if ON_DEBUG_LOG:
+  textmsg("Payload Update Tool end.")
+  end 
+  end 
+  def on_payload_get_cog2tcp_tool(tool_index=0):
+  if(tool_index!=ON_DI_SECONDARY):
+  local cog_tool=[on_tcp_tool_primary[0],on_tcp_tool_primary[1],on_tcp_tool_primary[2]]
+  else:
+  local cog_tool=[on_tcp_tool_secondary[0],on_tcp_tool_secondary[1],on_tcp_tool_secondary[2]]
+  end 
+  return cog_tool
+  end 
+  
+  #======    End of OnRobot Payload    ======#
+  #======    OnRobot QC TCP    ======#
+  
+  onrobotmini=0
+  
+  def on_tcp_offset_send(TCP_offset):
+  on_robot_TCP_offset=TCP_offset
+  end 
+  def on_payload_send(CoG,mass):
+  on_robot_payload_cog=CoG
+  on_robot_payload_mass=mass
+  end 
+  
+  
+  #======    End of OnRobot QC TCP    ======#
+  #======    OnRobot  Speedl    ======#
+  
+  on_speedl_thread_handler=0
+  on_speedl_is_enabled=False
+  on_speedl_is_running=False
+  on_speedl_acc=0.0
+  ft_speedl_hg_caranteen_reached=False
+  ft_speedl_hg_caranteen_safemode=False
+  on_speedl_for_ftcontrol=False
+  on_speedl_for_move=False
+  on_speedl_for_handguide=False
+  on_speedl_for_insertpart=False
+  on_speedl_for_depthcompensation=False
+  on_speedl_for_center=False
+  on_speedl_for_gecko=False
+  on_speedl_acc=10000.0 
+  on_speedl_acc_to_zero=3.0 
+  ON_SPEEDL_FTCONTROL=1
+  ON_SPEEDL_HANDGUIDE=2
+  ON_SPEEDL_TRAJECTORY=3
+  ON_SPEEDL_MOVE=ON_SPEEDL_TRAJECTORY
+  ON_SPEEDL_INSERTPART=4
+  ON_SPEEDL_DEPTHCOMP=5
+  ON_SPEEDL_CENTER=6
+  ON_SPEEDL_GECKO=7
+  def on_wait_ms(time_ms):
+  local sync_time=ceil(norm(time_ms/2.0))
+  while(sync_time>0):
+  sync_time=sync_time-1
+  sync()
+  end
+  end 
+  def on_error(status_flag,message,title,stop_var=False):
+  if(status_flag):
+  popup(message,title=title,error=True,blocking=False)
+  stop_var=True
+  end 
+  return stop_var
+  end 
+  def on_warning(status_flag,message,title,isPopupNeeded=False,is_shown=False):
+  if(status_flag):
+  if(not is_shown):
+  if(isPopupNeeded):
+  popup(message,title=title,warning=True,blocking=False)
+  else:
+  textmsg(title+": ",message)
+  end 
+  is_shown=True
+  end 
+  else:
+  is_shown=False
+  end 
+  return is_shown
+  end 
+  def on_speedl_add_extra(speedBase,speedExtra):
+  speedSum=ON_ZERO6D
+  speedBaseP=p[speedBase[0],speedBase[1],speedBase[2],speedBase[3],speedBase[4],speedBase[5]]
+  speedExtraP=p[speedExtra[0],speedExtra[1],speedExtra[2],speedExtra[3],speedExtra[4],speedExtra[5]]
+  speedSumP=pose_add(speedExtraP,speedBaseP)
+  speedSum=[speedSumP[0],speedSumP[1],speedSumP[2],speedSumP[3],speedSumP[4],speedSumP[5]]
+  return speedSum
+  end 
+  
+  thread on_speedl_thread():
+  if ON_DEBUG_LOG:
+  textmsg("Speedl thread started..")
+  end 
+  enter_critical
+  on_speedl_is_running=True
+  on_speedl_is_enabled=True
+  exit_critical
+  on_speedL=ON_ZERO6D
+  on_speedL_last=ON_ZERO6D
+  
+  while on_speedl_is_running:
+  on_speedBase=on_speedCB_get()
+  on_speedL=on_speedBase
+  
+  
+  if on_speedl_is_enabled:
+  if(on_speedL==ON_ZERO6D):
+  on_speedL=[on_speedL_last[0]/100,on_speedL_last[1]/100,on_speedL_last[2]/100,on_speedL_last[3]/100,on_speedL_last[4]/100,on_speedL_last[5]/100]
+  end
+  speedl(on_speedL,a=on_speedl_acc,t=0.001)
+  else:
+  speedl(ON_ZERO6D,a=on_speedl_acc_to_zero,t=0.001)
+  end 
+  on_speedL_last=on_speedL
+  end 
+  
+  on_speedL=ON_ZERO6D
+  if ON_DEBUG_LOG:
+  textmsg("Speedl thread ended.")
+  end 
+  end 
+  def on_speedl_integer_get():
+  local speedl_integer=binary_list_to_integer([on_speedl_for_ftcontrol,on_speedl_for_handguide,on_speedl_for_move,on_speedl_for_insertpart,on_speedl_for_depthcompensation,on_speedl_for_center,on_speedl_for_gecko])
+  return speedl_integer
+  end 
+  def on_speedl_start_for(speedl_id):
+  if(speedl_id==ON_SPEEDL_FTCONTROL):
+  on_speedl_for_ftcontrol=True
+  elif(speedl_id==ON_SPEEDL_HANDGUIDE):
+  on_speedl_for_handguide=True
+  elif(speedl_id==ON_SPEEDL_TRAJECTORY):
+  on_speedl_for_move=True
+  elif(speedl_id==ON_SPEEDL_INSERTPART):
+  on_speedl_for_insertpart=True
+  elif(speedl_id==ON_SPEEDL_DEPTHCOMP):
+  on_speedl_for_depthcompensation=True
+  elif(speedl_id==ON_SPEEDL_CENTER):
+  on_speedl_for_center=True
+  elif(speedl_id==ON_SPEEDL_GECKO):
+  on_speedl_for_gecko=True
+  else:
+  textmsg("Unknown Start speedl ID received: ",speedl_id)
+  end 
+  local speedl_integer=on_speedl_integer_get()
+  if not(speedl_integer==0):
+  if not on_speedl_is_running:
+  on_speedl_thread_handler=run on_speedl_thread()
+  end 
+  end 
+  return on_speedl_is_running
+  end 
+  def on_speedl_stop_for(speedl_id,brake=10,brakeRot=10):
+  if(speedl_id==ON_SPEEDL_FTCONTROL):
+  on_speedl_for_ftcontrol=False
+  elif(speedl_id==ON_SPEEDL_HANDGUIDE):
+  on_speedl_for_handguide=False
+  elif(speedl_id==ON_SPEEDL_TRAJECTORY):
+  on_speedl_for_move=False
+  elif(speedl_id==ON_SPEEDL_INSERTPART):
+  on_speedl_for_insertpart=False
+  elif(speedl_id==ON_SPEEDL_DEPTHCOMP):
+  on_speedl_for_depthcompensation=False
+  elif(speedl_id==ON_SPEEDL_CENTER):
+  on_speedl_for_center=False
+  elif(speedl_id==ON_SPEEDL_GECKO):
+  on_speedl_for_gecko=False
+  on_speedGecko_set(ON_ZERO6D)
+  else:
+  textmsg("Unknown Stop speedl ID received: ",speedl_id)
+  end 
+  local speedl_integer=on_speedl_integer_get()
+  if(speedl_integer==0):
+  if(on_speedl_is_running):
+  kill on_speedl_thread_handler
+  enter_critical
+  on_speedl_is_running=False
+  exit_critical
+  
+  end 
+  if ON_DEBUG_LOG:
+  textmsg("Speedl thread stopped")
+  end 
+  stopl(brake,brakeRot)
+  end 
+  return on_speedl_is_running
+  end 
+  def on_speedl_pause():
+  on_speedl_is_enabled=False
+  return on_speedl_integer_get()
+  end 
+  def on_speedl_resume():
+  on_speedl_is_enabled=True
+  return on_speedl_integer_get()
+  end 
+  
+  #======    End of OnRobot  Speedl    ======#
+  textmsg(on_devices_primary_log, ": Quick Changer + Lado de la herramienta de QC + [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]")
+  on_install_tcp = False
+  on_follow_tcp = False
+  on_tcp_active_is_primary = True
+  on_tcp_vision_primary = p[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  on_cog_vision_primary = p[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  on_mass_vision_primary = 0.0
+  on_tcp_qc_primary = p[0.0, 0.0, 0.0136, 0.0, 0.0, 0.0]
+  on_cog_qc_primary = p[0.0, 0.0, 0.004, 0.0, 0.0, 0.0]
+  on_mass_qc_primary = 0.06
+  on_tcp_gripper_static_primary = p[0.0, 0.0, 0.017, 0.0, 0.0, 0.0]
+  on_cog_gripper_primary = p[0.0, 0.0, 0.002, 0.0, 0.0, 0.0]
+  on_mass_gripper_primary = 0.14
+  on_tcp_tool_primary = p[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  on_cog_tool_primary = p[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  on_mass_tool_primary = 0.0
+  #======    OnRobot Run    ======#
+  
+  textmsg(on_xmlrpc_start_ip,on_device_ip)
+  on_portopen_javaSocket()
+  sync()
+  on_rtde_feed_open()
+  sync()
+  on_set_rtde_watchdog(updateHz=0.2)
+  sync()
+  on_dataProcess_thrd=run on_dataProcess_thread()
+  sync()
+  on_tcp_init_primary()
+  on_payload_init_primary()
+  
+  on_tcp_set_actual_to(on_tcp_active_is_primary)
+  if(on_follow_tcp):
+  on_payload_set_actual()
+  end 
+  on_watchdog_thrd=run on_set_watchdog_thread()
+  sync()
+  
+  #======    End of OnRobot Run    ======#
+  #======    OnRobot QC Start    ======#
+  
+  if(on_toolConnector):
+  tc_setup_tool()
+  end 
+  sync()
+  
+  #======    End of OnRobot QC Start    ======#
+  # end: URCap Installation Node
+  global Waypoint_1_p=p[.264096299579, -.228251370873, .548489751158, 1.585296335895, .085383798342, .052689608667]
+  global Waypoint_1_q=[0.08237954069413235, -1.547932513593771, -0.8429940287132611, -2.249380339970292, 0.011344640137963142, -1.6629497113001972]
+  global arribaA_F1_p=p[-.279153510462, .352051517090, .217663032356, -2.196521658279, -2.179429248330, -.001249965851]
+  global arribaA_F1_q=[-1.190489082785332, -1.038819970787025, 1.1808897718993634, -1.7578956226086886, -1.5557864952277454, -1.177922712170973]
+  global abajoA_F1_p=p[-.278072802729, .349973152649, .134710501441, -2.187302677929, -2.170893449779, -.009350084917]
+  global abajoA_F1_q=[-1.190667454396383, -0.9426656526378174, 1.4394829908954114, -2.126221319238187, -1.556412998829975, -1.1793354193316858]
+  global Punto_de_paso_1_p=p[-.083594318931, -.437711519530, .275848954336, 1.065987365409, -2.932765467276, .066419727208]
+  global Punto_de_paso_1_q=[1.089424133300786, -1.0593553346446587, 0.9393857161151473, -1.495781020527243, -1.5554059187518678, -1.1732090155230823]
+  global Punto_de_paso_2_p=p[-.014750702597, -.309442485570, .403244080555, .894185451473, -2.982111864608, .102799053877]
+  global Punto_de_paso_2_q=[1.0935268402099652, -1.5372310441783412, 0.9390023390399342, -1.0397697252086164, -1.543357197438386, -1.0536602179156649]
+  global arribaB_F1_p=p[.255485942993, -.106097948707, .238777894308, 2.203755614216, -2.230743228011, -.033649579332]
+  global arribaB_F1_q=[2.2848539352416655, -1.7739340267577148, 1.9226334730731311, -1.6995178661741726, -1.577369038258614, -0.8414099852190979]
+  global abajoB_F1_p=p[.250858979288, -.105476133415, .134044109725, 2.182572840766, -2.243051083477, -.011867863361]
+  global abajoB_F1_q=[2.276574134826671, -1.5835925541319718, 2.3162580172168092, -2.29774012188099, -1.5835788885699866, -0.8356931845294628]
+  global Punto_de_paso_3_p=p[.273903481163, -.146151648360, .451950588078, 2.064857202426, -2.090925973133, .993649886229]
+  global Punto_de_paso_3_q=[2.2192530632019043, -1.7692414722838343, 1.2738397757159632, -1.728790899316305, -1.5309603849994105, -0.891219441090719]
+  global arribaRodB_p=p[.194011362201, .254559202530, .123847504179, -2.207883590202, -2.214590558527, .011579920073]
+  global arribaRodB_q=[1.3220869083857045, -1.5547392976765488, -1.4908602470535564, -1.6646950405521914, 1.5819664340076602, -1.8189821464284903]
+  global abajoRodB_p=p[.194025854217, .254611576354, -.005903740031, -2.207840513058, -2.214488596203, .011315379007]
+  global abajoRodB_q=[1.321912375460505, -1.672549022186166, -2.0006709215611, -1.036900108609831, 1.5828390986336573, -1.8207274756804845]
+  global arribaP1_F2_p=p[.218374372055, -.029732860422, .075849359936, -2.208010862124, -2.214657416931, .011636022046]
+  global arribaP1_F2_q=[0.47634744644169036, -1.0782528680613446, -2.052947044372594, -1.5915252170958425, 1.5792386531829588, -2.6642420927630317]
+  global abajoP1_F2_p=p[.213326559063, -.028050590043, -.016565953541, -2.207971347712, -2.214664878635, .011503322615]
+  global abajoP1_F2_q=[0.49833440780624727, -1.159952716236642, -2.464047431945684, -1.098408774738628, 1.5801973342896383, -2.6433351675618333]
+  global arribaP2_F2_p=p[.211179447767, -.100212123550, .088000293172, -2.208026277507, -2.214716765692, .011231508116]
+  global arribaP2_F2_q=[0.13560509681702645, -1.152217940693217, -1.9578514099121236, -1.615559240380752, 1.5745306015014577, -3.004975144063125]
+  global abajoP2_F2_p=p[.213148696534, -.102679353504, -.018294387753, -2.208123709051, -2.214600930899, .011651706601]
+  global abajoP2_F2_q=[0.12304258346560015, -1.3056922715953192, -2.389227867126475, -1.03102167070423, 1.5747699737548662, -3.018769566212754]
+  global arribaP3_F2_p=p[.210891585436, -.177882956119, .088002307986, -2.207996337340, -2.214742848505, .011181435025]
+  global arribaP3_F2_q=[-0.21229106584657131, -1.3616600793651763, -1.8211178779601367, -1.5443704885295926, 1.568480491638179, -3.353291336690077]
+  global abajoP3_F2_p=p[.212352729663, -.176377604490, -.012380694100, -2.207996048152, -2.214798768183, .011200777120]
+  global abajoP3_F2_q=[-0.2048657576190429, -1.4987157148174113, -2.2060236930846786, -1.0223692220500844, 1.5691633224487334, -3.3471515814410644]
+  global arribaP4_F2_p=p[.291970268446, -.029241310649, .075850990760, -2.208009652747, -2.214680212144, .011621595431]
+  global arribaP4_F2_q=[0.3482890129089813, -1.449893311863229, -1.8077335357666513, -1.466449574833237, 1.5763156414031592, -2.7930677572832976]
+  global abajoP4_F2_p=p[.292485521244, -.029156837293, -.015453261319, -2.211335118390, -2.217182548375, -.004684129494]
+  global abajoP4_F2_q=[0.3473205211469564, -1.5821409669328128, -2.149722039681464, -0.9810495725460102, 1.5776031108775976, -2.794795731218428]
+  global arribaP5_F2_p=p[.292036813486, -.103169149761, .075847632800, -2.208089109948, -2.214600892977, .011653557493]
+  global arribaP5_F2_q=[0.08728861808779773, -1.525038079624525, -1.7387804985046138, -1.4623688024333834, 1.572398185729952, -3.054149452839951]
+  global abajoP5_F2_p=p[.293541840270, -.102245072266, -.017615069126, -2.208149232039, -2.214639652251, .011752259192]
+  global abajoP5_F2_q=[0.09023352232810683, -1.671676357560169, -2.0589649185777104, -0.9955358053375656, 1.5728907218972898, -3.0524063288128827]
+  global arribaP6_F2_p=p[.290851119068, -.178174895823, .075843564054, -2.208128034602, -2.214543307174, .011675875953]
+  global arribaP6_F2_q=[-0.1603496710406711, -1.6640440426267844, -1.5952486991883283, -1.4679694932749419, 1.5680491924285889, -3.302058045064104]
+  global abajoP6_F2_p=p[.291040824108, -.174951468364, -.017979381965, -2.208127040194, -2.214553060147, .011668273009]
+  global abajoP6_F2_q=[-0.150326553975205, -1.7894135914243732, -1.9169073104859855, -1.0209089082529141, 1.5688159465789422, -3.2932346502886864]
+  global arribaBulon_p=p[.264105213149, -.228250733213, .548484332530, 1.585324497658, .085363186379, .052713207674]
+  global arribaBulon_q=[0.08237934112548828, -1.5479613107493897, -0.84297776222229, -2.2493754825987757, 0.011371374130249023, -1.662912670766012]
+  global atrasBulon_p=p[.256211925079, -.371120014060, .135228490171, 1.180847469047, 1.252479627192, -1.235683173785]
+  global atrasBulon_q=[0.20949292182919432, -1.9370962582030167, -2.034124374389659, -2.313192029992566, 0.19896101951595982, -1.6172702948199742]
+  global delanteBulon_p=p[.255604050750, -.455462250736, .138596138243, 1.158631853822, 1.223105278388, -1.250786556870]
+  global delanteBulon_q=[-0.12740903539558607, -2.0261527286402172, -1.9504054391036634, -2.054601595447725, -0.1413716694115407, -1.866455102082736]
+  global arribaP1_F3_p=p[.218327743592, .097077333804, .075808009605, -2.208051583079, -2.214597805453, .012045887033]
+  global arribaP1_F3_q=[0.970752129959231, -1.1747811195173963, -2.0064305080926728, -1.5350170771290106, 1.5830136315588674, -2.169967859004558]
+  global abajoP1_F3_p=p[.211120477126, .099547009995, -.028868154439, -2.208097865808, -2.214557282062, .012130563194]
+  global abajoP1_F3_q=[1.0080471038818628, -1.3188994687846316, -2.4452376365661923, -0.9515825074962061, 1.583899259567243, -2.133862797413931]
+  global arribaP2_F3_p=p[.218255044003, .015758547467, .075806324953, -2.207989835995, -2.214569210422, .012088793108]
+  global arribaP2_F3_q=[0.6852162643329738, -1.068316035145729, -2.058615852727312, -1.5934856070708228, 1.581442835232062, -2.455329191705623]
+  global abajoP2_F3_p=p[.211595389804, .023497020439, -.027744198428, -2.207995911464, -2.214517160808, .012068941667]
+  global abajoP2_F3_q=[0.7434692382813174, -1.1799722474863863, -2.515985012054477, -1.0236614507488007, 1.5827131271361914, -2.398237053547927]
+  global arribaP3_F3_p=p[.233418693737, -.152255674407, .158374581365, -2.321066793086, 2.059413309150, .044113908473]
+  global arribaP3_F3_q=[-0.14806539217108394, -1.4183073800853379, -1.449226856231685, -1.846494337121471, 1.613742113113439, -0.26306659380071906]
+  global PuntoPaso_P3_F3_p=p[.233410847849, -.171853668888, .092642945458, -2.321076327189, 2.059436635897, .044165372098]
+  global PuntoPaso_P3_F3_q=[-0.2222145239459543, -1.4414001268199375, -1.7400031089782857, -1.5362258714488304, 1.613706111907969, -0.33815318742861855]
+  global abajoP3_F3_p=p[.220359772278, -.171424449606, -.028481370039, -2.321093161768, 2.059425039226, .044174966944]
+  global abajoP3_F3_q=[-0.2316601912127858, -1.5808230839171271, -2.2259168624878, -0.9114075464061298, 1.6145448684692338, -0.3490431944476473]
+  global arribaP4_F3_p=p[.291623546916, .099185069175, .075813501546, -2.208163486704, -2.214602719616, .012089079617]
+  global arribaP4_F3_q=[0.7490953149559663, -1.5138985931798814, -1.7521360360771074, -1.4535102010608776, 1.580221104755666, -2.3923228057086274]
+  global abajoP4_F3_p=p[.291112927682, .096381362472, -.036774351343, -2.207987172695, -2.214699703310, .011928594507]
+  global abajoP4_F3_q=[0.743161195499261, -1.7071065413756195, -2.133315944712706, -0.8791223442295433, 1.580919236456392, -2.3998277214921373]
+  global arribaP5_F3_p=p[.291629725612, .027054898854, .075830745827, -2.223194853851, -2.199582914956, .012075990426]
+  global arribaP5_F3_q=[0.5391322059410486, -1.4463543511277006, -1.811651763570115, -1.4641567094980452, 1.5784757755036716, -2.588532627620303]
+  global abajoP5_F3_p=p[.291638427631, .023049003172, -.024630302291, -2.223165069630, -2.199657117139, .012062060053]
+  global abajoP5_F3_q=[0.5264449119568455, -1.6116081676878249, -2.167324066162191, -0.9433773320963823, 1.5789034366607142, -2.6025503317461878]
+  global arribaP6_F3_p=p[.293178472108, -.170775556852, .057912343952, -2.197503334999, 2.235293632856, -.020976529593]
+  global arribaP6_F3_q=[-0.13142329267517303, -1.6315337847642992, -1.7285740911751841, -1.336398608252058, 1.563291411011321, -0.11187560505283653]
+  global abajoP6_F3_p=p[.293187992526, -.175363857548, -.032295410140, -2.197478510061, 2.235221511214, -.020803429330]
+  global abajoP6_F3_q=[-0.14608405839197047, -1.8058921770385528, -1.9922933411515036, -0.898320966001485, 1.5641640756373674, -0.12775810124603737]
+  global arribaTapaInt_p=p[.239730512491, .338693139803, .098431953001, -2.207936294799, -2.214679586376, .011316332292]
+  global arribaTapaInt_q=[1.262946605682361, -1.9797173939146688, -1.0898079872131827, -1.641644617120214, 1.5805568695068528, -1.8795431295978062]
+  global abajoTapaInt_p=p[.239738922717, .338685569523, -.007068753575, -2.207958124179, -2.214468290823, .011378168840]
+  global abajoTapaInt_q=[1.2623966479675004, -2.053554397896546, -1.4847515946715397, -1.1728612573402266, 1.5814428352320595, -1.8812904007246818]
+  global arribaP1_F4_p=p[.218348772489, -.029777054927, .075818997484, -2.208073880386, -2.214622291990, .011868549599]
+  global arribaP1_F4_q=[0.4763003528692309, -1.0782644118821558, -2.0530307991208883, -1.5915657448936447, 1.5791739072044835, -2.6642451031693604]
+  global abajoP1_F4_p=p[.214693105212, -.029412977637, .025922341405, -2.208105407299, -2.214592989166, .011852072476]
+  global abajoP1_F4_q=[0.48769426345825195, -1.0831385415843506, -2.2868595123291016, -1.3527282041362305, 1.5797181129455566, -2.6533778349505823]
+  global arribaP2_F4_p=p[.211131703305, -.100237661043, .087809202549, -2.207719815606, -2.214325776079, .012411491345]
+  global arribaP2_F4_q=[0.1356120828799814, -1.1531390367926404, -1.9579103548872467, -1.6154767556459548, 1.5744615182240702, -3.0049333731586185]
+  global abajoP2_F4_p=p[.214124674539, -.101264205145, .025562441189, -2.207674983204, -2.214495585154, .012419414744]
+  global abajoP2_F4_q=[0.12897983172238095, -1.2088150399312727, -2.2223277365643797, -1.2953833708301914, 1.574636051149284, -3.0124382889422128]
+  global arribaP3_F4_p=p[.213937842817, -.172218054527, .083013593507, -2.179604971049, -2.226929596166, -.016960228794]
+  global arribaP3_F4_q=[-0.2122429052935999, -1.3702948850444336, -1.8383326530456543, -1.5183678430369874, 1.589601755142212, -3.3718908468829554]
+  global abajoP3_F4_p=p[.212592732646, -.175009660893, .026049630485, -2.179641198109, -2.226909161210, -.016987090623]
+  global abajoP3_F4_q=[-0.22422582307922667, -1.4267288011363322, -2.0671653747558807, -1.2333696645549228, 1.5897696018218843, -3.3845551649676513]
+  global arribaP4_F4_p=p[.291895942277, -.029765667268, .075842881749, -2.210018597693, -2.212578570616, .011566612677]
+  global arribaP4_F4_q=[0.3464478565208564, -1.4498450096317264, -1.8078120392156842, -1.4664256375256635, 1.576381380401294, -2.7930504019665428]
+  global abajoP4_F4_p=p[.294089863646, -.028432233853, .025238134265, -2.210003631750, -2.212471458571, .011601014694]
+  global abajoP4_F4_q=[0.34830093383792615, -1.512436227207477, -1.9968681335449707, -1.21482117593796, 1.5767588615417156, -2.7918055693255397]
+  global arribaP5_F4_p=p[.292047162969, -.103183589286, .075859924159, -2.208132210748, -2.214600453443, .011672001046]
+  global arribaP5_F4_q=[0.08726646259971073, -1.5250687003926418, -1.7386970008367566, -1.4624113802460412, 1.5723671231216976, -3.054151658064881]
+  global abajoP5_F4_p=p[.292218345741, -.100850657000, .028040739974, -2.208093980749, -2.214656647052, .011698081533]
+  global abajoP5_F4_q=[0.09534215927127095, -1.5706086915782151, -1.9257121086120996, -1.2298131746104515, 1.5727813243865674, -3.0467074553118785]
+  global arribaP6_F4_p=p[.290842154195, -.178201610540, .075861425338, -2.208296211563, -2.214456686254, .011699172526]
+  global arribaP6_F4_q=[-0.16039575825824404, -1.6639969088513213, -1.595230936322917, -1.467996433852357, 1.5680037999916685, -3.3019884118480434]
+  global abajoP6_F4_p=p[.293167797044, -.178467405353, .025423624245, -2.208289481144, -2.214421453148, .011688869084]
+  global abajoP6_F4_q=[-0.1601346174823144, -1.7221614323057652, -1.7724785804749175, -1.2326033872416398, 1.568324565887444, -3.3023703734027148]
+  global arribaD1_F5_p=p[-.391906112680, .111701728632, .062414730639, -3.120840940537, -.027823823919, .013083639781]
+  global arribaD1_F5_q=[-0.5999215284930379, -1.2160912317088552, 1.347379032765519, -1.7217775783934712, -1.5846818129169158, 0.957253456115742]
+  global abajoD1_F5_p=p[-.391903107168, .111738401018, -.030076558729, -3.120770850857, -.027780336222, .013081599309]
+  global abajoD1_F5_q=[-0.5994060675250292, -1.09217269838366, 1.6244571844683948, -2.122820039788717, -1.5855448881732581, 0.9567382335662976]
+  global arribaP1_F5_p=p[.218348772489, -.029777054927, .075818997484, -2.208073880386, -2.214622291990, .011868549598]
+  global arribaP1_F5_q=[0.4763003528692451, -1.0782644118820848, -2.0530307991209398, -1.591565744893618, 1.5791739072044746, -2.664245103169357]
+  global abajoP1_F5_p=p[.214883970739, -.026553408258, .025332433947, -2.208096720401, -2.214564325806, .012029326262]
+  global abajoP1_F5_q=[0.5012585611728304, -1.0828022679372111, -2.289871978616599, -1.350012176417624, 1.5798720389052319, -2.639810493641351]
+  global arribaD2_F5_p=p[-.391905729757, .041937664632, .062414616985, -3.120852674643, -.027796367923, .013097560852]
+  global arribaD2_F5_q=[-0.4378894011127308, -1.2707415384105225, 1.421295468007215, -1.7388397655882502, -1.5872953573809507, 1.119180917739829]
+  global abajoD2_F5_p=p[-.392738540885, .037021730873, -.026417452779, -3.137804469150, -.027821312959, .013471704799]
+  global abajoD2_F5_q=[-0.43646461168398076, -1.1453262132457276, 1.68370229402651, -2.119575162927145, -1.5726812521563929, 1.1198527812957764]
+  global arribaP2_F5_p=p[.211131703305, -.100237661043, .087809202549, -2.207719815606, -2.214325776079, .012411491345]
+  global arribaP2_F5_q=[0.13561208287999155, -1.153139036792644, -1.9579103548872432, -1.6154767556459637, 1.574461518224063, -3.004933373158606]
+  global abajoP2_F5_p=p[.216857083786, -.101946153601, .024825938304, -2.207758626392, -2.214496629550, .012426880076]
+  global abajoP2_F5_q=[0.12409290981682985, -1.2259192666008545, -2.2158700183319615, -1.2847368623930713, 1.5744615182240613, -3.017325210847757]
+  global arribaD3_F5_p=p[-.387504120003, -.036086832394, .062415367671, -3.120876650693, -.027762251239, .013123928534]
+  global arribaD3_F5_q=[-0.24047118822208802, -1.2873407167247422, 1.4420540968524511, -1.7397476635375, -1.5901244322405947, 1.3165955543517764]
+  global abajoD3_F5_p=p[-.391986462235, -.032023567276, -.026846823760, -3.120886510452, -.027672463694, .013026002921]
+  global abajoD3_F5_q=[-0.24771434465520592, -1.1455655854991589, 1.6885622183429332, -2.128113885919083, -1.5908797422991743, 1.3084404468536015]
+  global arribaP3_F5_p=p[.210893817940, -.177854700257, .087997554369, -2.188403404214, -2.233894388107, .010988382706]
+  global arribaP3_F5_q=[-0.21223203704250793, -1.361705882405964, -1.8210765415308963, -1.5444418550897723, 1.568527398767303, -3.370754384376644]
+  global abajoP3_F5_p=p[.216105806086, -.178974782601, .026430992677, -2.198642191645, -2.243980104775, -.003370439817]
+  global abajoP3_F5_q=[-0.2122429052611272, -1.4184752267232525, -2.0787739754150465, -1.2129412454205646, 1.5689954757415014, -3.3714225927542576]
+  global arribaD4_F5_p=p[-.308728627987, .111696866569, .062402999374, -3.120867802786, -.027806215010, .012992685041]
+  global arribaD4_F5_q=[-0.7530906836139284, -1.5632954400828725, 1.7666180769549573, -1.7954021892943075, -1.5803898016558877, 0.8033258914947377]
+  global abajoD4_F5_p=p[-.311996402408, .111703062929, -.027985996874, -3.120815093988, -.027892998692, .013125268678]
+  global abajoD4_F5_q=[-0.7447097937213778, -1.387084321384748, 2.0390918890581933, -2.2441145382322256, -1.5813849608050212, 0.8107097148894733]
+  global arribaP4_F5_p=p[.291895942277, -.029765667268, .075842881749, -2.210018597693, -2.212578570616, .011566612677]
+  global arribaP4_F5_q=[0.346447856520875, -1.4498450096317193, -1.8078120392156904, -1.466425637525667, 1.5763813804012772, -2.793050401966526]
+  global abajoP4_F5_p=p[.294119413153, -.028411347682, .025236657727, -2.209935310745, -2.212601920624, .011559542046]
+  global abajoP4_F5_q=[0.34836771869812305, -1.5125023297782372, -1.9968311972067632, -1.214749159388031, 1.5767304462516272, -2.7918286714900793]
+  global arribaD5_F5_p=p[-.308723734132, .037870064631, .062393292850, -3.120905149481, -.027819638057, .012956496600]
+  global arribaD5_F5_q=[-0.5477364698992613, -1.6365057430663263, 1.8362644354450075, -1.7894998989501545, -1.5840223471271457, 1.0084681510925781]
+  global abajoD5_F5_p=p[-.311560454526, .037877309669, -.026954983583, -3.120879399455, -.027842728673, .013015518749]
+  global abajoD5_F5_q=[-0.5414508024799023, -1.4573550981334424, 2.11683637300602, -2.2491961918272807, -1.5849698225604012, 1.0138242244720184]
+  global arribaP5_F5_p=p[.292047162969, -.103183589286, .075859924159, -2.208132210748, -2.214600453443, .011672001046]
+  global arribaP5_F5_q=[0.08726646259972791, -1.5250687003925991, -1.7386970008368081, -1.462411380246003, 1.5723671231216807, -3.054151658064867]
+  global abajoP5_F5_p=p[.295705794105, -.103593395841, .026035264610, -2.208122401487, -2.214676175333, .011698322582]
+  global abajoP5_F5_q=[0.0848230016469224, -1.592438409519608, -1.9135789918866095, -1.2201596800692096, 1.5725416560468926, -3.057293250718453]
+  global arribaD6_F5_p=p[-.308718960545, -.041374722305, .062384791718, -3.120903917091, -.027837002597, .012928111769]
+  global arribaD6_F5_q=[-0.28755122820006385, -1.6276790104308096, 1.8264959494220296, -1.7845674953856658, -1.5882065931903568, 1.268661737442052]
+  global abajoD6_F5_p=p[-.316426570259, -.030792570349, -.022202075799, -3.090293169514, -.025741052345, .110028741673]
+  global abajoD6_F5_q=[-0.3058436552631072, -1.5009167951396591, 2.1768983046161186, -2.330723424951067, -1.5966704527484081, 1.2494904994964324]
+  global arribaP6_F6_p=p[.290842154195, -.178201610540, .075861425338, -2.208296211563, -2.214456686254, .011699172526]
+  global arribaP6_F6_q=[-0.1603957582582467, -1.6639969088513293, -1.5952309363229054, -1.4679964338523668, 1.5680037999916725, -3.3019884118480434]
+  global abajoP6_F5_p=p[.293146068160, -.178483438405, .025420318775, -2.208421334940, -2.214288626345, .011635200503]
+  global abajoP6_F5_q=[-0.1602212253330908, -1.7221163729428781, -1.7725563883253317, -1.2325515177584982, 1.568352865842117, -3.302337477698492]
+  global PuntoDePasoB_F6_p=p[.100403554903, -.365309740879, .139844825455, .048238131464, 3.035342655091, -.063441285229]
+  global PuntoDePasoB_F6_q=[1.3885839528866886, -1.4104005685366177, 1.2442452237467576, -1.4301227890841537, -1.4606660509940543, -0.14416419621473162]
+  global arribaB_F6_p=p[.255891807903, -.096672547191, .065248560021, 2.203678307113, -2.230731721401, -.033527952950]
+  global arribaB_F6_q=[2.284810523785705, -1.773952651727102, 1.922654703997011, -1.6996016255920896, -1.5774285779524133, -0.8414232323865143]
+  global abajoB_F6_p=p[.252317478388, -.098505635473, -.039610280683, 2.182607830273, -2.243078003736, -.011922479870]
+  global abajoB_F6_q=[2.2766074763013826, -1.5835372303344748, 2.3162264503216963, -2.2977259602505455, -1.5835372303344375, -0.8356636458549147]
+  global PuntoDePaso_F6_p=p[-.056622134781, -.267756282952, .065288945410, -.218717785256, 3.123733474291, .030125141620]
+  global PuntoDePaso_F6_q=[0.8660323748395863, -1.7741271846522362, 1.9226547039969533, -1.699601625592078, -1.576555913326478, -0.8414232323864663]
+  global arribaC_F6_p=p[-.307159810216, -.324046106802, .065260770092, .064804058600, 3.128970403642, .028671121995]
+  global arribaC_F6_q=[0.5169665244407204, -0.9854128956759984, 0.9690068007072519, -1.53588974175501, -1.5828390986336573, -1.007404044251127]
+  global abajoC_F6_p=p[-.310803423720, -.319903516324, -.034612300306, -.043027742816, -3.139816780670, -.028648236916]
+  global abajoC_F6_q=[0.5093455314634499, -0.909837321643721, 1.3280828634835, -1.98212017635377, -1.5905082861527218, -1.0302875677693528]
+  def Fase1():
+    $ 238 "Fase1" "noBreak"
+    $ 239 "Set DO[0]=Apagar"
+    set_standard_digital_out(0, False)
+    $ 240 "Home"
+    movej([0.0, -1.5707963267948966, 0.0, -1.5707963267948966, 0.0, 0.0], a=1.3962634015954636, v=1.0471975511965976)
+    $ 241 "MoveJ"
+    $ 242 "arribaA_F1" "breakAfter"
+    movej(get_inverse_kin(arribaA_F1_p, qnear=arribaA_F1_q), a=1.2, v=0.75)
+    $ 243 "MoveL"
+    $ 244 "abajoA_F1" "breakAfter"
+    movel(abajoA_F1_p, a=1.2, v=0.25)
+    $ 245 "Set DO[0]=Encender"
+    set_standard_digital_out(0, True)
+    $ 246 "Wait: 0.25"
+    sleep(0.25)
+    $ 247 "MoveL"
+    $ 248 "arribaA_F1" "breakAfter"
+    movel(arribaA_F1_p, a=1.2, v=0.25)
+    $ 249 "MoveJ"
+    $ 250 "Punto_de_paso_1" "breakAfter"
+    movej(get_inverse_kin(Punto_de_paso_1_p, qnear=Punto_de_paso_1_q), a=1.3962634015954636, v=1.0471975511965976)
+    $ 251 "Punto_de_paso_2" "breakAfter"
+    movej(get_inverse_kin(Punto_de_paso_2_p, qnear=Punto_de_paso_2_q), a=1.3962634015954636, v=1.0471975511965976)
+    $ 252 "arribaB_F1" "breakAfter"
+    movej(get_inverse_kin(arribaB_F1_p, qnear=arribaB_F1_q), a=1.3962634015954636, v=1.0471975511965976)
+    $ 253 "MoveL"
+    $ 254 "abajoB_F1" "breakAfter"
+    movel(abajoB_F1_p, a=1.2, v=0.25)
+    $ 255 "Wait: 0.25"
+    sleep(0.25)
+    $ 256 "Set DO[0]=Apagar"
+    set_standard_digital_out(0, False)
+    $ 257 "MoveL"
+    $ 258 "arribaB_F1" "breakAfter"
+    movel(arribaB_F1_p, a=1.2, v=0.25)
+    $ 259 "MoveJ"
+    $ 260 "Punto_de_paso_3" "breakAfter"
+    movej(get_inverse_kin(Punto_de_paso_3_p, qnear=Punto_de_paso_3_q), a=1.3962634015954636, v=1.0471975511965976)
+    $ 261 "Home"
+    movej([0.0, -1.5707963267948966, 0.0, -1.5707963267948966, 0.0, 0.0], a=1.3962634015954636, v=1.0471975511965976)
+  end
+  def Fase2():
+    $ 262 "Fase2" "noBreak"
+    $ 263 "Set DO[1]=Apagar"
+    set_standard_digital_out(1, False)
+    $ 264 "set_tcp(p[0.000000, 0.000000, 0.200000, 0.000000, 0.000000, 0.000000])"
+    set_tcp(p[0.000000, 0.000000, 0.200000, 0.000000, 0.000000, 0.000000])
+    $ 265 "MoveJ"
+    $ 266 "arribaRodB" "breakAfter"
+    movej(get_inverse_kin(arribaRodB_p, qnear=arribaRodB_q), a=1.2, v=0.75)
+    $ 267 "MoveL"
+    $ 268 "abajoRodB" "breakAfter"
+    movel(abajoRodB_p, a=1.2, v=0.25)
+    $ 269 "Wait: 0.25"
+    sleep(0.25)
+    $ 270 "Set DO[1]=Encender"
+    set_standard_digital_out(1, True)
+    $ 271 "MoveL"
+    $ 272 "arribaRodB" "breakAfter"
+    movel(arribaRodB_p, a=1.2, v=0.25)
+    $ 273 "If i≟1"
+    if (i == 1):
+      $ 274 "MoveJ"
+      $ 275 "arribaP1_F2" "breakAfter"
+      movej(get_inverse_kin(arribaP1_F2_p, qnear=arribaP1_F2_q), a=1.3962634015954636, v=1.0471975511965976)
+      $ 276 "MoveL"
+      $ 277 "abajoP1_F2" "breakAfter"
+      movel(abajoP1_F2_p, a=1.2, v=0.25)
+      $ 278 "Wait: 0.5"
+      sleep(0.5)
+      $ 279 "Set DO[1]=Apagar"
+      set_standard_digital_out(1, False)
+      $ 280 "Wait: 0.5"
+      sleep(0.5)
+      $ 281 "MoveL"
+      $ 282 "arribaP1_F2" "breakAfter"
+      movel(arribaP1_F2_p, a=1.2, v=0.25)
+    else:
+      $ 283 "ElseIf i≟2"
+      if (i == 2):
+        $ 284 "MoveJ"
+        $ 285 "arribaP2_F2" "breakAfter"
+        movej(get_inverse_kin(arribaP2_F2_p, qnear=arribaP2_F2_q), a=1.3962634015954636, v=1.0471975511965976)
+        $ 286 "MoveL"
+        $ 287 "abajoP2_F2" "breakAfter"
+        movel(abajoP2_F2_p, a=1.2, v=0.25)
+        $ 288 "Wait: 0.5"
+        sleep(0.5)
+        $ 289 "Set DO[1]=Apagar"
+        set_standard_digital_out(1, False)
+        $ 290 "Wait: 0.5"
+        sleep(0.5)
+        $ 291 "MoveL"
+        $ 292 "arribaP2_F2" "breakAfter"
+        movel(arribaP2_F2_p, a=1.2, v=0.25)
+      else:
+        $ 293 "ElseIf i≟3"
+        if (i == 3):
+          $ 294 "MoveJ"
+          $ 295 "arribaP3_F2" "breakAfter"
+          movej(get_inverse_kin(arribaP3_F2_p, qnear=arribaP3_F2_q), a=1.3962634015954636, v=1.0471975511965976)
+          $ 296 "MoveL"
+          $ 297 "abajoP3_F2" "breakAfter"
+          movel(abajoP3_F2_p, a=1.2, v=0.25)
+          $ 298 "Wait: 0.5"
+          sleep(0.5)
+          $ 299 "Set DO[1]=Apagar"
+          set_standard_digital_out(1, False)
+          $ 300 "Wait: 0.5"
+          sleep(0.5)
+          $ 301 "MoveL"
+          $ 302 "arribaP3_F2" "breakAfter"
+          movel(arribaP3_F2_p, a=1.2, v=0.25)
+        else:
+          $ 303 "ElseIf i≟4"
+          if (i == 4):
+            $ 304 "MoveJ"
+            $ 305 "arribaP4_F2" "breakAfter"
+            movej(get_inverse_kin(arribaP4_F2_p, qnear=arribaP4_F2_q), a=1.3962634015954636, v=1.0471975511965976)
+            $ 306 "MoveL"
+            $ 307 "abajoP4_F2" "breakAfter"
+            movel(abajoP4_F2_p, a=1.2, v=0.25)
+            $ 308 "Wait: 0.5"
+            sleep(0.5)
+            $ 309 "Set DO[1]=Apagar"
+            set_standard_digital_out(1, False)
+            $ 310 "Wait: 0.5"
+            sleep(0.5)
+            $ 311 "MoveL"
+            $ 312 "arribaP4_F2" "breakAfter"
+            movel(arribaP4_F2_p, a=1.2, v=0.25)
+          else:
+            $ 313 "ElseIf i≟5"
+            if (i == 5):
+              $ 314 "MoveJ"
+              $ 315 "arribaP5_F2" "breakAfter"
+              movej(get_inverse_kin(arribaP5_F2_p, qnear=arribaP5_F2_q), a=1.3962634015954636, v=1.0471975511965976)
+              $ 316 "MoveL"
+              $ 317 "abajoP5_F2" "breakAfter"
+              movel(abajoP5_F2_p, a=1.2, v=0.25)
+              $ 318 "Wait: 0.5"
+              sleep(0.5)
+              $ 319 "Set DO[1]=Apagar"
+              set_standard_digital_out(1, False)
+              $ 320 "Wait: 0.5"
+              sleep(0.5)
+              $ 321 "MoveL"
+              $ 322 "arribaP5_F2" "breakAfter"
+              movel(arribaP5_F2_p, a=1.2, v=0.25)
+            else:
+              $ 323 "Else" "noBreak"
+              $ 324 "MoveJ"
+              $ 325 "arribaP6_F2" "breakAfter"
+              movej(get_inverse_kin(arribaP6_F2_p, qnear=arribaP6_F2_q), a=1.3962634015954636, v=1.0471975511965976)
+              $ 326 "MoveL"
+              $ 327 "abajoP6_F2" "breakAfter"
+              movel(abajoP6_F2_p, a=1.2, v=0.25)
+              $ 328 "Wait: 0.5"
+              sleep(0.5)
+              $ 329 "Set DO[1]=Apagar"
+              set_standard_digital_out(1, False)
+              $ 330 "Wait: 0.5"
+              sleep(0.5)
+              $ 331 "MoveL"
+              $ 332 "arribaP6_F2" "breakAfter"
+              movel(arribaP6_F2_p, a=1.2, v=0.25)
+            end
+          end
+        end
+      end
+    end
+  end
+  def Fase3():
+    $ 333 "Fase3" "noBreak"
+    $ 334 "Set DO[0]=Apagar"
+    set_standard_digital_out(0, False)
+    $ 335 "MoveJ"
+    $ 336 "arribaBulon" "breakAfter"
+    movej(get_inverse_kin(arribaBulon_p, qnear=arribaBulon_q), a=1.2, v=0.75)
+    $ 337 "MoveJ"
+    $ 338 "atrasBulon" "breakAfter"
+    movej(get_inverse_kin(atrasBulon_p, qnear=atrasBulon_q), a=1.2, v=0.75)
+    $ 339 "MoveJ"
+    $ 340 "delanteBulon" "breakAfter"
+    movej(get_inverse_kin(delanteBulon_p, qnear=delanteBulon_q), a=1.3962634015954636, v=1.0471975511965976)
+    $ 341 "Set DO[0]=Encender"
+    set_standard_digital_out(0, True)
+    $ 342 "Wait: 0.25"
+    sleep(0.25)
+    $ 343 "MoveJ"
+    $ 344 "atrasBulon" "breakAfter"
+    movej(get_inverse_kin(atrasBulon_p, qnear=atrasBulon_q), a=1.3962634015954636, v=1.0471975511965976)
+    $ 345 "MoveJ"
+    $ 346 "arribaBulon" "breakAfter"
+    movej(get_inverse_kin(arribaBulon_p, qnear=arribaBulon_q), a=1.2, v=0.75)
+    $ 347 "If i≟1"
+    if (i == 1):
+      $ 348 "MoveJ"
+      $ 349 "arribaP1_F3" "breakAfter"
+      movej(get_inverse_kin(arribaP1_F3_p, qnear=arribaP1_F3_q), a=1.2, v=0.75)
+      $ 350 "MoveL"
+      $ 351 "abajoP1_F3" "breakAfter"
+      movel(abajoP1_F3_p, a=1.2, v=0.25)
+      $ 352 "Wait: 0.25"
+      sleep(0.25)
+      $ 353 "Set DO[0]=Apagar"
+      set_standard_digital_out(0, False)
+      $ 354 "MoveL"
+      $ 355 "arribaP1_F3" "breakAfter"
+      movel(arribaP1_F3_p, a=1.2, v=0.25)
+    else:
+      $ 356 "ElseIf i≟2"
+      if (i == 2):
+        $ 357 "MoveJ"
+        $ 358 "arribaP2_F3" "breakAfter"
+        movej(get_inverse_kin(arribaP2_F3_p, qnear=arribaP2_F3_q), a=1.3962634015954636, v=1.0471975511965976)
+        $ 359 "MoveL"
+        $ 360 "abajoP2_F3" "breakAfter"
+        movel(abajoP2_F3_p, a=1.2, v=0.25)
+        $ 361 "Wait: 0.25"
+        sleep(0.25)
+        $ 362 "Set DO[0]=Apagar"
+        set_standard_digital_out(0, False)
+        $ 363 "MoveL"
+        $ 364 "arribaP2_F3" "breakAfter"
+        movel(arribaP2_F3_p, a=1.2, v=0.25)
+      else:
+        $ 365 "ElseIf i≟3"
+        if (i == 3):
+          $ 366 "MoveJ"
+          $ 367 "arribaP3_F3" "breakAfter"
+          movej(get_inverse_kin(arribaP3_F3_p, qnear=arribaP3_F3_q), a=1.3962634015954636, v=1.0471975511965976)
+          $ 368 "PuntoPaso_P3_F3" "breakAfter"
+          movej(get_inverse_kin(PuntoPaso_P3_F3_p, qnear=PuntoPaso_P3_F3_q), a=1.3962634015954636, v=1.0471975511965976)
+          $ 369 "MoveL"
+          $ 370 "abajoP3_F3" "breakAfter"
+          movel(abajoP3_F3_p, a=1.2, v=0.25)
+          $ 371 "Wait: 0.25"
+          sleep(0.25)
+          $ 372 "Set DO[0]=Apagar"
+          set_standard_digital_out(0, False)
+          $ 373 "MoveL"
+          $ 374 "arribaP3_F3" "breakAfter"
+          movel(arribaP3_F3_p, a=1.2, v=0.25)
+        else:
+          $ 375 "ElseIf i≟4"
+          if (i == 4):
+            $ 376 "MoveJ"
+            $ 377 "arribaP4_F3" "breakAfter"
+            movej(get_inverse_kin(arribaP4_F3_p, qnear=arribaP4_F3_q), a=1.3962634015954636, v=1.0471975511965976)
+            $ 378 "MoveL"
+            $ 379 "abajoP4_F3" "breakAfter"
+            movel(abajoP4_F3_p, a=1.2, v=0.25)
+            $ 380 "Wait: 0.25"
+            sleep(0.25)
+            $ 381 "Set DO[0]=Apagar"
+            set_standard_digital_out(0, False)
+            $ 382 "MoveL"
+            $ 383 "arribaP4_F3" "breakAfter"
+            movel(arribaP4_F3_p, a=1.2, v=0.25)
+          else:
+            $ 384 "ElseIf i≟5"
+            if (i == 5):
+              $ 385 "MoveJ"
+              $ 386 "arribaP5_F3" "breakAfter"
+              movej(get_inverse_kin(arribaP5_F3_p, qnear=arribaP5_F3_q), a=1.3962634015954636, v=1.0471975511965976)
+              $ 387 "MoveL"
+              $ 388 "abajoP5_F3" "breakAfter"
+              movel(abajoP5_F3_p, a=1.2, v=0.25)
+              $ 389 "Wait: 0.25"
+              sleep(0.25)
+              $ 390 "Set DO[0]=Apagar"
+              set_standard_digital_out(0, False)
+              $ 391 "MoveL"
+              $ 392 "arribaP5_F3" "breakAfter"
+              movel(arribaP5_F3_p, a=1.2, v=0.25)
+            else:
+              $ 393 "ElseIf i≟6"
+              if (i == 6):
+                $ 394 "MoveJ"
+                $ 395 "arribaP6_F3" "breakAfter"
+                movej(get_inverse_kin(arribaP6_F3_p, qnear=arribaP6_F3_q), a=1.3962634015954636, v=1.0471975511965976)
+                $ 396 "MoveL"
+                $ 397 "abajoP6_F3" "breakAfter"
+                movel(abajoP6_F3_p, a=1.2, v=0.25)
+                $ 398 "Wait: 0.25"
+                sleep(0.25)
+                $ 399 "Set DO[0]=Apagar"
+                set_standard_digital_out(0, False)
+                $ 400 "MoveL"
+                $ 401 "arribaP6_F3" "breakAfter"
+                movel(arribaP6_F3_p, a=1.2, v=0.25)
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+  def Fase4():
+    $ 402 "Fase4" "noBreak"
+    $ 403 "Set DO[1]=Apagar"
+    set_standard_digital_out(1, False)
+    $ 404 "set_tcp(p[0.000000, 0.000000, 0.200000, 0.000000, 0.000000, 0.000000])"
+    set_tcp(p[0.000000, 0.000000, 0.200000, 0.000000, 0.000000, 0.000000])
+    $ 405 "MoveJ"
+    $ 406 "arribaTapaInt" "breakAfter"
+    movej(get_inverse_kin(arribaTapaInt_p, qnear=arribaTapaInt_q), t=2.0)
+    $ 407 "MoveL"
+    $ 408 "abajoTapaInt" "breakAfter"
+    movel(abajoTapaInt_p, a=1.2, v=0.25)
+    $ 409 "Set DO[1]=Encender"
+    set_standard_digital_out(1, True)
+    $ 410 "Wait: 0.5"
+    sleep(0.5)
+    $ 411 "MoveL"
+    $ 412 "arribaTapaInt" "breakAfter"
+    movel(arribaTapaInt_p, a=1.2, v=0.25)
+    $ 413 "If i≟1"
+    if (i == 1):
+      $ 414 "MoveJ"
+      $ 415 "arribaP1_F4" "breakAfter"
+      movej(get_inverse_kin(arribaP1_F4_p, qnear=arribaP1_F4_q), a=1.2, v=0.75)
+      $ 416 "MoveL"
+      $ 417 "abajoP1_F4" "breakAfter"
+      movel(abajoP1_F4_p, a=1.2, v=0.25)
+      $ 418 "Wait: 0.25"
+      sleep(0.25)
+      $ 419 "Set DO[1]=Apagar"
+      set_standard_digital_out(1, False)
+      $ 420 "Wait: 0.25"
+      sleep(0.25)
+      $ 421 "MoveL"
+      $ 422 "arribaP1_F4" "breakAfter"
+      movel(arribaP1_F4_p, a=1.2, v=0.25)
+    else:
+      $ 423 "ElseIf i≟2"
+      if (i == 2):
+        $ 424 "MoveJ"
+        $ 425 "arribaP2_F4" "breakAfter"
+        movej(get_inverse_kin(arribaP2_F4_p, qnear=arribaP2_F4_q), a=1.3962634015954636, v=1.0471975511965976)
+        $ 426 "MoveL"
+        $ 427 "abajoP2_F4" "breakAfter"
+        movel(abajoP2_F4_p, a=1.2, v=0.25)
+        $ 428 "Wait: 0.25"
+        sleep(0.25)
+        $ 429 "Set DO[1]=Apagar"
+        set_standard_digital_out(1, False)
+        $ 430 "Wait: 0.25"
+        sleep(0.25)
+        $ 431 "MoveL"
+        $ 432 "arribaP2_F4" "breakAfter"
+        movel(arribaP2_F4_p, a=1.2, v=0.25)
+      else:
+        $ 433 "ElseIf i≟3"
+        if (i == 3):
+          $ 434 "MoveJ"
+          $ 435 "arribaP3_F4" "breakAfter"
+          movej(get_inverse_kin(arribaP3_F4_p, qnear=arribaP3_F4_q), a=1.3962634015954636, v=1.0471975511965976)
+          $ 436 "MoveL"
+          $ 437 "abajoP3_F4" "breakAfter"
+          movel(abajoP3_F4_p, a=1.2, v=0.25)
+          $ 438 "Wait: 0.25"
+          sleep(0.25)
+          $ 439 "Set DO[1]=Apagar"
+          set_standard_digital_out(1, False)
+          $ 440 "Wait: 0.25"
+          sleep(0.25)
+          $ 441 "MoveL"
+          $ 442 "arribaP3_F4" "breakAfter"
+          movel(arribaP3_F4_p, a=1.2, v=0.25)
+        else:
+          $ 443 "ElseIf i≟4"
+          if (i == 4):
+            $ 444 "MoveJ"
+            $ 445 "arribaP4_F4" "breakAfter"
+            movej(get_inverse_kin(arribaP4_F4_p, qnear=arribaP4_F4_q), a=1.3962634015954636, v=1.0471975511965976)
+            $ 446 "MoveL"
+            $ 447 "abajoP4_F4" "breakAfter"
+            movel(abajoP4_F4_p, a=1.2, v=0.25)
+            $ 448 "Wait: 0.25"
+            sleep(0.25)
+            $ 449 "Set DO[1]=Apagar"
+            set_standard_digital_out(1, False)
+            $ 450 "Wait: 0.25"
+            sleep(0.25)
+            $ 451 "MoveL"
+            $ 452 "arribaP4_F4" "breakAfter"
+            movel(arribaP4_F4_p, a=1.2, v=0.25)
+          else:
+            $ 453 "ElseIf i≟5"
+            if (i == 5):
+              $ 454 "MoveJ"
+              $ 455 "arribaP5_F4" "breakAfter"
+              movej(get_inverse_kin(arribaP5_F4_p, qnear=arribaP5_F4_q), a=1.3962634015954636, v=1.0471975511965976)
+              $ 456 "MoveL"
+              $ 457 "abajoP5_F4" "breakAfter"
+              movel(abajoP5_F4_p, a=1.2, v=0.25)
+              $ 458 "Wait: 0.25"
+              sleep(0.25)
+              $ 459 "Set DO[1]=Apagar"
+              set_standard_digital_out(1, False)
+              $ 460 "Wait: 0.25"
+              sleep(0.25)
+              $ 461 "MoveL"
+              $ 462 "arribaP5_F4" "breakAfter"
+              movel(arribaP5_F4_p, a=1.2, v=0.25)
+            else:
+              $ 463 "Else" "noBreak"
+              $ 464 "MoveJ"
+              $ 465 "arribaP6_F4" "breakAfter"
+              movej(get_inverse_kin(arribaP6_F4_p, qnear=arribaP6_F4_q), a=1.3962634015954636, v=1.0471975511965976)
+              $ 466 "MoveL"
+              $ 467 "abajoP6_F4" "breakAfter"
+              movel(abajoP6_F4_p, a=1.2, v=0.25)
+              $ 468 "Wait: 0.25"
+              sleep(0.25)
+              $ 469 "Set DO[1]=Apagar"
+              set_standard_digital_out(1, False)
+              $ 470 "Wait: 0.25"
+              sleep(0.25)
+              $ 471 "MoveL"
+              $ 472 "arribaP6_F4" "breakAfter"
+              movel(arribaP6_F4_p, a=1.2, v=0.25)
+            end
+          end
+        end
+      end
+    end
+  end
+  def Fase5():
+    $ 476 "Fase5" "noBreak"
+    $ 477 "Set DO[1]=Apagar"
+    set_standard_digital_out(1, False)
+    $ 479 "set_tcp(p[0.000000, 0.000000, 0.200000, 0.000000, 0.000000, 0.000000])"
+    set_tcp(p[0.000000, 0.000000, 0.200000, 0.000000, 0.000000, 0.000000])
+    $ 480 "If i≟1"
+    if (i == 1):
+      $ 481 "MoveJ"
+      $ 482 "arribaD1_F5" "breakAfter"
+      movej(get_inverse_kin(arribaD1_F5_p, qnear=arribaD1_F5_q), a=1.3962634015954636, v=1.0471975511965976)
+      $ 483 "MoveL"
+      $ 484 "abajoD1_F5" "breakAfter"
+      movel(abajoD1_F5_p, a=1.2, v=0.25)
+      $ 485 "Wait: 0.5"
+      sleep(0.5)
+      $ 486 "Set DO[1]=Encender"
+      set_standard_digital_out(1, True)
+      $ 487 "Wait: 0.5"
+      sleep(0.5)
+      $ 488 "MoveL"
+      $ 489 "arribaD1_F5" "breakAfter"
+      movel(arribaD1_F5_p, a=1.2, v=0.25)
+      $ 490 "MoveJ"
+      $ 491 "arribaP1_F5" "breakAfter"
+      movej(get_inverse_kin(arribaP1_F5_p, qnear=arribaP1_F5_q), a=1.3962634015954636, v=1.0471975511965976)
+      $ 492 "MoveL"
+      $ 493 "abajoP1_F5" "breakAfter"
+      movel(abajoP1_F5_p, a=1.2, v=0.25)
+      $ 494 "Wait: 0.5"
+      sleep(0.5)
+      $ 495 "Set DO[1]=Apagar"
+      set_standard_digital_out(1, False)
+      $ 496 "Wait: 0.5"
+      sleep(0.5)
+      $ 497 "MoveL"
+      $ 498 "arribaP1_F5" "breakAfter"
+      movel(arribaP1_F5_p, a=1.2, v=0.25)
+    else:
+      $ 499 "ElseIf i≟2"
+      if (i == 2):
+        $ 500 "MoveJ"
+        $ 501 "arribaD2_F5" "breakAfter"
+        movej(get_inverse_kin(arribaD2_F5_p, qnear=arribaD2_F5_q), a=1.3962634015954636, v=1.0471975511965976)
+        $ 502 "MoveL"
+        $ 503 "abajoD2_F5" "breakAfter"
+        movel(abajoD2_F5_p, a=1.2, v=0.25)
+        $ 504 "Wait: 0.5"
+        sleep(0.5)
+        $ 505 "Set DO[1]=Encender"
+        set_standard_digital_out(1, True)
+        $ 506 "Wait: 0.5"
+        sleep(0.5)
+        $ 507 "MoveJ"
+        $ 508 "arribaD2_F5" "breakAfter"
+        movej(get_inverse_kin(arribaD2_F5_p, qnear=arribaD2_F5_q), a=1.3962634015954636, v=1.0471975511965976)
+        $ 509 "arribaP2_F5" "breakAfter"
+        movej(get_inverse_kin(arribaP2_F5_p, qnear=arribaP2_F5_q), a=1.3962634015954636, v=1.0471975511965976)
+        $ 510 "MoveL"
+        $ 511 "abajoP2_F5" "breakAfter"
+        movel(abajoP2_F5_p, a=1.2, v=0.25)
+        $ 512 "Wait: 0.5"
+        sleep(0.5)
+        $ 513 "Set DO[1]=Apagar"
+        set_standard_digital_out(1, False)
+        $ 514 "Wait: 0.5"
+        sleep(0.5)
+        $ 515 "MoveL"
+        $ 516 "arribaP2_F5" "breakAfter"
+        movel(arribaP2_F5_p, a=1.2, v=0.25)
+      else:
+        $ 517 "ElseIf i≟3"
+        if (i == 3):
+          $ 518 "MoveJ"
+          $ 519 "arribaD3_F5" "breakAfter"
+          movej(get_inverse_kin(arribaD3_F5_p, qnear=arribaD3_F5_q), a=1.3962634015954636, v=1.0471975511965976)
+          $ 520 "MoveL"
+          $ 521 "abajoD3_F5" "breakAfter"
+          movel(abajoD3_F5_p, a=1.2, v=0.25)
+          $ 522 "Wait: 0.5"
+          sleep(0.5)
+          $ 523 "Set DO[1]=Encender"
+          set_standard_digital_out(1, True)
+          $ 524 "Wait: 0.5"
+          sleep(0.5)
+          $ 525 "MoveL"
+          $ 526 "arribaD3_F5" "breakAfter"
+          movel(arribaD3_F5_p, a=1.2, v=0.25)
+          $ 527 "MoveJ"
+          $ 528 "arribaP3_F5" "breakAfter"
+          movej(get_inverse_kin(arribaP3_F5_p, qnear=arribaP3_F5_q), a=1.3962634015954636, v=1.0471975511965976)
+          $ 529 "MoveL"
+          $ 530 "abajoP3_F5" "breakAfter"
+          movel(abajoP3_F5_p, a=1.2, v=0.25)
+          $ 531 "Wait: 0.5"
+          sleep(0.5)
+          $ 532 "Set DO[1]=Apagar"
+          set_standard_digital_out(1, False)
+          $ 533 "Wait: 0.5"
+          sleep(0.5)
+          $ 534 "MoveJ"
+          $ 535 "arribaP3_F5" "breakAfter"
+          movej(get_inverse_kin(arribaP3_F5_p, qnear=arribaP3_F5_q), a=1.3962634015954636, v=1.0471975511965976)
+        else:
+          $ 536 "ElseIf i≟4"
+          if (i == 4):
+            $ 537 "MoveJ"
+            $ 538 "arribaD4_F5" "breakAfter"
+            movej(get_inverse_kin(arribaD4_F5_p, qnear=arribaD4_F5_q), a=1.3962634015954636, v=1.0471975511965976)
+            $ 539 "MoveL"
+            $ 540 "abajoD4_F5" "breakAfter"
+            movel(abajoD4_F5_p, a=1.2, v=0.25)
+            $ 541 "Wait: 0.5"
+            sleep(0.5)
+            $ 542 "Set DO[1]=Encender"
+            set_standard_digital_out(1, True)
+            $ 543 "Wait: 0.5"
+            sleep(0.5)
+            $ 544 "MoveJ"
+            $ 545 "arribaD4_F5" "breakAfter"
+            movej(get_inverse_kin(arribaD4_F5_p, qnear=arribaD4_F5_q), a=1.3962634015954636, v=1.0471975511965976)
+            $ 546 "MoveJ"
+            $ 547 "arribaP4_F5" "breakAfter"
+            movej(get_inverse_kin(arribaP4_F5_p, qnear=arribaP4_F5_q), a=1.3962634015954636, v=1.0471975511965976)
+            $ 548 "MoveL"
+            $ 549 "abajoP4_F5" "breakAfter"
+            movel(abajoP4_F5_p, a=1.2, v=0.25)
+            $ 550 "Wait: 0.5"
+            sleep(0.5)
+            $ 551 "Set DO[1]=Apagar"
+            set_standard_digital_out(1, False)
+            $ 552 "Wait: 0.5"
+            sleep(0.5)
+            $ 553 "MoveL"
+            $ 554 "arribaP4_F5" "breakAfter"
+            movel(arribaP4_F5_p, a=1.2, v=0.25)
+          else:
+            $ 555 "ElseIf i≟5"
+            if (i == 5):
+              $ 556 "MoveJ"
+              $ 557 "arribaD5_F5" "breakAfter"
+              movej(get_inverse_kin(arribaD5_F5_p, qnear=arribaD5_F5_q), a=1.3962634015954636, v=1.0471975511965976)
+              $ 558 "MoveJ"
+              $ 559 "abajoD5_F5" "breakAfter"
+              movej(get_inverse_kin(abajoD5_F5_p, qnear=abajoD5_F5_q), a=1.3962634015954636, v=1.0471975511965976)
+              $ 560 "Wait: 0.5"
+              sleep(0.5)
+              $ 561 "Set DO[1]=Encender"
+              set_standard_digital_out(1, True)
+              $ 562 "Wait: 0.5"
+              sleep(0.5)
+              $ 563 "MoveL"
+              $ 564 "arribaD5_F5" "breakAfter"
+              movel(arribaD5_F5_p, a=1.2, v=0.25)
+              $ 565 "MoveJ"
+              $ 566 "arribaP5_F5" "breakAfter"
+              movej(get_inverse_kin(arribaP5_F5_p, qnear=arribaP5_F5_q), a=1.3962634015954636, v=1.0471975511965976)
+              $ 567 "MoveL"
+              $ 568 "abajoP5_F5" "breakAfter"
+              movel(abajoP5_F5_p, a=1.2, v=0.25)
+              $ 569 "Wait: 0.5"
+              sleep(0.5)
+              $ 570 "Set DO[1]=Apagar"
+              set_standard_digital_out(1, False)
+              $ 571 "Wait: 0.5"
+              sleep(0.5)
+              $ 572 "MoveJ"
+              $ 573 "arribaP5_F5" "breakAfter"
+              movej(get_inverse_kin(arribaP5_F5_p, qnear=arribaP5_F5_q), a=1.3962634015954636, v=1.0471975511965976)
+            else:
+              $ 574 "ElseIf i≟6"
+              if (i == 6):
+                $ 575 "MoveJ"
+                $ 576 "arribaD6_F5" "breakAfter"
+                movej(get_inverse_kin(arribaD6_F5_p, qnear=arribaD6_F5_q), a=1.3962634015954636, v=1.0471975511965976)
+                $ 577 "MoveL"
+                $ 578 "abajoD6_F5" "breakAfter"
+                movel(abajoD6_F5_p, a=1.2, v=0.25)
+                $ 579 "Wait: 0.5"
+                sleep(0.5)
+                $ 580 "Set DO[1]=Encender"
+                set_standard_digital_out(1, True)
+                $ 581 "Wait: 0.5"
+                sleep(0.5)
+                $ 582 "MoveL"
+                $ 583 "arribaD6_F5" "breakAfter"
+                movel(arribaD6_F5_p, a=1.2, v=0.25)
+                $ 584 "MoveJ"
+                $ 585 "arribaP6_F6" "breakAfter"
+                movej(get_inverse_kin(arribaP6_F6_p, qnear=arribaP6_F6_q), a=1.3962634015954636, v=1.0471975511965976)
+                $ 586 "MoveL"
+                $ 587 "abajoP6_F5" "breakAfter"
+                movel(abajoP6_F5_p, a=1.2, v=0.25)
+                $ 588 "Wait: 0.5"
+                sleep(0.5)
+                $ 589 "Set DO[1]=Apagar"
+                set_standard_digital_out(1, False)
+                $ 590 "Wait: 0.5"
+                sleep(0.5)
+                $ 591 "MoveJ"
+                $ 592 "arribaP6_F6" "breakAfter"
+                movej(get_inverse_kin(arribaP6_F6_p, qnear=arribaP6_F6_q), a=1.3962634015954636, v=1.0471975511965976)
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+  def Fase6():
+    $ 593 "Fase6" "noBreak"
+    $ 595 "Set DO[0]=Apagar"
+    set_standard_digital_out(0, False)
+    $ 596 "MoveJ"
+    $ 597 "PuntoDePasoB_F6" "breakAfter"
+    movej(get_inverse_kin(PuntoDePasoB_F6_p, qnear=PuntoDePasoB_F6_q), a=1.2, v=0.75)
+    $ 598 "arribaB_F6" "breakAfter"
+    movej(get_inverse_kin(arribaB_F6_p, qnear=arribaB_F6_q), a=1.2, v=0.75)
+    $ 599 "MoveL"
+    $ 600 "abajoB_F6" "breakAfter"
+    movel(abajoB_F6_p, a=1.2, v=0.25)
+    $ 601 "Set DO[0]=Encender"
+    set_standard_digital_out(0, True)
+    $ 602 "Wait: 0.25"
+    sleep(0.25)
+    $ 603 "MoveL"
+    $ 604 "arribaB_F6" "breakAfter"
+    movel(arribaB_F6_p, t=2.0)
+    $ 605 "MoveJ"
+    $ 606 "PuntoDePaso_F6" "breakAfter"
+    movej(get_inverse_kin(PuntoDePaso_F6_p, qnear=PuntoDePaso_F6_q), a=1.2, v=0.75)
+    $ 607 "arribaC_F6" "breakAfter"
+    movej(get_inverse_kin(arribaC_F6_p, qnear=arribaC_F6_q), a=1.2, v=0.75)
+    $ 608 "MoveL"
+    $ 609 "abajoC_F6" "breakAfter"
+    movel(abajoC_F6_p, a=1.2, v=0.25)
+    $ 610 "Wait: 0.25"
+    sleep(0.25)
+    $ 611 "Set DO[0]=Apagar"
+    set_standard_digital_out(0, False)
+    $ 612 "MoveL"
+    $ 613 "arribaC_F6" "breakAfter"
+    movel(arribaC_F6_p, a=1.2, v=0.25)
+    $ 614 "Home"
+    movej([0.0, -1.5707963267948966, 0.0, -1.5707963267948966, 0.0, 0.0], a=1.3962634015954636, v=1.0471975511965976)
+    $ 615 "Set DO[7]=Apagar"
+    set_standard_digital_out(7, False)
+  end
+  while (True):
+    $ 1 "Robot Program"
+    $ 2 "'Estas variables hay que borrarlas en la prueba final. Se deben resetear en el Agente'"
+    # 'Estas variables hay que borrarlas en la prueba final. Se deben resetear en el Agente'
+    $ 3 "'Antes de comenzar con el programa principal,  comprobamos que el robot esta en la posicion inicial.'"
+    # 'Antes de comenzar con el programa principal,  comprobamos que el robot esta en la posicion inicial.'
+    $ 4 "Home"
+    movej([0.0, -1.5707963267948966, 0.0, -1.5707963267948966, 0.0, 0.0], a=1.3962634015954636, v=1.0471975511965976)
+    $ 5 "'MARCHA_Reset'"
+    # 'MARCHA_Reset'
+    $ 6 "write_output_boolean_register(2, False )"
+    write_output_boolean_register(2,  False  )
+    $ 7 "write_output_boolean_register(3, False )"
+    write_output_boolean_register(3,  False  )
+    $ 8 "'Flag_Service_Completed'"
+    # 'Flag_Service_Completed'
+    $ 9 "write_output_boolean_register(1, False )"
+    write_output_boolean_register(1,  False  )
+    $ 10 "i≔1"
+    global i=1
+    $ 11 "Wait: 2.0"
+    sleep(2.0)
+    $ 12 "'Leemos la variable que indica el comienzo del programa.'"
+    # 'Leemos la variable que indica el comienzo del programa.'
+    $ 13 "MARCHA≔read_input_boolean_register(0)"
+    global MARCHA=read_input_boolean_register(0)
+    $ 14 "'Una vez este la variable de MARCHA en TRUE accedemos al bucle y se comienza con la fabricacion del servicio requerido.'"
+    # 'Una vez este la variable de MARCHA en TRUE accedemos al bucle y se comienza con la fabricacion del servicio requerido.'
+    $ 15 "Loop MARCHA≟ True "
+    while (MARCHA ==   True  ):
+      $ 16 "Home"
+      movej([0.0, -1.5707963267948966, 0.0, -1.5707963267948966, 0.0, 0.0], a=1.3962634015954636, v=1.0471975511965976)
+      $ 17 "'Inicializamos el numero de items completados a cero'"
+      # 'Inicializamos el numero de items completados a cero'
+      $ 18 "write_output_integer_register(0,0)"
+      write_output_integer_register(0,0)
+      $ 19 "'Leemos el servicio que debemos realizar'"
+      # 'Leemos el servicio que debemos realizar'
+      $ 20 "Serv≔read_input_integer_register(0)"
+      global Serv=read_input_integer_register(0)
+      $ 21 "Wait: 2.0"
+      sleep(2.0)
+      $ 22 "'Leemos la cantidad de items a realizar'"
+      # 'Leemos la cantidad de items a realizar'
+      $ 23 "CantItems≔read_input_integer_register(1)"
+      global CantItems=read_input_integer_register(1)
+      $ 24 "'Flanc para guardar la hora de cuando se comienza con el servicio'"
+      # 'Flanc para guardar la hora de cuando se comienza con el servicio'
+      $ 25 "write_output_boolean_register(4, True )"
+      write_output_boolean_register(4,  True  )
+      $ 26 "Wait: 0.01"
+      sleep(0.01)
+      $ 27 "write_output_boolean_register(4, False )"
+      write_output_boolean_register(4,  False  )
+      $ 28 "If Serv≟1"
+      if (Serv == 1):
+        $ 29 "Call Fase1"
+        Fase1()
+        $ 30 "i≔1"
+        global i=1
+        $ 31 "Loop i≤CantItems"
+        while (i <= CantItems):
+          $ 32 "write_output_boolean_register(5, True )"
+          write_output_boolean_register(5,  True  )
+          $ 33 "Wait: 0.01"
+          sleep(0.01)
+          $ 34 "write_output_boolean_register(5, False )"
+          write_output_boolean_register(5,  False  )
+          $ 35 "Call Fase2"
+          Fase2()
+          $ 36 "'Asignamos la cantidad de item-s finalizamos al registro de enteros. Este valir llega al TIAPortal para que sea enviado al broker, consiguiendl que llegue al Agente.'"
+          # 'Asignamos la cantidad de item-s finalizamos al registro de enteros. Este valir llega al TIAPortal para que sea enviado al broker, consiguiendl que llegue al Agente.'
+          $ 37 "write_output_integer_register(0,i)"
+          write_output_integer_register(0,i)
+          $ 38 "'Activamos en flag con el que se muestra que un item ha sido finalizado'"
+          # 'Activamos en flag con el que se muestra que un item ha sido finalizado'
+          $ 39 "write_output_boolean_register(0, True )"
+          write_output_boolean_register(0,  True  )
+          $ 40 "Wait: 1.0"
+          sleep(1.0)
+          $ 41 "i≔i+1"
+          global i=i+1
+          $ 42 "'Publicacion de los datos'"
+          # 'Publicacion de los datos'
+          $ 43 "write_output_boolean_register(3, True )"
+          write_output_boolean_register(3,  True  )
+          $ 44 "Wait: 2.0"
+          sleep(2.0)
+          $ 45 "write_output_boolean_register(0, False )"
+          write_output_boolean_register(0,  False  )
+          $ 46 "write_output_boolean_register(3, False )"
+          write_output_boolean_register(3,  False  )
+        end
+        $ 47 "Home"
+        movej([0.0, -1.5707963267948966, 0.0, -1.5707963267948966, 0.0, 0.0], a=1.3962634015954636, v=1.0471975511965976)
+        $ 48 "Call Fase6"
+        Fase6()
+      else:
+        $ 49 "ElseIf Serv≟2"
+        if (Serv == 2):
+          $ 50 "Call Fase1"
+          Fase1()
+          $ 51 "i≔1"
+          global i=1
+          $ 52 "Loop i≤CantItems"
+          while (i <= CantItems):
+            $ 53 "write_output_boolean_register(5, True )"
+            write_output_boolean_register(5,  True  )
+            $ 54 "Wait: 0.01"
+            sleep(0.01)
+            $ 55 "write_output_boolean_register(5, False )"
+            write_output_boolean_register(5,  False  )
+            $ 56 "Call Fase2"
+            Fase2()
+            $ 57 "Call Fase3"
+            Fase3()
+            $ 58 "write_output_integer_register(0,i)"
+            write_output_integer_register(0,i)
+            $ 59 "write_output_boolean_register(0, True )"
+            write_output_boolean_register(0,  True  )
+            $ 60 "Wait: 1.0"
+            sleep(1.0)
+            $ 61 "i≔i+1"
+            global i=i+1
+            $ 62 "write_output_boolean_register(3, True )"
+            write_output_boolean_register(3,  True  )
+            $ 63 "Wait: 2.0"
+            sleep(2.0)
+            $ 64 "write_output_boolean_register(0, False )"
+            write_output_boolean_register(0,  False  )
+            $ 65 "write_output_boolean_register(3, False )"
+            write_output_boolean_register(3,  False  )
+          end
+          $ 66 "Home"
+          movej([0.0, -1.5707963267948966, 0.0, -1.5707963267948966, 0.0, 0.0], a=1.3962634015954636, v=1.0471975511965976)
+          $ 67 "Call Fase6"
+          Fase6()
+        else:
+          $ 68 "ElseIf Serv≟3"
+          if (Serv == 3):
+            $ 69 "Call Fase1"
+            Fase1()
+            $ 70 "i≔1"
+            global i=1
+            $ 71 "Loop i≤CantItems"
+            while (i <= CantItems):
+              $ 72 "write_output_boolean_register(5, True )"
+              write_output_boolean_register(5,  True  )
+              $ 73 "Wait: 0.01"
+              sleep(0.01)
+              $ 74 "write_output_boolean_register(5, False )"
+              write_output_boolean_register(5,  False  )
+              $ 75 "Call Fase2"
+              Fase2()
+              $ 76 "Call Fase3"
+              Fase3()
+              $ 77 "Call Fase4"
+              Fase4()
+              $ 78 "write_output_integer_register(0,i)"
+              write_output_integer_register(0,i)
+              $ 79 "write_output_boolean_register(0, True )"
+              write_output_boolean_register(0,  True  )
+              $ 80 "Wait: 1.0"
+              sleep(1.0)
+              $ 81 "i≔i+1"
+              global i=i+1
+              $ 82 "write_output_boolean_register(3, True )"
+              write_output_boolean_register(3,  True  )
+              $ 83 "Wait: 2.0"
+              sleep(2.0)
+              $ 84 "write_output_boolean_register(0, False )"
+              write_output_boolean_register(0,  False  )
+              $ 85 "write_output_boolean_register(3, False )"
+              write_output_boolean_register(3,  False  )
+            end
+            $ 86 "Home"
+            movej([0.0, -1.5707963267948966, 0.0, -1.5707963267948966, 0.0, 0.0], a=1.3962634015954636, v=1.0471975511965976)
+            $ 87 "Call Fase6"
+            Fase6()
+          else:
+            $ 88 "ElseIf Serv≟4"
+            if (Serv == 4):
+              $ 89 "Call Fase1"
+              Fase1()
+              $ 90 "i≔1"
+              global i=1
+              $ 91 "Loop i≤CantItems"
+              while (i <= CantItems):
+                $ 92 "write_output_boolean_register(5, True )"
+                write_output_boolean_register(5,  True  )
+                $ 93 "Wait: 0.01"
+                sleep(0.01)
+                $ 94 "write_output_boolean_register(5, False )"
+                write_output_boolean_register(5,  False  )
+                $ 95 "Call Fase2"
+                Fase2()
+                $ 96 "Call Fase3"
+                Fase3()
+                $ 97 "Call Fase4"
+                Fase4()
+                $ 98 "Call Fase5"
+                Fase5()
+                $ 99 "write_output_integer_register(0,i)"
+                write_output_integer_register(0,i)
+                $ 100 "write_output_boolean_register(0, True )"
+                write_output_boolean_register(0,  True  )
+                $ 101 "Wait: 1.0"
+                sleep(1.0)
+                $ 102 "i≔i+1"
+                global i=i+1
+                $ 103 "write_output_boolean_register(0, False )"
+                write_output_boolean_register(0,  False  )
+                $ 104 "write_output_boolean_register(3, True )"
+                write_output_boolean_register(3,  True  )
+                $ 105 "Wait: 2.0"
+                sleep(2.0)
+                $ 106 "write_output_boolean_register(3, False )"
+                write_output_boolean_register(3,  False  )
+              end
+              $ 107 "Home"
+              movej([0.0, -1.5707963267948966, 0.0, -1.5707963267948966, 0.0, 0.0], a=1.3962634015954636, v=1.0471975511965976)
+              $ 108 "Call Fase6"
+              Fase6()
+            else:
+              $ 109 "ElseIf Serv≟5"
+              if (Serv == 5):
+                $ 110 "Call Fase1"
+                Fase1()
+                $ 111 "i≔1"
+                global i=1
+                $ 112 "Loop i≤CantItems"
+                while (i <= CantItems):
+                  $ 113 "MoveJ"
+                  $ 114 "Waypoint_1" "breakAfter"
+                  movej(get_inverse_kin(Waypoint_1_p, qnear=Waypoint_1_q), a=1.3962634015954636, v=1.0471975511965976)
+                  $ 115 "write_output_boolean_register(5, True )"
+                  write_output_boolean_register(5,  True  )
+                  $ 116 "Wait: 0.01"
+                  sleep(0.01)
+                  $ 117 "write_output_boolean_register(5, False )"
+                  write_output_boolean_register(5,  False  )
+                  $ 118 "Call Fase3"
+                  Fase3()
+                  $ 119 "write_output_integer_register(0,i)"
+                  write_output_integer_register(0,i)
+                  $ 120 "write_output_boolean_register(0, True )"
+                  write_output_boolean_register(0,  True  )
+                  $ 121 "Wait: 1.0"
+                  sleep(1.0)
+                  $ 122 "i≔i+1"
+                  global i=i+1
+                  $ 123 "write_output_boolean_register(3, True )"
+                  write_output_boolean_register(3,  True  )
+                  $ 124 "Wait: 2.0"
+                  sleep(2.0)
+                  $ 125 "write_output_boolean_register(0, False )"
+                  write_output_boolean_register(0,  False  )
+                  $ 126 "write_output_boolean_register(3, False )"
+                  write_output_boolean_register(3,  False  )
+                end
+                $ 127 "Home"
+                movej([0.0, -1.5707963267948966, 0.0, -1.5707963267948966, 0.0, 0.0], a=1.3962634015954636, v=1.0471975511965976)
+                $ 128 "Call Fase6"
+                Fase6()
+              else:
+                $ 129 "ElseIf Serv≟6"
+                if (Serv == 6):
+                  $ 130 "Call Fase1"
+                  Fase1()
+                  $ 131 "i≔1"
+                  global i=1
+                  $ 132 "Loop i≤CantItems"
+                  while (i <= CantItems):
+                    $ 133 "write_output_boolean_register(5, True )"
+                    write_output_boolean_register(5,  True  )
+                    $ 134 "Wait: 0.01"
+                    sleep(0.01)
+                    $ 135 "write_output_boolean_register(5, False )"
+                    write_output_boolean_register(5,  False  )
+                    $ 136 "Call Fase3"
+                    Fase3()
+                    $ 137 "Call Fase4"
+                    Fase4()
+                    $ 138 "write_output_integer_register(0,i)"
+                    write_output_integer_register(0,i)
+                    $ 139 "write_output_boolean_register(0, True )"
+                    write_output_boolean_register(0,  True  )
+                    $ 140 "Wait: 1.0"
+                    sleep(1.0)
+                    $ 141 "i≔i+1"
+                    global i=i+1
+                    $ 142 "write_output_boolean_register(3, True )"
+                    write_output_boolean_register(3,  True  )
+                    $ 143 "Wait: 2.0"
+                    sleep(2.0)
+                    $ 144 "write_output_boolean_register(0, False )"
+                    write_output_boolean_register(0,  False  )
+                    $ 145 "write_output_boolean_register(3, False )"
+                    write_output_boolean_register(3,  False  )
+                  end
+                  $ 146 "Home"
+                  movej([0.0, -1.5707963267948966, 0.0, -1.5707963267948966, 0.0, 0.0], a=1.3962634015954636, v=1.0471975511965976)
+                  $ 147 "Call Fase6"
+                  Fase6()
+                else:
+                  $ 148 "ElseIf Serv≟7"
+                  if (Serv == 7):
+                    $ 149 "Call Fase1"
+                    Fase1()
+                    $ 150 "i≔1"
+                    global i=1
+                    $ 151 "Loop i≤CantItems"
+                    while (i <= CantItems):
+                      $ 152 "write_output_boolean_register(5, True )"
+                      write_output_boolean_register(5,  True  )
+                      $ 153 "Wait: 0.01"
+                      sleep(0.01)
+                      $ 154 "write_output_boolean_register(5, False )"
+                      write_output_boolean_register(5,  False  )
+                      $ 155 "Call Fase3"
+                      Fase3()
+                      $ 156 "Call Fase4"
+                      Fase4()
+                      $ 157 "Call Fase5"
+                      Fase5()
+                      $ 158 "write_output_integer_register(0,i)"
+                      write_output_integer_register(0,i)
+                      $ 159 "write_output_boolean_register(0, True )"
+                      write_output_boolean_register(0,  True  )
+                      $ 160 "Wait: 1.0"
+                      sleep(1.0)
+                      $ 161 "i≔i+1"
+                      global i=i+1
+                      $ 162 "write_output_boolean_register(3, True )"
+                      write_output_boolean_register(3,  True  )
+                      $ 163 "Wait: 2.0"
+                      sleep(2.0)
+                      $ 164 "write_output_boolean_register(0, False )"
+                      write_output_boolean_register(0,  False  )
+                      $ 165 "write_output_boolean_register(3,3)"
+                      write_output_boolean_register(3,3)
+                    end
+                    $ 166 "Home"
+                    movej([0.0, -1.5707963267948966, 0.0, -1.5707963267948966, 0.0, 0.0], a=1.3962634015954636, v=1.0471975511965976)
+                    $ 167 "Call Fase6"
+                    Fase6()
+                  else:
+                    $ 168 "ElseIf Serv≟8"
+                    if (Serv == 8):
+                      $ 169 "Call Fase1"
+                      Fase1()
+                      $ 170 "i≔1"
+                      global i=1
+                      $ 171 "Loop i≤CantItems"
+                      while (i <= CantItems):
+                        $ 172 "write_output_boolean_register(5, True )"
+                        write_output_boolean_register(5,  True  )
+                        $ 173 "Wait: 0.01"
+                        sleep(0.01)
+                        $ 174 "write_output_boolean_register(5, False )"
+                        write_output_boolean_register(5,  False  )
+                        $ 175 "Call Fase4"
+                        Fase4()
+                        $ 176 "write_output_integer_register(0,i)"
+                        write_output_integer_register(0,i)
+                        $ 177 "write_output_boolean_register(0, True )"
+                        write_output_boolean_register(0,  True  )
+                        $ 178 "Wait: 1.0"
+                        sleep(1.0)
+                        $ 179 "i≔i+1"
+                        global i=i+1
+                        $ 180 "write_output_boolean_register(3, True )"
+                        write_output_boolean_register(3,  True  )
+                        $ 181 "Wait: 2.0"
+                        sleep(2.0)
+                        $ 182 "write_output_boolean_register(0, False )"
+                        write_output_boolean_register(0,  False  )
+                        $ 183 "write_output_boolean_register(3, False )"
+                        write_output_boolean_register(3,  False  )
+                      end
+                      $ 184 "Home"
+                      movej([0.0, -1.5707963267948966, 0.0, -1.5707963267948966, 0.0, 0.0], a=1.3962634015954636, v=1.0471975511965976)
+                      $ 185 "Call Fase6"
+                      Fase6()
+                    else:
+                      $ 186 "ElseIf Serv≟9"
+                      if (Serv == 9):
+                        $ 187 "Call Fase1"
+                        Fase1()
+                        $ 188 "i≔1"
+                        global i=1
+                        $ 189 "Loop i≤CantItems"
+                        while (i <= CantItems):
+                          $ 190 "write_output_boolean_register(5, True )"
+                          write_output_boolean_register(5,  True  )
+                          $ 191 "Wait: 0.01"
+                          sleep(0.01)
+                          $ 192 "write_output_boolean_register(5, False )"
+                          write_output_boolean_register(5,  False  )
+                          $ 193 "Call Fase4"
+                          Fase4()
+                          $ 194 "Call Fase5"
+                          Fase5()
+                          $ 195 "write_output_integer_register(0,i)"
+                          write_output_integer_register(0,i)
+                          $ 196 "write_output_boolean_register(0, True )"
+                          write_output_boolean_register(0,  True  )
+                          $ 197 "Wait: 1.0"
+                          sleep(1.0)
+                          $ 198 "i≔i+1"
+                          global i=i+1
+                          $ 199 "write_output_boolean_register(3, True )"
+                          write_output_boolean_register(3,  True  )
+                          $ 200 "Wait: 2.0"
+                          sleep(2.0)
+                          $ 201 "write_output_boolean_register(0, False )"
+                          write_output_boolean_register(0,  False  )
+                          $ 202 "write_output_boolean_register(3, False )"
+                          write_output_boolean_register(3,  False  )
+                        end
+                        $ 203 "Home"
+                        movej([0.0, -1.5707963267948966, 0.0, -1.5707963267948966, 0.0, 0.0], a=1.3962634015954636, v=1.0471975511965976)
+                        $ 204 "Call Fase6"
+                        Fase6()
+                      else:
+                        $ 205 "ElseIf Serv≟10"
+                        if (Serv == 10):
+                          $ 206 "Call Fase1"
+                          Fase1()
+                          $ 207 "i≔1"
+                          global i=1
+                          $ 208 "Loop i≤CantItems"
+                          while (i <= CantItems):
+                            $ 209 "write_output_boolean_register(5, True )"
+                            write_output_boolean_register(5,  True  )
+                            $ 210 "Wait: 0.01"
+                            sleep(0.01)
+                            $ 211 "write_output_boolean_register(5, False )"
+                            write_output_boolean_register(5,  False  )
+                            $ 212 "Call Fase5"
+                            Fase5()
+                            $ 213 "write_output_integer_register(0,i)"
+                            write_output_integer_register(0,i)
+                            $ 214 "write_output_boolean_register(0, True )"
+                            write_output_boolean_register(0,  True  )
+                            $ 215 "Wait: 0.01"
+                            sleep(0.01)
+                            $ 216 "i≔i+1"
+                            global i=i+1
+                            $ 217 "write_output_boolean_register(3, True )"
+                            write_output_boolean_register(3,  True  )
+                            $ 218 "Wait: 2.0"
+                            sleep(2.0)
+                            $ 219 "write_output_boolean_register(0, False )"
+                            write_output_boolean_register(0,  False  )
+                            $ 220 "write_output_boolean_register(3, False )"
+                            write_output_boolean_register(3,  False  )
+                          end
+                          $ 221 "Home"
+                          movej([0.0, -1.5707963267948966, 0.0, -1.5707963267948966, 0.0, 0.0], a=1.3962634015954636, v=1.0471975511965976)
+                          $ 222 "Call Fase6"
+                          Fase6()
+                        else:
+                          $ 223 "Else" "noBreak"
+                          $ 224 "Popup: El servicio seleccionado no existe. Elije un servicio entre 1-10"
+                          popup("El servicio seleccionado no existe. Elije un servicio entre 1-10", "Mensaje", False, False, blocking=True)
+                        end
+                      end
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+      $ 225 "'Reseteamos la variable de MARCHA'"
+      # 'Reseteamos la variable de MARCHA'
+      $ 226 "write_output_boolean_register(2, True )"
+      write_output_boolean_register(2,  True  )
+      $ 227 "'SET de la variable que indica que el servicio ha sido finalizado.'"
+      # 'SET de la variable que indica que el servicio ha sido finalizado.'
+      $ 228 "write_output_boolean_register(1, True )"
+      write_output_boolean_register(1,  True  )
+      $ 229 "Wait: 1.0"
+      sleep(1.0)
+      $ 230 "write_output_boolean_register(3, True )"
+      write_output_boolean_register(3,  True  )
+      $ 231 "Wait: 2.0"
+      sleep(2.0)
+      $ 232 "write_output_boolean_register(3, False )"
+      write_output_boolean_register(3,  False  )
+      $ 233 "'Ponemos a 0 la variablr que hace que se resetee el valor de MARCHA'"
+      # 'Ponemos a 0 la variablr que hace que se resetee el valor de MARCHA'
+      $ 234 "write_output_boolean_register(2, False )"
+      write_output_boolean_register(2,  False  )
+      $ 235 "Wait: 5.0"
+      sleep(5.0)
+      $ 236 "write_output_boolean_register(1, False )"
+      write_output_boolean_register(1,  False  )
+      $ 237 "write_output_boolean_register(4, True )"
+      write_output_boolean_register(4,  True  )
+    end
+  end
+end

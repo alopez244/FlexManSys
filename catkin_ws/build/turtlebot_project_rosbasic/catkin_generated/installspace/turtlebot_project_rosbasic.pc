@@ -1,8 +1,0 @@
-prefix=/home/borjartime/catkin_ws/install
-
-Name: turtlebot_project_rosbasic
-Description: Description of turtlebot_project_rosbasic
-Version: 0.0.0
-Cflags: -I${prefix}/include
-Libs: -L${prefix}/lib 
-Requires: rospy

@@ -1,3 +1,0 @@
-string transport_unit_name
-string transport_unit_state
-float32 battery

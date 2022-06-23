@@ -1,1 +1,0 @@
-java -Dlog4j.configurationFile="log4j2.xml" -cp ".\lib\jade;.\lib\log4j\log4j-api-2.3.jar;.\lib\log4j\log4j-core-2.3.jar" jade.Boot -gui -host 192.168.1.100 -local-host 192.168.1.100 -port 1099 -local-port 1099

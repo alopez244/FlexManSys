@@ -1,5 +1,0 @@
-<launch>
-    <node pkg="init_particles_caller" type="init_particles_caller.py" name="service_client" output="screen">
-
-    </node>
-</launch>

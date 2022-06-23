@@ -1,4 +1,0 @@
-string coordinate # Coordenada la cual retiene la peticion
----
-bool success # Se ha realizado el servicio o no
-

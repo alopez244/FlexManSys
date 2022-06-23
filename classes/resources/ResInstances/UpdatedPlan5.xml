@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<updatedPlan xmlns="updatedPlan" id="UP_01" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="updatedPlan ./UpdatedPlan.xsd">
-		<station ref_id="51">
-		</station>
-</updatedPlan>

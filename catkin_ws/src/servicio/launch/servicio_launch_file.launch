@@ -1,5 +1,0 @@
-<launch>
-   <include file="$(find turtlebot_gazebo)/launch/turtlebot_world.launch"/>
-   <node pkg="servicio" type="servicio_ejemplo.py" name="service_client" output="screen">
-   </node>
-</launch>

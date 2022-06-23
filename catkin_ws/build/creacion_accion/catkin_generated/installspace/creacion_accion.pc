@@ -1,8 +1,0 @@
-prefix=/home/borjartime/catkin_ws/install
-
-Name: creacion_accion
-Description: Description of creacion_accion
-Version: 0.0.0
-Cflags: -I${prefix}/include
-Libs: -L${prefix}/lib 
-Requires: 

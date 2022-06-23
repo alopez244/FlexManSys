@@ -1,0 +1,84 @@
+ Program
+   Robot Program
+     Set DO[1]=Apagar
+     Wait read_input_boolean_register(0)≟ True 
+     i≔1
+     CantPiezas≔read_input_integer_register(1)
+     'Set ItemStarted=Encender'
+     'Using TCP SAI6199-GV_E1_jt: p[0.000000, 0.000000, 0.200000, 0.000000, 0.000000, 0.000000]'
+     set_tcp(p[0.000000, 0.000000, 0.200000, 0.000000, 0.000000, 0.000000])
+     Loop i≤CantPiezas
+       movej([1.284618, -1.581916, -1.622086, -1.507893, 1.586904, -1.859980],1.20000,0.25000,0,0.0000)
+       MoveJ
+         arribaRodB
+       MoveL
+         abajoRodB
+       Set DO[1]=Encender
+       Wait: 0.25
+       MoveL
+         arribaRodB
+       If i≟1
+         MoveJ
+           arribaP1_F2
+         MoveL
+           abajoP1_F2
+         Wait: 0.5
+         Set DO[1]=Apagar
+         Wait: 0.5
+         MoveL
+           arribaP1_F2
+       ElseIf i≟2
+         MoveJ
+           arribaP2_F2
+         MoveL
+           abajoP2_F2
+         Wait: 0.5
+         Set DO[1]=Apagar
+         Wait: 0.5
+         MoveL
+           arribaP2_F2
+       ElseIf i≟3
+         MoveJ
+           arribaP3_F2
+         MoveL
+           abajoP3_F3
+         Wait: 0.5
+         Set DO[1]=Apagar
+         Wait: 0.5
+         MoveL
+           arribaP3_F2
+       ElseIf i≟4
+         MoveJ
+           arribaP4_F2
+         MoveL
+           abajoP4_F2
+         Wait: 0.5
+         Set DO[1]=Apagar
+         Wait: 0.5
+         MoveL
+           arribaP4_F2
+       ElseIf i≟5
+         MoveJ
+           arribaP5_F2
+         MoveL
+           abajoP5_F2
+         Wait: 0.5
+         Set DO[1]=Apagar
+         Wait: 0.5
+         MoveL
+           arribaP5_F2
+       Else
+         MoveJ
+           arribaP6_F2
+         MoveL
+           abajoP6_F2
+         Wait: 0.5
+         Set DO[1]=Apagar
+         Wait: 0.5
+         MoveL
+           arribaP6_F2
+       NumPiezas≔i
+       write_output_integer_registet(0,NumPiezas)
+       i≔i+1
+     movej([0.017453, -1.553343, 0.017453, -1.553343, 0.017453, 0.017453],1.20000,0.25000,0,0.0000)
+     Home

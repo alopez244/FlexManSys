@@ -1,8 +1,0 @@
-prefix=/home/borjartime/catkin_ws/devel
-
-Name: init_particles_caller
-Description: Description of init_particles_caller
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 

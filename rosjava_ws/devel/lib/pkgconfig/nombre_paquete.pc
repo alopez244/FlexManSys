@@ -1,8 +1,0 @@
-prefix=/home/borjartime/rosjava_ws/devel
-
-Name: nombre_paquete
-Description: Description of nombre_paquete
-Version: 0.1.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 
